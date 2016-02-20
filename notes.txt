@@ -1,0 +1,76 @@
+first deploy:
+django 1.8 for long term support
+python 2.7
+pip install MySQL-python 
+pip install mysqlclient
+bootstrap 3.3.6
+uncompressed, development jQuery 1.12.0
+django-datetime-widget-0.9.3 (will have to install with pip when deploying to make sure unique css makes it, i think)
+
+second deploy:
+pip install django-import-export
+pip install requests (for api)
+pip install xmltodict (for parsing api into son-like dict)
+pip install -I google-api-python-client==1.3.2
+had to be older api python for error message i kept getting:
+http://stackoverflow.com/questions/29190604/attribute-error-trying-to-run-gmail-api-quickstart-in-python
+
+third deploy:
+pip install openpyxl
+
+
+somewhere floating around:
+used openpyxl, don’t know if will incorporate
+swing time and demo requirements
+cd django-swingtime-master/
+pip install -r requirements.txt
+remember to make db username longer:
+
+1.Login to your mysql in terminal(mysql -uroot -p)
+
+2.mysql use your_database_name;
+
+3.alter table auth_user modify username varchar(100);
+
+
+
+THIS WORKS TO LOG ON FROM PYTHONANYWHERE BASH CONSOLE!!!
+mysql -urcregsite -hmysql.server -p
+
+
+
+TO COPY FROM DB FILE THAT IS IN REGULAR FILES SECTION
+This worked to impose upon blank database, I don’t know if it would work with some changes
+1. first, log on to mysql from back with:
+mysql -urcregsite -hmysql.server -p
+2. 
+USE rcregsite$default;    
+SOURCE /home/rcregsite/rcreg2016copy.sql;
+NONONONONO this does not copy everything for some reason
+
+
+mysqldump -hmysql.server  --user rcregsite --password=mice4rice --databases ‘rcregsite$default' < /home/rcregsite/rcreg2016copy.sql
+
+
+
+
+Haven’t read all about registration-redux, here’s the docs:
+https://django-registration-redux.readthedocs.org/en/latest/default-backend.html
+
+
+project superuser: RollerTron. email is rcregsite@gmail.com, pass is r0llerc0n
+
+other pass I sometimes use is offensive nickname carson and rosa gave me
+
+db=rcreg2016
+
+BUT my general mysql pass is delicious rodent
+
+remember
+python manage.py createsuperuser
+
+
+free SVG converter?
+http://www.online-convert.com
+http://fontello.com/
+http://stackoverflow.com/questions/22257610/creating-custom-glyphicons-icon-font-on-bootstrap-3

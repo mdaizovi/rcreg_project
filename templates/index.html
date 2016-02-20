@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+<!--<link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">-->
+<link href="{% static "css/blog.css" %}" rel="stylesheet">
+<link href="{% static "css/offcanvas.css" %}" rel="stylesheet">
+
+{% block content %}
+<head>
+<title>{% block title %}Home{% endblock %}</title>
+</head>
+
+  <div class="row">
+    <div class="col-sm-8 blog-main">
+      <div class="blog-post">
+      <h3>Most Recent Announcement</h3>
+        <h2 class="blog-post-title"><a href="{{ blog.get_absolute_url }}">{{blog.headline}}</a></h2>
+
+
+        <p>{% autoescape off %}{{ blog.post|truncatechars:700}} </p><p><a href="{{ blog.get_absolute_url }}">
+Continue Reading &raquo; </a>{% endautoescape %}</p>
+          </div><!-- /.blog-post -->
+    </div><!-- /.blog-main -->
+
+
+
+    <div class="col-xs-3 col-sm-4 sidebar-offcanvas" id="sidebar" style="min-width: 300px;">
+      <div class="list-group">
+        <a class="list-group-item active tooltip-bottom" title="Disclosure: If you purchase anything directly after following any of the following links, the site creator or RollerCon may receive a commission. In other words, this is a helpful Tip Jar.">Getting Ready</a>
+{%if most_upcoming.ticket_link%}
+<a href="{{most_upcoming.ticket_link}}" class="list-group-item" target="_blank"><span class="glyphicon" aria-hidden="true"><i class="fa fa-ticket"></i> Passes</span></a>
+{%endif%}
+
+
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle list-group-item" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    <span class="glyphicon glyphicon-sunglasses" aria-hidden="true" > Bring</span>
+  </button>
+
+<!-- I'm deeply sorry for this hideous html. It makes an okay affiliate dropdown though. -->
+  <ul class="dropdown-menu" style= "width: 100%; text-align: center;" aria-labelledby="dropdownMenu1">
+    <li class="list-group-item"><table style= "width: 100%;"><tr><td>
+
+    <a rel="nofollow" href="http://www.amazon.com/gp/product/B016PSH8BE/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=B016PSH8BE&linkCode=as2&tag=itsjuscopandp-20&linkId=ZELROJSPT3QEKMBX" target="_blank">
+    <img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=B016PSH8BE&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=itsjuscopandp-20" ></a>
+    <img src="http://ir-na.amazon-adsystem.com/e/ir?t=itsjuscopandp-20&l=as2&o=1&a=B016PSH8BE" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+</td><td>
+  <a rel="nofollow" href="http://www.amazon.com/gp/product/B00FNZ4UFI/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=B00FNZ4UFI&linkCode=as2&tag=itsjuscopandp-20&linkId=2XE4ATHPUBBPL5HF" target="_blank">
+    <img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=B00FNZ4UFI&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=itsjuscopandp-20" ></a>
+    <img src="http://ir-na.amazon-adsystem.com/e/ir?t=itsjuscopandp-20&l=as2&o=1&a=B00FNZ4UFI" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+</td></tr></table></li>
+
+<li class="list-group-item"><table style= "width: 100%;"><tr><td>
+  <a rel="nofollow" href="http://www.amazon.com/gp/product/B005G01TNQ/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=B005G01TNQ&linkCode=as2&tag=itsjuscopandp-20&linkId=LZ6VQGVU6WKWDQCP" target="_blank">
+    <img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=B005G01TNQ&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=itsjuscopandp-20" ></a>
+    <img src="http://ir-na.amazon-adsystem.com/e/ir?t=itsjuscopandp-20&l=as2&o=1&a=B005G01TNQ" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+</td><td>
+  <a rel="nofollow" href="http://www.amazon.com/gp/product/B00B0N281A/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=B00B0N281A&linkCode=as2&tag=itsjuscopandp-20&linkId=6L6AKHMWATMQXCF3" target="_blank">
+    <img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=B00B0N281A&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=itsjuscopandp-20" ></a>
+    <img src="http://ir-na.amazon-adsystem.com/e/ir?t=itsjuscopandp-20&l=as2&o=1&a=B00B0N281A" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+</td></tr></table></li>
+        <li class="list-group-item">
+          <a rel="nofollow" href="http://www.amazon.com/gp/product/B000N5WT2O/ref=as_li_tl?ie=UTF8&camp=1789&creative=390957&creativeASIN=B000N5WT2O&linkCode=as2&tag=itsjuscopandp-20&linkId=QVEH7UQSWJ3T67GC" target="_blank">
+            <img border="0" src="http://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=B000N5WT2O&Format=_SL110_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1&tag=itsjuscopandp-20" ></a>
+            <img src="http://ir-na.amazon-adsystem.com/e/ir?t=itsjuscopandp-20&l=as2&o=1&a=B000N5WT2O" width="1" height="1" border="0" alt="" style="border:none !important; margin:0px !important;" />
+        </li></ul></div>
+
+ <!--this is here as an example of how to embed frames, but their stupid search is worthless, makes you re enter it at their site-->
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle list-group-item" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+  <span class="glyphicon glyphicon-plane" aria-hidden="true" > Fly</span>
+  </button>
+  <ul class="dropdown-menu" style= "width: 100%; text-align: center;" aria-labelledby="dropdownMenu1">
+    <li class="list-group-item">
+      <table style= "width: 100%;"><tr><td><iframe src="{% url 'CheapAirDynamic' %}" style="border:none;"></iframe></td></tr></table>
+  </li></ul></div>
+
+
+    <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle list-group-item" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      <span class="glyphicon" aria-hidden="true"><i class="fa fa-car"></i> Drive</span>
+      </button>
+      <ul class="dropdown-menu" style= "width: 100%; text-align: center;" aria-labelledby="dropdownMenu3">
+        <li class="list-group-item">
+  <table style= "width: 100%;">
+    <tr><td style="padding: 5px 0px 5px 0px;"><a href="http://click.linksynergy.com/fs-bin/click?id=wc9pZNlRC1Y&offerid=171423.10000046&subid=0&type=4" target="_blank">
+      <IMG border="0"   alt="Dollar Rent-a-Car, Inc." src="http://mproxy.banner.linksynergy.com/fs/banners/35267/35267_10000046.jpg"></a>
+  </td></tr>
+
+<tr><td style="padding: 5px 0px 5px 0px;"><a href="http://click.linksynergy.com/fs-bin/click?id=wc9pZNlRC1Y&offerid=171424.10000071&subid=0&type=4" target="_blank">
+  <IMG border="0"   alt="Thrifty Rent-A-Car System, Inc." src="http://mproxy.banner.linksynergy.com/fs/banners/3088/3088_10000071.jpg"></a>
+</td></tr>
+</table>
+      </li></ul></div>
+      {%if most_upcoming.hotel_book_link %}
+      <a href="{{most_upcoming.hotel_book_link }}"class="list-group-item" target="_blank"><span class="glyphicon" aria-hidden="true"><i class="fa fa-hotel"></i> Sleep</span></a>
+      {%endif%}
+      </div>
+    </div> <!--/.sidebar-offcanvas-->
+
+
+
+
+  </div><!-- /.row -->
+
+ <!--I don't think I need this script-->
+<!--<script src="{% static "js/offcanvas.js" %}" ></script> -->
+{% endblock %}

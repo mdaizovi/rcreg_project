@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}View Training{% endblock %}</title>
+<!-- Custom style for helper viewport this template -->
+<link href="{% static "css/tooltip-viewport.css"%}" rel="stylesheet">
+</head>
+
+<div class="row" id="moreInfo">
+    <h2 class="text-center">{{training.name}}<small>
+{%for coach in training.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
+{{coach.user.first_name}}</a>{%endfor%}</small></h2>
+    <hr>
+  <h5 class="text-center"><table class="table-condensed" style="width:100%;">
+      <!-- <tr><td>date</td><td>time</td><td>{{training.get_duration_display}}</td><td>location</td></tr>-->
+      <tr><td>{{training.get_duration_display}}</td></tr>
+    </table></h5>
+
+  <p class="text-center">{%if user in training.editable_by%}
+  <a href="{{training.get_edit_url}}"><button type="button" class="btn btn-success">Edit Training</button></a>
+  {%endif%}
+  {% if user in training.registered.editable_by %}
+  {% url 'register_training' training.pk as register_url%}
+  <a href="{{register_url}}"><button type="button" class="btn btn-success">Register MVPs</button></a>
+  {%endif%}</p>
+
+<div class="well well-lg" style="background:white;">
+<div class="well well-sm">
+  <table class="table" style="margin: 0px 0px 0px 0px; width:100%;">
+  <tr>
+  <!--border:none necessary in every td in order to get rid of ugly border on top, no other place to put it :-(-->
+  <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true"> Skill:
+{%if training.registered.skill %}{{ training.registered.skill_display }}
+{%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
+
+  <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass: <i class="{{training.onsk8s_icon}}"></i></span></td>
+  <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL: <i class="{{training.registered.intl_icon}}"></i></span></td>
+  <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact: <i class="{{training.contact_icon}}"></i></span></td>
+  </tr>
+  </table>
+</div><!-- end small well-->
+
+
+<p class="lead" style="text-align:justify;">{{training.description}}</p>
+{%for coach in training.coach.all%}
+<p class="lead" style="text-align:justify;">{{coach.description}}</p>
+{%endfor%}
+
+</div><!-- end well lg-->
+
+{%for roster in rosters %}
+<div class="col-sm-6">
+
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><h2 class="text-center">{% cycle 'Registered' 'Auditing' %}</h2></div>
+    <div class="panel-body"><h2 class="text-center">
+      <small>
+        {%if training.can_register%}
+        {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}
+        {%else%}<i>Registration has not started yet, please check back 2 hours prior to class start.</i>
+        {%endif%}
+      </small></h2>
+    </div>
+
+    <table class="table table-striped">
+    <tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>
+      {%for skater in roster.participants.all%}
+      <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}</td>
+      <td class="text-right">{{skater.sk8number}}</td></tr>{%endfor%}
+    </table>
+  </div>
+
+
+</div><!-- end col-sm-6-->
+
+{%endfor%}
+
+</div><!-- end row-->
+
+{% endblock %}

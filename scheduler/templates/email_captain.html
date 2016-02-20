@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Email Captain{% endblock %}</title>
+</head>
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+{%if roster.can_email%}
+    <h3>Email {{roster.captain.sk8name}}</h3>
+    {%if form %}
+    <p><i>Please note that this is <b>not</b> an anonymous email. Captain will receive a message including your name and email address.</i></p>
+
+<div class="col-sm-6">
+<form method="POST" class="post-form">
+
+{% csrf_token %}
+      {%if form.non_field_errors%}{{form.non_field_errors}}{%endif%}
+      {%for field in form %}
+      {%if field.errors%}{{field.errors}}{%endif%}
+      <div class="form-group">
+        <b>{{ field.label }}</b>
+        {{ field }}
+      </div>
+      {%endfor%}
+
+<button type="submit" class="btn btn-primary margin-top-10" >
+Send Message</button>
+</form>
+</div>
+
+{%else%}<!--<end if no form, ie if email attempted -->
+{%if email_success%}
+<div class="alert alert-success" role="alert">Your message has been sent to {{roster.captain.sk8name}}! <br>Back to <a href="{% url 'my_challenges' %}" class="alert-link">My Challenges</a>?
+{%else%}
+<div class="alert alert-danger" role="alert">There was an error, and your message has not been sent. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RC Admin</a> if this continues to occur.
+{%endif%}</div><!--<end if email success-->
+
+{%endif%}<!--<end if form -->
+
+
+{%else%}<!--if not coach.can_email -->
+<div class="alert alert-danger" role="alert">{{roster.captain.sk8name}} prefers not to receive emails through this site.</div>
+{%endif%}
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

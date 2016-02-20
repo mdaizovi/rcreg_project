@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}View Challenge{% endblock %}</title>
+<!-- Custom style for helper viewport this template -->
+<link href="{% static "css/tooltip-viewport.css"%}" rel="stylesheet">
+</head>
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-4">
+    <h2 class="text-center">{%if challenge.roster1 and challenge.roster1.name%}{{challenge.roster1.name}}{%else%}Unnamed Team{%endif%}</h2>
+
+{%if score_form %}
+{% url 'view_challange'  challenge.id as submit_url %}
+<form method="post">
+  {% csrf_token %}
+<input class="form-control" id="{{ score_form.roster1_score.id_for_label }}" maxlength="30" name="{{ score_form.roster1_score.html_name }}"
+        {%if challenge.roster1score%} placeholder="{{challenge.roster1score}}"{%else%} placeholder="{{score_form.roster1_score.label}}"{%endif%}>
+{%elif challenge.roster1score%}<h2 style="text-align:center;"><small>{{challenge.roster1score}}</small></h2>{%endif%}
+
+
+  </div>
+
+  <div class="col-sm-4">
+    <h1 class="text-center">VS</h1>
+
+    {%if score_form %}
+    <p class="text-center">
+      <button type="submit" class="btn btn-success btn-xs" action="{{submit_url}}" >Save Score</button></p>
+    {%endif%}
+
+  </div>
+
+  <div class="col-sm-4">
+    <h2 class="text-center">{%if challenge.roster2 and challenge.roster2.name%}{{challenge.roster2.name}}{%else%}Unnamed Team{%endif%}</h2>
+    {%if score_form %}
+    <input class="form-control" id="{{ score_form.roster2_score.id_for_label }}" maxlength="30" name="{{ score_form.roster2_score.html_name }}"
+            {%if challenge.roster2score%} placeholder="{{challenge.roster2score}}"{%else%} placeholder="{{score_form.roster2_score.label}}"{%endif%}></form>
+    {%elif challenge.roster2score%}<h2 style="text-align:center;"><small>{{challenge.roster2score}}</small></h2>{%endif%}
+      </div>
+
+</div>
+
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12 center-block">
+<!-- <h3 class="text-center"><small>time and location, if available</small></h3>-->
+
+
+</div><!-- end col-sm-4-->
+</div><!-- end row-->
+
+
+<div class="row" id="moreInfo">
+
+{%for roster in rosters %}
+  <div class="col-sm-6">
+
+    <h4>{% if roster.name%}{{roster.name}}{%else%}Unnamed Team {%endif%}{% if roster.color%} ({{roster.color}}) {%endif%}
+      {%if registrant_list and roster.captain in registrant_list%}
+      <a href="{{challenge.get_edit_url}}"><button type="button" class="btn btn-success btn-xs">Edit Team</button></a>
+      {%elif registrant_list and roster.captain not in registrant_list and user in roster.editable_by%}
+      <a href="{{roster.get_edit_url}}"><button type="button" class="btn btn-success btn-xs">Edit Roster</button></a>
+      {%endif%}</h4>
+
+{%if not challenge.is_a_game%}
+<div class="well well-sm">
+  <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
+    <td class="text-left container-fluid tooltip-bottom" title="{{roster.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:
+      {%if roster.skill %} {{ roster.skill_display }}
+      {%else%} <i class="{{roster.skill_icon}}"></i>{%endif%}
+    <td class="text-right container-fluid tooltip-bottom" title="{{roster.gender_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Gender: <i class="{{roster.gender_icon}}"></i></span></td>
+    </tr></table>
+</div><!-- end well-->
+{%endif%}
+
+<table class="table table-striped">
+<tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>
+{%if roster.has_number_dupes%}<!-- written this way so roster will only be checked once-->
+{%for skater in roster.participants.all%}
+  <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
+  </td>
+<!-- written this way so roster will only be checked once-->
+  <td {%if skater.sk8number in roster.has_number_dupes %} class="text-right tooltip-bottom" style="color: red; font-weight: bold;"  title="DUPLICATE NUMBER" {%else%} class="text-right" {%endif%}>{{skater.sk8number}}</td></tr>
+  {%endfor%}{%else%}
+  {%for skater in roster.participants.all%}
+  <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
+  </td>
+  <td class="text-right">{{skater.sk8number}}</td></tr>{%endfor%}
+  {%endif%}<!--if roster has number dupes-->
+
+</table>
+
+</div><!-- end col-sm-6-->
+
+{%endfor%}
+
+</div><!-- end row-->
+
+{% endblock %}

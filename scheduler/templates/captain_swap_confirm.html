@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Change Captain{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+
+    <h3>Change {{roster.name}} Captain</h3>
+
+
+
+{%if swap_attempt%}
+{%if new_captain %}
+<div class="alert alert-success" role="alert">{{new_captain.sk8name}} is now the captain of {{roster.name}}. <br>Go to <a href="{% url 'my_challenges' %}" class="alert-link">My Challenges</a>?</div>
+{%else%}<!-- if no new captain -->
+<div class="alert alert-danger" role="alert">There was an error changing captains. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RC Admin</a> if this continues to occur.</div>
+{%endif%}<!-- end if new captain -->
+
+
+{%else%}<!-- if new captain but no swap attempt -->
+    <div class="alert alert-danger" role="alert">Are you sure you want to remove yourself as captain of {{roster.name}}?<br>
+      <ul><li>You will remain on the roster but you will lose edit privileges. </li>
+      <li>This Challenge will only be editable by your opponent, your new captain, and RollerCon admins.</li></ul>
+    <br>Only continue if your new captain has already agreed to take over responsibility for this Challenge.
+
+
+        <form method="POST" class="post-form">
+              {% csrf_token %}
+
+              <input type="hidden" name="roster_id" value="{{roster.id}}" />
+              <input type="hidden" name="activity_id" value="{{activity_id}}" />
+                <input type="hidden" name="new_captain" value="{{new_captain.id}}" />
+          <input class="btn btn-danger margin-top-15 center-block" type="submit" method="post" name="confirm captain replace" value="Change Captains">
+        </form>
+      </div>
+
+{% url 'edit_challenge' activity_id as edit_challenge_url %}
+<p class="text-center margin-top-15"><a href="{{ edit_challenge_url }}"><button type="button" class="btn btn-primary">Go Back</button></a></p>
+{%endif%}<!-- if swap attempt -->
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+{% endblock %}

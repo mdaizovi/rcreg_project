@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "chromatic-pride-120508",
+  "private_key_id": "4df6edbc4e359c7d0e6522d3291001e6728e3300",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCchnXCCVtIAQ6A\nPxOpUkiQCU4827kNeXWUW1GGtVRcNucDlyo6jn2S5WlA0mfcgIk9cDKXDcq7qB5O\nWKIWcpUbGOPpD17qkTVD5d3IPrQCF1pVmkhyktwg1byxkeA0a169kd0NVHZQ4FI+\nKeZJty3o0YKALWLRr+TLM0aEp8yxB2Fyw/ASNhCYnnuKJ+ySkSbyrILoH5fmw8It\njwNporvF37SM+IReSA+V3Pac9jMYrSk3QEJQneUSqPg+GsFbBgxzkHx+sI0IW5Sa\nut1nZSx8o1hhFeQI7ksCDWg3V/Qxy1aW+Hp4YZSBpVNCNLwsmmn3bjdRf73qh+vz\nCZu1+gatAgMBAAECggEALlYbvDJa5GjzqwGBR4nFU2Z908RT9uoy5ZVXACLj81yJ\nbOWuKaGPCRKC4x6mgn9GoXp6b380ufLd7eGNMkn/XAM1TQQw3A3aj9wXmLT/QvM4\n2ciPk+Nn6Qx9DLAbiEkUxdfNcanEUNLnZeGve7kPjTGgiWNmMp74gzMNuC2Yifsk\nTyS/HbB0BT/3RCO68EDo0jxvlvKd810ONyvp/+Et4hf4H1QRCZ9eLFZvEWtYTS2n\nFRCZ2P6cUVdZYupoW5tj8gkgaCPnGCfxBYuoGYSKwnKak9t+Qt05QXYH7dfUHZe8\n0UK1PYVX4GZbQc5u0VpL9tDuCjHeZymCD3M2bVD14QKBgQD/Z9VF2iwV5qtjWq2E\ndhSa850b3AX0MG6rKOf19q/2NOHANlXV5J+ksAQy0elnPew/xcwfkRcxW3yC6U5Z\nOGqgA/+YWhEMJoxFH9P+9Tr07PSsYYaqo5nUnYpWZECnj2KXJTjtXfKJGFeD5Kor\n6uLBYP+UTwCr/ksDs3FISqMLNQKBgQCc47cmOLsWyqazX232a/Myc6moG5NM8N2+\nsyGD0Am/ae+pRFuN+sR8h89MawyrBJicPed54aE1ALBBavgXq7IBp5eCY7fpVZ+i\nRgUND/HRLgvXwrqK3xa719WPk5KRxYzHS6WTkN273GOt0jDeFbW9ti5kKM2gVpDk\nRvewbN2EmQKBgE+GTxve4Nc46aiX9WtHMQdGT2b7TUdJRUw6Am/NjeCFer1UrclZ\n1HN88vG39orU9xisR/CURrpxmAVTC7gwHtMQK6eOc7xqzEZBsMq0JNVaapy6CSpc\nomtXWlmoAZGqzbHuPxl5pSkW0TkaG/psuoon36yYJMdo+IaAewddZgL5AoGACEcz\nqL6hkIhM13YXlUMI6AaWUxpxYUPsT12gTRYzDXiHfsTul8U9jNyVoZCccIGjk8ro\nZdPz75oDss/0Gzuh/tha9DRSxesQqz1Kku/ecI0fbtkFgsJWrr6qtBKzTyG/Vdy1\n9d1U9c6hK9DFZ1J57nKoa/yDLQykRIdCFnsIDTECgYEA2ULU+f4/5ohBSB4Hrlw0\n6uwBh588pZyovuVn65HQMM+EALM4se175nYU5AbYxjIeOOIWnzAfB+k8LBEF5OOa\nDH2kMXBdfsSxWESboS66lOD4WgCCHssB24f03SKisQGU/b8tieh3p7BH0ma6T6yi\nAjOMqmwdNdj+y88cvhtCUgY=\n-----END PRIVATE KEY-----\n",
+  "client_email": "chromatic-pride-120508@appspot.gserviceaccount.com",
+  "client_id": "103114067177290638152",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/chromatic-pride-120508%40appspot.gserviceaccount.com"
+}

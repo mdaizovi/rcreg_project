@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Edit Training{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+
+  {%if not formlist%}
+  <div class="alert alert-danger" role="alert">
+    You have not have permission to edit this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+  {%else%}<!-- if it captain of one of the rosters-->
+
+  <div class="col-sm-12">
+      <div class="col-sm-6">
+        <h3 class="text-center">Edit Training Details</h3>
+
+        {%if training_changes_made %}
+        <div class="alert alert-success" role="alert">{{training}} successfully saved!</div>
+        {%endif%}
+
+        <form method="POST" class="post-form">
+              {% csrf_token %}
+          {%for form in formlist %}
+        {%for field in form %}
+        {%if field.errors%}{{field.errors}}{%endif%}
+        <div class="form-group">{{ field.label }} {{ field }}
+        </div>
+        {%endfor%}{%endfor%}
+        <input class="btn btn-success" type="submit" method="post" name="save training" value="Save Training Details">
+        </form>
+
+      </div><!--end col-sm-6, 12 and row still open-->
+
+
+  <div class="col-sm-6">
+    <h3 class="text-center">Edit Coaches</h3>
+
+    {%if add_fail %}
+    <div class="alert alert-danger" role="alert">{{add_fail.sk8name}} NOT added to {{training.name}}</div>
+    {%elif skater_added %}
+    <div class="alert alert-success" role="alert">{{skater_added.sk8name}} added to {{training.name}}</div>
+    {%endif%}
+
+    {% if remove_fail %}
+    <div class="alert alert-danger" role="alert">{{remove_fail.sk8name}} NOT removed from {{training.name}}</div>
+    {% elif skater_remove %}
+    <div class="alert alert-success" role="alert">{{skater_remove.sk8name}} removed from {{training.name}}</div>
+    {%endif%}
+
+<div class="well well-sm margin-top-10" style="background: white;">
+    <div class="form-group">
+             <h4 >Search for New Coach to add</h4>
+             <form method="POST" class="post-form">
+                   {% csrf_token %}
+   {{search_form }}
+   <input class="btn btn-primary margin-top-15" type="submit" method="post" name="search" value="Search for Coach">
+   </form>
+ </div><!--end well-->
+   </div><!--end form group-->
+
+{% if eligible_coaches %}
+<div class="well well-sm margin-top-10" style="background: white;">
+ <div class="form-group">
+          <h4>Add Coach</h4>
+          <form method="POST" class="post-form">
+                {% csrf_token %}
+{{eligible_coaches}}
+<input class="btn btn-success margin-top-15" type="submit" method="post" name="add coach" value="+ Coach to {{training.name}}">
+</form>
+ </div><!--end well-->
+</div><!--end form group-->
+{%endif%}
+
+<div class="well well-sm margin-top-10" style="background: white;">
+ <div class="form-group">
+   <form method="POST" class="post-form">
+         {% csrf_token %}
+<h4>Remove Existing Coach</h4>
+{{coaches}}
+<input class="btn btn-danger margin-top-15" type="submit" method="post" name="remove coach" value="- Coach from {{training.name}}">
+</form>
+ </div><!--end well-->
+</div><!--end form group-->
+
+</div><!--end col-sm-6-->
+    </div><!-- end row-->
+  </div><!-- end 12-->
+
+
+    <div class="well well-md margin-top-15">
+      <form method="POST" class="post-form">
+            {% csrf_token %}
+            <input type="hidden" name="activity_id" value="{{ training.id }}" />
+          <input class="btn btn-danger margin-top-15 center-block btn-xs" type="submit" method="post" name="delete" value="Delete Training">
+          </form>
+  </div><!-- end well-->
+{%endif%}
+
+
+
+{% endblock %}

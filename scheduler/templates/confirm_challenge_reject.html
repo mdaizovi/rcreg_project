@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Reject Challenge{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+    <h3>Reject {{challenge.name}}</h3>
+    <div class="alert alert-danger" role="alert">Are you sure you want to reject this challenge?
+    {%if not opponent_acceptance%}<br>Because your opponent has not accepted,
+    {%if my_team.nearly_homeless %}and you don't have any other Challenges, this will delete both your Challenge and Team
+    {% else %}this will delete both your Challenge{%endif%} Completely.
+
+    {%else%}<br>The Challenge will remain but this will remove yourself as captain, remove all skaters from your roster, and your opponent will have to challenge someone else.
+    {%endif%}
+
+        <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
+              {% csrf_token %}
+              <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
+              <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+
+          <input class="btn btn-danger margin-top-15 center-block" type="submit" method="post" name="confirm reject" value="Reject Challenge">
+        </form>
+        </div>
+
+    {% url 'edit_challenge' challenge.id as edit_challenge_url %}
+<form method="POST" class="post-form"  action="{{ edit_challenge_url }}">
+  <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+    {% csrf_token %}
+        <input class="btn btn-primary margin-top-25 center-block" type="submit" method="post" value="Go Back">
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

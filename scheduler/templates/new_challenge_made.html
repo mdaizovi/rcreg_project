@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}New{%if is_a_game%} Game{%else%}Challenge{%endif%}{% endblock %}</title>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>-->
+</head>
+
+
+<div class="row" id="moreInfo">
+      <div class="col-sm-12">
+
+    {%if my_team or challenged_captain or opposing_roster%}
+    {%if my_team %}
+    <div class="alert alert-success" role="alert">Team {{my_team.name}} successfully selected for a {%if is_a_game%} Game{%else%} Challenge{%endif%}! <br>
+    {%elif challenged_captain or opposing_roster%}
+    <div class="alert alert-success" role="alert">{%if opposing_roster.name %}{{opposing_roster.name}} and {%endif%}{{challenged_captain.sk8name}} successfully invited to oppose {{challenge.roster1.name}}!
+    To keep track of whether your challenge is accepted, please see <a href="{%url 'my_challenges'%}">My Challenges & Games</a>.
+    {%endif%}</div>{%endif%}
+
+{% if coed_beginner %}
+    <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>
+    {%endif%}
+
+<p class="lead">{%if game_teams_form%}
+  You now have 3 options:<ul>
+    <li>Choose an existing <b>Sanctioned/Regulation Team</b> below to oppose</li>
+    <li>If target is team not found, maybe the captain didn't make it yet. <br><b>Search for the captain</b> of the Sanctioned/Regulation and invite them to oppose {{my_team.name}}</li>
+    <li>If target captain is not found, maybe the captain didn't buy a pass yet or otherwise isn't in the system yet.
+      <br>You can log off, give it some time, and find this Game later through <a href="{% url 'my_challenges' %}">My Challenges</a>, then invite the team or captain through the Edit Challenge page.</li>
+    </ul> </p><p class="lead">After you do one of these 3 things and your opposing captain accepts, either one of you can Submit the Game, and it will be reviewed by RollerCon Admins.
+    {%elif not challenged_captain %}Please choose an eligible Skater or MVP pass-holder to invite as your opposing captain
+    {%endif%}</p>
+
+
+{%if game_teams_form%}
+<div class="col-sm-6 margin-top-15">
+<form method="POST" class="post-form">
+  {% csrf_token %}
+<input type="hidden" name="is_a_game" value="{{ is_a_game }}" />
+{%with challenge.id as challenge_id%}<input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
+<div class="well well-sm" style="min-height:170px;">
+    <h4>Sanctioned/Regulation Teams for {{challenge.con}}</h4>
+<table class="table margin-top-25">
+        {%for field in game_teams_form %}
+        <tr><td style="border:none;vertical-align: middle;">
+          <b>Game Teams</b></td>
+          <td style="border:none;">{{ field }}</td>
+            <td style="border:none; text-align: center;">
+              <input class="btn btn-success btn-block" type="submit" method="post" name="challenge team" value="Oppose"></td>
+          </tr>
+          {%endfor%}
+        </form>
+        </table>
+          </div><!-- end well sm-->
+      </div><!-- end col-sm-6 -->
+{%endif%}<!--  game_teams_form -->
+
+
+{%if formlist%}
+<div class="col-sm-6 margin-top-15">
+<form method="POST" class="post-form">
+  {% csrf_token %}
+  {%if is_a_game %}<input type="hidden" name="is_a_game" value="{{ is_a_game }}" />{%endif%}
+  <input type="hidden" name="my_team" value="{{ my_team.id }}" />
+
+    <div class="well well-sm">
+          <h4>Search/Select a captain</h4>
+    <table class="table">
+            {%for form in formlist%}
+                <form method="POST" class="post-form">
+                  {% csrf_token %}
+                  {%with challenge.id as challenge_id%}
+                  <input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
+            {%for field in form %}
+            <tr {%if form.tooltip%}style="tooltip-bottom" title="{{form.tooltip}}"{%endif%}><td style="border:none;vertical-align: middle;">
+
+              <b>{% cycle 'Search' 'Captains' %}</b></td>
+
+              <td style="border:none;">{{ field }}</td>
+                <td style="border:none; text-align: center;">
+                  <input class="btn btn-{% cycle 'primary' 'success' %} btn-block" type="submit" method="post"
+                  name="{% cycle 'search captain' 'invite captain' %}" value="{% cycle 'Find' 'Invite' %}">
+                </td>
+              </tr>
+              {%endfor%}
+            </form>
+            {%endfor%}
+
+            </table>
+              </div><!-- end well sm-->
+          </div><!-- end col-sm-6 -->
+    {%endif%}
+
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

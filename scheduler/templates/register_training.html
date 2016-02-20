@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Register for Training{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+
+  {%if user not in training.registered.editable_by %}
+  <div class="alert alert-danger" role="alert">
+    You have not have permission to register people this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+  {%else%}<!-- if it captain of one of the rosters-->
+
+  <div class="col-sm-12">
+  <h3 class="text-center">Register MVPs for {{training.name}}</h3>
+  <p class="text-center">Time, location (to make sure right one)</p>
+  <p class="text-center"><a class="btn btn-primary" href="{{training.get_view_url}}" role="button">See Training Details</a>
+  {%if user in training.editable_by %}
+  <a class="btn btn-success" href="{{training.get_edit_url}}" role="button">Edit Training Details</a>{%endif%}
+</p>
+
+{%if add_fail %}
+<div class="alert alert-danger text-center" role="alert">{{add_fail.sk8name}} NOT added to {{roster.name}}</div>
+{%elif skater_added %}
+<div class="alert alert-success text-center" role="alert">{{skater_added.sk8name}} added to {{roster.name}}</div>
+{%endif%}
+
+{% if remove_fail %}
+<div class="alert alert-danger text-center" role="alert">{{remove_fail.sk8name}} NOT removed from {{roster.name}}</div>
+{% elif skater_remove %}
+<div class="alert alert-success text-center" role="alert">{{skater_remove.sk8name}} removed from {{roster.name}}</div>
+{%endif%}
+
+
+      <div class="col-sm-6">
+      <div class="well well-lg">
+        <h3 class="text-center">Registered</h3>
+        <p class="text-center" {% if training.registered.spacea %}
+        >Available spaces: {{ training.registered.spacea }}
+      {%else%} style="color:red"> ROSTER FULL {%endif%}
+    </p>
+
+<div class="well well-sm">
+      <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
+        <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
+        {%if training.registered.skill %}{{ training.registered.skill_display }}
+        {%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
+        <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
+        <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>
+        <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{training.contact_icon}}"></i></span></td>
+        </tr></table>
+    </div>
+
+      <table class="table">
+              {% for form in register_forms%}
+                  <form method="POST" class="post-form">
+                        {% csrf_token %}
+              {%for field in form %}<tr {%if form.tooltip%}style="tooltip-bottom" title="{{form.tooltip}}"{%endif%}><td style="border:none;vertical-align: middle;">
+                <b>
+
+              {% cycle 'Search' 'Eligible' 'Registered' %}
+              </b></td>
+                <td style="border:none;">{{ field }}</td>
+                  <td style="border:none; text-align: center;">
+                    <input
+                    {%if not training.registered.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
+                    class="btn btn-{% cycle 'primary' 'success' 'danger' %} btn-block" type="submit" method="post"
+                    name="{% cycle 'search register' 'add register' 'remove register' %}" value="{% cycle 'Find' '+ Register' '- Register' %}"></td>
+                </tr>{%endfor%}
+              </form>
+              {%endfor%}
+              </table>
+
+
+</div><!--end well-->
+      </div><!--end col-sm-6, 12 and row still open-->
+
+
+  <div class="col-sm-6">
+    <div class="well well-lg">
+    <h3 class="text-center">Auditing</h3>
+    <p class="text-center" {% if training.auditing.spacea %}
+    >Available spaces: {{ training.auditing.spacea }}
+    {%else%} style="color:red"> ROSTER FULL {%endif%}
+    </p>
+
+<div class="well well-sm">
+  <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
+    <td class="text-left container-fluid tooltip-bottom" title="{{training.auditing.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
+      {%if training.auditing.skill %}{{ training.auditing.skill_display }}
+      {%else%}<i class="{{training.auditing.skill_icon}}"></i>{%endif%}
+    <td class="text-left container-fluid tooltip-bottom"
+{%if training.onskates%}
+    title="This is an On-Skates Training. Auditor will not skate, but must have an MVP pass to Audit."
+{%else%}
+ title="{{training.registered.passes_tooltip_title}}"
+ {%endif%}
+    style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="glyphicon icon-shoes"></i></span></td>
+    <td class="text-center container-fluid tooltip-bottom" title="{{training.auditing.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.auditing.intl_icon}}"></i></span></td>
+    <td class="text-left container-fluid tooltip-bottom" title="Auditing a training does not include Contact" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="glyphicon icon-nocontact"></i></span></td>
+    </tr></table>
+      </div>
+
+<table class="table">
+{% for form in audit_forms%}
+    <form method="POST" class="post-form">
+          {% csrf_token %}
+
+{%for field in form %}<tr {%if form.tooltip%}style="tooltip-bottom" title="{{form.tooltip}}"{%endif%}><td style="border:none;vertical-align: middle;">
+  <b>
+{% cycle 'Search' 'Eligible' 'Auditing' %}
+</b></td>
+  <td style="border:none;">{{ field }}</td>
+    <td style="border:none; text-align: center;">
+      <input
+      {%if not training.auditing.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
+      class="btn btn-{% cycle 'primary' 'success' 'danger' %} btn-block" type="submit" method="post"
+      name="{% cycle 'search audit' 'add audit' 'remove audit' %}" value="{% cycle 'Find' '+ Audit' '- Audit' %}"></td>
+  </tr>{%endfor%}
+</form>
+{%endfor%}
+</table>
+
+</div><!--end well-->
+</div><!--end col-sm-6-->
+
+{%endif%} <!--if audit_formlist-->
+
+    </div><!-- end row-->
+  </div><!-- end 12-->
+
+
+
+
+
+
+{% endblock %}

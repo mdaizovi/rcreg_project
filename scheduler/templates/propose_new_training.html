@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}New Training{% endblock %}</title>
+</head>
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Propose a New Training</h3>
+
+
+{%if upcoming_registrants %}
+
+
+<div class="col-sm-6">
+<form method="POST" class="post-form">
+      {% csrf_token %}
+
+      {%if trainings_coached and not training_made %}
+        <div class="list-group">
+        <div class="dropdown">
+        <button class="list-group-item active btn btn-default dropdown-toggle list-group-item" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true">
+        Clone a Past or Proposed Training
+        </button>
+        <ul class="dropdown-menu" style= "width: 100%; text-align: center;" aria-labelledby="dropdownMenu1">
+        {%for training in trainings_coached%}
+        {%with training.id as training_to_clone_id%}
+      <input type="hidden" name="cloned_training_id" value="{{ training_to_clone_id }}" />{%endwith%}
+          <li class="list-group-item">
+            <input type="submit" class="btn btn-primary btn-block" name="clone training" value="{{ training.name|truncatechars:40}}: {{training.con}}">
+        </li>
+        {%endfor%}
+          </ul></div></div>
+      {%endif%}
+
+{%if formlist %}
+      {%for form in formlist%}
+      {%if form.non_field_errors%}{{form.non_field_errors}}{%endif%}
+
+      {%for field in form %}
+      {%if field.errors%}{{field.errors}}{%endif%}
+      <div class="form-group">
+        {{ field.label }} {{ field }}
+      </div>
+      {%endfor%}
+{%endfor%}
+
+
+{% if training_made %}
+{%with training_made.id as training_id%}
+<input type="hidden" name="training_id" value="{{ training_id }}" />{%endwith%}
+<button type="submit" class="btn btn-primary margin-top-10" >
+Save Training</button>
+{%else%}
+<button type="submit" class="btn btn-primary margin-top-10" >Propose Training</button>
+{%endif%}
+</form>
+</div>
+{%endif%}<!--<end if form -->
+
+
+{%else%} <!--if not upcoming_registrants -->
+<div class="alert alert-danger" role="alert">In order to propose a training, you need have a Skater, MVP, or Off-Skates pass for an upcoming RollerCon, which you do not.<br>
+  A possible reason for this confusion could be if you purchased a pass with a different email from that which you used to log in.</p>
+  <p>Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is in error, or require further assistance.</div>
+{%endif%}
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

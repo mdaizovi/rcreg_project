@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Delete Training{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+    <h3>Delete {{training.name}}</h3>
+<div class="alert alert-danger" role="alert">
+{%if skater_remove%}{{skater_remove.sk8name}} is currently the only coach for {{training.name}}. <br>If you remove {{skater_remove.sk8name}}, it will delete the training.<br>{%endif%}
+
+    Are you sure you want to delete this training?
+      <br>This will remove all coaches, delete all registration lists, and delete all training details.
+
+{% url 'edit_training'  training.id as edit_url %}
+        <form method="POST" class="post-form" action="{{ edit_url }}">
+              {% csrf_token %}
+              <input type="hidden" name="activity_id" value="{{ training.id }}" />
+          <input class="btn btn-danger margin-top-15 center-block" type="submit" method="post" name="confirm delete" value="Delete Training">
+        </form>
+        </div>
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

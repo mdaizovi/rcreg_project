@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Edit Roster{% endblock %}</title>
+</head>
+
+
+  <div class="row center-block">
+  <div class="col-sm-12">
+
+{%if user in roster.editable_by%}
+<h3>Edit {{roster.name}}
+{%if challenge%}<a href="{{challenge.get_view_url}}"><button type="button" class="btn btn-primary">See Challenge</button></a>{%endif%}
+</h3>
+
+
+    {%if add_fail %}
+    <div class="alert alert-danger" role="alert">{{add_fail.sk8name}} NOT added to {{roster.name}}</div>
+    {%elif skater_added %}
+    <div class="alert alert-success" role="alert">{{skater_added.sk8name}} added to {{roster.name}}</div>
+    {%endif%}
+
+
+    {% if remove_fail %}
+    <div class="alert alert-danger" role="alert">{{remove_fail.sk8name}} NOT removed from {{roster.name}}</div>
+    {% elif skater_remove %}
+    <div class="alert alert-success" role="alert">{{skater_remove.sk8name}} removed from {{roster.name}}</div>
+    {%endif%}
+
+    <div class="well well-md">
+
+    <input type="hidden" name="roster_id" value="{{ roster.id }}" />
+
+
+    <div class="row center-block">
+        <div class="col-sm-6">
+          <h3 class="text-center">Add/Remove Skaters</h3>
+
+
+          <div class="well well-sm">
+          <div class="form-group" style="tooltip-bottom" title="{{skater_search_form.tooltip}}">
+                   <h4 class="margin-top-10">Search Eligible Skaters<br><small>Search will only return skaters whose skill and gender make them eligible for this team.</small></h4>
+                   <form method="POST" class="post-form">
+                         {% csrf_token %}
+         {{skater_search_form}}
+         <input type="hidden" name="roster_id" value="{{ roster.id }}"/>
+         <input class="btn btn-primary margin-top-15" type="submit" method="post" name="search skater" value="Search for Skater" >
+         </form>
+         </div>
+       </div>
+
+
+
+    <div class="well well-sm">
+ <div class="form-group">
+          <h4 class="margin-top-10">Add Eligible Skaters<br><small>The only visible skaters are those whose gender and skill are compatible with this team.
+        </small></h4>
+          <form method="POST" class="post-form">
+                {% csrf_token %}
+{{eligible_participants}}
+<input type="hidden" name="roster_id" value="{{ roster.id }}" />
+<input class="btn btn-success margin-top-15" type="submit" method="post" name="add skater" value="Add Skater to {{roster.name}}">
+</form>
+</div>
+</div>
+
+  <div class="well well-sm">
+ <div class="form-group">
+   <form method="POST" class="post-form">
+         {% csrf_token %}
+<h4 class="margin-top10">Remove Skaters</h4>
+{{participants}}
+<input type="hidden" name="roster_id" value="{{ roster.id }}" />
+<input class="btn btn-danger margin-top-15" type="submit" method="post" name="remove skater" value="Remove Skater from {{roster.name}}">
+</form>
+</div>
+</div>
+
+
+</div><!--end col-sm-6-->
+
+
+<div class="col-sm-6">
+    <h3 class="text-center">View Roster<br>
+    {% if roster.color%}<small> ({{roster.color}}) </small>{%endif%}</h3>
+
+<div class="well well-sm"  style="background-color:white;">
+
+  <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
+    <td class="text-left container-fluid tooltip-bottom" title="{{roster.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:
+    {%if roster.skill %} {{ roster.skill_display }}
+    {%else%} <i class="{{roster.skill_icon}}"></i>{%endif%}
+    <td class="text-right container-fluid tooltip-bottom" title="{{roster.gender_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Gender: <i class="{{roster.gender_icon}}"></i></span></td>
+    </tr></table>
+</div><!-- end well-->
+
+
+<div class="well well-sm"  style="background-color:white;">
+<table class="table table-striped">
+<tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>
+
+{%if roster.has_number_dupes%}<!-- written this way so roster will only be checked once-->
+{%for skater in roster.participants.all%}
+  <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
+  </td>
+<!-- written this way so roster will only be checked once-->
+  <td {%if skater.sk8number in roster.has_number_dupes %} class="text-right tooltip-bottom" style="color: red; font-weight: bold;"  title="DUPLICATE NUMBER" {%else%} class="text-right" {%endif%}>{{skater.sk8number}}</td></tr>
+  {%endfor%}{%else%}
+  {%for skater in roster.participants.all%}
+  <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
+  </td>
+  <td class="text-right">{{skater.sk8number}}</td></tr>{%endfor%}
+  {%endif%}<!--if roster has number dupes-->
+</table>
+</div><!-- end well-->
+
+</div><!-- end col-sm-6-->
+
+    </div><!-- end row-->
+    </div><!-- end well-->
+
+
+
+    {%else%}<!-- if user not in editable_by -->
+    <div class="alert alert-danger" role="alert">
+      You have not have permission to edit this roster. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+    {%endif%}<!-- if user not in editable_by -->
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+{% endblock %}

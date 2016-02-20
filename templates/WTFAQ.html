@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+{% load i18n %}
+
+
+  {% block content %}
+<html>
+    <head>
+        <title>{% block title%} WTF is going on? (FAQ){% endblock %}</title>
+    </head>
+<body>
+
+{%if user.is_a_boss %}
+
+    <h1>WTF is going on?</h1>
+      <p class="lead blog-description">This is where I try to predict the questions you'll have and tell you how to use this site</p>
+      <p>&nbsp;</p>
+
+      <div class="row">
+              <div class="col-sm-12 blog-main">
+<h3>FAQ</h3>
+<ul>
+<li><a href="#whocansee">Who can see this page?</a></li>
+<li><a href="#whatedit">What can I edit and what should I never touch?</a></li>
+<li><a href="#hownewattendee">How do I input new Registrants (Attendees)?</a></li>
+<li><a href="#howcontactyou">I'm still confused. How can I contact you?</a></li>
+</ul>
+<h3>&nbsp;</h3>
+
+
+<p><img class="img-responsive" style="padding: 10px 10px 10px 10px;" src="{% static "images/khaleesibloodridercrop.png" %}" width="462" height="330" align="right" /></p>
+<p><a id="whocansee"><b>Who can see this page?</b></a></p>
+<p>In order to see this page you need to be either the Khaleesi herself or one of her trusted <a href="http://m.westeros.org/index.php/Bloodrider">Bloodriders</a>. <small style="font-size: 11px;">Yes I know Missendei is not a bloodrider, but doesn't Bacon look lovely in her dress?</small>
+</p>
+<p>&nbsp;</p>
+
+<p><a id="whatedit"><b>What can I edit and what should I never touch?</b></a></p>
+<p>In the <a href="{%url 'admin:index' %}">Admin</a> section you'll see a lot of objects, like:
+  <ul><li>Groups</li><li>Users</li><li>Registrants</li><li>Etc...</li></ul>
+Please never touch <b>Groups</b> or <b>Site</b>.<br>
+You can edit <b>Users</b> but don't create any Users, they are automatically created when a new <b>Registrant</b> gets made.
+Basically every real human being gets a User, which can hold several Registrants. For example, if Michela Dai Zovi aka Dahmernatrix goes to RollerCon every year,
+every time you add a new Registrant (ie MVP 2015, Skater 2016, etc) with the same email address as one before (mdaizovi@gmail.com), it gets added to the User assosciated with that email address.
+It would be possible to manually connect registrants with different email addresses, like if someone changes their email address, but lets pretend it's impossible because it's messy.
+</p>
+<p>&nbsp;</p>
+
+<p><a id="hownewattendee"><b>How do I input new Registrants (Attendees)?</b></a></p>
+<p>You can input new attendees thorugh the Admin. On the top right of the screen, under the blue bar you should see two little grey buttons: <b>Import</b>, and <b>Add registrant</b>.<br>
+  Use <b>Add registrant</b> if you just want to manually add a person or two. Please note that You have to input email, first_name, and last_name. Sk8name and Sk8number are optional,
+  but if they do have a sk8number please enter it because that becomes their User display name forever. If they don't have one, like if they are a vendor, their first name will be the display name.<br>
+  If you need to add a lot of people, use <b>Import</b>. You don't need to massage the data-- as long as it always looks like it did in 2016 it will translate how BPT says it how I want it-- but you need to make
+  the excel sheet present the date <i>in the order</i> the computer expects it to be in.<br>
+  To get an example of what it wants, export some existing registrants, because the order/format is the same for import and export.<br>
+  Depending on what we decide re: ease of accidentally deleting everyone :-) the import button will either be by the import/add registrant buttons, or on the left from an Action dropdown, in the same place you can delete registrants.<br>
+  Either way, export the registrant and it'll show you the order it wants. I tried to make it mirror the BPT reports as closely as possible.<br>
+  <b>To format the BPT Excel sheet:</b><br>
+  <ol><li>Take your BPT report, delete the first few rows down to and including "Will Call Tickets" so row 1 is the columns names, row 2 starts the data.</li>
+    <li>Insert a column so that Column A is blank and Column B is the BPT Ticket ID.</li>
+    <li>Delete Columns C-M (order date/event start date/event end date/attendee l name/attendee f name/etc) but keep Shipping State.</li>
+      <li>Keep Shipping State and Shipping County, I use those for INTL. Delete Shipping Zip, Phone, Email, Card Number, Barcode, Box Office User, Order Notes.</li>
+      <li>Keep Admission Level. Delete Price, Admitted, Question 1, Question 6, Question 16.</li>
+      <li>So now your order should be:blank column, BPT Ticket ID, State, Country, Admission Level, Last Name, First Name, email, skate name, skate number,
+        skill, gender, league affiliation, insurance carrier, insurance number, age group, willing to volunteer, favorite part.</li>
+        <li>Last step: columns S,T,U, and V. Leave S blank, but then for T,U, and V use the example of the exported Registrants.
+          T is the primary key of the Con this person is registering for, probably 2 for 2016 or 3 for 2017. Just copy and paste the values for con, con__city and con__year (example, "Las Vegas", "2016").</li>
+          <li>Copy and paste the header (row 1) from the exported Registrant file, so that it's my header and not the BPT header on the excel sheet.</li>
+          <li>Save file as an XLS somewhere. (XLSX doesn't work right, I don't know why it's an option)</li>
+          <li>Go back to Admin on site, click <b>Import</b>, choose XLS (XLSX doesn't work right), and import. It'll show you what it's about to import before importing.</li>
+          <li>Either be stoked you just imported 1,000 records in a few minutes, or, if there's a problem, take a screenshot and call me.</li></ol>
+            <p>&nbsp;</p>
+
+<p><a id="howcontactyou"><b>I'm still confused. How can I contact you?</b></a></p>
+<p>You can either email<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}"> the RCregsite email </a> or <a href="mailto:mdaizovi@gmail.com"> my personal email address.</a>
+<br>My Google Voice number will probably never change and that's <a href="tel://1-262-477-9684"> 262-477-9684</a>.
+</p>
+<p>&nbsp;</p>
+
+
+  </div><!-- row-->
+    </div><!-- col-sm-8 blog-main -->
+
+{%else%}
+<div class="alert alert-danger" role="alert">
+  You have not have permission to see this page. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+{%endif%}
+
+{% endblock %}

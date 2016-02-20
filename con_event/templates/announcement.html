@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% extends 'layouts/announcement_base.html'%}
+{% load staticfiles %}
+  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+{% load i18n %}
+
+
+  {% block blogcontent %}
+
+
+
+        <div class="blog-post">
+          <h1 class="blog-post-title">{{blog.headline}}</h1>
+          <p class="blog-post-meta">{{blog.date}} by {{blog.user.first_name}}</p>
+          {% autoescape off %}{{ blog.post}}{% endautoescape %}
+        </div><!-- /.blog-post -->
+
+
+
+{%if previous_blog or next_blog%}
+        <nav>
+          <ul class="pager">
+            {%if previous_blog %}<li><a href="{{previous_blog.get_absolute_url}}">Previous</a></li>{%endif%}
+            {%if next_blog %}<li><a href="{{next_blog.get_absolute_url}}">Next</a></li>{%endif%}
+          </ul>
+        </nav>
+        {%endif%}
+
+
+
+{% endblock %}

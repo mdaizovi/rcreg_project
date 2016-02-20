@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}New{%if is_a_game%} Game{%else%} Challenge{%endif%}{% endblock %}</title>
+
+</head>
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Propose a New
+    {%if is_a_game%} Game<br>
+      <small>For official teams of existing leagues.
+        <br>To propose Challenge between unofficial, unaffiliated teams, <a href="{%url 'propose_new_challenge' %}">
+    {%else%}Challenge<br>
+      <small>For unaffiliated, non-chartered teams. Example: Vagine Regime, Team SeXY, Yellow Fever, etc.
+        <br>To propose a sanctioned/regulation Game between official teams, <a href="{%url 'propose_new_game' %}">
+          {%endif%}click here</a></small></h3>
+
+          {% if captain_conflict %}
+            <div class="alert alert-danger" role="alert">Selecting this criteria for
+              {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
+              would make you ineligible for this team and would leave it without a captain. Team not made.
+            </div>{%endif%}
+
+
+{%if upcoming_registrants and cansk8 %}
+{%if cancaptain %}
+{%if my_teams_as_cap%}<p class="margin-top-15"><b>Select from your existing teams or <a href="{%url 'propose_new_game_new_team' %}">Create new team</a></b></p>{%endif%}
+
+{%if formlist %}
+<div class="col-sm-6">
+<form method="POST" class="post-form">
+      {% csrf_token %}
+
+{%if is_a_game %}<input type="hidden" name="is_a_game" value="{{ is_a_game }}" />{%endif%}
+
+  {%for form in formlist %}
+{%for field in form %}
+{%if field.errors%}{{field.errors}}{%endif%}
+<div class="form-group">{{ field.label }} {{ field }}
+</div>
+{%endfor%} {%endfor%}
+<button type="submit" class="btn btn-primary margin-top-10" >Propose{%if is_a_game%} Game{%else%} Challenge{%endif%}</button>
+</form>
+</div>
+{%endif%}
+
+
+
+{%else%} <!-- if upcoming registrants but no cancaptain-->
+<div class="alert alert-danger" role="alert">You are already captaining the maximum number of challenges ({{MAX_CAPTAIN_LIMIT}}) for RollerCon: {{registrant.con}}.<br>
+Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+{%endif%}
+
+{%else%} <!--if not upcoming_registrants or not can sk8-->
+<div class="alert alert-danger" role="alert">In order to propose a Challenge, you need have a Skater or MVP pass for an upcoming RollerCon, which you do not.<br>
+  A possible reason for this confusion could be if you purchased a pass with a different email from that which you used to log in.</p>
+  <p>Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is in error, or require further assistance.</div>
+{%endif%}
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

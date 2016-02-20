@@ -1,0 +1,31 @@
+<p class=lead><b>MVP Class Registration Info</b><br>
+Most MVP On Skates classes are first-come, first-served (the only exception is INTL sessions). Session sign-up is super easy.</p>
+
+<ul><li>The MVP Class Signup desk is open from 8am to 8pm.</li>
+<li>You may sign up for one class at a time, <b>two hours</b> before the session begins.
+<br><b>UPDATE:</b> There were a lot of complaints in 2015 with inconsistent enforcement of the two-hour sign up time, so starting in 2016 this is enforced by this site; it is now impossible for volunteers to begin registering MVPs for classes more than two hours prior to the class start.</li>
+<li>Starting at 6pm, you may register for up to two classes that start after 8pm.</li></ul>
+
+<p class=lead><b>What To Do:</b></p>
+<ol> <li>Check the board to see which classes are registering.</li>
+<li>Get in the line for the class you want.</li>
+<li>Have your MVP badge and government-issued ID ready (off your neck!) to hand to the teller.</li>
+<li>The teller will <s>make sure you're eligible</s>, then sign you up.<br>
+<b>UPDATE:</b>The system will only allow registration of eligible skaters. If you are not eligible for a class, registration is impossible, but Auditing may be allowed. If you believe that you should be eligible for a class but they can't find you to register you, please log in, check <a href="/con/profile">My Profile</a>, and make sure it is accurate. </li>
+<li>2 hours later, go to the class. Bring your badge & ID.</li></ol>
+
+<p class=lead><b>More About Lines:</b></p>
+<ul style="margin-left: 20px;"><li>Each class has its own line; that teller registers students for ONE specific class.</li>
+<li>You can see what sessions they're registering on the white board at the Class Signup entrance. </li>
+<li>Make sure you get in the line for the class session you want.</li>
+<li>If you feel compelled to line up before your class is registering, you can wait in the chair line. Ask the RC Staff to help you get in the right chair line.</li>
+<li>Please don't bother lining up in the halls super early, you guys. The lines move fast.</li></ul>
+
+<p class=lead><b>INTL Classes</b><br>
+Skaters from outside the continental US have priority entry into classes with this label. INTL includes anyone with a government-issued photo ID from outside the continental US, and includes Hawaiian & Alaskan MVP Passholders. 
+INTL status is initially granted on the basis of the shipping address provided upon RC pass-purchase, but can also be granted on a  case-by-case basis by RC admins, if adequate ID is provided.<br>Acceptable forms of ID include:
+<ul style="margin-left: 20px;"><li>a valid, government-issued non-US ID, or</li>
+<li>an Alaska or Hawaii drivers license or ID, or</li>
+<li>an INTL MVP sticker on your helmet (which you can get at RollerCon Registration)</li></ul>
+
+Only INTL skaters can officially register for INTL classes, but non-INTL skaters can Audit. Because INTL classes often don't fill up, they have a much larger Audit capacity than non-INTL classes. If the session isn't full, the coach may agree to let Auditing skaters participate in the class, but this si solely up to the Coach's discretion. </p >

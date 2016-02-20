@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Edit Challenge{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+    {%if my_team%}
+
+    {% if my_acceptance %}
+    <h3>Edit {{challenge.name}}
+    <a href="{{challenge.get_view_url}}"><button type="button" class="btn btn-primary">See Challenge</button></a>
+  </h3>
+
+  {%if invited_captain%}
+  <div class="alert alert-success" role="alert">{{invited_captain.sk8name}} has been invited to this challenge.</div>
+  {%endif%}
+
+
+    {%if opponent_acceptance %}
+    <div class="alert alert-success" role="alert">{{opponent.captain.sk8name}} has accepted this challenge.</div>
+    {%else%}<!-- if you have accepted challenge but opponent has not-->
+
+    <div class="well well-md">
+    {%if opponent.captain or invited_captain%}
+        <div class="alert alert-danger" role="alert"> {%if invited_captain%}{{invited_captain.sk8name}}{%else%}{{opponent.captain.sk8name}}{%endif%} has not acccepted this challenge yet. If you do not have a confirmed opponent, your challenge may not be scheduled.</div>
+        {%if not challenge.is_a_game%}<p>Would you like to rescind invitation and challenge another captain?</p>{%endif%}
+    {%else%}<!-- if you don't have an opponent-->
+      <div class="alert alert-danger" role="alert">You don't have an opponent! If you do not have a confirmed opponent, your challenge may not be scheduled.</div>
+    {%endif%}<!-- if opponent-->
+    <p>Challenge another {%if challenge.is_a_game%}team{%else%}captain{%endif%}?</p>
+
+
+    {% if challenge.is_a_game and opponent_form_list %}
+    <div class="row" id="moreInfo">
+
+    <div class="col-sm-6">
+      <form method="POST" class="post-form">
+        {% csrf_token %}
+          <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+      {%with challenge.id as challenge_id%}<input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
+      <div class="well well-sm" style="min-height:170px;">
+          <h4>Sanctioned/Regulation Teams for {{challenge.con}}</h4>
+      <table class="table margin-top-25">
+            {%for field in game_teams_form %}
+              <tr><td style="border:none;vertical-align: middle;">
+                <b>Game Teams</b></td>
+                <td style="border:none;">{{ field }}</td>
+                  <td style="border:none; text-align: center;">
+                    <input class="btn btn-success btn-block" type="submit" method="post" name="challenge team" value="Oppose"></td></tr>
+                {%endfor%}
+              </form>
+              </table>
+            </div><!-- end well -->
+            </div><!-- end col-sm-6 -->
+
+
+      <div class="col-sm-6">
+      <form method="POST" class="post-form">
+        {% csrf_token %}
+
+    <div class="well well-sm" style="min-height:170px;">
+                <h4>Search/Select a captain</h4>
+          <table class="table">
+                  {%for form in opponent_form_list%}
+                      <form method="POST" class="post-form">
+                        {% csrf_token %}
+                        {%with challenge.id as challenge_id%}
+                        <input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
+                        <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+                  {%for field in form %}
+                  <tr {%if form.tooltip%}style="tooltip-bottom" title="{{form.tooltip}}"{%endif%}><td style="border:none;vertical-align: middle;">
+
+                    <b>{% cycle 'Search' 'Captains' %}</b></td>
+
+                    <td style="border:none;">{{ field }}</td>
+                      <td style="border:none; text-align: center;">
+                        <input class="btn btn-{% cycle 'primary' 'success' %} btn-block" type="submit" method="post"
+                        name="{% cycle 'search captain' 'invite captain' %}" value="{% cycle 'Find' 'Invite' %}">
+                      </td>
+                    </tr>
+                    {%endfor%}
+                  </form>
+                  {%endfor%}
+                  </table>
+                  </div><!-- end well -->
+                </div><!-- end col-sm-6 -->
+              </div>
+
+
+    {% elif not challenge.is_a_game and opponent_form_list %}<!--if opponent_form_list but not a game  -->
+
+
+
+
+
+
+
+
+
+    <form method="POST" class="post-form form-inline">
+          {% csrf_token %}
+          <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+          <input type="hidden" name="opponent_id" value="{{ opponent.id }}" />
+        {%for form in opponent_form_list%}
+    {%for field in form %}
+      <div class="form-group">
+    <label for="exampleInputName2" style="padding: 0px 10px 10px 10px; width: 170px;">{{field.label}}</label>
+        <div class="input-group" {%if form.tooltip%}style="width: 175px;tooltip-bottom" title="{{form.tooltip}}" {%else%}style="width: 175px;"{%endif%}>{{ field }}</div>
+  <input class="btn btn-{% cycle 'primary' 'success' %}" type="submit" method="post" name="{% cycle 'search captains' 'invite captain' %}" value="{% cycle 'Search Captains' 'Invite Captain' %}" >
+</div>
+  {%endfor%}{%endfor%}
+    </form>
+    {%endif%}<!-- opponent_form_list-->
+
+
+      </div><!-- end well-->
+    {%endif%}<!-- if opponent_acceptance-->
+
+
+  <div class="well well-md">
+    <div class="row center-block">
+      <h2 class="text-center">{{my_team.name}}</h2>
+        <hr>
+
+      <div class="col-sm-6">
+        {%if formlist %}
+        <h3 class="text-center">Edit Team Details</h3>
+
+        {%if challenge.is_a_game%}
+        <p class="margin-top-15"><i>Please note that since this is a Sanctioned/Regulation Game team, any changes made to the Name, Color, or Roster will
+          carry over to all other Games in which this team participates during this Con.
+        <br>Rules and Location Type can vary by Game and do not carry over.</i></p>
+          {%endif%}
+
+        {%if save_attempt %}
+        {% if coed_beginner %}
+            <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>
+          {% elif captain_conflict %}
+            <div class="alert alert-danger" role="alert">Making these changes to
+              {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
+              would make you ineligible for this team and would leave it without a captain. Changes not made.
+            </div>
+          {%elif save_success%}
+        <div class="alert alert-success" role="alert">{{my_team.name}} successfully saved!</div>
+        {%endif%}{%endif%}
+
+
+        <form method="POST" class="post-form margin-top-10">
+              {% csrf_token %}
+              {%for form in formlist%}
+        {%for field in form %}
+        {%if field.errors%}{{field.errors}}{%endif%}
+        <div class="form-group"><b>{{ field.label }}</b> {{ field }}
+        </div>
+        {%endfor%}{%endfor%}
+        <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+        <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+        <input class="btn btn-success margin-top-10" type="submit" method="post" name="save team" value="Save Team Details">
+        </form>
+        {%endif%} <!--if form-->
+      </div><!--end col-sm-6-->
+
+
+  <div class="col-sm-6"><h3 class="text-center">Edit Team Roster</h3>
+
+    {%if add_fail %}
+    <div class="alert alert-danger" role="alert">{{add_fail.sk8name}} NOT added to {{my_team.name}}</div>
+    {%elif skater_added %}
+    <div class="alert alert-success" role="alert">{{skater_added.sk8name}} added to {{my_team.name}}</div>
+    {%endif%}
+
+    {% if remove_fail %}
+    <div class="alert alert-danger" role="alert">{{remove_fail.sk8name}} NOT removed from {{my_team.name}}</div>
+    {% elif skater_remove %}
+    <div class="alert alert-success" role="alert">{{skater_remove.sk8name}} removed from {{my_team.name}}</div>
+    {%endif%}
+
+
+
+    <div class="well well-sm">
+    <div class="form-group" style="tooltip-bottom" title="{{skater_search_form.tooltip}}">
+             <h4>Search Eligible Skaters
+               {%if not challenge.is_a_game%}<br><small>Search will only return skaters whose skill and gender make them eligible for this team.</small>
+             {%endif%}</h4>
+             <form method="POST" class="post-form">
+                   {% csrf_token %}
+   {{skater_search_form}}
+   <input type="hidden" name="roster_id" value="{{ my_team.id }}"/>
+   <input class="btn btn-primary margin-top-10" type="submit" method="post" name="search skater" value="Search for Skater" >
+   </form>
+   </div>
+ </div>
+
+
+
+    <div class="well well-sm">
+ <div class="form-group">
+          <h4>Add Eligible Skaters
+            {%if not challenge.is_a_game%}<br><small>The only visible skaters are those whose gender and skill are compatible with this team.
+          </small>{%endif%}</h4>
+          <form method="POST" class="post-form">
+                {% csrf_token %}
+{{eligible_participants}}
+<input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+<input class="btn btn-success margin-top-10" type="submit" method="post" name="add skater" value="Add Skater to {{my_team.name}}">
+</form>
+</div>
+</div>
+
+    <div class="well well-sm">
+ <div class="form-group">
+   <form method="POST" class="post-form">
+         {% csrf_token %}
+<h4>Remove Skaters</h4>
+{{participants}}
+<input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+<input class="btn btn-danger margin-top-10" type="submit" method="post" name="remove skater" value="Remove Skater from {{my_team.name}}">
+</form>
+</div>
+</div>
+
+<div class="well well-sm">
+<div class="form-group">
+<form method="POST" class="post-form">
+     {% csrf_token %}
+<h4>Replace Yourself as Captain<br>
+<small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge.
+</small></h4>
+{{participants}}
+<input type="hidden" name="roster_id" value="{{ my_team.id }}" />
+<input class="btn btn-success margin-top-10" type="submit" method="post" name="replace captain" value="Select new captain for {{my_team.name}}">
+</form>
+</div>
+</div>
+
+
+
+
+
+</div><!--end col-sm-6-->
+
+
+    </div><!-- end row-->
+    </div><!-- end well-->
+
+    <div class="well well-md">
+      <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
+            {% csrf_token %}
+            <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
+            <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+          <input class="btn btn-danger margin-top-15 center-block btn-xs" type="submit" method="post" name="reject" value="Reject Challenge">
+          </form>
+
+
+
+    {%else%}<!-- if you have not accepted challenge-->
+      <div class="well well-sm">
+        <h3 class="text-center">You have been invited to captain a Challenge against {{opponent.name}}</h3>
+        <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
+              {% csrf_token %}
+              <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
+              <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+        <table class="table table-condensed" style="margin: 0px 0px 0px 0px;">
+      <tr>
+
+      <td class="text-center">
+        <input class="btn btn-success margin-top-15" type="submit" method="post" name="accept" value="Accept Challenge">
+         </td>
+
+        <td class="text-center">
+          <input class="btn btn-danger margin-top-15 " type="submit" method="post" name="reject" value="Reject Challenge">
+           </td>
+      </td>
+</tr></table></form>
+      {%endif%}<!-- if my_acceptance -->
+</div>
+
+
+
+
+    {%else%}<!-- if not my_team%-->
+    <div class="alert alert-danger" role="alert">
+      You have not have permission to edit this challenge. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+    {%endif%}<!-- if it captain of one of the rosters-->
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

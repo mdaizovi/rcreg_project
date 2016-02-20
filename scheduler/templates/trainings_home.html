@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %} Trainings{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Scheduled Trainings: {{con}} <small> Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
+
+  <div class="dropdown margin-top-10">
+    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      Other Cons
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+      {%for item in con_list%}
+      {% url 'trainings_home_con' item.pk as training_url %}
+      <li role="presentation"><a href="{{training_url}}">{{item}}</a></li>{%endfor%}
+    </ul>
+  </div>
+<hr>
+
+{%if date_dict %}
+
+    <div class="tabbable margin-top-20">
+      <ul class="nav nav-tabs">
+
+{%for key in date_dict.keys%}
+{% with forloop.counter|stringformat:"s" as day_number %}
+{% with '#tab'|add:day_number as tab_number %}
+        <li {%if forloop.first %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{ key|date:"D M d" }}</a></li>
+        {%endwith%}{%endwith%}
+        {%endfor%}
+      </ul>
+
+
+      <div class="tab-content margin-top-10">
+        {%for key, value in date_dict.iteritems%}
+        {% with forloop.counter|stringformat:"s" as day_number %}
+        {% with 'tab'|add:day_number as tab_number %}
+        <div class="tab-pane{%if forloop.first %} active{%endif%}" id="{{tab_number}}">
+          <div class="row">
+            <div class="col-md-12 pull-left">
+
+
+
+<div class="list-group">
+  <h3><a href="#" class="list-group-item active">
+    Scheduled Trainings: {{ key|date:"l M d Y" }}
+  </a></h3>
+
+
+{%for training in value %}
+  <a href="{{training.get_view_url}}" class="list-group-item">
+  <h4 class="list-group-item-heading">{{training.name}}<small> {{ training.display_coach_names }}</small></h4>
+  <p class="list-group-item-text">
+
+    <table class="table-condensed" style="margin: 0px 0px -15px 0px; width:100%;"><tr>
+    <td style="width:400px;"><br></td>
+<!-- <td style="width:400px;">Time<br>Location</td>-->
+
+    <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center; width:100px;">
+      <span class="glyphicon" aria-hidden="true"> Skill:<br>
+{%if training.registered.skill %}{{ training.registered.skill_display }}
+{%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
+    <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
+    <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>
+    <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{training.contact_icon}}"></i></span></td>
+    </tr></table></p>
+</a>{%endfor%}
+</div>
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+        </div><!-- end tab-pane -->
+        {%endwith%}{%endwith%}
+        {%endfor%}
+
+      </div><!-- end tab-content -->
+    </div><!-- end tabbable -->
+
+{%else%}<!-- if no datedict -->
+<div class="well margin-top-10"><p>No Scheduled Trainings for this Con.</p></div>
+{%endif%}
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}

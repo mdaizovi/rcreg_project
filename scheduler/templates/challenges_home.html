@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %} Challenges & Games{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Scheduled Challenges & Games: {{con}} <small>Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
+
+  <div class="dropdown margin-top-10">
+    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      Other Cons
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+      {%for item in con_list%}
+      {% url 'challenges_home_con' item.pk as challenge_url %}
+      <li role="presentation"><a href="{{challenge_url}}">{{item}}</a></li>{%endfor%}
+    </ul>
+  </div>
+<hr>
+
+{%if date_dict %}
+<div class="tabbable margin-top-20">
+
+  <ul class="nav nav-tabs">
+
+{%for key in date_dict.keys%}
+{% with forloop.counter|stringformat:"s" as day_number %}
+{% with '#tab'|add:day_number as tab_number %}
+    <li {%if forloop.first %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{ key|date:"D M d" }}</a></li>
+    {%endwith%}{%endwith%}
+    {%endfor%}
+  </ul>
+
+  <div class="tab-content margin-top-10">
+    {%for key, value in date_dict.iteritems%}
+    {% with forloop.counter|stringformat:"s" as day_number %}
+    {% with 'tab'|add:day_number as tab_number %}
+    <div class="tab-pane{%if forloop.first %} active{%endif%}" id="{{tab_number}}">
+      <div class="row">
+        <div class="col-md-12 pull-left">
+
+<div class="list-group">
+<h3><a href="#" class="list-group-item active">
+Scheduled Challenges: {{ key|date:"l M d Y" }}
+</a></h3>
+
+  {%for challenge in value %}
+  <a href="{{challenge.get_view_url}}" class="list-group-item">
+  <h4 class="list-group-item-heading">{{challenge.name}}<small> {{challenge.roster1.captain.sk8name}} & {{challenge.roster2.captain.sk8name}}</small></h4>
+  <p class="list-group-item-text">Time & Location & full/half length</p>
+</a>{%endfor%}
+
+</div>
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+        </div><!-- end tab-pane -->
+        {%endwith%}{%endwith%}
+        {%endfor%}
+
+      </div><!-- end tab-content -->
+    </div><!-- end tabbable -->
+
+{%else%}<!-- if no datedict -->
+<div class="well margin-top-10"><p>No Scheduled Challenges or Games for this Con.</p></div>
+{%endif%}
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}

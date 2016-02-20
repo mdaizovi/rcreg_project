@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Submit Challenge{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+{% if challenge %}<!-- ensuring it's actually a post -->
+{% if is_captain %}
+
+
+{% if submit_attempt %}
+<h3>Submit {{challenge.name}}</h3>
+{% if can_submit_chlg %}
+<div class="alert alert-success" role="alert">{{challenge.name}} successfully submitted on {{challenge.submitted_on}}!
+<br>Return to  <a href="{% url 'my_challenges'%}" class="alert-link">My Challenges</a>?
+{% else %}<div class="alert alert-danger" role="alert">The window to submit Challenges for {{challenge.con}} is currently closed. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.
+{% endif %}{% endif %}<!-- if submit_attempt, if  can_submit_chlg-->
+
+
+
+{% if unsubmit_attempt %}
+<h3>Un-Submit {{challenge.name}}</h3>
+{% if challenge.con.schedule_final %}
+<div class="alert alert-danger" role="alert">The schedule for {{challenge.con}} has already been finalized. Please contact the <a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>to Un-Submit your Challenge.
+{% else %}<!-- if not challenge.con.schedule_final -->
+
+  {% if challenge.submitted_on %}
+    <div class="alert alert-danger" role="alert">Are you sure you want to Un-Submit this challenge?<br>
+      The Challenge will remain in the system, and you can re-submit it later, but you will lose your place in line and start over.
+      <form method="POST" class="post-form">
+            {% csrf_token %}
+            <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+            <input class="btn btn-danger margin-top-15 center-block" type="submit" method="post" name="confirm unsubmit" value="Un-Submit Challenge">
+  </form>
+
+{% else %}<!-- if notchallenge.submitted_on -->
+<div class="alert alert-danger" role="alert">{{challenge.name}} Unsubmitted.<br>Return to  <a href="{% url 'my_challenges'%}" class="alert-link">My Challenges</a>?
+
+{%endif%}<!-- if challenge.submitted_on -->
+{%endif%}<!-- if challenge.con.schedule_final  -->
+{%endif%}<!-- if unsubmit_attempt -->
+
+</div><!-- various alert divs -->
+
+
+{%else%}<!-- if not is_captain-->
+<div class="alert alert-danger" role="alert">
+  You have not have permission to Submit this Challenge; only the captains can do that. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+{%endif%}<!-- if is_captain-->
+
+
+{%else%}<!-- if challenge, ensuring it's actually a post -->
+<div class="alert alert-danger" role="alert">Please Submit your Challenge properly, via <a href="{% url 'my_challenges'%}" class="alert-link">My Challenges</a>.</div>
+{%endif%}
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

@@ -1,0 +1,36 @@
+#from scheduler.models import Roster
+from con_event.models import SKILL_LEVEL_CHG,GENDER
+from .models import GAME_CAP, GAMETYPE, DEFAULT_SANCTIONED_DURATION
+
+def adjust_captaining_no(sender, instance,**kwargs):
+    '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
+    if instance.captain:
+        captain=instance.captain
+        instance.captain=None
+        instance.save()
+        captain.save()
+
+def challenge_defaults(sender, instance,**kwargs):
+    #make a pre save so i don't have to also add save and make infinite loop
+
+    def set_mc(roster):
+        print "rosteR",roster
+        print "SKILL_LEVEL_CHG[0][0]",SKILL_LEVEL_CHG[0][0]
+        roster.skill=SKILL_LEVEL_CHG[0][0]
+        print "A"
+        print "GENDER[-1][0]",GENDER[-1][0]
+        roster.gender=GENDER[-1][0]
+        print "B"
+        roster.intl=False
+        print "C"
+        roster.save()
+
+    if instance.is_a_game:
+        print "GAMETYPE[-1][0]",GAMETYPE[-1][0]
+        instance.gametype=GAMETYPE[-1][0]
+        instance.duration=DEFAULT_SANCTIONED_DURATION
+        for r in [instance.roster1,instance.roster2]:
+            if r:
+                set_mc(r)
+    else:
+        instance.duration=DEFAULT_CHALLENGE_DURATION

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}My Trainings{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>My Trainings</h3>
+
+    {%if not registrant_dict_list%}
+    <div class="alert alert-danger" role="alert">
+    You have not have any RollerCon passes on file. Please contact the site administrator if you believe this to be in error.</div>
+    {%else%}
+
+    <div class="tabbable">
+      <ul class="nav nav-tabs">
+
+{%for dict in registrant_dict_list%}
+
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with '#tab'|add:con_number as tab_number %}
+
+<li {%if dict.con == active %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{dict.con}}</a></li>
+
+{%endwith%}{%endwith%}
+{%endfor%}
+</ul>
+
+<div class="tab-content margin-top-10">
+{%for dict in registrant_dict_list%}
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with 'tab'|add:con_number as tab_number %}
+
+
+<div class="tab-pane {%if dict.con == active %}active{%endif%}" id="{{tab_number}}">
+
+
+  <div class="row">
+    <div class="col-md-12 pull-left">
+
+    <div class="panel panel-default">
+    <!-- <div class="panel-heading"><b>My Challenges</b></div>-->
+    <div class="panel-body">
+
+{%if dict.pending or dict.scheduled or dict.unconfirmed%}
+
+      <table class="table table-hover">
+      <tr><th>Training</th><th>Status</th><th class="text-left" colspan="2">Actions</th></tr>
+
+      {%if dict.scheduled%}
+      {%for item in dict.scheduled%}
+      <tr><td>{{item.name}}</td><td>
+        <span class="glyphicon tooltip-bottom" aria-hidden="true" title="Congratulations! This training has been accepted and is on the RollerCon schedule">
+          <i class="fa fa-check"></i> Scheduled</span></td>
+
+            {%if user in item.editable_by %}
+            <td><a class="btn btn-success btn-block" href="{{item.get_edit_url}}" role="button">Edit Training</a></td>
+            <td>
+            {%else%}
+            <td class="text-right" colspan="2">{%endif%}
+              <a class="btn btn-primary btn-block" href="{{item.get_view_url}}" role="button">See Training</a></td></tr>
+      {%endfor%}{%endif%}
+
+      {%if dict.unconfirmed%}
+      {%for item in dict.unconfirmed%}
+      <tr><td>{{item.name}}</td><td>
+          <span class="glyphicon tooltip-bottom" aria-hidden="true" title="Unconfirmed because the training has been submitted, but not accepted or added to the schedule by RollerCon admins">
+            <i class="fa fa-question"></i> Unconfirmed</span></td>
+            {%if user in item.editable_by %}
+            <td><a class="btn btn-success btn-block" href="{{item.get_edit_url}}" role="button">Edit Training</a></td>
+            <td>
+            {%else%}
+            <td class="text-right" colspan="2">{%endif%}
+              <a class="btn btn-primary btn-block" href="{{item.get_view_url}}" role="button">See Training</a></td></tr>
+      {%endfor%}{%endif%}
+
+
+      </table>
+
+      {%else%}<!-- if no challenges -->
+      <p>No trainings found.</p>
+      {%endif%}
+
+    </div>
+
+    </div>
+
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+        </div><!-- end tab-pane -->
+        {%endwith%}{%endwith%}
+        {%endfor%}<!-- dict in registrant_dict_list% -->
+
+      </div><!-- end tab-content -->
+    </div><!-- end tabbable -->
+{%endif%}<!-- if registrant_dict_list, ie if they have registered for at least one con -->
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}

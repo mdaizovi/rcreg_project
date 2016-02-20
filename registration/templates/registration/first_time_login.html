@@ -1,0 +1,19 @@
+{% extends "registration/registration_base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Reset password" %}{% endblock %}
+
+{% block content %}
+<p class="lead">
+  <b>What's My Username?</b></p>
+<p class="lead">
+      If you have purchased an Off Skates, Skater, or MVP pass for RollerCon this year, or if you coached a training in 2015, you already have a site user account associated with the email address you provided with pass purchase.</p>
+      <p class="lead">
+        <b>What's My Password?</b></p>
+      <p class="lead">
+      You have been assigned a random password, which you will need to <a href="{% url 'auth_password_reset' %}">reset</a> to log in to your site user account.
+    </p>
+{% endblock %}
+
+
+{# This is used by django.contrib.auth #}

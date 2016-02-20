@@ -1,0 +1,77 @@
+{% extends "registration/registration_base.html" %}
+{% load i18n %}
+{% load staticfiles %}
+  <link href="{% static "css/signin.css" %}" rel="stylesheet">
+
+{% block title %}{% trans "Log in" %}{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-4 center-block" style="float: none; margin: 0 auto;">
+      <p class="lead"><b>First Time Logging In?</b> <a href="{% url 'first_time_login' %}"><br>Get Your Username & Password</a></p>
+
+
+<!-- help with formatting: https://patrickchoo.wordpress.com/2015/01/12/very-simple-django-login-code/ -->
+  <form class="form-signin" action="{% url 'auth_login' %}" method="post" id="login-form">
+    {% csrf_token %}
+      <h2 class="form-signin-heading">{{ message }}</h2>
+
+<!--this took forever to get right: http://stackoverflow.com/questions/2035288/getting-a-list-of-errors-in-a-django-form -->
+<!--bc I didn't realize it a dict -->
+{%if form.errors%}
+{% for field, errors in form.errors.items %}
+    {% for error in errors %}
+    <p class="text-warning">{{error}}</p>
+    {%endfor%}{%endfor%}{%endif%}
+
+      {% for field in form %}
+
+      <input class="form-control" id="{{ field.id_for_label }}" maxlength="30" name="{{ field.html_name }}"
+          {%if field.label == 'Username'%} placeholder="Email Address"{%else%} placeholder="{{field.label}}"{%endif%}
+          {%if field.html_name  == 'password'%}type="password"
+          {%else%}type="text"
+          {%endif%}/>
+
+      {% endfor %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}" />{% endif %}
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      </form>
+
+
+
+
+<p class="margin-top-15">{% trans "Forgot your password?" %} <a href="{% url 'auth_password_reset' %}">{% trans "Reset it" %}</a>.</p>
+
+</div><!--end dov col-sm-6-->
+</div><!--end dov row-->
+{% endblock %}
+
+
+{% comment %}
+**registration/login.html**
+
+It's your responsibility to provide the login form in a template called
+registration/login.html by default. This template gets passed four
+template context variables:
+
+``form``
+    A Form object representing the login form. See the forms
+    documentation for more on Form objects.
+
+``next``
+    The URL to redirect to after successful login. This may contain a
+    query string, too.
+
+``site``
+    The current Site, according to the SITE_ID setting. If you don't
+    have the site framework installed, this will be set to an instance
+    of RequestSite, which derives the site name and domain from the
+    current HttpRequest.
+
+``site_name``
+    An alias for site.name. If you don't have the site framework
+    installed, this will be set to the value of
+    request.META['SERVER_NAME']. For more on sites, see The
+    "sites" framework.
+{% endcomment %}

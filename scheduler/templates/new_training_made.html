@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}New Training{% endblock %}</title>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>-->
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+    {% if add_fail %}
+    <h3>Error Making New Training</h3>
+    <div class="alert alert-danger" role="alert">Training not made. Please try again later and contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is in error, or require further assistance.</div>
+    {%else%}
+
+    {%if training_made%}
+    <h3>New Training Made!</h3>
+<div class="alert alert-success" role="alert">Training {{ training_made.name}} Sucessfully proposed! Please see <a href="{%url 'my_trainings'%}" class="alert-link"> My Trainings</a> to edit
+and update your <a href="{% url 'coach_profile' %}" class="alert-link">Coaching Profile</a> if you haven't already.
+</div>
+
+{%endif%}<!--<end if training made, -->
+  {%endif%}<!--<end if add_fail -->
+
+
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{% endblock %}

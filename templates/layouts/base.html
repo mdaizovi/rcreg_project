@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+{% load i18n %}
+<html lang="en">
+
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="A site to facilitate RollerCon roller derby convention activity sign up">
+  <meta name="author" content="Michela Dai Zovi">
+<!-- font awesome: http://fortawesome.github.io/Font-Awesome/icons/ -->
+  <link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet">
+
+  <!-- well this took for fucking ever to get right
+  just move downloaded fontello folder to static and name it fontello
+http://www.online-convert.com/result/89dea647789ba48e521968fcc1beac02
+http://fontello.com/
+http://stackoverflow.com/questions/17288478/how-do-i-use-fontello-fonts
+example syntax for use, if name is skate2
+<span class="glyphicon icon-skate2" aria-hidden="true">
+ -->
+    <link href="{% static "fontello/css/fontello.css" %}" rel="stylesheet">
+
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" type="text/css" media="screen" />
+
+  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+  <link href="{% static "css/ie10-viewport-bug-workaround.css" %}" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="{% static "css/dashboard.css" %}" rel="stylesheet">
+  <link href="{% static "css/jumbotron.css" %}" rel="stylesheet">
+  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+
+  <!-- Dahmer's custom CSS -->
+  <link rel="stylesheet" href="{% static "css/dahmer.css" %}" type="text/css" media="screen" />
+
+<link rel="shortcut icon" href="{% static "images/Rcskate48.ico" %}">
+  <title>RC C&T| {% block title %}{% endblock %}</title>
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+
+
+<body>
+
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <a class="navbar-brand" href="/"><img src="{% static "images/rclogoalpha.png" %}" style="max-width:35px; margin-top: -7px;"></a>
+    <a class="navbar-brand" href="{% url 'index' %}">Competition & Training</a>
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+
+      <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{% url 'all_announcements' %}">Announcements</a></li>
+            <li><a href="{% url 'challenges_home' %}">Competition</a></li>
+            <li><a href="{% url 'trainings_home' %}">Training</a></li>
+            <li><a href="/con/announcement/FAQ/">FAQ</a></li>
+            {% if user.is_a_boss %}<li><a href="{%url 'admin:index' %}">Admin</a></li>{%endif%}
+            <li>{% if user.is_authenticated %}<a href="{% url 'auth_logout' %}">Log Out</a>
+            {%else%}
+            <a href="{% url 'auth_login' %}">Log In</a>
+            {%endif%}</li>
+          </ul>
+
+      </div><!--/.navbar-collapse -->
+
+    </div>
+  </nav>
+
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+
+          {% if user.is_authenticated and user.registrants %}
+          <ul class="nav nav-sidebar">
+          <li class="active"><a><b>{{ user.first_name }} {{ user.last_name }}</b><span class="sr-only">(current)</span></a></li>
+           <!--<li><a href="{% url 'auth_password_change' %}">Change Password</a></li>-->
+          <li><a href="{% url 'registrant_profile' %}">My Profile</a></li>
+          <li><a href="{% url 'my_challenges' %}">My Challenges & Games
+              {%if ALL_CHALLENGE_NOTIFY %}
+              <span class="badge tooltip-bottom" style="background-color:red;"title="You have {{ALL_CHALLENGE_NOTIFY}} competitive issue{{ ALL_CHALLENGE_NOTIFY|pluralize }} to attend to">
+                {{ALL_CHALLENGE_NOTIFY }}</span>{%endif%}
+            </a></li>
+          <li><a href="{% url 'my_trainings' %}">My Trainings</a></li>
+        </ul>
+        {%endif%}
+
+        <ul class="nav nav-sidebar">
+          {% if user.is_a_boss %}
+          <li><a href="{%url 'admin:index' %}"><b>Admin</b></a></li>
+          {% if user.is_the_boss %}
+          <li><a href="">Scheduling</a></li>
+           <!-- <li><a href="">Analytics</a></li>-->
+          {%endif%}<!-- end if THE boss -->
+            <li><a href="{%url 'WTFAQ' %}">What the FAQ?!?</a></li>{%endif%}<!-- end if A boss -->
+        </ul>
+
+        <ul class="nav nav-sidebar">
+          <li><a href="{% url 'challenges_home' %}"><b>Competition Home</b></a></li>
+          <li><a href="{%url 'propose_new_challenge' %}">Propose a Challenge</a></li>
+          <li><a href="{%url 'propose_new_game' %}">Propose a Game</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="{% url 'trainings_home' %}"><b>Training Home</b></a></li>
+          <li><a href="{%url 'propose_new_training' %}">Propose a Training</a></li>
+        </ul>
+        <hr>
+      </div>
+
+      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+    {% block content %}
+    {% endblock %}
+    <hr>
+    <footer class="margin-top-25">
+      <p class="pull-left" style="position: absolute; bottom: 0;">
+        <span class="glyphicon icon-rclogo" style="font-size: 30px;"aria-hidden="true"> </span>
+         &copy; 2016 <a href="http://www.rollercon.com">RollerCon</a>, LLC.
+         &middot;
+         Site by <a href="http://www.smartderby.net"> Smart Derby
+        <span class="glyphicon icon-smartderby" style="font-size: 20px;"aria-hidden="true"> </span></a>
+         &middot;
+        <!-- <a href="#">Privacy</a> &middot; <a href="#">Terms</a> &middot; -->
+        <a href="mailto:{{ CUSTOM_SITE_ADMIN_EMAIL }}">Contact</a></p>
+    </footer>
+
+
+  </div>  <!-- end div id='content'-->
+        </div>
+
+      </div>
+    </div>
+
+  <!-- Bootstrap core JavaScript
+  ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="{% static "js/vendor/jquery.min.js" %}" ><\/script>')</script>
+  <script src="{% static "js/bootstrap.min.js" %}" ></script>
+  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+  <script src="{% static "js/ie10-viewport-bug-workaround.js" %}" ></script>
+  <!-- this is developmeny jquery. remember to change to compressed later. -->
+  <!-- <script type="text/javascript"  src="{% static "js/jquery-1.12.0.min.js" %}"></script>-->
+
+
+
+</body>
+
+</html>

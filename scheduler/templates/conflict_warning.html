@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Conflict Warning{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+
+
+    <h3>Conflict Warning</h3>
+    <div class="alert alert-danger" role="alert">Are you sure you want to save these changes to
+{% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}?
+
+
+{%if registrant%}
+      <br>This will make you ineligible for {%for roster in potential_conflicts %}{%if not forloop.first %} and{%endif%} <b>{{roster.name}}</b>{%endfor%} and remove you from the roster.</div>
+{%else%}
+      <br>This will make some skaters ineligible to skate and remove them from the roster.</p></div>
+      <div class="well well-sm">
+        <p style="text-align:center;"><b>Endangered:</b>{%for skater in potential_conflicts %}<br>{{skater.sk8name}}{%endfor%}</p></div>
+{%endif%}
+        <form method="POST" class="post-form">
+              {% csrf_token %}
+              {%for form in hidden_forms %}
+              {%for field in form%}
+
+              <input type="hidden" name="{{field.name}}" value="{{field.value}}" /> {%endfor%}{%endfor%}
+
+              {%if registrant%}
+              <input type="hidden" name="registrant_id" value="{{registrant.id}}" />
+              {%else%}
+              <input type="hidden" name="roster_id" value="{{roster.id}}" />
+              {%endif%}
+{%if activity_id %}
+<input type="hidden" name="activity_id" value="{{activity_id}}" />
+{%endif%}
+          <input class="btn btn-success margin-top-15 center-block" type="submit" method="post" name="confirm save" value="Save Changes">
+        </form>
+{%if registrant%}
+        <p class="text-center margin-top-15"><a href="{% url 'registrant_profile' %}"><button type="button" class="btn btn-primary">Go Back</button></a></p>
+{%else%}
+{% url 'edit_challenge' activity_id as edit_challenge_url %}
+<p class="text-center margin-top-15"><a href="{{ edit_challenge_url }}"><button type="button" class="btn btn-primary">Go Back</button></a></p>
+{%endif%}
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+{% endblock %}

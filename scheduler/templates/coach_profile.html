@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Profile{% endblock %}</title>
+<!-- necessary for date time widget. Doesn't seem to work if moved-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>My Coach Profile<small><i><a href="{% url 'registrant_profile' %}"> Back to Registration Profile</a></i></small></h3>
+    <h4><a href="{{coach.get_absolute_url}}">My Public Coach Page</a></h4>
+
+    {%if not user.is_a_coach %}
+    <div class="alert alert-danger" role="alert">
+    You have not submitted any Trainings. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+    {%else%}
+
+
+    {%if save_attempt%}
+    {%if save_success%}
+    <div class="alert alert-success" role="alert">Profile Successfully Updated!
+    {%else%}<div class="alert alert-danger" role="alert">Update Failed. Please try again later and contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if this keeps happening.
+    {%endif%}
+    </div>
+    {%endif%}
+
+
+          <div class="row">
+            <div class="col-md-6 pull-left">
+
+
+  <form method="POST" class="post-form">
+        {% csrf_token %}
+{%for field in form %}
+    <div class="form-group">
+            {{ field.label }} {{ field }}
+    </div>
+{%endfor%}
+    <button type="submit" class="btn btn-success margin-top-10">Save</button>
+</form>
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+
+
+{%endif%}<!-- if user.is_a_coach -->
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}

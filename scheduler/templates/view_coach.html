@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}View Coach{% endblock %}</title>
+<!-- Custom style for helper viewport this template -->
+<link href="{% static "css/tooltip-viewport.css"%}" rel="stylesheet">
+</head>
+
+<div class="row" id="moreInfo">
+
+<div class="col-sm-12">
+
+  <div class="panel panel-default margin-top-15">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><h2 class="text-center">{{coach.user.first_name}}
+      {%if coach.can_email%}
+      {% url 'email_coach'  coach.id as email_url %}
+      <br><small><a href="{{email_url}}">email coach</a></small></h2>{%endif%}
+    </div>
+    <div class="panel-body"><h2 style="text-align: justify;">
+      <small>{{coach.description}}</small></h2>
+    </div>
+
+    <table class="table table-striped">
+    <tr><th>Current and Past Trainings</th><th class="text-right">Con</th></tr>
+      {%for training in coach.training_set.all%}
+      <tr><td><a href="{{training.get_view_url}}">{{ training.name }}</a></td><td class="text-right">{{training.con}}</td></tr>{%endfor%}
+    </table>
+  </div>
+</div><!-- end col-sm-6-->
+
+
+
+</div><!-- end row-->
+
+{% endblock %}

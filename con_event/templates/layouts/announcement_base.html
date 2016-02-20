@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+{% load i18n %}
+
+
+  {% block content %}
+<html>
+    <head>
+
+        <title>{% block title%}Announcement{% endblock %}</title>
+    </head>
+<body>
+
+      <p class="lead blog-description">Announcements: RollerCon Challenge & Registration </p>
+
+      <div class="row">
+              <div class="col-sm-8 blog-main">
+
+
+  {% block blogcontent %}
+{% endblock %}
+
+</div><!-- /.blog-main -->
+
+<div class="col-xs-3 col-sm-4 blog-sidebar">
+  <div class="sidebar-module sidebar-module-inset">
+    <h4>About</h4>
+    <p>These announcements focus on Challenges & Trainings registration.
+      <br>Please go to the <a href="http://www.rollercon.com">RollerCon main site</a> for general info.</p>
+  </div>
+      </div><!-- /.blog-sidebar -->
+
+</div><!-- /.row -->
+
+
+{% endblock %}
