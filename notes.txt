@@ -51,7 +51,7 @@ NONONONONO this does not copy everything for some reason
 
 mysqldump -hmysql.server  --user rcregsite --password=mice4rice --databases ‘rcregsite$default' < /home/rcregsite/rcreg2016copy.sql
 
-
+git clone https://github.com/mdaizovi/rcreg_project.git
 
 
 Haven’t read all about registration-redux, here’s the docs:

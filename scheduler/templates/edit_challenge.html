@@ -35,7 +35,7 @@
     {%else%}<!-- if you don't have an opponent-->
       <div class="alert alert-danger" role="alert">You don't have an opponent! If you do not have a confirmed opponent, your challenge may not be scheduled.</div>
     {%endif%}<!-- if opponent-->
-    <p>Challenge another {%if challenge.is_a_game%}team{%else%}captain{%endif%}?</p>
+    <p style="text-align:center;"><b>Challenge another {%if challenge.is_a_game%}team{%else%}captain{%endif%}?</b></p>
 
 
     {% if challenge.is_a_game and opponent_form_list %}
@@ -48,7 +48,8 @@
       {%with challenge.id as challenge_id%}<input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
       <div class="well well-sm" style="min-height:170px;">
           <h4>Sanctioned/Regulation Teams for {{challenge.con}}</h4>
-      <table class="table margin-top-25">
+          {%if game_teams_form %}
+          <table class="table margin-top-25">
             {%for field in game_teams_form %}
               <tr><td style="border:none;vertical-align: middle;">
                 <b>Game Teams</b></td>
@@ -58,6 +59,9 @@
                 {%endfor%}
               </form>
               </table>
+          {%else%}
+          <p class="margin-top-25" style="text-align:center;"><i>No other Game teams yet, just yours!<br>Please check back later.</i></p>
+          {%endif%}
             </div><!-- end well -->
             </div><!-- end col-sm-6 -->
 
@@ -96,13 +100,6 @@
 
 
     {% elif not challenge.is_a_game and opponent_form_list %}<!--if opponent_form_list but not a game  -->
-
-
-
-
-
-
-
 
 
     <form method="POST" class="post-form form-inline">

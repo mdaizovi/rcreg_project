@@ -31,7 +31,6 @@ def challenge_defaults(sender, instance,**kwargs):
     from con_event.models import GENDER,SKILL_LEVEL_CHG
     from scheduler.models import DEFAULT_CHALLENGE_DURATION,DEFAULT_SANCTIONED_DURATION,GAMETYPE,GAME_CAP
     #make a pre save so i don't have to also add save and make infinite loop
-    print "running challenge_defaults"
 
     def set_mc(roster):
         """these are the default matching criteria I want forgames"""
@@ -41,7 +40,6 @@ def challenge_defaults(sender, instance,**kwargs):
         roster.save()
 
     if instance.is_a_game:
-        print "CD is a game"#I think maybr this doesn't run the first time, becasue isn't a game yet.
         instance.gametype=GAMETYPE[-1][0]
         if not instance.duration:
             instance.duration=DEFAULT_SANCTIONED_DURATION

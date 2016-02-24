@@ -567,7 +567,7 @@ class Blog(models.Model):
     headline = models.CharField(max_length=200,unique=True)
     slugname=models.CharField(max_length=100,null=True, blank=True)
     date=models.DateField(default=timezone.now)
-    user=models.ForeignKey(User,limit_choices_to={'is_staff': True})
+    user=models.ForeignKey(User,limit_choices_to={'is_staff': True},null=True, blank=True, on_delete=models.SET_NULL)
     post= models.TextField()
 
     def __unicode__(self):

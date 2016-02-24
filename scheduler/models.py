@@ -64,7 +64,7 @@ class Roster(Matching_Criteria):
 
     #only for challenges
     name=models.CharField(max_length=200,null=True, blank=True)
-    captain=models.ForeignKey(Registrant,related_name="captain",null=True, blank=True)#maybe I should allow this to be deleted if registrant is deleted?
+    captain=models.ForeignKey(Registrant,related_name="captain",null=True, blank=True,on_delete=models.SET_NULL)#maybe I should allow this to be deleted if registrant is deleted?
     color=models.CharField(max_length=100,null=True, blank=True, choices=COLORS)
     can_email=models.BooleanField(default=True)
 
@@ -112,21 +112,34 @@ class Roster(Matching_Criteria):
         problem_criteria=[]
         potential_conflicts=[]
         captain_conflict=False
-        for skater in list(self.participants.all()):
-            if skater.gender not in self.genders_allowed():
+        print "test"
+        try:
+            for skater in list(self.participants.all()):
+                if skater.gender not in self.genders_allowed():
+                    if "gender" not in problem_criteria:
+                        problem_criteria.append("gender")
+                    if skater not in potential_conflicts:
+                        potential_conflicts.append(skater)
+                    if self.captain and skater==self.captain:
+                        captain_conflict=True
+                if skater.skill not in self.skills_allowed():
+                    if "skill" not in problem_criteria:
+                        problem_criteria.append("skill")
+                    if skater not in potential_conflicts:
+                        potential_conflicts.append(skater)
+                    if self.captain and skater==self.captain:
+                        captain_conflict=True
+        except:#if no such thing as self.participants.all()
+            if self.captain and self.captain.gender not in self.genders_allowed():
                 if "gender" not in problem_criteria:
                     problem_criteria.append("gender")
-                if skater not in potential_conflicts:
-                    potential_conflicts.append(skater)
-                if self.captain and skater==self.captain:
-                    captain_conflict=True
-            if skater.skill not in self.skills_allowed():
+                if self.captain not in potential_conflicts:
+                    potential_conflicts.append(self.captain)
+            if self.captain and self.captain.skill not in self.skills_allowed():
                 if "skill" not in problem_criteria:
                     problem_criteria.append("skill")
-                if skater not in potential_conflicts:
-                    potential_conflicts.append(skater)
-                if self.captain and skater==self.captain:
-                    captain_conflict=True
+                if self.captain not in potential_conflicts:
+                    potential_conflicts.append(self.captain)
 
         if len(potential_conflicts)>0:
             return problem_criteria,potential_conflicts,captain_conflict
@@ -316,7 +329,6 @@ class Roster(Matching_Criteria):
 
     def get_edit_url(self):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
-
 
     class Meta:
         ordering=("-con",'name','captain')

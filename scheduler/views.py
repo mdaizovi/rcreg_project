@@ -848,6 +848,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
     problem_criteria=None
     opposing_roster=None
     challenged_captain=None
+    IntegrityErrorMSG=None
 
     upcoming_registrants=user.upcoming_registrants()
     if upcoming_registrants:
@@ -859,6 +860,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 cancaptain=True
 
         if request.method == "POST":
+
             challenged_captain=None
             my_team=None
             if 'is_a_game' in request.POST:
@@ -868,6 +870,13 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 challenge=Challenge.objects.get(pk=request.POST['challenge_id'])
             else:
                 challenge=False
+
+            if 'con' in request.POST:#somehow I'm gonna find out the fucking con
+                con=Con.objects.get(pk=request.POST['con'])
+            elif challenge:
+                con=challenge.con
+            elif challenged_captain:
+                con=challenged_captain.con
 
             if 'eligible_registrant' in request.POST:#if selected a captain to challenge
                 eligibleregistrantform=EligibleRegistrantForm(request.POST, my_arg=None)
@@ -910,9 +919,13 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 if registrant and cancaptain:#so this should be true if is_a_game, bc of top of view
                     if roster_form:
                         if roster_form.is_valid():
-                            my_team=roster_form.save()
+                            my_team=roster_form.save(commit=False)
+                            my_team.con=con
                             my_team.captain=registrant
-                            my_team.save()#to put captain on participants
+                            try:
+                                my_team.save()#to put captain on participants
+                            except:
+                                existing_team=Roster.objects.get(name=my_team.name, con=registrant.con,captain=registrant)
                             problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
                             if captain_conflict:
                                 my_team.delete()
@@ -924,7 +937,17 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                         challenge=challenge_form.save(commit=False)
                         challenge.roster1=my_team
                         my_team.con=challenge.con
-                        my_team.save()
+                        try:
+                            my_team.save()
+                        except:
+                            existing_team=Roster.objects.get(name=my_team.name, con=registrant.con,captain=registrant)
+                            if challenge.roster1==my_team:
+                                my_team=existing_team
+                                challenge.roster1=my_team
+                            elif challenge.roster2==my_team:
+                                my_team=existing_team
+                                challenge.roster2=my_team
+
                         formlist=[]
                         if is_a_game:
                             coed_beginner=False
@@ -938,7 +961,11 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
             if not challenged_captain or not opposing_roster:#I don't need to see these forms if they just invited someone
 
                 if is_a_game:
-                    existing_games=Challenge.objects.filter(con=challenge.con,is_a_game=True)
+                    if challenge:#I'm not sure how this is running w/out kniwing the challenge,i got errors about challenge being a bool,
+                    #so trying to supply con otherwise just in case.
+                        existing_games=Challenge.objects.filter(con=challenge.con,is_a_game=True)
+                    else:
+                        existing_games=Challenge.objects.filter(con=con,is_a_game=True)
                     game_teams=[]
                     for game in existing_games:
                         if game.roster1 and game.roster1.captain and game.roster1.captain not in upcoming_registrants and game.roster1.name and game.roster1 not in game_teams:
@@ -971,7 +998,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 formlist=[search_form,eligibleregistrantform]
 
             if challenge and (my_team or opposing_roster) and not captain_conflict:
-                return render_to_response('new_challenge_made.html', {'opposing_roster':opposing_roster,'game_teams_form':game_teams_form,'is_a_game':is_a_game,'coed_beginner':coed_beginner,'my_team':my_team,'formlist':formlist,'challenged_captain':challenged_captain,'challenge':challenge},context_instance=RequestContext(request))
+                return render_to_response('new_challenge_made.html', {'IntegrityErrorMSG':IntegrityErrorMSG,'opposing_roster':opposing_roster,'game_teams_form':game_teams_form,'is_a_game':is_a_game,'coed_beginner':coed_beginner,'my_team':my_team,'formlist':formlist,'challenged_captain':challenged_captain,'challenge':challenge},context_instance=RequestContext(request))
 
         #this is where not request.post starts
         if not challenged_captain or not opposing_roster:#I don't need to see these forms if they just invited someone
@@ -983,9 +1010,9 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                     my_teams_as_cap=[]
                     potential_games=list(Challenge.objects.filter(is_a_game=True).filter(Q(roster1__captain__in=upcoming_registrants)|Q(roster2__captain__in=upcoming_registrants)))
                     for g in potential_games:
-                        if g.roster1.captain in upcoming_registrants and g.roster1 not in my_teams_as_cap:
+                        if g.roster1 and g.roster1.captain and (g.roster1.captain in upcoming_registrants) and (g.roster1 not in my_teams_as_cap):
                             my_teams_as_cap.append(g.roster1)
-                        elif g.roster2.captain in upcoming_registrants and g.roster2 not in my_teams_as_cap:
+                        elif g.roster2 and g.roster2.captain and (g.roster2.captain in upcoming_registrants) and (g.roster2 not in my_teams_as_cap):
                             my_teams_as_cap.append(g.roster2)
 
                     if len(my_teams_as_cap)>0 and not create_new_team:
@@ -997,7 +1024,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 elif cancaptain:
                     formlist=[ChallengeRosterModelForm(user=user),ChallengeModelForm(user=user)]
 
-    return render_to_response('propose_new_challenge.html', {'problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'registrant':registrant,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
+    return render_to_response('propose_new_challenge.html', {'IntegrityErrorMSG:IntegrityErrorMSG''problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'registrant':registrant,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
 
 @login_required
 def challenge_submit(request):

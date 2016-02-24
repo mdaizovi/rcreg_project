@@ -14,6 +14,10 @@
     <h3>Scheduled Challenges & Games: {{con}} <small>Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
 
   <div class="dropdown margin-top-10">
+
+    <table class="table condensed" style="margin: 0px 0px 0px 0px; width:50%;">
+    <tr><td style="border:none; text-align: left;">
+    <div class="dropdown">
     <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
       Other Cons
       <span class="caret"></span>
@@ -23,7 +27,20 @@
       {% url 'challenges_home_con' item.pk as challenge_url %}
       <li role="presentation"><a href="{{challenge_url}}">{{item}}</a></li>{%endfor%}
     </ul>
-  </div>
+  </div></td>
+  <td style="border:none; text-align: center;">
+    <div class="btn-group">
+  <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+  {%if con.schedule_final%} disabled>Proposal Period Closed
+  {%else%}>Propose a... {%endif%}
+  <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu">
+    <li><a href="{%url 'propose_new_challenge' %}">Challenge</a></li>
+    <li><a href="{%url 'propose_new_game' %}">Game</a></li>
+  </ul>
+</div>
+      </td></tr></table>
 <hr>
 
 {%if date_dict %}
@@ -75,7 +92,7 @@ Scheduled Challenges: {{ key|date:"l M d Y" }}
 
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
-
+</div>
 
 
 {% endblock %}

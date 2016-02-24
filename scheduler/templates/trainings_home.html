@@ -13,7 +13,9 @@
   <div class="col-sm-12">
     <h3>Scheduled Trainings: {{con}} <small> Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
 
-  <div class="dropdown margin-top-10">
+  <table class="table condensed" style="margin: 0px 0px 0px 0px; width:50%;">
+  <tr><td style="border:none; text-align: left;">
+  <div class="dropdown">
     <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
       Other Cons
       <span class="caret"></span>
@@ -22,8 +24,13 @@
       {%for item in con_list%}
       {% url 'trainings_home_con' item.pk as training_url %}
       <li role="presentation"><a href="{{training_url}}">{{item}}</a></li>{%endfor%}
-    </ul>
-  </div>
+  </div></td>
+  <td style="border:none; text-align: center;">
+    <a class="btn btn-success"
+        {%if con.schedule_final%} href="#" role="button" disabled>Proposal Period Closed</a>
+        {%else%} href="{%url 'propose_new_training' %}" role="button">Propose a Training</a>{%endif%}
+      </td>
+</tr></table>
 <hr>
 
 {%if date_dict %}
@@ -92,7 +99,6 @@
 
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
-
 
 
 {% endblock %}
