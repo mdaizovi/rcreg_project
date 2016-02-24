@@ -68,6 +68,8 @@ class Roster(Matching_Criteria):
     color=models.CharField(max_length=100,null=True, blank=True, choices=COLORS)
     can_email=models.BooleanField(default=True)
 
+    internal_notes= models.TextField(null=True,blank=True)
+
     def __unicode__(self):
         if self.name:
             return "%s %s" %(self.name, self.con)
@@ -82,6 +84,10 @@ class Roster(Matching_Criteria):
             if att_unclean:
                 cleaned_att=ascii_only_no_punct(att_unclean)
                 setattr(self, item, cleaned_att)
+
+        if self.internal_notes:
+            cleaned_notes=ascii_only(self.internal_notes)
+            self.internal_notes=cleaned_notes
 
         if self.captain:
             try:#so it won't freal out the first time, before first save
@@ -329,6 +335,8 @@ class Activity(models.Model):
     #because durationfileds are buggy in 1.8
     duration=models.CharField(max_length=30,choices=DURATION,null=True, blank=True)
 
+    internal_notes= models.TextField(null=True,blank=True)
+
     def editable_by(self):
         '''returns list of Users that can edit Activity
         keep in mind being captain of EITHER team makes this True
@@ -386,6 +394,10 @@ class Challenge(Activity):
        return "%s: %s" %(self.name, self.con)
 
     def save(self, *args, **kwargs):
+
+        if self.internal_notes:
+            cleaned_notes=ascii_only(self.internal_notes)
+            self.internal_notes=cleaned_notes
 
         if self.roster1:
             if not self.roster1.cap:
@@ -599,6 +611,10 @@ class Training(Activity):
                 cleaned_att=ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
+        if self.internal_notes:
+            cleaned_notes=ascii_only(self.internal_notes)
+            self.internal_notes=cleaned_notes
+
         if not self.duration:
             if self.onsk8s:
                 self.duration=DEFAULT_ONSK8S_DURATION
@@ -615,11 +631,26 @@ class Coach(models.Model):
     description = models.TextField(null=True, blank=True)
     can_email=models.BooleanField(default=True)
 
+    internal_notes= models.TextField(null=True,blank=True)
+
     def __unicode__(self):
         try:
             return "Coach %s" % (self.user.first_name)
         except:
-            return self.id 
+            return self.id
+
+    def save(self, *args, **kwargs):
+        '''custom functions: removes non-ascii chars'''
+        string_fields=['description','internal_notes']
+        for item in string_fields:
+            att_unclean=getattr(self, item)
+            if att_unclean:
+                #NOTEE: I'm allowing punctuation in notes and description, hope this doesn't bite me
+                #usualy I strip all punctuation
+                cleaned_att=ascii_only(att_unclean)
+                setattr(self, item, cleaned_att)
+
+        super(Coach, self).save()
 
     def get_absolute_url(self):#https://docs.djangoproject.com/en/1.7/ref/urlresolvers/#django.core.urlresolvers.reverse
         from scheduler.views import view_coach

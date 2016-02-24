@@ -11,6 +11,14 @@
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <meta name="description" content="A site to facilitate RollerCon roller derby convention activity sign up">
   <meta name="author" content="Michela Dai Zovi">
+
+  <!-- The following 5 og tags are to tell FaceBook what to display -->
+  <meta property="og:url"                content="http://www.rollertron.com" />
+  <meta property="og:type"               content="website" />
+  <meta property="og:title"              content="RollerTron" />
+  <meta property="og:description"        content="Streamlined RollerCon Challenge, Game, and Training management" />
+  <meta property="og:image"              content="http://www.rollertron.com/static/images/rclogoalpha.png" />
+
 <!-- font awesome: http://fortawesome.github.io/Font-Awesome/icons/ -->
   <link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet">
 
@@ -39,7 +47,7 @@ example syntax for use, if name is skate2
   <link rel="stylesheet" href="{% static "css/dahmer.css" %}" type="text/css" media="screen" />
 
 <link rel="shortcut icon" href="{% static "images/Rcskate48.ico" %}">
-  <title>RC C&T| {% block title %}{% endblock %}</title>
+  <title>RollerTron | {% block title %}{% endblock %}</title>
 
   <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
   <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -55,7 +63,7 @@ example syntax for use, if name is skate2
 
   <nav class="navbar navbar-inverse navbar-fixed-top">
     <a class="navbar-brand" href="/"><img src="{% static "images/rclogoalpha.png" %}" style="max-width:35px; margin-top: -7px;"></a>
-    <a class="navbar-brand" href="{% url 'index' %}">Competition & Training</a>
+    <a class="navbar-brand" href="{% url 'index' %}">RollerTron</a>
     <div class="container">
       <div class="navbar-header">
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">

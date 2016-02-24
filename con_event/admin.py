@@ -42,7 +42,7 @@ class RegistrantAdmin(ImportExportActionModelAdmin):#This puts the export button
     list_display_links = list_display#makes everything in list display clickable to get to object
     search_fields = ('first_name', 'last_name','sk8name','sk8number','email',"con__year", 'con__city')
     fields = (('con','pass_type'),('first_name','last_name','email'),('sk8name','sk8number'),('skill','gender','intl'),'user',('country','state'),'captaining',
-        ('BPT_Ticket_ID','affiliation','ins_carrier','ins_number','age_group','favorite_part','volunteer'))
+        ('BPT_Ticket_ID','affiliation','ins_carrier','ins_number','age_group','favorite_part','volunteer'),'internal_notes')
     list_filter = ('con', 'pass_type','gender')
     resource_class = RegistrantResource
 
@@ -87,9 +87,12 @@ class BlogAdmin(ImportExportModelAdmin):
     view_on_site = True
     #https://docs.djangoproject.com/en/1.8/ref/contrib/admin/#django.contrib.admin.ModelAdmin.formfield_for_foreignkey
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "user":
-            kwargs["queryset"] = User.objects.filter(Q(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME])|Q(is_staff=True))
-        return super(BlogAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            if db_field.name == "user":
+                kwargs["queryset"] = User.objects.filter(Q(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME])|Q(is_staff=True))
+            return super(BlogAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        except:
+            pass
 
 
 admin.site.register(State, StateAdmin)

@@ -19,7 +19,7 @@
         <h2 class="blog-post-title"><a href="{{ blog.get_absolute_url }}">{{blog.headline}}</a></h2>
 
 
-        <p>{% autoescape off %}{{ blog.post|truncatechars:700}} </p><p><a href="{{ blog.get_absolute_url }}">
+        <p>{% autoescape off %}{{ blog.post|truncatechars:600}} </p><p><a href="{{ blog.get_absolute_url }}">
 Continue Reading &raquo; </a>{% endautoescape %}</p>
           </div><!-- /.blog-post -->
     </div><!-- /.blog-main -->

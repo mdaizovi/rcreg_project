@@ -43,11 +43,16 @@ class RegisteredInline(admin.StackedInline):
         return super(RegisteredInline, self).formfield_for_choice_field(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        training_id = resolve(request.path).args[0]
-        training=Training.objects.get(pk=training_id)
-        if db_field.name == "participants":
-            kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=training.con)
-        return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            training_id = resolve(request.path).args[0]
+            training=Training.objects.get(pk=training_id)
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=training.con)
+            return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+        except:
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
+            return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 class AuditingInline(admin.StackedInline):
     model = Roster
@@ -62,16 +67,21 @@ class AuditingInline(admin.StackedInline):
         return super(AuditingInline, self).formfield_for_choice_field(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        training_id = resolve(request.path).args[0]
-        training=Training.objects.get(pk=training_id)
-        if db_field.name == "participants":
-            kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'],con=training.con)
-        return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            training_id = resolve(request.path).args[0]
+            training=Training.objects.get(pk=training_id)
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'],con=training.con)
+            return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+        except:
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
+            return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 class RosterResource(resources.ModelResource):
     class Meta:
         model = Roster
-        fields = ('id','name','captain','captain__sk8name','color','skill','gender','intl','con','con__city','con__year')
+        fields = ('id','name','captain','captain__sk8name','color','skill','gender','intl','internal_notes','con','con__city','con__year')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('captain','con')
@@ -86,18 +96,24 @@ class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button wit
     resource_class = RosterResource
 
     def formfield_for_foreignkey(self, db_field, request,**kwargs):
-        object_id = resolve(request.path).args[0]
-        roster=Roster.objects.get(pk=object_id)
-        if db_field.name == "captain":
-            kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-        return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            object_id = resolve(request.path).args[0]
+            roster=Roster.objects.get(pk=object_id)
+            if db_field.name == "captain":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+            return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        except:
+            pass
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        object_id = resolve(request.path).args[0]
-        roster=Roster.objects.get(pk=object_id)
-        if db_field.name == "participants":
-            kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-        return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            object_id = resolve(request.path).args[0]
+            roster=Roster.objects.get(pk=object_id)
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+            return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
+        except:
+            pass
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django
@@ -109,7 +125,7 @@ class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button wit
 class ChallengeResource(resources.ModelResource):
     class Meta:
         model = Challenge
-        fields = ('id','name','roster1','roster1__name','roster1__captain','roster1__captain__sk8name','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','created_on','submitted_on','con','con__city','con__year')
+        fields = ('id','name','roster1','roster1__name','roster1__captain','roster1__captain__sk8name','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','created_on','submitted_on','internal_notes','con','con__city','con__year')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
@@ -121,22 +137,28 @@ class ChallengeAdmin(ImportExportActionModelAdmin):
     list_display= ('name', 'con')
     search_fields = ('name','roster1__name', 'roster2__name')
     fields = (('con','RCaccepted','RCrejected'),('location_type','duration','ruleset','gametype','is_a_game'),('created_on','submitted_on'),
-        ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'))
+        ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'),'internal_notes')
     list_filter = ('con','location_type','is_a_game')
     resource_class = ChallengeResource
 
     def formfield_for_foreignkey(self, db_field, request,**kwargs):
-        challenge_id = resolve(request.path).args[0]
-        challenge=Challenge.objects.get(pk=challenge_id)
-        if db_field.name in ["roster1","roster2"]:
-            #I could maybe filter by cap as well, to ensure only get game teams? worried i'll forget about that and cause problems.
-            kwargs["queryset"] = Roster.objects.filter(registered=None,auditing=None,con=challenge.con)
-        return super(ChallengeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        try:#So will still work when making a new one
+            challenge_id = resolve(request.path).args[0]
+            challenge=Challenge.objects.get(pk=challenge_id)
+            if db_field.name in ["roster1","roster2"]:
+                #I could maybe filter by cap as well, to ensure only get game teams? worried i'll forget about that and cause problems.
+                kwargs["queryset"] = Roster.objects.filter(registered=None,auditing=None,con=challenge.con)
+            return super(ChallengeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+        except:
+            if db_field.name in ["roster1","roster2"]:
+                #I could maybe filter by cap as well, to ensure only get game teams? worried i'll forget about that and cause problems.
+                kwargs["queryset"] = Roster.objects.filter(registered=None,auditing=None)
+            return super(ChallengeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 class TrainingResource(resources.ModelResource):
     class Meta:
         model = Training
-        fields = ('id','name','location_type','RCaccepted','registered__intl','registered__skill','registered__gender','duration','onsk8s','contact','coach','created_on','description','regcap','audcap','con','con__city','con__year')
+        fields = ('id','name','location_type','RCaccepted','registered__intl','registered__skill','registered__gender','duration','onsk8s','contact','coach','created_on','description','regcap','audcap','internal_notes','con','con__city','con__year')
         export_order=fields
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
         import_id_fields = ('coach','con')
@@ -150,6 +172,7 @@ class TrainingAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('coach',)
     list_filter = ('con','onsk8s','registered__skill','registered__intl','registered__gender','location_type','contact')
     resource_class = TrainingResource
+    fields = (('name','con','location_type'),('RCaccepted','RCrejected','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes')
     inlines = [
         RegisteredInline, AuditingInline
     ]

@@ -252,7 +252,7 @@ def make_countries():
         f.close()
 
 def make_states():
-    csvfile=(static_path+"states.csv")
+    csvfile=(static_path+"statesall.csv")
 
     with open(csvfile) as file1:
         data = csv.reader(file1, delimiter=',')
@@ -321,12 +321,12 @@ def make_registrants():
     r1, created1=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="B", email="mdaizovi@gmail.com",first_name="Michela",last_name="Dai Zovi", sk8name="Dahmernatrix",sk8number="505", country=Country.objects.get(name="Thailand"))
     r2, created2=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="A", email="denise.grimes@gmail.com",first_name="Denise",last_name="Grimes", sk8name="Ivanna S. Pankin",sk8number="22", country=Country.objects.get(name="United States"))
     r3, created3=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="A", email="derbydish99@gmail.com",first_name="Patricia",last_name="Ethier", sk8name="Trish the Dish",sk8number="86", country=Country.objects.get(name="United States"))
-    r4, created4=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="B", email="rollerconcoordinator@gmail.com",first_name="Angela",last_name="Parill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
+    r4, created4=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="B", email="rollerconcoordinator@gmail.com",first_name="Angela",last_name="Parrill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
 
     r5, created1=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="B", email="mdaizovi@gmail.com",first_name="Michela",last_name="Dai Zovi", sk8name="Dahmernatrix",sk8number="505", country=Country.objects.get(name="Thailand"))
     r6, created2=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="A", email="denise.grimes@gmail.com",first_name="Denise",last_name="Grimes", sk8name="Ivanna S. Pankin",sk8number="22", country=Country.objects.get(name="United States"))
     r7, created3=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="A", email="derbydish99@gmail.com",first_name="Patricia",last_name="Ethier", sk8name="Trish the Dish",sk8number="86", country=Country.objects.get(name="United States"))
-    r8, created4=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="B", email="rollerconcoordinator@gmail.com",first_name="Angela",last_name="Parill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
+    r8, created4=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="B", email="rollerconcoordinator@gmail.com",first_name="Angela",last_name="Parrill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
 
     user_list=[r1,r2,r3,r4]
     for u in user_list:

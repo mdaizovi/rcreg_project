@@ -68,6 +68,9 @@ class RegistrantProfileForm(ModelForm):
         #self.fields["availability_start"]=forms.DateTimeField(widget=DateTimeWidget(attrs={'id':"availability_start"}, usel10n = True, bootstrap_version=3),label ="OPTIONAL")
         # self.fields["availability_start"]=forms.DateTimeField(widget=DateTimeWidget(attrs={'id':"availability_start"}, usel10n = True, bootstrap_version=3),required=False,label="Availability Start*")
         # self.fields["availability_end"]=forms.DateTimeField(widget=DateTimeWidget(attrs={'id':"availability_end"}, usel10n = True, bootstrap_version=3),required=False,label="Availability End*")
+        self.fields['sk8name'].widget.attrs['disabled'] = True #only looks disabled, I can still change it?
+        self.fields['sk8name'].required = False
+        self.fields['sk8number'].required = False
         self.fields['intl'].widget.attrs['disabled'] = True #only looks disabled, I can still change it?
         self.fields['pass_type'].widget.attrs['disabled'] = True #only looks disabled, I can still change it?
         self.fields['intl'].required = False
@@ -75,8 +78,10 @@ class RegistrantProfileForm(ModelForm):
 
     class Meta:
         model = Registrant
-        fields = ['skill','gender','pass_type','intl']
+        fields = ['sk8name','sk8number','skill','gender','pass_type','intl']
         labels = {
+            'sk8name': _('Skate Name'),
+            'sk8number': _('Skate Number'),
             'intl': _('International'),
             'pass_type': _("Pass Type"),
         }
@@ -90,7 +95,15 @@ class EligibleRegistrantForm(forms.Form):
         if eligibles:
             ELIGIBLE_REGISTRANTS=[]
             for item in eligibles:
-                ELIGIBLE_REGISTRANTS.append((item.pk, (item.sk8name+" "+item.sk8number)))
+                if item.sk8name and item.sk8number:
+                    ELIGIBLE_REGISTRANTS.append((item.pk, (item.sk8name+" "+item.sk8number)))
+                elif item.sk8name:
+                    ELIGIBLE_REGISTRANTS.append((item.pk, (item.sk8name)))
+                elif item.first_name and item.last_name:
+                    ELIGIBLE_REGISTRANTS.append((item.pk, (item.first_name+" "+item.last_name)))
+                elif item.first_name:
+                    ELIGIBLE_REGISTRANTS.append((item.pk, (item.first_name)))
+
         else:
             ELIGIBLE_REGISTRANTS=[(("None"),("None"))]
 

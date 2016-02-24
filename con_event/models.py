@@ -348,6 +348,8 @@ class Registrant(Matching_Criteria):
     favorite_part=models.CharField(max_length=100, null=True,blank=True)
     volunteer=models.CharField(max_length=100, null=True,blank=True)
 
+    internal_notes= models.TextField(null=True,blank=True)
+
 
     def __unicode__(self):
        return "%s %s %s" % (self.sk8name, self.sk8number, self.con)
@@ -360,6 +362,8 @@ class Registrant(Matching_Criteria):
                     return True
             else:
                 return False
+        elif not self.country:
+            return False
         else:
             return True
 
@@ -528,6 +532,13 @@ class Registrant(Matching_Criteria):
             if att_unclean:
                 cleaned_att=ascii_only_no_punct(att_unclean)
                 setattr(self, item, cleaned_att)
+
+        if self.internal_notes:
+            cleaned_notes=ascii_only(self.internal_notes)
+            self.internal_notes=cleaned_notes
+
+        if not self.sk8number:
+            self.sk8number="X"
 
         if not self.con:
             upcoming=Con.objects.most_upcoming()

@@ -2,3 +2,11 @@
 .DS_Store
 rcregvenv
 
+# I want my migrations to be DB local/production DB specific, this should ignore all folders named migrations #
+##################
+migrations/
+
+# Specific files #
+#################
+rcreg_project/settings.py
+

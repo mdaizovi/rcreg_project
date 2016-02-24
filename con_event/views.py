@@ -64,6 +64,7 @@ def registrant_profile(request):
         #which is fine, I guess bc otherwise I had all kinds of shit to make sure pass type and intl didn't get changed.
         this_reg.skill=request.POST['skill']
         this_reg.gender=request.POST['gender']
+        this_reg.sk8number=request.POST['sk8number']
         problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
 
         if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!

@@ -86,12 +86,12 @@
   <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
   </td>
 <!-- written this way so roster will only be checked once-->
-  <td {%if skater.sk8number in roster.has_number_dupes %} class="text-right tooltip-bottom" style="color: red; font-weight: bold;"  title="DUPLICATE NUMBER" {%else%} class="text-right" {%endif%}>{{skater.sk8number}}</td></tr>
+  <td {%if skater.sk8number and skater.sk8number in roster.has_number_dupes %} class="text-right tooltip-bottom" style="color: red; font-weight: bold;"  title="DUPLICATE NUMBER" {%else%} class="text-right" {%endif%}>{%if skater.sk8number %}{{skater.sk8number}}{% endif %}</td></tr>
   {%endfor%}{%else%}
   {%for skater in roster.participants.all%}
   <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}{% if skater == roster.captain%}<b> (Captain)</b>{%endif%}
   </td>
-  <td class="text-right">{{skater.sk8number}}</td></tr>{%endfor%}
+  <td class="text-right"> {%if skater.sk8number%}{{skater.sk8number}}{%endif%} </td></tr>{%endfor%}
   {%endif%}<!--if roster has number dupes-->
 
 </table>

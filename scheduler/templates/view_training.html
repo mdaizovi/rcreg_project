@@ -71,7 +71,7 @@
     <tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>
       {%for skater in roster.participants.all%}
       <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}</td>
-      <td class="text-right">{{skater.sk8number}}</td></tr>{%endfor%}
+      <td class="text-right">{% if skater.sk8number %}{{skater.sk8number}}{% endif %}</td></tr>{%endfor%}
     </table>
   </div>
 

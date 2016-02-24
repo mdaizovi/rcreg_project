@@ -13,3 +13,13 @@ margin-top tip from http://stackoverflow.com/questions/10085723/twitter-bootstra
 after-header from http://stackoverflow.com/questions/21171500/getting-a-bootstrap-css-list-group-to-take-up-the-entire-width-of-a-mobile-app-p
 */
 .after-header { padding:50px 0px; }
+
+/*
+anchor from https://pixelflips.com/blog/anchor-links-with-a-fixed-header
+*/
+.anchor{
+  display: block;
+  height: 80px; /*same height as header*/
+  margin-top: -80px; /*same height as header*/
+  visibility: hidden;
+}

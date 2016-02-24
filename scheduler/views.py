@@ -14,7 +14,9 @@ from scheduler.app_settings import MAX_CAPTAIN_LIMIT
 from django.forms.models import model_to_dict
 from datetime import timedelta, date
 import collections
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mail
+from rcreg_project.settings import CUSTOM_SITE_ADMIN_EMAIL, SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
+
 
 #syntx reference:
             #selection = request.POST.copy()
@@ -23,7 +25,6 @@ from django.core.mail import EmailMessage
             #mvp_id_list= selection.getlist('mvpid')
             #print "selectiondict: ",selectiondict
             #selectiondict=dict(selection.lists())
-
 
 @login_required
 def email_captain(request, roster_id):
@@ -43,7 +44,13 @@ def email_captain(request, roster_id):
                 email.send(fail_silently=False)
                 email_success=True
             except:
-                email_success=False
+                try:
+                    #note that send_mail does not include reply to
+                    send_mail(subject, message_body, from_email=SECOND_CHOICE_EMAIL, recipient_list=[captain.user.email],
+                        fail_silently=False,auth_user=SECOND_CHOICE_EMAIL,auth_password=SECOND_CHOICE_PW)
+                    email_success=True
+                except:
+                    email_success=False
     else:
         form=SendEmail()
 
@@ -90,11 +97,18 @@ def email_coach(request, coach_id):
                 email.send(fail_silently=False)
                 email_success=True
             except:
-                email_success=False
+                try:
+                 #note that send_mail does not include reply to
+                    send_mail(subject, message_body, from_email=SECOND_CHOICE_EMAIL, recipient_list=[coach.user.email],
+                        fail_silently=False,auth_user=SECOND_CHOICE_EMAIL,auth_password=SECOND_CHOICE_PW)
+                    email_success=True
+                except:
+                    email_success=False
     else:
         form=SendEmail()
 
     return render_to_response('email_coach.html',{'email_success':email_success,'form':form,'coach':coach}, context_instance=RequestContext(request))
+
 
 def view_coach(request, coach_id):
     coach=Coach.objects.get(pk=coach_id)
