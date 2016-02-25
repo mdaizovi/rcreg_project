@@ -457,7 +457,7 @@ def edit_roster(request, roster_id):
     user=request.user
     roster=Roster.objects.get(pk=roster_id)
 
-#make sure this works with Game rosters tht can ahve several challenges attached to it
+    #make sure this works with Game rosters tht can have several challenges attached to it
     try:
         challenge=Challenge.objects.get(Q(roster1=roster)|Q(roster2=roster))
     except:
