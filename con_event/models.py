@@ -211,13 +211,11 @@ class Matching_Criteria(models.Model):
     def skills_allowed(self):
         #this is only necessary for rosters, not registrants, but moved it here anyway.
         if self.skill:
-            print "self.skill:",self.skill
             allowed=list(self.skill)
             if "O" in allowed:
                 allowed.remove("O")
         else:
             allowed=["A","B","C","D"]
-        print "allowed",allowed
         return allowed
 
     def skill_display(self):
@@ -368,7 +366,6 @@ class Registrant(Matching_Criteria):
             return True
 
     def can_sk8(self):
-        #print self.pass_type
         if self.pass_type=='MVP' or self.pass_type=='Skater':
             return True
         else:

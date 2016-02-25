@@ -112,7 +112,6 @@ class Roster(Matching_Criteria):
         problem_criteria=[]
         potential_conflicts=[]
         captain_conflict=False
-        print "test"
         try:
             for skater in list(self.participants.all()):
                 if skater.gender not in self.genders_allowed():

@@ -79,7 +79,6 @@ def coach_profile(request):
     return render_to_response('coach_profile.html',{'coach':coach,'form':form,'save_attempt':save_attempt,'save_success':save_success,'user':user},context_instance=RequestContext(request))
 
 
-
 @login_required
 def email_coach(request, coach_id):
     user=request.user
@@ -503,7 +502,7 @@ def edit_challenge(request, activity_id):
     upcoming_registrants=user.upcoming_registrants()
     challenge=Challenge.objects.get(pk=int(activity_id))
 
-    registrant_list= list(user.registrant_set.all())
+    registrant_list = list(user.registrant_set.all())
     opponent_form_list=None
     participants=None
     eligible_participants=None
@@ -593,8 +592,7 @@ def edit_challenge(request, activity_id):
             opponent.save()
             opponent.captain.save()#to get captaining number accurate
 
-
-        elif 'search captain' in request.POST:
+        elif 'search captains' in request.POST:
             captain_search_form=SearchForm(request.POST or None)
             captain_search_form.fields['search_q'].label = "Captain Name"
             entry_query = captain_search_form.get_query(['sk8name','last_name','first_name'])
@@ -665,7 +663,6 @@ def edit_challenge(request, activity_id):
                     else:
                         eligible_opponents = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C'],captaining__lt=MAX_CAPTAIN_LIMIT).exclude(id__in=[o.id for o in registrant_list]).order_by('sk8name','last_name','first_name')
                 else:
-                    print "no entry query"
                     if challenge.is_a_game:
                         eligible_opponents=list(Registrant.objects.filter(con=challenge.con,pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(id__in=[o.id for o in registrant_list]))
                     else:
@@ -985,9 +982,9 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                     entry_query = search_form.get_query(['sk8name','last_name','first_name'])
                 if entry_query:
                     if challenge.is_a_game:#if is a game, max captain limit doesn't matter
-                        captains = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C']).order_by('sk8name','last_name','first_name')
+                        captains = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C']).exclude(id__in=[o.id for o in upcoming_registrants]).order_by('sk8name','last_name','first_name')
                     else:
-                        captains = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C'], captaining__lt=MAX_CAPTAIN_LIMIT).order_by('sk8name','last_name','first_name')
+                        captains = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C'], captaining__lt=MAX_CAPTAIN_LIMIT).exclude(id__in=[o.id for o in upcoming_registrants]).order_by('sk8name','last_name','first_name')
                 else:#if no search querty or search fail
                     if challenge.is_a_game:
                         captains=Registrant.objects.filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C']).exclude(id__in=[o.id for o in upcoming_registrants])

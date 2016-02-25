@@ -71,7 +71,7 @@
         {% csrf_token %}
 
     <div class="well well-sm" style="min-height:170px;">
-                <h4>Search/Select a captain</h4>
+                <h4>Search/Select Skater to Challenge</h4>
           <table class="table">
                   {%for form in opponent_form_list%}
                       <form method="POST" class="post-form">
@@ -124,6 +124,7 @@
 
   <div class="well well-md">
     <div class="row center-block">
+      <span class="anchor" id="editteamsection"></span>
       <h2 class="text-center">{{my_team.name}}</h2>
         <hr>
 
@@ -150,7 +151,7 @@
         {%endif%}{%endif%}
 
 
-        <form method="POST" class="post-form margin-top-10">
+        <form method="POST" class="post-form margin-top-10" action="#editteamsection">
               {% csrf_token %}
               {%for form in formlist%}
         {%for field in form %}
@@ -187,7 +188,8 @@
              <h4>Search Eligible Skaters
                {%if not challenge.is_a_game%}<br><small>Search will only return skaters whose skill and gender make them eligible for this team.</small>
              {%endif%}</h4>
-             <form method="POST" class="post-form">
+
+             <form method="POST" class="post-form" action="#editteamsection">
                    {% csrf_token %}
    {{skater_search_form}}
    <input type="hidden" name="roster_id" value="{{ my_team.id }}"/>
@@ -203,7 +205,7 @@
           <h4>Add Eligible Skaters
             {%if not challenge.is_a_game%}<br><small>The only visible skaters are those whose gender and skill are compatible with this team.
           </small>{%endif%}</h4>
-          <form method="POST" class="post-form">
+          <form method="POST" class="post-form" action="#editteamsection">
                 {% csrf_token %}
 {{eligible_participants}}
 <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
@@ -214,7 +216,7 @@
 
     <div class="well well-sm">
  <div class="form-group">
-   <form method="POST" class="post-form">
+   <form method="POST" class="post-form" action="#editteamsection">
          {% csrf_token %}
 <h4>Remove Skaters</h4>
 {{participants}}
@@ -226,7 +228,7 @@
 
 <div class="well well-sm">
 <div class="form-group">
-<form method="POST" class="post-form">
+<form method="POST" class="post-form" action="#editteamsection">
      {% csrf_token %}
 <h4>Replace Yourself as Captain<br>
 <small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge.
