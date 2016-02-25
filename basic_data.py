@@ -240,26 +240,27 @@ def import_from_excel(clean_xlfile,con):
                             print "think doesn't exist"
                             this_reg=Registrant(con=con, email=email,first_name=first_name,last_name=last_name)
 
-            attr_dict={'sk8name':sk8name,'sk8number':sk8number,'skill':skill,"gender":gender,'pass_type':pass_type,'first_name':first_name,'last_name':last_name,
-                'country':country,'state':state,'BPT_Ticket_ID':BPT_Ticket_ID,'affiliation':affiliation,'ins_carrier':ins_carrier,'ins_number':ins_number,'age_group':age_group,
-                'favorite_part':favorite_part,'volunteer':volunteer}
-            for k,v in attr_dict.iteritems():
-                print k," is ",v
-                value = getattr(this_reg, k)
-                #Notice this only adds data that doesn't exist, it doesn't overwrite existing db data
-                #I could make update by saying if old != new, if i wanted. dob't know if i want.
-                if v and not value:
-                    print "setting ",this_reg,"s ",k
-                    setattr(this_reg, k, v)
-                elif not v:
-                    print "od doesn't have ",k
-                elif value:
-                    print this_reg,"already has a ",k,": ",value
+            if this_reg:#ie if no repeat email
+                attr_dict={'sk8name':sk8name,'sk8number':sk8number,'skill':skill,"gender":gender,'pass_type':pass_type,'first_name':first_name,'last_name':last_name,
+                    'country':country,'state':state,'BPT_Ticket_ID':BPT_Ticket_ID,'affiliation':affiliation,'ins_carrier':ins_carrier,'ins_number':ins_number,'age_group':age_group,
+                    'favorite_part':favorite_part,'volunteer':volunteer}
+                for k,v in attr_dict.iteritems():
+                    print k," is ",v
+                    value = getattr(this_reg, k)
+                    #Notice this only adds data that doesn't exist, it doesn't overwrite existing db data
+                    #I could make update by saying if old != new, if i wanted. dob't know if i want.
+                    if v and not value:
+                        print "setting ",this_reg,"s ",k
+                        setattr(this_reg, k, v)
+                    elif not v:
+                        print "od doesn't have ",k
+                    elif value:
+                        print this_reg,"already has a ",k,": ",value
 
-            this_reg.save()
-            this_reg.save()#think I have to do twice tomake user? I forgot.
-            success_list.append(od)
-            print this_reg," Succesfully made"
+                this_reg.save()
+                this_reg.save()#think I have to do twice tomake user? I forgot.
+                success_list.append(od)
+                print this_reg," Succesfully made"
         except:
             print "Fail: "
             error_list.append(od)
@@ -274,7 +275,7 @@ def import_from_excel(clean_xlfile,con):
         write_wb(export_path,'RegistrantFAIL.xlsx',error_list,header)
         print "error list written"
     if repeat_email_list:
-        write_wb(export_path,'RegistrantREPEATEMAILFAIL.xlsx',error_list,header)
+        write_wb(export_path,'RegistrantREPEATEMAILFAIL.xlsx',repeat_email_list,header)
         print "repeat_email_list written"
 
 
