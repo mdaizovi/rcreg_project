@@ -18,10 +18,20 @@ export_path=static_path+'exported/'
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 
+def wb_or_str(xlfile):
+    """cehcks is xlfile input is a strong of name, or wb object. either makes or returns object."""
+    if isinstance(xlfile , basestring):
+        #if a string of file name is entered
+        wb = openpyxl.load_workbook(xlfile)
+    else:
+        # if a wb object is entered
+        wb = xlfile
+    return wb
+
 #xlfile=(static_path+'myheader.xlsx')
 #xlfile=(static_path+'BPTheader.xlsx')
 def get_header(xlfile):
-    wb = openpyxl.load_workbook(xlfile)
+    wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
     #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
     header=collections.OrderedDict()
@@ -55,7 +65,7 @@ def write_wb(target_location,target_name,od_list,header):
 
 def make_excel_odict_list(xlfile):
     """Takes in excel file of BPT registrant data, turns each row into an ordered dict, returns list of all ordered dicts"""
-    wb = openpyxl.load_workbook(xlfile)
+    wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
     #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
     all_data=[]
@@ -91,16 +101,23 @@ def find_incompletes(xlfile):
             complete_entries.append(od)
 
     header=get_header((static_path+'BPTheader.xlsx'))
+    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+
     if len(no_sk8name)>0:
-        no_sk8name_file=write_wb(export_path,'NoSk8NameReg.xlsx',no_sk8name,header)
+        name_str='NoSk8NameReg '+ date_str +'.xlsx'
+        no_sk8name_file=write_wb(export_path,name_str,no_sk8name,header)
     else:
         no_sk8name_file=None
+
     if len(no_real_name)>0:
-        no_real_name_file=write_wb(export_path,'NoRealNameReg.xlsx',no_real_name,header)
+        name_str='NoRealNameReg '+ date_str +'.xlsx'
+        no_real_name_file=write_wb(export_path,name_str,no_real_name,header)
     else:
         no_real_name_file=None
+
     if len(complete_entries)>0:
-        complete_entries_file=write_wb(export_path,'CompleteReg.xlsx',complete_entries,header)
+        name_str='CompleteReg '+ date_str +'.xlsx'
+        complete_entries_file=write_wb(export_path,name_str,complete_entries,header)
     else:
         complete_entries_file=None
 
@@ -129,17 +146,16 @@ def email_dupes(xlfile):
             good_emails.append(od)
 
     header=get_header((static_path+'BPTheader.xlsx'))
+    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
     if len(good_emails)>0:
-        #write_wb(export_path,'SingleEmailRegistrants.xlsx',good_emails,header)
-        #single_file=export_path+'SingleEmailRegistrants.xlsx'
-        single_file=write_wb(export_path,'SingleEmailRegistrants.xlsx',good_emails,header)
+        name_str='SingleEmailRegistrants '+ date_str +'.xlsx'
+        single_file=write_wb(export_path,name_str,good_emails,header)
     else:
         single_file=None
 
     if len(bad_emails)>0:
-        #write_wb(export_path,'EmailDupeRegistrants.xlsx',bad_emails,header)
-        #dupe_file=export_path+'EmailDupeRegistrants.xlsx'
-        dupe_file=write_wb(export_path,'EmailDupeRegistrants.xlsx',bad_emails,header)
+        name_str='EmailDupeRegistrants '+ date_str +'.xlsx'
+        dupe_file=write_wb(export_path,name_str,bad_emails,header)
     else:
         dupe_file=None
 
@@ -147,23 +163,27 @@ def email_dupes(xlfile):
 
 #target_file=(export_path+"RollerTron.xlsx")
 #target_file=(import_path+'RollerTron Attendee @ 022316 copy.xlsx')
+#target_file=(import_path+'RespondersNOTINDB.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
     single_file,dupe_file=email_dupes(target_file)
-    no_sk8name_file,no_real_name_file,complete_entries_file=find_incompletes((export_path+'SingleEmailRegistrants.xlsx'))
-    #the end.
+
+    no_sk8name_file,no_real_name_file,complete_entries_file=find_incompletes(single_file)
+
+    return single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file
+
 
 
 #con=Con.objects.get(year="2016")
-#clean_xlfile=(export_path+'SingleEmailRegistrants.xlsx')
-#clean_xlfile=(export_path+'RegistrantFAIL copy.xlsx')
-#clean_xlfile=(import_path+'RollerTron Attendee @ 022316 copy.xlsx')
-def import_from_excel(clean_xlfile,con):
+#complete_entries_filee=(export_path+'SingleEmailRegistrants.xlsx')
+#complete_entries_file=(export_path+'RegistrantFAIL copy.xlsx')
+#complete_entries_file=(import_path+'RollerTron Attendee @ 022316 copy.xlsx')
+def import_from_excel(complete_entries_file,con):
     """This assumes that I've already checked for duplicate emails and lack of name, sk8name.
     This is data that could be ready for import via Django import/export, but I think this will be faster.
     This is coming from BPT format, not mine"""
-    all_data=make_excel_odict_list(clean_xlfile)
+    all_data=make_excel_odict_list(complete_entries_file)
     error_list=[]
     success_list=[]
     repeat_email_list=[]
@@ -268,14 +288,19 @@ def import_from_excel(clean_xlfile,con):
 
 
     header=get_header((static_path+'BPTheader.xlsx'))
+    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+
     if success_list:
-        write_wb(export_path,'RegistrantsMade.xlsx',success_list,header)
+        name_str='RegistrantsMade '+ date_str +'.xlsx'
+        write_wb(export_path,name_str,success_list,header)
         print "success list written"
     if error_list:
-        write_wb(export_path,'RegistrantFAIL.xlsx',error_list,header)
+        name_str='RegistrantFAIL '+ date_str +'.xlsx'
+        write_wb(export_path,name_str,error_list,header)
         print "error list written"
     if repeat_email_list:
-        write_wb(export_path,'RegistrantREPEATEMAILFAIL.xlsx',repeat_email_list,header)
+        name_str='RegistrantREPEATEMAILFAIL '+ date_str +'.xlsx'
+        write_wb(export_path,name_str,repeat_email_list,header)
         print "repeat_email_list written"
 
 

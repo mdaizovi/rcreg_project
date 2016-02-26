@@ -27,7 +27,7 @@ class VenueAdmin(admin.ModelAdmin):
 
 class LocationAdmin(admin.ModelAdmin):
     list_display= ('venue','name','location_type')
-    search_fields = ('venue','name','location_type')
+    search_fields = ('venue__name','name','location_type')
 
 
 class RegisteredInline(admin.StackedInline):
@@ -90,7 +90,7 @@ class RosterResource(resources.ModelResource):
 
 class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
     list_display= ('name', 'captain','cap')
-    search_fields = ('name', 'captain')
+    search_fields = ('name', 'captain__sk8name', 'captain__first_name','captain__last_name')
     filter_horizontal = ('participants',)
     list_filter = ('con','skill','gender','intl')
     resource_class = RosterResource
@@ -135,7 +135,7 @@ class ChallengeResource(resources.ModelResource):
 
 class ChallengeAdmin(ImportExportActionModelAdmin):
     list_display= ('name', 'con')
-    search_fields = ('name','roster1__name', 'roster2__name')
+    search_fields = ('name','roster1__name', 'roster2__name','roster1__captain__sk8name','roster2__captain__sk8name')
     fields = (('con','RCaccepted','RCrejected'),('location_type','duration','ruleset','gametype','is_a_game'),('created_on','submitted_on'),
         ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'),'internal_notes')
     list_filter = ('con','location_type','is_a_game')

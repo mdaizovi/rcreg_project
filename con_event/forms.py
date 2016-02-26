@@ -105,7 +105,7 @@ class EligibleRegistrantForm(forms.Form):
                     ELIGIBLE_REGISTRANTS.append((item.pk, (item.first_name)))
 
         else:
-            ELIGIBLE_REGISTRANTS=[(("None"),("None"))]
+            ELIGIBLE_REGISTRANTS=[((None),("None"))]
 
         self.fields['eligible_registrant']=forms.CharField(required=True,label="Skaters",
             widget=forms.Select(choices=ELIGIBLE_REGISTRANTS))
