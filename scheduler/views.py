@@ -875,7 +875,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
             elif challenged_captain:
                 con=challenged_captain.con
 
-            if 'eligible_registrant' in request.POST and (request.POST['eligible_registrant'] not in ['None',None]:#if selected a captain to challenge
+            if 'eligible_registrant' in request.POST and (request.POST['eligible_registrant'] not in ['None',None]):#if selected a captain to challenge
                 eligibleregistrantform=EligibleRegistrantForm(request.POST, my_arg=None)
                 if eligibleregistrantform.is_valid():
                     challenged_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
