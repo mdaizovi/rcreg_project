@@ -490,9 +490,9 @@ class Challenge(Activity):
     def roster4registrant(self,registrant):
         """takes in registrant, returns which team they're on"""
         if registrant in self.roster1.participants.all():
-            return roster1
+            return self.roster1
         elif registrant in self.roster2.participants.all():
-            return roster2
+            return self.roster2
         else:
             return None
 
@@ -504,7 +504,8 @@ class Challenge(Activity):
             self.captain2accepted=False
 
         if not self.captain1accepted and not self.captain2accepted:
-            self.delete()
+            print "this is where I'd delete ",self
+            #self.delete()
         else:
             self.save()
 
