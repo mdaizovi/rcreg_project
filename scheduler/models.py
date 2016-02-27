@@ -11,7 +11,7 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
-from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster
+from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
@@ -112,33 +112,43 @@ class Roster(Matching_Criteria):
         problem_criteria=[]
         potential_conflicts=[]
         captain_conflict=False
-        try:
-            for skater in list(self.participants.all()):
-                if skater.gender not in self.genders_allowed():
-                    if "gender" not in problem_criteria:
-                        problem_criteria.append("gender")
-                    if skater not in potential_conflicts:
-                        potential_conflicts.append(skater)
-                    if self.captain and skater==self.captain:
-                        captain_conflict=True
-                if skater.skill not in self.skills_allowed():
-                    if "skill" not in problem_criteria:
-                        problem_criteria.append("skill")
-                    if skater not in potential_conflicts:
-                        potential_conflicts.append(skater)
-                    if self.captain and skater==self.captain:
-                        captain_conflict=True
-        except:#if no such thing as self.participants.all()
-            if self.captain and self.captain.gender not in self.genders_allowed():
+        def capt_confl(problem_criteria,potential_conflicts,captain_conflict):
+            if self.captain and (self.captain.gender not in self.genders_allowed()):
+                captain_conflict=True
                 if "gender" not in problem_criteria:
                     problem_criteria.append("gender")
-                if self.captain not in potential_conflicts:
-                    potential_conflicts.append(self.captain)
-            if self.captain and self.captain.skill not in self.skills_allowed():
+                    if self.captain not in potential_conflicts:
+                        potential_conflicts.append(self.captain)
+            if self.captain and (self.captain.skill not in self.skills_allowed()):
+                captain_conflict=True
                 if "skill" not in problem_criteria:
                     problem_criteria.append("skill")
                 if self.captain not in potential_conflicts:
                     potential_conflicts.append(self.captain)
+            return problem_criteria,potential_conflicts,captain_conflict
+
+        try:
+            participants=list(self.participants.all())
+            if len(participants)>0:
+                for skater in list(self.participants.all()):
+                    if skater.gender not in self.genders_allowed():
+                        if "gender" not in problem_criteria:
+                            problem_criteria.append("gender")
+                        if skater not in potential_conflicts:
+                            potential_conflicts.append(skater)
+                        if self.captain and skater==self.captain:
+                            captain_conflict=True
+                    if skater.skill not in self.skills_allowed():
+                        if "skill" not in problem_criteria:
+                            problem_criteria.append("skill")
+                        if skater not in potential_conflicts:
+                            potential_conflicts.append(skater)
+                        if self.captain and skater==self.captain:
+                            captain_conflict=True
+            else:
+                problem_criteria,potential_conflicts,captain_conflict=capt_confl(problem_criteria,potential_conflicts,captain_conflict)
+        except:#if no such thing as self.participants.all()
+            problem_criteria,potential_conflicts,captain_conflict=capt_confl(problem_criteria,potential_conflicts,captain_conflict)
 
         if len(potential_conflicts)>0:
             return problem_criteria,potential_conflicts,captain_conflict
@@ -325,6 +335,17 @@ class Roster(Matching_Criteria):
         else:
             return False
 
+    def is_homeless(self):
+        '''This is for reject warning, to cehck if rejecting this challenge will delete roster.
+        Mostly for Game rosters, kinda ovbious for Challenge Rosters'''
+        r1=list(self.roster1.all())
+        r2=list(self.roster2.all())
+        rs=r1+r2
+        if len(rs)<=0:
+            return True
+        else:
+            return False
+
 
     def get_edit_url(self):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
@@ -333,6 +354,7 @@ class Roster(Matching_Criteria):
         ordering=("-con",'name','captain')
         unique_together = ('name','con','captain')
 
+post_save.connect(delete_homeless_roster_ros, sender=Roster)
 pre_delete.connect(adjust_captaining_no, sender=Roster)
 
 class Activity(models.Model):
@@ -453,43 +475,19 @@ class Challenge(Activity):
             return None
 
     def rosterreject(self,roster):
-        """takes in roster, rejects challenge. does diff thigns depennding on if it game or not"""
-        def game_reject(roster):
-            """if it's a game, toss the team from challenge but keep team intact"""
-            if roster==self.roster1:
-                self.roster1=None
-            elif roster==self.roster2:
-                self.roster2=None
-            #delete roster if its rejecting its only chllenge
-            connections=list(roster.roster1.all())+list(roster.roster2.all())
-            if len(connections)<=1:
-                roster.delete()
-
-        def chall_reject(roster):
-            """if it's a challenge, team still exists but toss captain and skaters"""
-            roster.captain=None
-            roster.participants.clear()
-            roster.save()
-
-        if roster==self.roster1:
+        """takes in roster, rejects challenge. if both have rejected, deletes challenge."""
+        if self.roster1==roster:
             self.captain1accepted=False
-        elif roster==self.roster2:
+        elif self.roster2==roster:
             self.captain2accepted=False
-
-        if self.is_a_game:
-            game_reject(roster)
-        else:
-            chall_reject(roster)
 
         if not self.captain1accepted and not self.captain2accepted:
             self.delete()
         else:
             self.save()
 
-
     def my_team_status(self, registrant_list):
         '''takes in registrant list, tells you which team you're captaining, whether you've accepte, who your opponent is, and if they'e accepted'''
-
         if self.roster1 and self.roster1.captain and (self.roster1.captain in registrant_list):
             my_team=self.roster1
             opponent=self.roster2
@@ -508,19 +506,14 @@ class Challenge(Activity):
 
         return my_team,opponent,my_acceptance,opponent_acceptance
 
-
     def replace_team(self,registrant,selected_team):
         """for changing from disposable team to Game team. Finds the team te registrant is a captain of, removes that team, puts given team in it place."""
         if self.roster1 and self.roster1.captain and (self.roster1.captain ==registrant):
             my_old_team=self.roster1
-            if my_old_team.nearly_homeless():
-                my_old_team.delete()
-                self.roster1=selected_team
+            self.roster1=selected_team
         elif self.roster2 and self.roster2.captain and (self.roster2.captain ==registrant):
             my_old_team=self.roster2
-            if my_old_team.nearly_homeless():
-                my_old_team.delete()
-                self.roster2=selected_team
+            self.roster2=selected_team
         self.save()
 
     def can_submit_chlg(self):
@@ -539,7 +532,8 @@ class Challenge(Activity):
         unique_together = ('con','name','roster1','roster2')
 
 pre_save.connect(challenge_defaults, sender=Challenge)
-pre_delete.connect(delete_homeless_roster, sender=Challenge)
+post_save.connect(delete_homeless_chg, sender=Challenge)
+pre_delete.connect(delete_homeless_roster_chg, sender=Challenge)
 
 class Training(Activity):
     #activity has fields: name,con,location_type,RCaccepted, created_on,duration

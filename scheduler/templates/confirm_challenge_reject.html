@@ -15,7 +15,7 @@
     <h3>Reject {{challenge.name}}</h3>
     <div class="alert alert-danger" role="alert">Are you sure you want to reject this challenge?
     {%if not opponent_acceptance%}<br>Because your opponent has not accepted,
-    {%if my_team.nearly_homeless %}and you don't have any other Challenges, this will delete both your Challenge and Team
+    {%if my_team.nearly_homeless %}and {{my_team.name}} does't have any other Challenges, this will delete both your Challenge and Team
     {% else %}this will delete both your Challenge{%endif%} Completely.
 
     {%else%}<br>The Challenge will remain but this will remove yourself as captain, remove all skaters from your roster, and your opponent will have to challenge someone else.
@@ -25,8 +25,12 @@
               {% csrf_token %}
               <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
               <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+              {%if my_opponent%}<input type="hidden" name="opponent_id" value="{{ my_opponent.id }}" />{%endif%}
+              <input type="hidden" name="my_team_id" value="{{ my_team.id }}" />
 
-          <input class="btn btn-danger margin-top-15 center-block" type="submit" method="post" name="confirm reject" value="Reject Challenge">
+<table class="table">
+  <tr><td><input class="btn btn-danger margin-top-15 center" type="submit" method="post" name="reject remain captain" value="Reject Challenge But Remain captain of {{ my_team.name }}"></td>
+  <td><input class="btn btn-danger margin-top-15 center" type="submit" method="post" name="reject leave team" value="Reject Challenge And Leave {{ my_team.name }}"></td></tr></table>
         </form>
         </div>
 

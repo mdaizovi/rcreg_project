@@ -1,21 +1,28 @@
 #from scheduler.models import Roster
-def delete_homeless_roster(sender, instance,**kwargs):
+def delete_homeless_roster_chg(sender, instance,**kwargs):
     """upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
     Not necessary for Training, d/t 1:1 """
-    print "running delete_homeless_roster"
     my_rosters=[]
-    print "my_rosters"
     if instance.roster1:
         my_rosters.append(instance.roster1)
     if instance.roster2:
         my_rosters.append(instance.roster2)
     for r in my_rosters:
-        print "r",r
-        connections=list(r.roster1.all())+list(r.roster2.all())
-        print "connections",connections
-        if len(connections)<=1:
-            r.delete()
+        if r.id and not r.name and not r.captain:
+            connections=list(r.roster1.all())+list(r.roster2.all())
+            if len(connections)<=1:
+                r.delete()
 
+def delete_homeless_roster_ros(sender, instance,**kwargs):
+    """Deletes a Roster if it has no Captain and no Challenges"""
+    my_challenges=list(instance.roster1.all())+list(instance.roster2.all())
+    if len(my_challenges)<1 and not instance.captain:
+        instance.delete()
+
+def delete_homeless_chg(sender, instance,**kwargs):
+    """Deletes Challeng if it has no Rosters"""
+    if not instance.roster1 and not instance.roster2:
+        instance.delete()
 
 def adjust_captaining_no(sender, instance,**kwargs):
     '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''

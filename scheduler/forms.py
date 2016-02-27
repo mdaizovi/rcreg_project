@@ -158,13 +158,17 @@ class ChallengeModelForm(ModelForm):
         model = Challenge
         fields = ['con','location_type','ruleset','gametype']
 
-class GameRosterSelectForm(forms.Form):
+class MyRosterSelectForm(forms.Form):
     def __init__(self, *args, **kwargs):
         team_list = kwargs.pop('team_list')
-        super(GameRosterSelectForm, self).__init__(*args, **kwargs)
+        super(MyRosterSelectForm, self).__init__(*args, **kwargs)
         MY_TEAMS=[]
         for r in team_list:
-            MY_TEAMS.append((str(r.pk), str(r.name)))
+            if r.name:
+                MY_TEAMS.append((str(r.pk), str(r.name)))
+            else:
+                MY_TEAMS.append((str(r.pk), "unnamed team"))
+
         self.fields["game_team"]=forms.CharField(label="Select Team", widget=forms.Select(choices=MY_TEAMS),required=True, initial=MY_TEAMS[0][0])
 
         for field in iter(self.fields):

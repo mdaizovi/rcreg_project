@@ -24,7 +24,7 @@
   {%endif%}
 
 
-    {%if opponent_acceptance %}
+    {%if opponent and opponent.captain and opponent_acceptance %}
     <div class="alert alert-success" role="alert">{{opponent.captain.sk8name}} has accepted this challenge.</div>
     {%else%}<!-- if you have accepted challenge but opponent has not-->
 
@@ -255,16 +255,18 @@
             {% csrf_token %}
             <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
             <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+            {%if opponent%}<input type="hidden" name="opponent_id" value="{{ opponent.id }}" />{%endif%}
+            <input type="hidden" name="my_team_id" value="{{ my_team.id }}" />
           <input class="btn btn-danger margin-top-15 center-block btn-xs" type="submit" method="post" name="reject" value="Reject Challenge">
           </form>
-
-
 
     {%else%}<!-- if you have not accepted challenge-->
       <div class="well well-sm">
         <h3 class="text-center">You have been invited to captain a Challenge against {{opponent.name}}</h3>
         <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
               {% csrf_token %}
+              {%if opponent%}<input type="hidden" name="opponent_id" value="{{ opponent.id }}" />{%endif%}
+              <input type="hidden" name="my_team_id" value="{{ my_team.id }}" />
               <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
               <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
         <table class="table table-condensed" style="margin: 0px 0px 0px 0px;">

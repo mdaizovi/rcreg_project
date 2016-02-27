@@ -16,8 +16,11 @@
 <hr>
         <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
               {% csrf_token %}
-              <input type="hidden" name="registrant_id" value="{{ my_team.captain.id }}" />
+              <input type="hidden" name="registrant_id" value="{{ registrant.id }}" />
               <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
+              <input type="hidden" name="my_team_id" value="{{ my_team.id }}" />
+              {%if my_opponent%}<input type="hidden" name="opponent_id" value="{{ my_opponent.id }}" />{%endif%}
+
               <input type="hidden" name="accept" value="accept" />
 
         <table class="table table-condensed" style="margin: 0px 0px 0px 0px;">

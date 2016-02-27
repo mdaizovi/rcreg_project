@@ -29,7 +29,9 @@
 
 {%if upcoming_registrants and cansk8 %}
 {%if cancaptain %}
-{%if my_teams_as_cap%}<p class="margin-top-15"><b>Select from your existing teams or <a href="{%url 'propose_new_game_new_team' %}">Create new team</a></b></p>{%endif%}
+{%if my_teams_as_cap%}<p class="margin-top-15"><b>Select from your existing teams or
+  {%if is_a_game %}<a href="{%url 'propose_new_game_new_team' %}">
+  {%else %}<a href="{%url 'propose_new_challenge_new_team' %}">{%endif%}Create new team</a></b></p>{%endif%}
 
 {%if formlist %}
 <div class="col-sm-6">

@@ -408,7 +408,9 @@ class Registrant(Matching_Criteria):
         '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
         from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
         my_rosters=list(self.roster_set.all())
+        print "my pendind rosters", my_rosters
         pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
+        print "pending",pending
         return pending
 
     def scheduled_challenges(self):
@@ -484,6 +486,7 @@ class Registrant(Matching_Criteria):
             return True
         else:
             return False
+
 
     def update_blackouts(self,date_dict):
         """Takes in a dictionary w/ date object as key, list w/ ["AM","PM"], or 1, as value.

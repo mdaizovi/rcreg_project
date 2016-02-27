@@ -12,18 +12,37 @@ def update_user_fl_name(sender, instance,**kwargs):
     """postsave signal from Registrant, changes User first and last name if Registrant did.
     This won't show up on sidebar until they go to a new page, but I think that's okay, don't feel like refreshing context"""
     if instance.user:#this should always be true, but just in case
-        if (instance.sk8name and instance.sk8number) and ((instance.user.first_name !=instance.sk8name) or (instance.user.last_name !=instance.sk8number)):
-            if instance.user.first_name !=instance.sk8name:
-                instance.user.first_name =instance.sk8name
-            if instance.user.last_name !=instance.sk8number:
-                instance.user.last_name =instance.sk8number
-            instance.user.save()
-        elif (instance.first_name and instance.last_name) and ((instance.user.first_name !=instance.first_name) or (instance.user.last_name !=instance.last_name )):
-            if instance.user.first_name !=instance.first_name:
-                instance.user.first_name =instance.first_name
-            if instance.user.last_name !=instance.last_name:
-                instance.user.last_name =instance.last_name
-            instance.user.save()
+        print "running update_user_fl_name"
+
+        print "instance is ",instance
+
+        print "sk8name", instance.sk8name
+        print "sk8name", instance.sk8number
+        print "instance.first_name",instance.first_name
+        print "instance.last_name",instance.last_name
+
+        print "user is ",instance.user
+
+        print "instance.user.first_name",instance.user.first_name
+        print "instance.user.last_name",instance.user.last_name
+
+        if (instance.sk8name and instance.sk8number):
+            if((instance.user.first_name !=instance.sk8name) or (instance.user.last_name !=instance.sk8number)):
+                print "first part true"
+                if instance.user.first_name !=instance.sk8name:
+                    instance.user.first_name =instance.sk8name
+                if instance.user.last_name !=instance.sk8number:
+                    instance.user.last_name =instance.sk8number
+                instance.user.save()
+        elif (instance.first_name and instance.last_name):
+            if ((instance.user.first_name !=instance.first_name) or (instance.user.last_name !=instance.last_name )):
+                print "scond part true"
+                if instance.user.first_name !=instance.first_name:
+                    instance.user.first_name =instance.first_name
+                if instance.user.last_name !=instance.last_name:
+                    instance.user.last_name =instance.last_name
+                instance.user.save()
+
 
 def delete_homeless_user(sender, instance,**kwargs):
     '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants.
