@@ -13,7 +13,7 @@ from django.db import connection as dbconnection
 from django.forms.models import model_to_dict
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT_Affiliate_ID
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete,post_init,pre_init
-from con_event.signals import delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
+from con_event.signals import update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
 import logging
 #Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -556,9 +556,10 @@ class Registrant(Matching_Criteria):
         unique_together = (('con','email'),('con','user'),('con','last_name','first_name','sk8name'))
 
 pre_save.connect(clean_registrant_import, sender=Registrant)
-pre_delete.connect(delete_homeless_user, sender=Registrant)#I'm not sure if this works on staff, for some reason.
+post_save.connect(update_user_fl_name, sender=Registrant)
 post_save.connect(match_user, sender=Registrant)
 post_save.connect(sync_reg_permissions, sender=Registrant)
+pre_delete.connect(delete_homeless_user, sender=Registrant)#I'm not sure if this works on staff, for some reason.
 
 class Blog(models.Model):
     headline = models.CharField(max_length=200,unique=True)
