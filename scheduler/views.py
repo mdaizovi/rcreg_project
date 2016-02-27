@@ -557,6 +557,9 @@ def edit_challenge(request, activity_id):
                 roster=roster_form.save()
                 if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
                     coed_beginner =roster.coed_beginner()
+                    if coed_beginner:
+                        roster.save()
+
                 challenge=challenge_form.save()
                 roster.con=challenge.con
                 roster.save()
@@ -572,13 +575,20 @@ def edit_challenge(request, activity_id):
 
         elif 'invite captain' in request.POST or 'game_team' in request.POST:
             if 'invite captain' in request.POST:
-                invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                try:
+                    invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                except:
+                    pass
+                    #invited_captain=None
                 try:
                     opponent=Roster.objects.get(pk=request.POST['opponent_id'])
-                    opponent.captain=invited_captain
+                    if invited_captain and not opponent.captain:
+                        opponent.captain=invited_captain
                 except:#if this is the first time and there is no opponent
-                    opponent=Roster(captain=invited_captain, con=invited_captain.con)
-                    opponent.save()
+                    opponent=Roster(con=challenge.con)
+                    if invited_captain:
+                        opponent.captain=invited_captain
+
             elif 'game_team' in request.POST:
                 opponent=Roster.objects.get(pk=request.POST['game_team'])
                 invited_captain=opponent.captain
@@ -589,8 +599,10 @@ def edit_challenge(request, activity_id):
                 challenge.roster1=opponent
 
             challenge.save()
-            opponent.save()
-            opponent.captain.save()#to get captaining number accurate
+            if opponent:
+                opponent.save()
+            if opponent.captain:
+                opponent.captain.save()#to get captaining number accurate
 
         elif 'search captains' in request.POST:
             captain_search_form=SearchForm(request.POST or None)
@@ -725,11 +737,12 @@ def challenge_respond(request):
         if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
             if 'reject remain captain' in request.POST:
                 challenge.rosterreject(my_team)
-                if registrant==challenge.roster1.captain:
+                if challenge.roster1 and registrant==challenge.roster1.captain:
                     challenge.roster1=None
-                elif registrant==challenge.roster2.captain:
+                elif challenge.roster2 and registrant==challenge.roster2.captain:
                     challenge.roster2=None
                 challenge.save()
+                registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
             elif 'reject leave team' in request.POST:
                 challenge.rosterreject(my_team)
@@ -958,6 +971,8 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                             challenge.is_a_game=True
                         else:
                             coed_beginner=my_team.coed_beginner()
+                            if coed_beginner:
+                                my_team.save()
 
                         challenge.save()
                         registrant.save()#to adjust captaining number

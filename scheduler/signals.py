@@ -8,7 +8,7 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
     if instance.roster2:
         my_rosters.append(instance.roster2)
     for r in my_rosters:
-        if r.id and not r.name and not r.captain:
+        if r.id and not r.captain:
             connections=list(r.roster1.all())+list(r.roster2.all())
             if len(connections)<=1:
                 r.delete()

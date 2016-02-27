@@ -107,6 +107,28 @@ class Roster(Matching_Criteria):
 
         super(Roster, self).save()
 
+
+    def coed_beginner(self):
+        #maybe write something simialr for minimum contact skills?
+        if self.gender=='NA/Coed':
+            forbidden_skills=[None,False,'C','CO','BC','ABC']
+            if self.skill in forbidden_skills:
+                coed_int_str="Coed teams have a minimum skill level of Intermediate."
+                if self.captain and self.captain.skill and self.captain.skill in ["B","BO","A","BO"]:#if captain is intermediate or above
+                    self.skill="BO"
+                    return coed_int_str+" In order to remain coed, the skill level has been raised to Intermediate. If you'd like to include a lower skill level, please change team gender first."
+                else:
+                    if self.captain.gender:
+                        self.gender=self.captain.gender
+                    else:
+                        self.gender="Female"
+                return coed_int_str+" Because your skill is not Intermediate, team Gender has been assigned."
+                #self.save()
+            else:
+                return False
+        else:
+            return False
+
     def criteria_conflict(self):
         '''nearly identical to Registrant method of the same name, jsut w/ skater/roster roles reversed'''
         problem_criteria=[]
