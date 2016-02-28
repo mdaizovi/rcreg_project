@@ -755,6 +755,12 @@ def challenge_respond(request):
                     my_teams_as_cap=list(registrant.captain.exclude(name=None))
                     if len(my_teams_as_cap)>0:
                         form=MyRosterSelectForm(team_list=my_teams_as_cap)
+                        if my_team in my_teams_as_cap:
+                            form=MyRosterSelectForm(team_list=my_teams_as_cap)
+                            form.fields["game_team"].initial =str(my_team.pk)
+                        else:
+                             form=MyRosterSelectForm(team_list=my_teams_as_cap)
+
                         return render_to_response('challenge_respond.html',{'form':form,'opponent':opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
                 #I don't want these to run f game team
                 my_team.gender=registrant.gender#to avoid weird save errors w/ eligibility
