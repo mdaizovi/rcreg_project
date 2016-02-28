@@ -600,8 +600,9 @@ def edit_challenge(request, activity_id):
                 challenge.roster1=opponent
 
             challenge.save()
-            opponent.save()
-            opponent.captain.save()#to get captaining number accurate
+            if opponent:
+                opponent.save()
+                opponent.captain.save()#to get captaining number accurate
 
         elif 'search captains' in request.POST:
             captain_search_form=SearchForm(request.POST or None)
@@ -732,6 +733,14 @@ def challenge_respond(request):
                     my_team.captain=None
                     my_team.name=None
                     my_team.save()
+
+                #error: save() prohibited to prevent data loss due to unsaved related object 'roster1'.
+                #I hope this hack doesn't fuck me.
+                if challenge.roster1:
+                    challenge.roster1.save()
+                if challenge.roster2:
+                    challenge.roster2.save()
+
                 challenge.save()
                 registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
