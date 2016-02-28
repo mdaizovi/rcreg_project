@@ -506,15 +506,15 @@ class Challenge(Activity):
 
         return my_team,opponent,my_acceptance,opponent_acceptance
 
-    def replace_team(self,registrant,selected_team):
+    def replace_team(self,old_team,selected_team):
         """for changing from disposable team to Game team. Finds the team te registrant is a captain of, removes that team, puts given team in it place."""
-        if self.roster1 and self.roster1.captain and (self.roster1.captain ==registrant):
-            my_old_team=self.roster1
+        if self.roster1 and self.roster1==old_team:
             self.roster1=selected_team
-        elif self.roster2 and self.roster2.captain and (self.roster2.captain ==registrant):
-            my_old_team=self.roster2
+        elif self.roster2 and self.roster2==old_team:
             self.roster2=selected_team
+
         self.save()
+        return old_team,selected_team
 
     def can_submit_chlg(self):
         """first checks if con allows submission through method of same name, then checks if both captains have accepted"""
