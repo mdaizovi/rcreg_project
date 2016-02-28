@@ -197,6 +197,17 @@ class Matching_Criteria(models.Model):
     gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
     intl=models.NullBooleanField(default=False)
 
+    def coed_beginner(self):
+        #maybe write something simialr for minimum contact skills?
+        if self.gender=='NA/Coed':
+            forbidden_skills=[None,False,'C','CO','BC','ABC','BO']
+            if self.skill in forbidden_skills:
+                self.skill="BO"
+                self.save()
+                return "Coed teams have a minimum skill level of Intermediate. In order to remain coed, the skill level has been raised to Intermediate. If you'd like to include a lower skill level, please change team gender first."
+        else:
+            return False
+
     def skills_allowed(self):
         #this is only necessary for rosters, not registrants, but moved it here anyway.
         if self.skill:
@@ -397,9 +408,9 @@ class Registrant(Matching_Criteria):
         '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
         from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
         my_rosters=list(self.roster_set.all())
-        print "my rostersA", my_rosters
+        print "my pendind rosters", my_rosters
         pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
-        print "pendingaAAAA",pending
+        print "pending",pending
         return pending
 
     def scheduled_challenges(self):

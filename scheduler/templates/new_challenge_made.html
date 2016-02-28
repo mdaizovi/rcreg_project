@@ -73,7 +73,6 @@
             {%for form in formlist%}
                 <form method="POST" class="post-form">
                   {% csrf_token %}
-                    <input type="hidden" name="my_team" value="{{ my_team.id }}" />
                   {%with challenge.id as challenge_id%}
                   <input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
             {%for field in form %}
