@@ -55,7 +55,7 @@ def registrant_profile(request):
 
     if request.method == 'POST':
         selection= request.POST.copy()
-        print "selection",selection
+        #print "selection",selection
         save_attempt=True
         this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
         this_con=this_reg.con
@@ -75,7 +75,7 @@ def registrant_profile(request):
                 #don't change the way you convert to string, this method needs to be the same for update_blackouts to work.
                 string_of_date=date.strftime("%B %d, %Y")
                 ampmitems=request.POST.getlist(string_of_date)
-                print "ampmitems",ampmitems
+                #print "ampmitems",ampmitems
                 if string_of_date not in request.POST:
                     date_dict[string_of_date]=["AM","PM"]
                 else:#assuming there's an ampmitem list, bc the date is in post
@@ -110,18 +110,14 @@ def registrant_profile(request):
         if (registrant.con.start > datetime.date.today()):
             if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
                 datelist=registrant.con.get_date_range()
-                print "datelist",datelist
-                print "registrant.blackout.all()",registrant.blackout.all()
                 for bo in registrant.blackout.all():
                     bo_list.append((bo.date,bo.ampm,None,"Available "+bo.ampm))
-                print "bo_list1",bo_list
                 for date in datelist:
                     if (date,"AM",None,"Available AM") not in bo_list:
                         bo_list.append((date,"AM","checked","Available AM"))
                     if (date,"PM",None,"Available PM") not in bo_list:
                         bo_list.append((date,"PM","checked","Available PM"))
                 bo_list.sort()
-                print "bo_list2",bo_list
 
         else:
             datelist=None
