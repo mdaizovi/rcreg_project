@@ -499,15 +499,19 @@ def edit_roster(request, roster_id):
 @login_required
 def edit_challenge(request, activity_id):
     user=request.user
-    #upcoming_registrants=user.upcoming_registrants()
     challenge=Challenge.objects.get(pk=int(activity_id))
     registrant=Registrant.objects.get(con=challenge.con, user=user)
-
     my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
-    print "VERYbeginning of edit, my team",my_team
-    print "opponent",opponent
-    print "my acce",my_acceptance
-    print "opponent_acceptance",opponent_acceptance
+
+    print "challenge roster check",challenge
+    if challenge.roster1:
+        print "r1",challenge.roster1,challenge.roster1.pk
+    else:
+        print "no r1"
+    if challenge.roster2:
+        print "r2",challenge.roster2,challenge.roster2.pk
+    else:
+        print "no r2"
 
     registrant_list = list(user.registrant_set.all())
     opponent_form_list=None
@@ -533,8 +537,8 @@ def edit_challenge(request, activity_id):
     game_teams_form=None
 
     if request.method == "POST":
-        my_team=Roster.objects.get(pk=request.POST['roster_id'])
-
+        selection = request.POST.copy()
+        print "selection", selection
         if 'confirm save' in request.POST or 'save team' in request.POST:
             save_attempt=True
             if challenge.is_a_game:
@@ -546,6 +550,7 @@ def edit_challenge(request, activity_id):
                 challenge_form=ChallengeModelForm(request.POST,user=user, instance=challenge)
                 my_team=roster_form.save(commit=False)#without this, criteria conflict was running off old gender/skill.
             #don't save yet, just changing skill and gender for problem criteria check
+            print "my team in confirm save",my_team
 
             if 'save team' in request.POST:
                 #don't save yet, just changing skill and gender for problem criteria check
@@ -561,12 +566,16 @@ def edit_challenge(request, activity_id):
                 conflict_sweep=my_team.conflict_sweep()
 
             if not captain_conflict and roster_form.is_valid() and challenge_form.is_valid():#this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
+                #this is only if just updating team, not creating new or swapping captains or anything
                 roster=roster_form.save()
                 if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
                     coed_beginner =roster.coed_beginner()
+                    if coed_beginner:
+                        roster.save()
                 challenge=challenge_form.save()
                 roster.con=challenge.con
                 roster.save()
+                my_team=roster#keep this to get new saved data for my_team
                 save_success=True
             else:
                 print "Captain conflict or Errors: ",roster_form.errors, challenge_form.errors
@@ -579,13 +588,19 @@ def edit_challenge(request, activity_id):
 
         elif 'invite captain' in request.POST or 'game_team' in request.POST:
             if 'invite captain' in request.POST:
-                invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                try:
-                    opponent=Roster.objects.get(pk=request.POST['opponent_id'])
-                    opponent.captain=invited_captain
-                except:#if this is the first time and there is no opponent
-                    opponent=Roster(captain=invited_captain, con=invited_captain.con)
-                    opponent.save()
+                if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
+                    invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                    if opponent:
+                        if opponent.captain:
+                            prev_cap=opponent.captain
+                        opponent.captain=invited_captain
+                        opponent.save()#this is so captain save will reset captian number
+                        if prev_cap:
+                            prev_cap.save()#to reset captain #
+                    else:#if this is the first time and there is no opponent
+                         opponent=Roster(captain=invited_captain, con=invited_captain.con)
+                         opponent.save()
+
             elif 'game_team' in request.POST:
                 opponent=Roster.objects.get(pk=request.POST['game_team'])
                 invited_captain=opponent.captain
@@ -704,76 +719,6 @@ def edit_challenge(request, activity_id):
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
 
-# @login_required
-# def challenge_respond(request):
-#     '''This should always be post from Edit Challange, if not post jsut goes to index
-#     takes in which challenge, who captain is, saves whether accepted or rejected,
-#     redrects to my challenges if rejected, edit challenge if accepted'''
-#     user=request.user
-#     if request.method == "POST":
-#         registrant_id = request.POST['registrant_id']
-#         activity_id = request.POST['activity_id']
-#         challenge=Challenge.objects.get(pk=activity_id)
-#         registrant=Registrant.objects.get(pk=registrant_id)
-#         my_team = Roster.objects.get(pk=request.POST['my_team_id'])
-#         if 'opponent_id' in request.POST :
-#             my_opponent=Roster.objects.get(pk=request.POST['opponent_id'])
-#         else:
-#             if challenge.roster1==my_team:
-#                 my_opponent=challenge.roster1
-#             elif challenge.roster2==my_team:
-#                 my_opponent=challenge.roster2
-#
-#         if challenge.roster1==my_team:
-#             opponent_acceptance=challenge.captain2accepted
-#         elif challenge.roster2==my_team:
-#             opponent_acceptance=challenge.captain1accepted
-#
-#         if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
-#             if 'reject remain captain' in request.POST:
-#                 challenge.rosterreject(my_team)
-#                 if registrant==challenge.roster1.captain:
-#                     challenge.roster1=None
-#                 elif registrant==challenge.roster2.captain:
-#                     challenge.roster2=None
-#                 challenge.save()
-#                 return redirect('/scheduler/my_challenges/')
-#             elif 'reject leave team' in request.POST:
-#                 challenge.rosterreject(my_team)
-#                 my_team.participants.remove(registrant)
-#                 my_team.captain=None
-#                 my_team.save()
-#                 registrant.save()#this is important to reset captain number
-#                 return redirect('/scheduler/my_challenges/')
-#             else:
-#                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'my_opponent':my_opponent}, context_instance=RequestContext(request))
-    #
-    #     elif "accept" in request.POST:
-    #         if 'create_new_team' in request.POST:
-    #             skill_str=registrant.skill+"O"
-    #             new_team=Roster(captain=registrant, con=registrant.con, gender=registrant.gender, skill=skill_str)
-    #             new_team.save()
-    #             challenge.replace_team(registrant,new_team)
-    #
-    #         elif 'game_team' in request.POST:
-    #             selected_team=Roster.objects.get(pk=request.POST['game_team'])
-    #             challenge.replace_team(registrant,selected_team)
-    #         else:
-    #             my_teams_as_cap=list(registrant.captain.exclude(name=None))
-    #             if len(my_teams_as_cap)>0:
-    #                 form=MyRosterSelectForm(team_list=my_teams_as_cap)
-    #                 return render_to_response('challenge_respond.html',{'form':form,'my_opponent':my_opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
-    #
-    #         #is a game but want new team, or if a game but no other teams, or if not  game. all accept.
-    #         if challenge.roster1.captain==registrant:
-    #             challenge.captain1accepted=True
-    #         elif challenge.roster2.captain==registrant:
-    #             challenge.captain2accepted=True
-    #         challenge.save()
-    #         return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
-    # else:#this should never happen, should always be post
-    #     return redirect('/')
-
 @login_required
 def challenge_respond(request):
     '''This should always be post from Edit Challange, if not post jsut goes to index
@@ -811,20 +756,22 @@ def challenge_respond(request):
                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
 
         elif "accept" in request.POST:
+            skill_str=registrant.skill+"O"
             if 'create_new_team' in request.POST:
-                skill_str=registrant.skill+"O"
                 new_team=Roster(captain=registrant, con=registrant.con, gender=registrant.gender, skill=skill_str)
                 new_team.save()
                 challenge.replace_team(registrant,new_team)
 
             elif 'game_team' in request.POST:
                 selected_team=Roster.objects.get(pk=request.POST['game_team'])
+                selected_team.gender=registrant.gender#to avoid weird save errors w/ eligibility
+                selected_team.skill=skill_str#to avoid weird save errors w/ eligibility
                 challenge.replace_team(registrant,selected_team)
             else:
                 my_teams_as_cap=list(registrant.captain.exclude(name=None))
                 if len(my_teams_as_cap)>0:
                     form=MyRosterSelectForm(team_list=my_teams_as_cap)
-                    return render_to_response('challenge_respond.html',{'form':form,'my_opponent':my_opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
+                    return render_to_response('challenge_respond.html',{'form':form,'opponent':opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
 
             #is a game but want new team, or if a game but no other teams, or if not  game. all accept.
             if challenge.roster1.captain==registrant:
@@ -835,7 +782,6 @@ def challenge_respond(request):
             return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
     else:#this should never happen, should always be post
         return redirect('/')
-
 
 
 def view_challenge(request, activity_id):
@@ -939,8 +885,8 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 cancaptain=True
 
         if request.method == "POST":
-            #selection = request.POST.copy()
-            #print "selection", selection
+            selection = request.POST.copy()
+            print "selection", selection
 
             challenged_captain=None
             my_team=None
@@ -1011,8 +957,8 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                     roster_form=ChallengeRosterModelForm(request.POST,user=user,instance=my_team)
 
                 if registrant and cancaptain:#so this should be true if is_a_game, bc of top of view
-                    if roster_form:
-                        if roster_form.is_valid():
+                    if not my_team and roster_form:
+                        if roster_form.is_valid():#HERE's where I los emy rost                        print "my_team before roster form sacv",my_team
                             my_team=roster_form.save(commit=False)
                             problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
 
@@ -1028,6 +974,8 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                             challenge.is_a_game=True
                         else:
                             coed_beginner=my_team.coed_beginner()
+                            if coed_beginner:
+                                my_team.save()
 
                         challenge.save()
                         registrant.save()#to adjust captaining number
