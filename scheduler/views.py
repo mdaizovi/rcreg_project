@@ -750,9 +750,7 @@ def challenge_respond(request):
             else:
                 skill_str=registrant.skill+"O"
                 if 'create_new_team' in request.POST:
-                    new_team=Roster(captain=registrant, con=registrant.con, gender=registrant.gender, skill=skill_str)
-                    new_team.save()
-                    my_old_team,my_team=challenge.replace_team(my_team,new_team)
+                    pass #i jsut want to use old team, but save gender etc below
                 else:
                     my_teams_as_cap=list(registrant.captain.exclude(name=None))
                     if len(my_teams_as_cap)>0:
