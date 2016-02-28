@@ -499,10 +499,17 @@ def edit_roster(request, roster_id):
 @login_required
 def edit_challenge(request, activity_id):
     user=request.user
+    #upcoming_registrants=user.upcoming_registrants()
     challenge=Challenge.objects.get(pk=int(activity_id))
     registrant=Registrant.objects.get(con=challenge.con, user=user)
-    my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
 
+    my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+    print "VERYbeginning of edit, my team",my_team
+    print "opponent",opponent
+    print "my acce",my_acceptance
+    print "opponent_acceptance",opponent_acceptance
+
+    registrant_list = list(user.registrant_set.all())
     opponent_form_list=None
     participants=None
     eligible_participants=None
@@ -572,29 +579,25 @@ def edit_challenge(request, activity_id):
 
         elif 'invite captain' in request.POST or 'game_team' in request.POST:
             if 'invite captain' in request.POST:
-                if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in ["None",None,"",u'']:
-                    invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                    if opponent:
-                        opponent.captain=invited_captain
-                    else:
-                        skill_str=invited_captain.skill+"O"
-                        opponent=Roster(captain=invited_captain, con=challenge.con, gender=invited_captain.gender, skill=skill_str)
-
+                invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                try:
+                    opponent=Roster.objects.get(pk=request.POST['opponent_id'])
+                    opponent.captain=invited_captain
+                except:#if this is the first time and there is no opponent
+                    opponent=Roster(captain=invited_captain, con=invited_captain.con)
+                    opponent.save()
             elif 'game_team' in request.POST:
                 opponent=Roster.objects.get(pk=request.POST['game_team'])
                 invited_captain=opponent.captain
 
-            if opponent:
-                if my_team==challenge.roster1:
-                    challenge.roster2=opponent
+            if my_team==challenge.roster1:
+                challenge.roster2=opponent
+            elif my_team==challenge.roster2:
+                challenge.roster1=opponent
 
-                elif my_team==challenge.roster2:
-                    challenge.roster1=opponent
-                opponent.save()
-                challenge.save()
-                if opponent.captain:
-                    opponent.captain.save()#to get captaining number accurate
-
+            challenge.save()
+            opponent.save()
+            opponent.captain.save()#to get captaining number accurate
 
         elif 'search captains' in request.POST:
             captain_search_form=SearchForm(request.POST or None)
@@ -701,6 +704,76 @@ def edit_challenge(request, activity_id):
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
 
+# @login_required
+# def challenge_respond(request):
+#     '''This should always be post from Edit Challange, if not post jsut goes to index
+#     takes in which challenge, who captain is, saves whether accepted or rejected,
+#     redrects to my challenges if rejected, edit challenge if accepted'''
+#     user=request.user
+#     if request.method == "POST":
+#         registrant_id = request.POST['registrant_id']
+#         activity_id = request.POST['activity_id']
+#         challenge=Challenge.objects.get(pk=activity_id)
+#         registrant=Registrant.objects.get(pk=registrant_id)
+#         my_team = Roster.objects.get(pk=request.POST['my_team_id'])
+#         if 'opponent_id' in request.POST :
+#             my_opponent=Roster.objects.get(pk=request.POST['opponent_id'])
+#         else:
+#             if challenge.roster1==my_team:
+#                 my_opponent=challenge.roster1
+#             elif challenge.roster2==my_team:
+#                 my_opponent=challenge.roster2
+#
+#         if challenge.roster1==my_team:
+#             opponent_acceptance=challenge.captain2accepted
+#         elif challenge.roster2==my_team:
+#             opponent_acceptance=challenge.captain1accepted
+#
+#         if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
+#             if 'reject remain captain' in request.POST:
+#                 challenge.rosterreject(my_team)
+#                 if registrant==challenge.roster1.captain:
+#                     challenge.roster1=None
+#                 elif registrant==challenge.roster2.captain:
+#                     challenge.roster2=None
+#                 challenge.save()
+#                 return redirect('/scheduler/my_challenges/')
+#             elif 'reject leave team' in request.POST:
+#                 challenge.rosterreject(my_team)
+#                 my_team.participants.remove(registrant)
+#                 my_team.captain=None
+#                 my_team.save()
+#                 registrant.save()#this is important to reset captain number
+#                 return redirect('/scheduler/my_challenges/')
+#             else:
+#                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'my_opponent':my_opponent}, context_instance=RequestContext(request))
+    #
+    #     elif "accept" in request.POST:
+    #         if 'create_new_team' in request.POST:
+    #             skill_str=registrant.skill+"O"
+    #             new_team=Roster(captain=registrant, con=registrant.con, gender=registrant.gender, skill=skill_str)
+    #             new_team.save()
+    #             challenge.replace_team(registrant,new_team)
+    #
+    #         elif 'game_team' in request.POST:
+    #             selected_team=Roster.objects.get(pk=request.POST['game_team'])
+    #             challenge.replace_team(registrant,selected_team)
+    #         else:
+    #             my_teams_as_cap=list(registrant.captain.exclude(name=None))
+    #             if len(my_teams_as_cap)>0:
+    #                 form=MyRosterSelectForm(team_list=my_teams_as_cap)
+    #                 return render_to_response('challenge_respond.html',{'form':form,'my_opponent':my_opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
+    #
+    #         #is a game but want new team, or if a game but no other teams, or if not  game. all accept.
+    #         if challenge.roster1.captain==registrant:
+    #             challenge.captain1accepted=True
+    #         elif challenge.roster2.captain==registrant:
+    #             challenge.captain2accepted=True
+    #         challenge.save()
+    #         return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
+    # else:#this should never happen, should always be post
+    #     return redirect('/')
+
 @login_required
 def challenge_respond(request):
     '''This should always be post from Edit Challange, if not post jsut goes to index
@@ -708,42 +781,34 @@ def challenge_respond(request):
     redrects to my challenges if rejected, edit challenge if accepted'''
     user=request.user
     if request.method == "POST":
-        registrant_id = request.POST['registrant_id']
-        activity_id = request.POST['activity_id']
-        challenge=Challenge.objects.get(pk=activity_id)
-        registrant=Registrant.objects.get(pk=registrant_id)
-        my_team = Roster.objects.get(pk=request.POST['my_team_id'])
-        if 'opponent_id' in request.POST :
-            my_opponent=Roster.objects.get(pk=request.POST['opponent_id'])
-        else:
-            if challenge.roster1==my_team:
-                my_opponent=challenge.roster1
-            elif challenge.roster2==my_team:
-                my_opponent=challenge.roster2
-
-        if challenge.roster1==my_team:
-            opponent_acceptance=challenge.captain2accepted
-        elif challenge.roster2==my_team:
-            opponent_acceptance=challenge.captain1accepted
+        selection = request.POST.copy()
+        print "selection", selection
+        challenge=Challenge.objects.get(pk=request.POST['activity_id'])
+        registrant=Registrant.objects.get(pk=request.POST['registrant_id'])
+        my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+        print "my team beginning of responf",my_team
 
         if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
-            if 'reject remain captain' in request.POST:
+            if 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
                 challenge.rosterreject(my_team)
-                if registrant==challenge.roster1.captain:
-                    challenge.roster1=None
-                elif registrant==challenge.roster2.captain:
-                    challenge.roster2=None
+                if 'reject remain captain' in request.POST :
+                    if challenge.roster1 and challenge.roster1.captain==registrant:
+                        challenge.roster1=None
+                    elif challenge.roster2 and challenge.roster2.captain==registrant:
+                        challenge.roster2=None
+                    #challenge.save()
+                elif 'reject leave team' in request.POST:
+                    #challenge.save()#can i move to the end?
+                    my_team.participants.remove(registrant)
+                    my_team.captain=None
+                    my_team.name=None
+                    my_team.save()
                 challenge.save()
-                return redirect('/scheduler/my_challenges/')
-            elif 'reject leave team' in request.POST:
-                challenge.rosterreject(my_team)
-                my_team.participants.remove(registrant)
-                my_team.captain=None
-                my_team.save()
                 registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
+
             else:
-                return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'my_opponent':my_opponent}, context_instance=RequestContext(request))
+                return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
 
         elif "accept" in request.POST:
             if 'create_new_team' in request.POST:
@@ -770,6 +835,7 @@ def challenge_respond(request):
             return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
     else:#this should never happen, should always be post
         return redirect('/')
+
 
 
 def view_challenge(request, activity_id):
@@ -1006,7 +1072,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 formlist=[search_form,eligibleregistrantform]
 
             if challenge and (my_team or opposing_roster) and not captain_conflict:
-                return render_to_response('new_challenge_made.html', {'IntegrityErrorMSG':IntegrityErrorMSG,'opposing_roster':opposing_roster,'game_teams_form':game_teams_form,'is_a_game':is_a_game,'coed_beginner':coed_beginner,'my_team':my_team,'formlist':formlist,'challenged_captain':challenged_captain,'challenge':challenge},context_instance=RequestContext(request))
+                return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
 
         #this is where not request.post starts
         if not challenged_captain or not opposing_roster:#I don't need to see these forms if they just invited someone
