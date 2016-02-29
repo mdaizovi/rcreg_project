@@ -741,17 +741,18 @@ def challenge_respond(request):
                 if challenge.pk:#if challenge has not just been deleted
                     challenge.save()#this is necessary, otherwise it won't save challenge
 
-                if 'reject remain captain' in request.POST:
-                    pass
-
-                elif 'reject leave team' in request.POST:
+                if 'reject leave team' in request.POST:
                     old_chal_set=list(my_team.roster1.all())+list(my_team.roster2.all())
                     for c in old_chal_set:
                         c.rosterreject(my_team)
                         old_team,selected_team=c.replace_team(my_team,None)
                         if c.pk:
                             c.save()
-                    my_team.participants.remove(registrant)
+                    try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
+                        if my_team and my_team.participants.all() and registrant in my_team.participants.all():
+                            my_team.participants.remove(registrant)
+                    except:
+                        pass
                     my_team.delete()
 
                 registrant.save()#this is important to reset captain number
@@ -764,9 +765,26 @@ def challenge_respond(request):
                 selected_team=Roster.objects.get(pk=request.POST['game_team'])
                 my_old_team,my_team=challenge.replace_team(my_team,selected_team)
                 if my_old_team and my_old_team!= selected_team:
-                    if my_old_team.captain and my_old_team.captain ==registrant:#( can probably do this in method, but unsure if I'll always want
+                    if my_old_team.captain and my_old_team.captain == registrant:#( can probably do this in method, but unsure if I'll always want
+                        print "this is probably where all the none teams are coming form, views line 769"
                         my_old_team.captain=None
-                        my_old_team.save()
+                        try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
+                            if my_old_team and my_old_team.participants.all() and registrant in my_old_team.participants.all():
+                                my_old_team.participants.remove(registrant)
+                        except:
+                            pass
+
+                        try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
+                            if not my_old_team.name and not my_old_team.captain and my_old_team.is_homeless:
+                                my_old_team.delete()
+                            else:
+                                my_old_team.save()
+                        except:
+                            try:
+                                my_old_team.save()
+                            except:
+                                pass #i really need to check this when it's not 2am
+
                         registrant.save()#reset captian #
             else:
                 skill_str=registrant.skill+"O"

@@ -2,6 +2,7 @@
 def delete_homeless_roster_chg(sender, instance,**kwargs):
     """upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
     Not necessary for Training, d/t 1:1 """
+    #print "running delete_homeless_roster_chg",instance
     my_rosters=[]
     if instance.roster1:
         my_rosters.append(instance.roster1)
@@ -11,17 +12,22 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
         if r.id and not r.name and not r.captain:
             connections=list(r.roster1.all())+list(r.roster2.all())
             if len(connections)<=1:
+                #print "about to delete",r
                 r.delete()
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Deletes a Roster if it has no Captain and no Challenges"""
     my_challenges=list(instance.roster1.all())+list(instance.roster2.all())
+    #print "running delete_homeless_roster_ros"
     if len(my_challenges)<1 and not instance.captain:
+        #print "about to delete ",instance
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
     """Deletes Challeng if it has no Rosters"""
+    #print "running delete_homeless_chg"
     if not instance.roster1 and not instance.roster2:
+        #print "about to delete",instance
         instance.delete()
 
 
