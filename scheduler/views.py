@@ -763,10 +763,11 @@ def challenge_respond(request):
             if 'select_existing_team' in request.POST:
                 selected_team=Roster.objects.get(pk=request.POST['game_team'])
                 my_old_team,my_team=challenge.replace_team(my_team,selected_team)
-                if my_old_team!= selected_team and my_old_team.captain and my_old_team.captain ==registrant:#( can probably do this in method, but unsure if I'll always want
-                    my_old_team.captain=None
-                    my_old_team.save()
-                    registrant.save()#reset captian #
+                if my_old_team and my_old_team!= selected_team:
+                    if my_old_team.captain and my_old_team.captain ==registrant:#( can probably do this in method, but unsure if I'll always want
+                        my_old_team.captain=None
+                        my_old_team.save()
+                        registrant.save()#reset captian #
             else:
                 skill_str=registrant.skill+"O"
                 if 'create_new_team' in request.POST:
