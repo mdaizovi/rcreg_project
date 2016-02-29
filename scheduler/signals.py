@@ -24,6 +24,7 @@ def delete_homeless_chg(sender, instance,**kwargs):
     if not instance.roster1 and not instance.roster2:
         instance.delete()
 
+
 def adjust_captaining_no(sender, instance,**kwargs):
     '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
     if instance.captain:
@@ -38,7 +39,6 @@ def challenge_defaults(sender, instance,**kwargs):
     from con_event.models import GENDER,SKILL_LEVEL_CHG
     from scheduler.models import DEFAULT_CHALLENGE_DURATION,DEFAULT_SANCTIONED_DURATION,GAMETYPE,GAME_CAP
     #make a pre save so i don't have to also add save and make infinite loop
-
     def set_mc(roster):
         """these are the default matching criteria I want forgames"""
         roster.skill=SKILL_LEVEL_CHG[0][0]

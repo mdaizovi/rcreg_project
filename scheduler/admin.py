@@ -89,31 +89,39 @@ class RosterResource(resources.ModelResource):
         report_skipped = True
 
 class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
+    fields = ('name','captain','color','skill','gender','intl','internal_notes','con')
+    #fields = [field.name for field in Roster._meta.fields if field.name != "id"]#shows all but m2m fields
+    #exclude=('con',)
+
+    fields = (('con','name','color'),('captain','can_email'),('skill','gender','intl'),'participants','registered','auditing','internal_notes')
+
     list_display= ('name', 'captain','cap')
     search_fields = ('name', 'captain__sk8name', 'captain__first_name','captain__last_name')
     filter_horizontal = ('participants',)
     list_filter = ('con','skill','gender','intl')
     resource_class = RosterResource
 
-    def formfield_for_foreignkey(self, db_field, request,**kwargs):
-        try:#So will still work when making a new one
-            object_id = resolve(request.path).args[0]
-            roster=Roster.objects.get(pk=object_id)
-            if db_field.name == "captain":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-            return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-        except:
-            pass
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        try:#So will still work when making a new one
-            object_id = resolve(request.path).args[0]
-            roster=Roster.objects.get(pk=object_id)
-            if db_field.name == "participants":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-            return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
-        except:
-            pass
+#these 2 don't work for making a new roster, I'm just going to comment out for now so I can move on
+#figure it out later
+    # def formfield_for_foreignkey(self, db_field, request,**kwargs):
+    #     try:#So will still work when making a new one
+    #         object_id = resolve(request.path).args[0]
+    #         roster=Roster.objects.get(pk=object_id)
+    #         if db_field.name == "captain":
+    #             kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+    #         return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+    #     except:
+    #         pass
+    #
+    # def formfield_for_manytomany(self, db_field, request, **kwargs):
+    #     try:#So will still work when making a new one
+    #         object_id = resolve(request.path).args[0]
+    #         roster=Roster.objects.get(pk=object_id)
+    #         if db_field.name == "participants":
+    #             kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+    #         return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
+    #     except:
+    #         pass
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django

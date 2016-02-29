@@ -528,6 +528,20 @@ def edit_challenge(request, activity_id):
 
     if request.method == "POST":
         if 'confirm save' in request.POST or 'save team' in request.POST:
+
+#################I'm having problems with people trying to save existing teams as same name as other existing teams
+                #so I need to get their existing team and swap them out, if exist.
+            existing_team=None
+            if 'name' in request.POST:
+                my_team_name=ascii_only_no_punct(request.POST['name'])
+                try:
+                    existing_team=Roster.objects.get(con=registrant.con,captain=registrant, name=my_team_name)
+                    old_team,selected_team=challenge.replace_team(my_team,existing_team)
+                    my_team=selected_team
+                except:
+                    pass #if it still thows dupe entry errors I'll know this didn't work.
+########################################
+
             save_attempt=True
             if challenge.is_a_game:
                 roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
@@ -721,30 +735,27 @@ def challenge_respond(request):
         my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
         if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
             if 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
-                challenge.rosterreject(my_team)
-                if 'reject remain captain' in request.POST :
-                    if challenge.roster1 and challenge.roster1.captain==registrant:
-                        challenge.roster1=None
-                    elif challenge.roster2 and challenge.roster2.captain==registrant:
-                        challenge.roster2=None
-                    #challenge.save()
+                challenge.rosterreject(my_team)#has to be first to reject properly, oterwise is still accepted
+                old_team,selected_team=challenge.replace_team(my_team,None)#this is necessary, otherwise it won't save challenge
+                challenge.rosterreject(my_team)#to delete homeless challenge
+                if challenge.pk:#if challenge has not just been deleted
+                    challenge.save()#this is necessary, otherwise it won't save challenge
+
+                if 'reject remain captain' in request.POST:
+                    pass
+
                 elif 'reject leave team' in request.POST:
+                    old_chal_set=list(my_team.roster1.all())+list(my_team.roster2.all())
+                    for c in old_chal_set:
+                        c.rosterreject(my_team)
+                        old_team,selected_team=c.replace_team(my_team,None)
+                        if c.pk:
+                            c.save()
                     my_team.participants.remove(registrant)
-                    my_team.captain=None
-                    my_team.name=None
-                    my_team.save()
+                    my_team.delete()
 
-                #error: save() prohibited to prevent data loss due to unsaved related object 'roster1'.
-                #I hope this hack doesn't fuck me.
-                if challenge.roster1:
-                    challenge.roster1.save()
-                if challenge.roster2:
-                    challenge.roster2.save()
-
-                challenge.save()
                 registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
-
             else:
                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
 
@@ -777,12 +788,15 @@ def challenge_respond(request):
                 my_team.name=None
                 my_team.save()
 
+
             #is a game but want new team, or if a game but no other teams, or if not  game. all accept.
-            if challenge.roster1.captain==registrant:
+            if challenge.roster1 and challenge.roster1.captain and challenge.roster1.captain==registrant:
                 challenge.captain1accepted=True
-            elif challenge.roster2.captain==registrant:
+            elif challenge.roster2 and challenge.roster2.captain and challenge.roster2.captain==registrant:
                 challenge.captain2accepted=True
             challenge.save()
+
+
             return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
     else:#this should never happen, should always be post
         return redirect('/')
@@ -915,6 +929,7 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                     skill_str=challenged_captain.skill+"O"#this will make default team skill either AO,BO,or CO
                     opposing_roster=Roster(captain=challenged_captain, con=challenged_captain.con, gender=challenged_captain.gender, skill=skill_str)
                     opposing_roster.save()
+                    opposing_roster.save()#again, to add cap to roster
                     challenge.roster2=opposing_roster
                     challenge.save()
                     formlist=None
@@ -940,17 +955,22 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 except:
                     pass
 
-                if 'game_team' in request.POST:
-                    my_team=Roster.objects.get(pk=request.POST['game_team'])
-                    roster_form=None
-                elif 'name' in request.POST:
-                    my_team_name=ascii_only_no_punct(request.POST['name'])
-                    try:
-                        my_team=Roster.objects.get(con=con,captain=registrant, name=my_team_name)
-                    except:
-                        my_team=Roster(con=con,captain=registrant, name=my_team_name)
-                elif 'my_team'in request.POST:
-                    my_team=Roster.objects.get(pk=request.POST['my_team'])
+                #where i figure out or make my team
+                if 'game_team' in request.POST or 'my_team'in request.POST or 'name' in request.POST:
+                    if 'game_team' in request.POST:
+                        my_team=Roster.objects.get(pk=request.POST['game_team'])
+                        roster_form=None
+                    elif 'my_team'in request.POST:
+                        my_team=Roster.objects.get(pk=request.POST['my_team'])
+                    elif 'name' in request.POST:
+                        if request.POST['name'] not in [None,"None","",u'']:
+                            my_team_name=ascii_only_no_punct(request.POST['name'])
+                            try:
+                                my_team=Roster.objects.get(con=con,captain=registrant, name=my_team_name)
+                            except:
+                                my_team=Roster(con=con,captain=registrant, name=my_team_name)
+                        else:
+                            my_team=Roster(con=con,captain=registrant)
 
                 if is_a_game:
                     roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
@@ -1029,7 +1049,12 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 formlist=[]
                 my_teams_as_cap=[]
                 for r in upcoming_registrants:
-                    my_teams_as_cap+=list(r.captain.exclude(name=None))
+                    #my_teams_as_cap+=list(r.captain.exclude(name=None))
+                    rosters=list(Roster.objects.filter(captain=r))
+                    for r in rosters:#I don't know why i ahve to do it this way. .exclude name=None ecludes all, for osme reason
+                        if not r.name:
+                            rosters.remove(r)
+                    my_teams_as_cap+=list(rosters)
                 if len(my_teams_as_cap)>0 and not create_new_team:
                     if is_a_game or cancaptain:
                         formlist=[MyRosterSelectForm(team_list=my_teams_as_cap)]

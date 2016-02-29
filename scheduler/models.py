@@ -104,7 +104,6 @@ class Roster(Matching_Criteria):
             self.name="AUDITING: "+self.auditing.name
             if self.auditing.audcap:
                 self.cap=self.auditing.audcap
-
         super(Roster, self).save()
 
     def criteria_conflict(self):
@@ -455,7 +454,7 @@ class Challenge(Activity):
             cleaned_notes=ascii_only(self.internal_notes)
             self.internal_notes=cleaned_notes
 
-        if self.roster1:
+        if self.roster1:#this doesn't matter since i don't save it, does it?
             if not self.roster1.cap:
                 self.roster1.cap=GAME_CAP
             if not self.is_a_game:
@@ -465,9 +464,11 @@ class Challenge(Activity):
                 name1=self.roster1.name
             else:
                 name1="?"
+            #self.roster1.save()
         else:
             name1="?"
-        if self.roster2:
+
+        if self.roster2:#this doesn't matter since i don't save it, does it?
             if not self.roster2.cap:
                 self.roster2.cap=GAME_CAP
             if not self.is_a_game:
@@ -480,13 +481,12 @@ class Challenge(Activity):
         else:
             name2="?"
 
-
         self.name= "%s vs %s" % (name1,name2)
-
-        super(Challenge, self).save()
 
         if not self.duration:
             self.duration=DEFAULT_CHALLENGE_DURATION
+
+        super(Challenge, self).save()
 
     def roster4registrant(self,registrant):
         """takes in registrant, returns which team they're on"""
@@ -499,15 +499,32 @@ class Challenge(Activity):
 
     def rosterreject(self,roster):
         """takes in roster, rejects challenge. if both have rejected, deletes challenge."""
+        opposing_cap=None
+        opposing=None
+
         if self.roster1==roster:
             self.captain1accepted=False
+            if self.roster2:
+                opposing=self.roster2
+
         elif self.roster2==roster:
             self.captain2accepted=False
+            if self.roster1:
+                opposing=self.roster1
 
         if not self.captain1accepted and not self.captain2accepted:
-            self.delete()
+            if opposing:
+                if opposing.captain:
+                    opposing_cap=opposing.captain
+                if len(list(opposing.roster1.all())+list(opposing.roster2.all()))==1:#if this is this rosters only challange
+                    opposing.delete()
+                    if opposing_cap:
+                        opposing_cap.save()#to reset captain number
+            if self.id:
+                self.delete()
         else:
             self.save()
+
 
     def my_team_status(self, registrant_list):
         '''takes in registrant list, tells you which team you're captaining, whether you've accepte, who your opponent is, and if they'e accepted'''
@@ -536,7 +553,7 @@ class Challenge(Activity):
         elif self.roster2 and self.roster2==old_team:
             self.roster2=selected_team
 
-        self.save()
+        #self.save()
         return old_team,selected_team
 
     def can_submit_chlg(self):

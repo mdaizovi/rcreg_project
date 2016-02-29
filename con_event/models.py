@@ -392,6 +392,7 @@ class Registrant(Matching_Criteria):
         or in which registrant is captain, has accepted challenge, but opponent has rejected.
         either way action is require on registrant's part (either accept of find a new opponent)"""
         from scheduler.models import Challenge
+        #print "unaccepted challenges",unaccepted_challenges
         unaccepted_challenges=Challenge.objects.filter(Q(roster1__captain=self)|Q(roster2__captain=self)).filter(Q(captain1accepted=False)|Q(captain2accepted=False))
         return unaccepted_challenges
 
@@ -400,17 +401,21 @@ class Registrant(Matching_Criteria):
         only if submission day has passed
         don't change this without consulting notify something something in rcreg_project/custom processors.'''
         from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
-        my_rosters=list(self.roster_set.filter(captain=self))
+        my_rosters=list(Roster.objects.filter(captain=self))
         unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
+        #print "my unsubmitted",unsubmitted
         return unsubmitted
 
     def pending_challenges(self):
         '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
-        from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
+        #####AH! people weren't getting notified of challenges they were invited to, becuse weren't on the roster yet. What a dummy!!!
+        from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
         my_rosters=list(self.roster_set.all())
-        print "my pendind rosters", my_rosters
+        my_cap_rosters=list(Roster.objects.filter(captain=self))
+        for r in my_cap_rosters:
+            if r not in my_rosters:
+                my_rosters.append(r)
         pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
-        print "pending",pending
         return pending
 
     def scheduled_challenges(self):
