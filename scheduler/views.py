@@ -130,7 +130,7 @@ def trainings_home(request,con_id=None,):
         con=Con.objects.most_upcoming()
     else:
         con=Con.objects.get(pk=con_id)
-        
+
     scheduled=list(Training.objects.filter(con=con,RCaccepted=True))
 
     if len(scheduled)>0:
@@ -407,7 +407,7 @@ def propose_new_training(request):
                 registered_made=trainingregisteredmodelform.save(commit=False)#so delete homeless roster signal won't get called
                 registered_made.con=training_made.con
                 registered_made.gender='NA/Coed'
-                auditing_made=Roster(gender='NA/Coed',skill='0',intl=False,con=training_made.con)
+                auditing_made=Roster(gender='NA/Coed',skill=None,intl=False,con=training_made.con)
                 registered_made.registered=training_made
                 auditing_made.auditing=training_made
                 auditing_made.save()

@@ -209,13 +209,17 @@ class Matching_Criteria(models.Model):
     #         return False
 
     def skills_allowed(self):
+        print "running skills allowed"
         #this is only necessary for rosters, not registrants, but moved it here anyway.
         if self.skill:
+            print "there is self.skill and it's ",self.skill
             allowed=list(self.skill)
             if "O" in allowed:
                 allowed.remove("O")
         else:
+            print "there is not self.skill"
             allowed=["A","B","C","D"]
+        print "allowed is",allowed
         return allowed
 
     def skill_display(self):
