@@ -395,16 +395,20 @@ def propose_new_training(request):
             trainingmodelform=TrainingModelForm(request.POST,user=user)
             trainingregisteredmodelform=TrainingRegisteredModelForm(request.POST)
             if trainingmodelform.is_valid() and trainingregisteredmodelform.is_valid():
-                training_made=trainingmodelform.save()#have to commit=false otherwise mad no reg or aud rosters
-                registered_made=trainingregisteredmodelform.save(commit=False)
+                #NOTE TO SELF:
+                #order: make training first so it can be connected to.
+                #you need to commit false on registered because a roster with no connections,captain, or name will be deleted in a post save signal
+                #then connect training to registered/auditing. then save all.
+                training_made=trainingmodelform.save()
+                registered_made=trainingregisteredmodelform.save(commit=False)#so delete homeless roster signal won't get called
                 registered_made.con=training_made.con
                 registered_made.gender='NA/Coed'
                 auditing_made=Roster(gender='NA/Coed',skill='0',intl=False,con=training_made.con)
                 registered_made.registered=training_made
                 auditing_made.auditing=training_made
                 auditing_made.save()
-                registered_made.save()
-
+                registered_made.save()#then save to the relationship is kept.
+                auditing_made.save()
                 coach, c_create=Coach.objects.get_or_create(user=user)
                 if c_create:
                     coach.save()

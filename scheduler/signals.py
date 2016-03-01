@@ -16,10 +16,15 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
                 r.delete()
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
-    """Deletes a Roster if it has no Captain and no Challenges"""
-    my_challenges=list(instance.roster1.all())+list(instance.roster2.all())
+    """Post Save from Roster
+    Deletes a Roster if it has no Captain and no Challenges or Trainings"""
+    my_connections=list(instance.roster1.all())+list(instance.roster2.all())
+    if instance.registered:
+        my_connections.append(instance.registered)
+    if instance.auditing:
+        my_connections.append(instance.auditing)
     #print "running delete_homeless_roster_ros"
-    if len(my_challenges)<1 and not instance.captain:
+    if len(my_connections)<1 and not instance.captain and not instance.registered and not instance.auditing:
         #print "about to delete ",instance
         instance.delete()
 
