@@ -133,10 +133,15 @@ def email_dupes(xlfile):
     last_email=None
     good_emails=[]
     bad_emails=[]
+    long_emails=[]
 
     for od in all_data:
         email2=od.get("AB")
         email_list.append(email2)
+        if len(email2)>=30:
+            print "long email ",email2
+            long_emails.append(od)
+
 
     for od in all_data:
         email2=od.get("AB")
@@ -159,11 +164,13 @@ def email_dupes(xlfile):
     else:
         dupe_file=None
 
+    if len(long_emails)>0:
+        name_str='LONGEmailRegistrants '+ date_str +'.xlsx'
+        dupe_file=write_wb(export_path,name_str,long_emails,header)
+
     return single_file,dupe_file
 
-#target_file=(export_path+"RollerTron.xlsx")
-#target_file=(import_path+'RollerTron Attendee @ 022316 copy.xlsx')
-#target_file=(import_path+'RespondersNOTINDB.xlsx')
+#target_file=(import_path+'RollerTron Attendee 02 29 16.xlsx')
 #single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
@@ -177,10 +184,7 @@ def sort_BPT_excel(target_file):
 
 
 #con=Con.objects.get(year="2016")
-#complete_entries_filee=(export_path+'SingleEmailRegistrants.xlsx')
-#complete_entries_file=(export_path+'RegistrantFAIL copy.xlsx')
-#complete_entries_file=(import_path+'RollerTron Attendee @ 022316 copy.xlsx')
-complete_entries_file=(import_path+'TEST.xlsx')
+#complete_entries_file=(import_path+'RollerTron Attendee 02 29 16.xlsx')
 def import_from_excel(complete_entries_file,con):
     """This assumes that I've already checked for duplicate emails and lack of name, sk8name.
     This is data that could be ready for import via Django import/export, but I think this will be faster.
