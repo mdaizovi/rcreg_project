@@ -22,6 +22,15 @@
     You have not have any RollerCon passes on file. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
     {%else%}
 
+      <ul class="nav nav-pills margin-top-15">
+        <li role="presentation"><a href="{% url 'my_challenges' %}"><b>My Challenges & Games
+          {%if ALL_CHALLENGE_NOTIFY %}
+          <span class="badge tooltip-bottom" style="background-color:red;"title="You have {{ALL_CHALLENGE_NOTIFY}} competitive issue{{ ALL_CHALLENGE_NOTIFY|pluralize }} to attend to">
+            {{ALL_CHALLENGE_NOTIFY }}</span>{%endif%}
+        </b></a></li>
+        <li role="presentation"><a href="{% url 'my_trainings' %}"><b>My Trainings</a></b></li>
+      </ul>
+
 
     {%if save_attempt%}
 
@@ -42,7 +51,7 @@
 
 
 
-    <div class="tabbable">
+    <div class="tabbable margin-top-15">
       <ul class="nav nav-tabs">
 
 {%for dict in registrant_dict_list%}
