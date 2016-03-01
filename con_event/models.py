@@ -232,11 +232,12 @@ class Matching_Criteria(models.Model):
             str_end= " in Profile in order to register"
             str_mid=""
             for item in allowed:
-                displayable=skill_dict.get(item)
-                if item==allowed[-1]:
-                    item_str=" or "+displayable
-                else:
-                    item_str=" "+displayable+","
+                if item:
+                    displayable=skill_dict.get(item)
+                    if item==allowed[-1]:
+                        item_str=" or "+displayable
+                    else:
+                        item_str=" "+displayable+","
 
                 str_mid+=item_str
             return str_base+str_mid+str_end
