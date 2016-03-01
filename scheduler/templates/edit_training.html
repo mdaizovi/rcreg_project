@@ -40,6 +40,11 @@
 
   <div class="col-sm-6">
     <h3 class="text-center">Edit Coaches</h3>
+  {% if user in coach_users%}
+      <ul class="nav nav-pills margin-top-15">
+        <li role="presentation" style="width:100%;" class="text-center"><a href="{% url 'coach_profile' %}"><b>Edit My Coaching Profile</a></b></li>
+      </ul>{%endif%}
+
 
     {%if add_fail %}
     <div class="alert alert-danger" role="alert">{{add_fail.sk8name}} NOT added to {{training.name}}</div>
@@ -53,9 +58,9 @@
     <div class="alert alert-success" role="alert">{{skater_remove.sk8name}} removed from {{training.name}}</div>
     {%endif%}
 
-<div class="well well-sm margin-top-10" style="background: white;">
+<div class="well well-sm margin-top-20" style="background: white;">
     <div class="form-group">
-             <h4 >Search for New Coach to add</h4>
+             <h4>Search for New Coach to add</h4>
              <form method="POST" class="post-form">
                    {% csrf_token %}
    {{search_form }}

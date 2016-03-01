@@ -125,12 +125,13 @@ def view_training(request, activity_id):
 def trainings_home(request,con_id=None,):
     user=request.user
     con_list= list(Con.objects.all())
+    #con_dict_list=[]#this is from chllenges, do i need it here too?
     if not con_id:
         con=Con.objects.most_upcoming()
     else:
         con=Con.objects.get(pk=con_id)
-
-    scheduled=list(Training.objects.filter(con=con))
+        
+    scheduled=list(Training.objects.filter(con=con,RCaccepted=True))
 
     if len(scheduled)>0:
         share=int(len(scheduled)/5) #hard coding for now because this is just for display
@@ -296,6 +297,7 @@ def edit_training(request, activity_id):
     formlist=[]
     eligible_coaches=None
     search_form=SearchForm()
+    coach_users=[]
 
 
     if request.method == "POST":
@@ -354,13 +356,15 @@ def edit_training(request, activity_id):
         eligible_coaches=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
         eligible_coaches.fields['eligible_registrant'].label = "All Skaters"
 
-
-    coaches=EligibleRegistrantForm(my_arg=training.get_coach_registrants())
+    coach_registrants=training.get_coach_registrants()
+    coaches=EligibleRegistrantForm(my_arg=coach_registrants)
+    for c in coach_registrants:
+        coach_users.append(c.user)
     coaches.fields['eligible_registrant'].label = "Coaches"
     if formlist and not training.onsk8s:
         formlist.append(DurationOnly(initial={'duration':training.duration}))
 
-    return render_to_response('edit_training.html',{'search_form':search_form,'user':user,'editable_by':editable_by,'coaches':coaches,'eligible_coaches':eligible_coaches,'skater_remove':skater_remove,'add_fail':add_fail,'skater_added':skater_added,'training':training,'training_changes_made':training_changes_made,'formlist':formlist},context_instance=RequestContext(request))
+    return render_to_response('edit_training.html',{'coach_users':coach_users,'search_form':search_form,'user':user,'editable_by':editable_by,'coaches':coaches,'eligible_coaches':eligible_coaches,'skater_remove':skater_remove,'add_fail':add_fail,'skater_added':skater_added,'training':training,'training_changes_made':training_changes_made,'formlist':formlist},context_instance=RequestContext(request))
 
 @login_required
 def propose_new_training(request):
