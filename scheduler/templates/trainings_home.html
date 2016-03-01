@@ -25,6 +25,11 @@
       {% url 'trainings_home_con' item.pk as training_url %}
       <li role="presentation"><a href="{{training_url}}">{{item}}</a></li>{%endfor%}
   </div></td>
+
+  <td style="border:none; text-align: center;">
+    <a class="btn btn-primary" href="{% url 'my_trainings' %}" role="button">My Trainings</a>
+      </td>
+
   <td style="border:none; text-align: center;">
     <a class="btn btn-success"
         {%if con.schedule_final%} href="#" role="button" disabled>Proposal Period Closed</a>
