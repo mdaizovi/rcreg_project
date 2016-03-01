@@ -10,8 +10,14 @@
 <link href="{% static "css/tooltip-viewport.css"%}" rel="stylesheet">
 </head>
 
+{%if not challenge %}
+  <div class="alert alert-danger" role="alert">This Challenge no longer exists. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+{%else%}
+
 <div class="row" id="moreInfo">
   <div class="col-sm-4">
+
+
     <h2 class="text-center">{%if challenge.roster1 and challenge.roster1.name%}{{challenge.roster1.name}}{%else%}Unnamed Team{%endif%}</h2>
 
 {%if score_form %}
@@ -101,5 +107,7 @@
 {%endfor%}
 
 </div><!-- end row-->
+
+{%endif%}<!-- If no exist -->
 
 {% endblock %}

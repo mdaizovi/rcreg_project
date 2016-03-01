@@ -16,7 +16,9 @@ from django.forms.models import model_to_dict
 from datetime import timedelta, date
 import collections
 from django.core.mail import EmailMessage, send_mail
-from rcreg_project.settings import CUSTOM_SITE_ADMIN_EMAIL, SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
+from django.core.exceptions import ObjectDoesNotExist
+from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
+
 
 
 #syntx reference:
@@ -835,10 +837,16 @@ def view_challenge(request, activity_id):
         registrant_list=list(user.registrant_set.all())
     except:
         registrant_list=None
-    challenge=Challenge.objects.get(pk=int(activity_id))
-    rosters=[challenge.roster1, challenge.roster2]
 
-    if registrant_list and user.can_edit_score():
+    try:
+        challenge=Challenge.objects.get(pk=int(activity_id))
+        rosters=[challenge.roster1, challenge.roster2]
+    except ObjectDoesNotExist:
+        print 'Does Not Exist!'
+        challenge=None
+        rosters=None
+
+    if challenge and registrant_list and user.can_edit_score():
         if request.method == "POST":
             form=ScoreFormDouble(request.POST, my_arg=challenge)
             if form.is_valid():

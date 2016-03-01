@@ -3,7 +3,6 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
 from con_event.forms import RegistrantProfileForm
-from rcreg_project.settings import CUSTOM_SITE_ADMIN_EMAIL, RC_GENERAL_ADMIN_EMAIL
 from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
