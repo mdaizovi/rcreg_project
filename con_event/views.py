@@ -53,17 +53,21 @@ def registrant_profile(request):
 
 
     if request.method == 'POST':
-        selection= request.POST.copy()
-        #print "selection",selection
         save_attempt=True
         this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
         this_con=this_reg.con
         #for some fucking reason couldn't get the goddamed modelform to act like a real modelform
         #so i write hack aorund only updating the only 2 fields I want to be able to update, anyway.
         #which is fine, I guess bc otherwise I had all kinds of shit to make sure pass type and intl didn't get changed.
-        this_reg.skill=request.POST['skill']
-        this_reg.gender=request.POST['gender']
-        this_reg.sk8number=request.POST['sk8number']
+        if 'skill' in request.POST:
+            if request.POST['skill'] in [None,"None","",u'']:
+                this_reg.skill=None
+            else:
+                this_reg.skill=request.POST['skill']
+        if 'gender' in request.POST:
+            this_reg.gender=request.POST['gender']
+        if 'sk8number' in request.POST:
+            this_reg.sk8number=request.POST['sk8number']
         problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
 
         if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!
@@ -92,8 +96,9 @@ def registrant_profile(request):
                     if conflict_sweep:
                         save_success=True
                 else:
-                    hidden_form=RegistrantProfileForm(instance=this_reg)
-                    return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_form':hidden_form,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
+                    hidden_forms=[RegistrantProfileForm(request.POST or None, instance=this_reg)]
+                    #hidden_form=RegistrantProfileForm(request.POST or None, instance=this_reg)
+                    return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_forms':hidden_forms,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
 
             else:#if no problem criteria
                 this_reg.save()

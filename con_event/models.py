@@ -209,17 +209,13 @@ class Matching_Criteria(models.Model):
     #         return False
 
     def skills_allowed(self):
-        print "running skills allowed"
         #this is only necessary for rosters, not registrants, but moved it here anyway.
         if self.skill:
-            print "there is self.skill and it's ",self.skill
             allowed=list(self.skill)
             if "O" in allowed:
                 allowed.remove("O")
         else:
-            print "there is not self.skill"
             allowed=["A","B","C","D"]
-        print "allowed is",allowed
         return allowed
 
     def skill_display(self):
@@ -491,8 +487,8 @@ class Registrant(Matching_Criteria):
                 for roster in potential_conflicts:
                     roster.participants.remove(self)
                     roster.save()
-                    if roster.is_homeless():
-                        roster.delete()
+                    #if roster.is_homeless():#why do i ahve this? I don;t think this is good ot have, and it could eithe never run or ruin these_date_strings
+                        #roster.delete()
             return True
         else:
             return False
