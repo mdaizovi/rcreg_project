@@ -1105,9 +1105,9 @@ def challenge_submit(request):
         user=request.user
         registrant_list= list(user.registrant_set.all())
 
-        if challenge.roster1.captain and challenge.roster1.captain in registrant_list:
+        if challenge.roster1 and challenge.roster1.captain and challenge.roster1.captain in registrant_list:
             is_captain=True
-        elif challenge.roster2.captain and challenge.roster2.captain in registrant_list:
+        elif challenge.roster2 and challenge.roster2.captain and challenge.roster2.captain in registrant_list:
             is_captain=True
 
         if 'submit_challenge' in request.POST:
