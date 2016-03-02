@@ -15,7 +15,7 @@
 {%if user.is_a_boss %}
 
     <h1>WTF is going on?</h1>
-      <p class="lead blog-description">This is where I try to predict the questions you'll have and tell you how to use this site</p>
+      <p class="lead blog-description">This is where I try to predict the questions you'll have and tell you how the site works.</p>
       <p>&nbsp;</p>
 
       <div class="row">
@@ -24,6 +24,9 @@
 <ul>
 <li><a href="#whocansee">Who can see this page?</a></li>
 <li><a href="#whatedit">What can I edit and what should I never touch?</a></li>
+<li><a href="#HowIaddChal">Is there a way for me to enter Challenges or Rosters without the hassle of captains and accepting and stuff?</a></li>
+<li><a href="#howchangeemail">How do I change someone's email address?</a></li>
+<li><a href="#howINTL">How do I make a Registrant INTL?</a></li>
 <li><a href="#hownewattendee">How do I input new Registrants (Attendees)?</a></li>
 <li><a href="#howcontactyou">I'm still confused. How can I contact you?</a></li>
 </ul>
@@ -33,7 +36,8 @@
 <p><img class="img-responsive" style="padding: 10px 10px 10px 10px;" src="{% static "images/khaleesibloodridercrop.png" %}" width="462" height="330" align="right" /></p>
 <span class="anchor" id="whocansee"></span>
 <p><b>Who can see this page?</b></p>
-<p>In order to see this page you need to be either the Khaleesi herself or one of her trusted <a href="http://m.westeros.org/index.php/Bloodrider">Bloodriders</a>. <small style="font-size: 11px;">Yes I know Missendei is not a bloodrider, but doesn't Bacon look lovely in her dress?</small>
+<p>In order to see this page you need to be either the Khaleesi herself or one of her trusted <a href="http://m.westeros.org/index.php/Bloodrider">Bloodriders</a>.
+  <small style="font-size: 11px;">Yes I know Missandei is not a bloodrider, but doesn't Bacon look lovely in her dress?</small>
 </p>
 <p>&nbsp;</p>
 
@@ -43,15 +47,52 @@
   <ul><li>Groups</li><li>Users</li><li>Registrants</li><li>Etc...</li></ul>
 Please never touch <b>Groups</b> or <b>Site</b>.<br>
 You can edit <b>Users</b> but don't create any Users, they are automatically created when a new <b>Registrant</b> gets made.
-Basically every real human being gets a User, which can hold several Registrants. For example, if Michela Dai Zovi aka Dahmernatrix goes to RollerCon every year,
-every time you add a new Registrant (ie MVP 2015, Skater 2016, etc) with the same email address as one before (mdaizovi@gmail.com), it gets added to the User assosciated with that email address.
-It would be possible to manually connect registrants with different email addresses, like if someone changes their email address, but lets pretend it's impossible because it's messy.
+Basically every real human being gets one User, which can hold several Registrants. For example, if Michela Dai Zovi aka Dahmernatrix goes to RollerCon every year,
+every time you add a new Registrant (ie Dahmer's MVP pass in 2015, Dahmer's Skater pass in 2016, etc) with the same email address as one before (mdaizovi@gmail.com), it gets added to the User associated with that email address.<br>
+Coaches are also connected to their Registrants through the User, which is how I had to do it do they wouldn't have to update their bio every year, and so their page would show all of their classes, not just one year's worth.<br>
+It would be possible to manually connect registrants with different email addresses, like if someone changes their email address, but lets pretend it's impossible and encourage them to use the same email address always.
 </p>
+<p>&nbsp;</p>
+
+<span class="anchor" id="HowIaddChal"></span>
+<p><b>Is there a way for me to enter Challenges or Rosters without the hassle of captains and accepting and stuff?</b>
+<p>Yes.
+  <ol><li>Assuming the target captains already exist as a Registrants, <a href="/admin/scheduler/roster/">make the Rosters in the Admin</a> (little grey "add roster +" oval in the right hand corner), and choose that Registrants as Captains.
+    <br><b>IMPORTANT:</b> Make sure you are choosing the Registrant for the right year. As you know, many captains come every year and weird things could happen if Dahmer 2015 is captaining a 2016 team.</li>
+    <li><a href="/admin/scheduler/challenge/">Make a Challenge in the Admin</a> (little grey "add challenge +" oval in the right hand corner),
+      selecting the two teams you just made. Or one new team you just made and one existing team they made, whatever.</li>
+    <li>Check both acceptance boxes (<b>Captain1accepted</b> and <b>Captain2accepted</b>)</li>
+    <li>You don't need to touch <b>Created on</b>, that is automaticaly generated the first time it's saved,
+      but you do need to give it a <b>Submitted on</b> time and date in order for it to count as submitted. Just click Now and Today, and then edit later if you want it to be set at a different time/date. That way you know the time/date will be in the right format.</li>
+        <li>Save. The next time the users log in to RollerTron they'll see the same thing everyone else sees when they've completed the whole acceptance/submission process.</li></ol>
+  <p>&nbsp;</p>
+
+
+<span class="anchor" id="howchangeemail"></span>
+<p><b>How do I change someone's email address?</b></p>
+<ol><li><a href="/admin/auth/user/">Find the User in the Admin</a>, by <b>old</b> email address.</li>
+  <li>Change the User email address <b>and</b> Username. It's best if we remain consistent and just keep them the same.</li>
+  <li><a href="/admin/con_event/registrant/">Find the Registrant in the Admin</a>.</li>
+    <li>You should see that the User field now displays the <b>new</b> email address. Change the Registrant email as well, for consistency.</li>
+    <li>Save. Do it this way and they won't have to reset their password, just log in with the new email address as their username.</li></ol>
+<p>The reason why I want you to do it this way is because if you only change the Registrant email address and remove the old User, a new User will be created,
+  and it will be confusing for them when they forget they changed their email address and log in with their old one, and can't find any of their pass data.
+  <br>The homeless User could also be confusing for an Admin someday.</p>
+<p>&nbsp;</p>
+
+<span class="anchor" id="howINTL"></span>
+<p><b>How do I make a Registrant INTL?</b></p>
+<p>People become INTL in 1 of 3 ways.
+<ol><li>If we know their country and if the Registrant's country is a country other than the Con they're registered for (probably always US, but I don't want to limit you!)</li>
+  <li><b>or</b> if we know their state <b>and</b> that state is AK,HI or AP, then they are INTL automatically when they are saved.
+    <br><i>Note: This will not work properly if you ever hold a RollerCon in Hawaii, Alaska, or on a military base.</i>
+    <li><b>Or</b> an admin like you can make them INTL and it'll trust your judgement. In that case we don't need to know their county/state</li>
+      <li>Save.</li></ol>
 <p>&nbsp;</p>
 
 <span class="anchor" id="hownewattendee"></span>
 <p><b>How do I input new Registrants (Attendees)?</b></p>
-<p>You can input new attendees thorugh the Admin. On the top right of the screen, under the blue bar you should see two little grey buttons: <b>Import</b>, and <b>Add registrant</b>.<br>
+<p>You can input new attendees through the Admin. On the top right of the screen, under the blue bar you should see two little grey buttons: <b>Import</b>, and <b>Add registrant</b>.<br>
   Use <b>Add registrant</b> if you just want to manually add a person or two. Please note that You have to input email, first_name, and last_name. Sk8name and Sk8number are optional,
   but if they do have a sk8number please enter it because that becomes their User display name forever. If they don't have one, like if they are a vendor, their first name will be the display name.<br>
   If you need to add a lot of people, use <b>Import</b>. You don't need to massage the data-- as long as it always looks like it did in 2016 it will translate how BPT says it how I want it-- but you need to make

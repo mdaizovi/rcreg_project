@@ -31,11 +31,13 @@ def update_user_fl_name(sender, instance,**kwargs):
 
 
 def delete_homeless_user(sender, instance,**kwargs):
-    '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants.
-    This should not delete users that no longr have registrants.
+    '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants,
+    If they're not staff. I added that just in case to make sure I never accidentally delete RollerTron.
     REMEMBER never delete all homeless Users, because that will delete SuperUser RollerTron'''
+    print "starting delete_homeless_user"
     if instance.user:#this should always be true, but just in case
-        if len(instance.user.registrant_set.all()) <= 1:
+        if len(instance.user.registrant_set.all()) <= 1 and not instance.user.is_staff and not instance.user.is_superuser:
+            print "about to delete",instance.user
             instance.user.delete()
 
 def clean_registrant_import(sender, instance,**kwargs):
@@ -125,7 +127,10 @@ def match_user(sender, instance,**kwargs):
 
 def sync_reg_permissions(sender, instance,**kwargs):
     """Checks to see if user is in custom BIG_BOSS_GROUP_NAME/LOWER_BOSS_GROUP_NAME permission groups,
-    if so, gives staff/superuser permissions. If have permissions but not in groups, removes permissions."""
+    if so, gives staff/superuser permissions.
+    I used to have:
+        If have permissions but not in groups, removes permissions.
+    but commented out because I think Ivann might start giving permissions piecemeal"""
 
     user=instance.user
     groups=user.groups.all()
@@ -138,11 +143,10 @@ def sync_reg_permissions(sender, instance,**kwargs):
             if not user.is_superuser:
                 user.is_superuser=True
                 user.save()
-
-    elif user.is_staff or user.is_superuser:#clean out people who are no longer in group
-        if user.is_superuser and BIG_BOSS_GROUP_NAME not in groups:
-            user.is_superuser=False
-            user.save()
-        elif user.is_staff and (LOWER_BOSS_GROUP_NAME not in groups) and (BIG_BOSS_GROUP_NAME not in groups):
-            user.is_staff=False
-            user.save()
+    # elif user.is_staff or user.is_superuser:#clean out people who are no longer in group
+    #     if user.is_superuser and BIG_BOSS_GROUP_NAME not in groups:
+    #         user.is_superuser=False
+    #         user.save()
+    #     elif user.is_staff and (LOWER_BOSS_GROUP_NAME not in groups) and (BIG_BOSS_GROUP_NAME not in groups):
+    #         user.is_staff=False
+    #         user.save()

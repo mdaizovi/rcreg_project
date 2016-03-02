@@ -568,7 +568,7 @@ pre_save.connect(clean_registrant_import, sender=Registrant)
 post_save.connect(update_user_fl_name, sender=Registrant)
 post_save.connect(match_user, sender=Registrant)
 post_save.connect(sync_reg_permissions, sender=Registrant)
-pre_delete.connect(delete_homeless_user, sender=Registrant)#I'm not sure if this works on staff, for some reason.
+pre_delete.connect(delete_homeless_user, sender=Registrant)
 
 class Blog(models.Model):
     headline = models.CharField(max_length=200,unique=True)
