@@ -170,21 +170,17 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 02 29 16.xlsx')
-#single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
+#target_file=(import_path+'RollerTron Attendee 030216.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
     single_file,dupe_file=email_dupes(target_file)
-
     no_sk8name_file,no_real_name_file,complete_entries_file=find_incompletes(single_file)
 
     return single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file
 
-
-
+#single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 #con=Con.objects.get(year="2016")
-#complete_entries_file=(import_path+'RollerTron Attendee 02 29 16.xlsx')
 def import_from_excel(complete_entries_file,con):
     """This assumes that I've already checked for duplicate emails and lack of name, sk8name.
     This is data that could be ready for import via Django import/export, but I think this will be faster.
