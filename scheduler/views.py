@@ -11,7 +11,7 @@ from scheduler.forms import MyRosterSelectForm,GameRosterCreateModelForm,GameMod
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
 from scheduler.models import Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
-from scheduler.app_settings import MAX_CAPTAIN_LIMIT
+from scheduler.app_settings import MAX_CAPTAIN_LIMIT,CLOSE_CHAL_SUB_AT
 from django.forms.models import model_to_dict
 from datetime import timedelta, date
 import collections
@@ -893,7 +893,9 @@ def my_challenges(request):
         pending=list(registrant.pending_challenges())
         scheduled=registrant.scheduled_challenges()
         unconfirmed=registrant.unconfirmed_challenges()
-        registrant_dict={'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
+        can_sub_date=registrant.con.can_submit_chlg_by_date()
+        sub_full=Challenge.objects.submission_full(registrant.con)
+        registrant_dict={'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()
@@ -906,7 +908,7 @@ def my_challenges(request):
         except:
             active=None
 
-    return render_to_response('my_challenges.html', {'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response('my_challenges.html', {'CLOSE_CHAL_SUB_AT':CLOSE_CHAL_SUB_AT,'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
 @login_required
 def propose_new_game(request):

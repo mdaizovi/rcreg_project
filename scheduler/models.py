@@ -12,6 +12,7 @@ from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,G
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
+from scheduler.app_settings import CLOSE_CHAL_SUB_AT
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
@@ -433,6 +434,16 @@ class Activity(models.Model):
         #ordering=('-created_on',)#not sure if abstract can be ordered?
         abstract = True
 
+class ChallengeManager(models.Manager):
+
+    def submission_full(self,con):
+        """If we have too many challenges this year, returns true. Else, false"""
+        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None))
+        if len(submissions)<CLOSE_CHAL_SUB_AT:
+            return False
+        else:
+            return True
+
 class Challenge(Activity):
     roster1=models.ForeignKey(Roster, related_name="roster1", null=True,blank=True,on_delete=models.SET_NULL)
     roster2=models.ForeignKey(Roster, related_name="roster2", null=True,blank=True,on_delete=models.SET_NULL)
@@ -444,6 +455,7 @@ class Challenge(Activity):
     gametype=models.CharField(max_length=250, choices=GAMETYPE, default=GAMETYPE[0][0])
     submitted_on=models.DateTimeField(null=True, blank=True)
     is_a_game=models.BooleanField(default=False)
+    objects = ChallengeManager()
 
     def __unicode__(self):
        return "%s: %s" %(self.name, self.con)

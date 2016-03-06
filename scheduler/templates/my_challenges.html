@@ -45,17 +45,23 @@
     <div class="col-md-12 pull-left">
     <div class="panel panel-default">
     <div class="panel-body">
-      {%if dict.pending and not dict.con.can_submit_chlg%}
-      <div class="alert alert-danger" role="alert">Challenge Submission opens on {{ dict.con.challenge_submission_start }}</div>
-      {% endif %}
 
 {%if dict.pending %}
+{%if not dict.con.can_submit_chlg%}
+      {%if  dict.sub_full %}
+      <div class="alert alert-danger" role="alert">{{CLOSE_CHAL_SUB_AT}} Challenges have already been submitted for {{dict.con}} and submission is now closed.</div>
+      {%elif not dict.can_sub_date %}
+      <div class="alert alert-danger" role="alert">Challenge Submission opens on {{ dict.con.challenge_submission_start }}</div>
+      {% endif %}
+{% endif %}
+
 {%if ALL_CHALLENGE_NOTIFY%}
 <div class="alert alert-danger" role="alert">You have<ul>
 {%if NOTIFY_UNACCEPTED_CHALLENGES%}<li>{{NOTIFY_UNACCEPTED_CHALLENGES}} Competitive
 event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_CHALLENGES > 1%}have{%else%}has{%endif%} not been accepted by yourself or your opposing captain.</li>{%endif%}
 {%if NOTIFY_PENDING_CHALLENGES%}<li>{{NOTIFY_PENDING_CHALLENGES}} Competitive event{{ NOTIFY_PENDING_CHALLENGES|pluralize }} which {%if NOTIFY_PENDING_CHALLENGES > 1%}have{%else%}has{%endif%} not been submitted.</li>{%endif%}
-</ul></div>{%endif%}<!-- ALL_CHALLENGE_NOTIFY -->{%endif%}<!-- dict.pending -->
+</ul></div>{%endif%}<!-- ALL_CHALLENGE_NOTIFY -->
+{%endif%}<!-- dict.pending -->
 
 {%if dict.pending or dict.scheduled or dict.unconfirmed%}
       <table class="table table-hover">

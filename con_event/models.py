@@ -133,14 +133,27 @@ class Con(models.Model):
         else:
             return True
 
-    def can_submit_chlg(self):
+    def can_submit_chlg_by_date(self):
+        """"only checks to see if there is a chalenge submission date and that date has passed.
+        Does not check if received too many submissions already"""
+        can_submit=False
         if self.challenge_submission_start:
-            if self.challenge_submission_start<=datetime.date.today():#later add and schedule not final, or some deadlne
-                return True
-            else:
-                return False
-        else:
-            return False
+            if self.challenge_submission_start<=datetime.date.today():
+                can_submit=True
+        return can_submit
+
+
+    def can_submit_chlg(self):
+        """Checks both is submisison date has passed and if submission isn't clused due to too many submisisons"""
+        from scheduler.models import Challenge
+        can_submit=self.can_submit_chlg_by_date()
+
+        if can_submit:
+            submission_full=Challenge.objects.submission_full(self)
+            if submission_full:
+                can_submit=False
+                
+        return can_submit
 
 
     def get_date_range(self):
