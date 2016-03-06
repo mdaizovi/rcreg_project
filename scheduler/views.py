@@ -555,8 +555,8 @@ def edit_challenge(request, activity_id):
     game_teams_form=None
 
     if request.method == "POST":
-        if 'confirm save' in request.POST or 'save team' in request.POST:
 
+        if 'confirm save' in request.POST or 'save team' in request.POST:
 #################I'm having problems with people trying to save existing teams as same name as other existing teams
                 #so I need to get their existing team and swap them out, if exist.
             existing_team=None
@@ -700,8 +700,12 @@ def edit_challenge(request, activity_id):
                 roster_form=ChallengeRosterModelForm(user=user,instance=my_team)
                 challenge_form=ChallengeModelForm(user=user,instance=challenge)
             formlist=[roster_form,challenge_form]
-
-            skater_search_form=SearchForm()
+            ###############this part sloppy hack to keep searched skater name from showing up in both captain and skater search.
+            if request.method == "POST" and 'search skater' in request.POST:
+                skater_search_form=SearchForm(request.POST)
+            else:
+                skater_search_form=SearchForm()
+            ##################################
             skater_search_form.fields['search_q'].label = "Skater Name"
             if request.method != "POST" or 'search skater' not in request.POST:
                 eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(my_team))
@@ -728,7 +732,13 @@ def edit_challenge(request, activity_id):
                 else:
                     eligibleregistrantform.fields['eligible_registrant'].label = "All Eligible Captains"
 
-                captain_search_form=SearchForm(request.POST or None)
+                ###############this part sloppy hack to keep searched skater name from showing up in both captain and skater search.
+                if request.method == "POST" and 'search captains' in request.POST:
+                    captain_search_form=SearchForm(request.POST)
+                else:
+                    captain_search_form=SearchForm()
+                ##################################
+
                 captain_search_form.fields['search_q'].label = "Captain Name"
                 opponent_form_list=[captain_search_form,eligibleregistrantform]
 
