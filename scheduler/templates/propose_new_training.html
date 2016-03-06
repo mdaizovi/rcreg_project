@@ -15,8 +15,13 @@
 
 {%if upcoming_registrants %}
 
+{%if most_upcoming_con and not most_upcoming_con.can_submit_trng_by_date %}
+<div class="alert alert-warning" role="alert">Please note that the Training Proposal deadline for {{most_upcoming_con}} has passed.<br>
+If you are proposing a Training for {{most_upcoming_con}}, it is unlikely to be added to the schedule.</div>
+{%endif%}
 
 <div class="col-sm-6">
+
 <form method="POST" class="post-form">
       {% csrf_token %}
 

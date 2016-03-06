@@ -105,6 +105,7 @@ class Con(models.Model):
     start = models.DateField(auto_now=False, auto_now_add=False)
     end = models.DateField(auto_now=False, auto_now_add=False)
     challenge_submission_start=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
+    training_submission_end=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
     year = models.IntegerField()
     BPT_event_id=models.CharField(max_length=100,null=True, blank=True)
     objects = ConManager()
@@ -142,7 +143,6 @@ class Con(models.Model):
                 can_submit=True
         return can_submit
 
-
     def can_submit_chlg(self):
         """Checks both is submisison date has passed and if submission isn't clused due to too many submisisons"""
         from scheduler.models import Challenge
@@ -152,7 +152,16 @@ class Con(models.Model):
             submission_full=Challenge.objects.submission_full(self)
             if submission_full:
                 can_submit=False
-                
+
+        return can_submit
+
+    def can_submit_trng_by_date(self):
+        """"only checks to see if there is a training submission end date and that date has passed.
+        Does not check if received too many trainings already"""
+        can_submit=False
+        if self.training_submission_end:
+            if self.training_submission_end >= datetime.date.today():
+                can_submit=True
         return can_submit
 
 
@@ -174,10 +183,15 @@ class Con(models.Model):
         if self.year != self.start.year:
             self.year = self.start.year
 
-        if self.start and not self.challenge_submission_start:
-            month=self.start.month-4
-            dt=datetime.date(self.start.year, month, 1)
-            self.challenge_submission_start=dt
+        if self.start:#split up because I always mess up conditionals w/ too many conditions
+            if not self.challenge_submission_start or not self.training_submission_end:
+                month=self.start.month-4
+                if not self.challenge_submission_start:
+                    dt=datetime.date(self.start.year, month, 1)
+                    self.challenge_submission_start=dt
+                if not self.training_submission_end:
+                    dt2=datetime.date(self.start.year, month, 15)
+                    self.training_submission_end=dt2
 
         if not self.country:
             self.country=Country.objects.get(name="United States")

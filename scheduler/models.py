@@ -437,7 +437,7 @@ class Activity(models.Model):
 class ChallengeManager(models.Manager):
 
     def submission_full(self,con):
-        """If we have too many challenges this year, returns true. Else, false"""
+        """If we have too many challenges submitted this year, returns true. Else, false"""
         submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None))
         if len(submissions)<CLOSE_CHAL_SUB_AT:
             return False

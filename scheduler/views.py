@@ -388,6 +388,8 @@ def propose_new_training(request):
     add_fail=False
     training_made=False
     formlist=[]
+    most_upcoming_con=Con.objects.most_upcoming()
+    print "most_upcoming_con is",most_upcoming_con
 
     if request.method == "POST":
 
@@ -434,7 +436,7 @@ def propose_new_training(request):
 
                 if training_made and not training_made.onsk8s:
                     formlist=[DurationOnly()]
-                    return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
+                    return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
             else:
                 add_fail=True
 
@@ -444,7 +446,7 @@ def propose_new_training(request):
         if conlist:
             formlist=[TrainingRegisteredModelForm(),TrainingModelForm(user=user)]
 
-    return render_to_response('propose_new_training.html', {'formlist':formlist,'trainings_coached':trainings_coached,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
+    return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'formlist':formlist,'trainings_coached':trainings_coached,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 
 
 def challenges_home(request,con_id=None,):
