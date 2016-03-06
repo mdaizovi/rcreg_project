@@ -291,6 +291,7 @@ def my_trainings(request):
 @login_required
 def edit_training(request, activity_id):
     user=request.user
+    registrant_list = list(user.registrant_set.all())
     training=Training.objects.get(pk=int(activity_id))
     editable_by=training.editable_by()
     eligible_coaches=None
@@ -309,16 +310,18 @@ def edit_training(request, activity_id):
 
         if 'delete' in request.POST or 'remove coach' in request.POST:
             if 'remove coach' in request.POST:
-                skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
+                    skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
 
             if 'delete' in request.POST or int( training.coach.count() ) == 1:
                 return render_to_response('confirm_training_delete.html',{'skater_remove':skater_remove,'training':training},context_instance=RequestContext(request))
             else:
                 #had to monkey patch this way bc coach is legacy, but registrants vary by the year
-                coach, created=Coach.objects.get_or_create(user=skater_remove.user)
-                training.coach.remove(coach)
-                training.save()
-                coach.save()
+                if skater_remove:
+                    coach, created=Coach.objects.get_or_create(user=skater_remove.user)
+                    training.coach.remove(coach)
+                    training.save()
+                    coach.save()
 
         elif 'confirm delete' in request.POST:
             training.coach.clear()
@@ -326,11 +329,12 @@ def edit_training(request, activity_id):
             return redirect('/scheduler/my_trainings/')
 
         elif 'add coach' in request.POST:
-            skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-            coach, created=Coach.objects.get_or_create(user=skater_added.user)
-            training.coach.add(coach)
-            training.save()
-            coach.save()
+            if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
+                skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                coach, created=Coach.objects.get_or_create(user=skater_added.user)
+                training.coach.add(coach)
+                training.save()
+                coach.save()
 
         elif 'save training' in request.POST:#save training details
             if 'duration' in request.POST:#if off skates, can choose duratio
@@ -354,9 +358,13 @@ def edit_training(request, activity_id):
     if request.method == "POST" and 'search_q' in request.POST:
         search_form=SearchForm(request.POST)
         entry_query = search_form.get_query(['sk8name','last_name','first_name'])
-        found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).order_by('sk8name','last_name','first_name')
-        eligible_coaches=EligibleRegistrantForm(my_arg=found_entries)
-        eligible_coaches.fields['eligible_registrant'].label = "Found Skaters"
+        if entry_query:
+            found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).exclude(id__in=[o.id for o in registrant_list]).order_by('sk8name','last_name','first_name')
+            eligible_coaches=EligibleRegistrantForm(my_arg=found_entries)
+            eligible_coaches.fields['eligible_registrant'].label = "Found Skaters"
+        else:
+            eligible_coaches=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con).exclude(id__in=[o.id for o in registrant_list]))
+            eligible_coaches.fields['eligible_registrant'].label = "All Skaters"
     else:
         eligible_coaches=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
         eligible_coaches.fields['eligible_registrant'].label = "All Skaters"

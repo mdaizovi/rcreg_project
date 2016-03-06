@@ -22,7 +22,7 @@
       <br><small><a href="{{email_url}}">email coach</a></small></h2>{%endif%}
     </div>
     <div class="panel-body"><h2 style="text-align: justify;">
-      <small>{{coach.description}}</small></h2>
+      <small>{%if coach.description %}{{coach.description}}{%else%}<i>Coach has not provided a description</i>{%endif%}</small></h2>
     </div>
 
     <table class="table table-striped">
