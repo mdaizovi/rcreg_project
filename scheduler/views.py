@@ -520,11 +520,16 @@ def edit_roster(request, roster_id):
 @login_required
 def edit_challenge(request, activity_id):
     user=request.user
-    challenge=Challenge.objects.get(pk=int(activity_id))
-    registrant=Registrant.objects.get(con=challenge.con, user=user)
-    my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
-
     registrant_list = list(user.registrant_set.all())
+    try:
+        challenge=Challenge.objects.get(pk=int(activity_id))
+        registrant=Registrant.objects.get(con=challenge.con, user=user)
+        my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+    except ObjectDoesNotExist:
+        challenge=None
+        return render_to_response('edit_challenge.html',{},context_instance=RequestContext(request))
+
+
     opponent_form_list=None
     participants=None
     eligible_participants=None
@@ -853,7 +858,6 @@ def view_challenge(request, activity_id):
         challenge=Challenge.objects.get(pk=int(activity_id))
         rosters=[challenge.roster1, challenge.roster2]
     except ObjectDoesNotExist:
-        print 'Does Not Exist!'
         challenge=None
         rosters=None
 
