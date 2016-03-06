@@ -11,7 +11,7 @@
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
 
-{%if roster.can_email%}
+{%if roster.can_email and roster.captain.user and roster.captain.user.email%}
     <h3>Email {{roster.captain.sk8name}}</h3>
     {%if form %}
     <p><i>Please note that this is <b>not</b> an anonymous email. Captain will receive a message including your name and email address.</i></p>
@@ -44,8 +44,12 @@ Send Message</button>
 {%endif%}<!--<end if form -->
 
 
-{%else%}<!--if not coach.can_email -->
+{%elif not roster.can_email%}<!--if not coach.can_email -->
 <div class="alert alert-danger" role="alert">{{roster.captain.sk8name}} prefers not to receive emails through this site.</div>
+
+{%elif not roster.captain.user or not roster.captain.user.email%}
+<div class="alert alert-danger" role="alert">{{roster.captain.sk8name}} has not provided a valid email address to this site.</div>
+
 {%endif%}
 
   </div><!-- end col-sm-12 -->

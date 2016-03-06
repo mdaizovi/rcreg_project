@@ -36,8 +36,8 @@ class RegistrantResource(resources.ModelResource):
         report_skipped = True
 
 
-#class RegistrantAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
-class RegistrantAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
+class RegistrantAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
+#class RegistrantAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
     list_display= ('con','first_name','last_name','sk8name','sk8number','pass_type','gender','skill','intl')
     list_display_links = list_display#makes everything in list display clickable to get to object
     search_fields = ('first_name', 'last_name','sk8name','sk8number','email',"con__year", 'con__city')

@@ -31,6 +31,7 @@ from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
 
 @login_required
 def email_captain(request, roster_id):
+    """This form will only show if captain has agreed to accept emails and has a user with an emial address"""
     user=request.user
     roster=Roster.objects.get(pk=roster_id)
     captain=roster.captain
@@ -39,8 +40,8 @@ def email_captain(request, roster_id):
     if request.method == "POST":
         form=None
         message=request.POST['message']
-        if roster.can_email:
-            subject=captain.user.first_name+", "+user.first_name+" has sent you a message through the RollerCon site!"
+        if roster.can_email and roster.captain.user and roster.captain.user.email:
+            subject=captain.user.first_name+", "+user.first_name+" has sent you a message through the RollerTron site!"
             message_body = ''.join(["Message below. Please respond to "+user.email+", not to us.\n\n\n",message])
             email = EmailMessage(subject=subject, body=message_body, to=[captain.user.email], reply_to=[user.email])
             try:
@@ -84,6 +85,8 @@ def coach_profile(request):
 
 @login_required
 def email_coach(request, coach_id):
+    """This assumes that coach has a user and an user email address.
+    I think it's important coaches supply an email address, how can you rely on someone you can't get in touch with?"""
     user=request.user
     coach=Coach.objects.get(pk=coach_id)
     email_success=False
@@ -92,7 +95,7 @@ def email_coach(request, coach_id):
         form=None
         message=request.POST['message']
         if coach.can_email:
-            subject=coach.user.first_name+", "+user.first_name+" has sent you a message through the RollerCon site!"
+            subject=coach.user.first_name+", "+user.first_name+" has sent you a message through the RollerTron site!"
             message_body = ''.join(["Message below. Please respond to "+user.email+", not to us.\n\n\n",message])
             email = EmailMessage(subject=subject, body=message_body, to=[coach.user.email], reply_to=[user.email])
             try:

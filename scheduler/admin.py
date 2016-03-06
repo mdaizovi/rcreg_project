@@ -200,9 +200,10 @@ class CoachResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = True
 
-
-class CoachAdmin(ImportExportActionModelAdmin):
-    search_fields = ('user__first_name', 'user__last_name')
+class CoachAdmin(ImportExportModelAdmin):
+#class CoachAdmin(ImportExportActionModelAdmin):
+    search_fields = ('user__username','user__first_name', 'user__last_name')
+    #list_display= ('user',)
     resource_class = CoachResource
     view_on_site = True
 
