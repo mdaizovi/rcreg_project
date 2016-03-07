@@ -88,7 +88,8 @@ class RosterResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = True
 
-class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
+#class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
+class RosterAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
     fields = ('name','captain','color','skill','gender','intl','internal_notes','con')
     #fields = [field.name for field in Roster._meta.fields if field.name != "id"]#shows all but m2m fields
     #exclude=('con',)
@@ -141,7 +142,8 @@ class ChallengeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = True
 
-class ChallengeAdmin(ImportExportActionModelAdmin):
+class ChallengeAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
+#class ChallengeAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
     list_display= ('name', 'con')
     search_fields = ('name','roster1__name', 'roster2__name','roster1__captain__sk8name','roster2__captain__sk8name')
     fields = (('con','RCaccepted','RCrejected'),('location_type','duration','ruleset','gametype','is_a_game'),('created_on','submitted_on'),
@@ -174,7 +176,8 @@ class TrainingResource(resources.ModelResource):
         report_skipped = True
 
 
-class TrainingAdmin(ImportExportActionModelAdmin):
+class TrainingAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
+#class TrainingAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
     list_display= ('name','con')
     search_fields = ('name', 'con__year')
     filter_horizontal = ('coach',)
