@@ -99,11 +99,11 @@ class Roster(Matching_Criteria):
 
         if self.registered:
             self.name="REGISTERED: "+self.registered.name
-            if self.registered.regcap:
-                self.cap=self.registered.regcap
+            if self.registered.regcap:# I think this might conflict with get_maxcap
+                self.cap=self.registered.regcap#but maybe it almost never runs, since you'd have to add a regcap/audcap
         elif self.auditing:
             self.name="AUDITING: "+self.auditing.name
-            if self.auditing.audcap:
+            if self.auditing.audcap:# I think this might conflict with get_maxcap
                 self.cap=self.auditing.audcap
         super(Roster, self).save()
 
