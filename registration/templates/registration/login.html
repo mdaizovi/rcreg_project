@@ -27,7 +27,7 @@
 
       {% for field in form %}
 
-      <input class="form-control" id="{{ field.id_for_label }}" maxlength="30" name="{{ field.html_name }}"
+      <input class="form-control" id="{{ field.id_for_label }}" maxlength="100" name="{{ field.html_name }}"
           {%if field.label == 'Username'%} placeholder="Email Address"{%else%} placeholder="{{field.label}}"{%endif%}
           {%if field.html_name  == 'password'%}type="password"
           {%else%}type="text"

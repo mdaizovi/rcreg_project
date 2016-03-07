@@ -57,7 +57,7 @@ urlpatterns = [
                        url(r'^password/reset/done/$',
                            auth_views.password_reset_done,
                            name='auth_password_reset_done'),
-                            #Dahmer addition
+                      #Dahmer addition specifically for RollerTron
                        url(r'^first_time_login/',
                            TemplateView.as_view(template_name='registration/first_time_login.html'),
                            name='first_time_login'),
