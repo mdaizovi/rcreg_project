@@ -206,7 +206,7 @@ class Con(models.Model):
         super(Con, self).save()
 
 class Blackout(models.Model):
-    registrant=models.ForeignKey('Registrant',related_name="blackout")
+    registrant=models.ForeignKey('Registrant',related_name="blackout")#did not set null on delete, I'm okay with this going away if registrant goes away
     date=models.DateField()
     ampm=models.CharField(max_length=100, choices=AMPM)
 
@@ -514,8 +514,6 @@ class Registrant(Matching_Criteria):
                 for roster in potential_conflicts:
                     roster.participants.remove(self)
                     roster.save()
-                    #if roster.is_homeless():#why do i ahve this? I don;t think this is good ot have, and it could eithe never run or ruin these_date_strings
-                        #roster.delete()
             return True
         else:
             return False

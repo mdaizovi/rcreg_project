@@ -798,6 +798,7 @@ def challenge_respond(request):
                             my_team.participants.remove(registrant)
                     except:
                         pass
+                    print "about to delete",my_team," a la scheduler views line 801"
                     my_team.delete()
 
                 registrant.save()#this is important to reset captain number
@@ -821,6 +822,7 @@ def challenge_respond(request):
 
                         try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
                             if not my_old_team.name and not my_old_team.captain and my_old_team.is_homeless:
+                                print "about to delete",my_team," a la scheduler views line 825"
                                 my_old_team.delete()
                             else:
                                 my_old_team.save()

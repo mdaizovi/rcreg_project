@@ -11,10 +11,10 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 def update_user_fl_name(sender, instance,**kwargs):
     """postsave signal from Registrant, changes User first and last name if Registrant did.
     This won't show up on sidebar until they go to a new page, but I think that's okay, don't feel like refreshing context"""
-    if instance.user:#people w/ no email addresses don't have a user
+    if instance.user:#people w/ no email addresses might not have a user
         if (instance.sk8name and instance.sk8number):
             if((instance.user.first_name !=instance.sk8name) or (instance.user.last_name !=instance.sk8number)):
-                print "first part true"
+                #print "first part true"
                 if instance.user.first_name !=instance.sk8name:
                     instance.user.first_name =instance.sk8name
                 if instance.user.last_name !=instance.sk8number:
@@ -22,7 +22,7 @@ def update_user_fl_name(sender, instance,**kwargs):
                 instance.user.save()
         elif (instance.first_name and instance.last_name):
             if ((instance.user.first_name !=instance.first_name) or (instance.user.last_name !=instance.last_name )):
-                print "scond part true"
+                #print "scond part true"
                 if instance.user.first_name !=instance.first_name:
                     instance.user.first_name =instance.first_name
                 if instance.user.last_name !=instance.last_name:
@@ -34,11 +34,13 @@ def delete_homeless_user(sender, instance,**kwargs):
     '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants,
     If they're not staff. I added that just in case to make sure I never accidentally delete RollerTron.
     REMEMBER never delete all homeless Users, because that will delete SuperUser RollerTron'''
-    print "starting delete_homeless_user"
-    if instance.user:#people w/ no email addresses don't have a user
+    #print "starting delete_homeless_user"
+    if instance.user:#people w/ no email addresses might not have a user
         if len(instance.user.registrant_set.all()) <= 1 and not instance.user.is_staff and not instance.user.is_superuser:
-            print "about to delete",instance.user
-            instance.user.delete()
+            print "would delete ",instance.user," here, but temporarily suspended delete_homeless_user"
+            pass 
+            #print "about to delete",instance.user
+            #instance.user.delete()
 
 def clean_registrant_import(sender, instance,**kwargs):
     """hard-coding of expected format of importing an excel sheet of Registrant data from BPT, and saving it in a format that suits my models
@@ -53,7 +55,7 @@ def clean_registrant_import(sender, instance,**kwargs):
                 clean_value=clean_value[:100]
             setattr(instance, k, clean_value)
 
-    print instance.sk8name,instance.first_name, instance.last_name,instance.email
+    #print instance.sk8name,instance.first_name, instance.last_name,instance.email
     pass_split=str(instance.pass_type).split()
     #print "pass_split",pass_split
     if set(["Not","Skating","NA","na","N/A",None,0,"0","Off","Offskate"]).intersection(pass_split):
@@ -94,7 +96,7 @@ def match_user(sender, instance,**kwargs):
     If no match, makes one.'''
     from django.contrib.auth.models import User
 
-    if not instance.user and instance.email:#people w/ no email addresses don't have a user
+    if not instance.user and instance.email:#people w/ no email addresses might not have a user
         try:#Ideally there should only be one that suits this. if not, get most recent w/ same email
             user_query=list(User.objects.filter(Q(username=instance.email)|Q(email=instance.email)).latest('id'))
             user=user_query[0]

@@ -198,7 +198,7 @@ class Roster(Matching_Criteria):
             maxcap=self.cap
         else:
             if self.captain:
-                maxcap=GAME_CAP
+                maxcap = GAME_CAP
             elif self.registered:
                 maxcap=DEFAULT_REG_CAP
             elif self.auditing:
@@ -327,7 +327,7 @@ class Roster(Matching_Criteria):
         return allowed_editors
 
     def nearly_homeless(self):
-        '''This is for reject warning, to cehck if rejecting this challenge will delete roster.
+        '''This is for reject warning, to check if rejecting this challenge will delete roster.
         Mostly for Game rosters, kinda ovbious for Challenge Rosters'''
         r1=list(self.roster1.all())
         r2=list(self.roster2.all())
@@ -338,7 +338,7 @@ class Roster(Matching_Criteria):
             return False
 
     def is_homeless(self):
-        '''This is for reject warning, to cehck if rejecting this challenge will delete roster.
+        '''This is for reject warning, to check if rejecting this challenge will delete roster.
         Mostly for Game rosters, kinda ovbious for Challenge Rosters'''
         r1=list(self.roster1.all())
         r2=list(self.roster2.all())
@@ -470,7 +470,7 @@ class Challenge(Activity):
 
         if self.roster1:#this doesn't matter since i don't save it, does it?
             if not self.roster1.cap:
-                self.roster1.cap=GAME_CAP
+                self.roster1.cap= GAME_CAP
             if not self.is_a_game:
                 if not self.roster1.skill:
                     self.roster1.skill="BC"
@@ -484,7 +484,7 @@ class Challenge(Activity):
 
         if self.roster2:#this doesn't matter since i don't save it, does it?
             if not self.roster2.cap:
-                self.roster2.cap=GAME_CAP
+                self.roster2.cap= GAME_CAP
             if not self.is_a_game:
                 if not self.roster2.skill:
                     self.roster2.skill="BC"
@@ -527,13 +527,15 @@ class Challenge(Activity):
                 opposing=self.roster1
 
         if not self.captain1accepted and not self.captain2accepted:
-            if opposing:
+            if opposing and not opposing.name:#only want to delete roster is homeless, captain has not named it.
                 if opposing.captain:
                     opposing_cap=opposing.captain
                 if len(list(opposing.roster1.all())+list(opposing.roster2.all()))==1:#if this is this rosters only challange
+                    print "about to delete ",opposing," in roster reject"
                     opposing.delete()
-                    if opposing_cap:
-                        opposing_cap.save()#to reset captain number
+                if opposing_cap:
+                    opposing_cap.save()#to reset captain number
+
             if self.id:
                 self.delete()
         else:
