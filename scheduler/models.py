@@ -112,14 +112,16 @@ class Roster(Matching_Criteria):
         problem_criteria=[]
         potential_conflicts=[]
         captain_conflict=False
+        genders_allowed=self.genders_allowed()
+        skills_allowed=self.skills_allowed()
         def capt_confl(problem_criteria,potential_conflicts,captain_conflict):
-            if self.captain and (self.captain.gender not in self.genders_allowed()):
+            if self.captain and (self.captain.gender not in genders_allowed):
                 captain_conflict=True
                 if "gender" not in problem_criteria:
                     problem_criteria.append("gender")
                     if self.captain not in potential_conflicts:
                         potential_conflicts.append(self.captain)
-            if self.captain and (self.captain.skill not in self.skills_allowed()):
+            if self.captain and (self.captain.skill not in skills_allowed):
                 captain_conflict=True
                 if "skill" not in problem_criteria:
                     problem_criteria.append("skill")
@@ -131,14 +133,14 @@ class Roster(Matching_Criteria):
             participants=list(self.participants.all())
             if len(participants)>0:
                 for skater in list(self.participants.all()):
-                    if skater.gender not in self.genders_allowed():
+                    if skater.gender not in genders_allowed:
                         if "gender" not in problem_criteria:
                             problem_criteria.append("gender")
                         if skater not in potential_conflicts:
                             potential_conflicts.append(skater)
                         if self.captain and skater==self.captain:
                             captain_conflict=True
-                    if skater.skill not in self.skills_allowed():
+                    if skater.skill not in skills_allowed:
                         if "skill" not in problem_criteria:
                             problem_criteria.append("skill")
                         if skater not in potential_conflicts:
@@ -256,7 +258,7 @@ class Roster(Matching_Criteria):
         if self.gender=='NA/Coed':
             allowed=["Female","Male","NA/Coed"]
         else:
-            allowed=[self.gender]
+            allowed=["NA/Coed",self.gender]
         return allowed
 
     def intls_allowed(self):

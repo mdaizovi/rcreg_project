@@ -389,7 +389,6 @@ def propose_new_training(request):
     training_made=False
     formlist=[]
     most_upcoming_con=Con.objects.most_upcoming()
-    print "most_upcoming_con is",most_upcoming_con
 
     if request.method == "POST":
 
@@ -571,6 +570,8 @@ def edit_challenge(request, activity_id):
 ########################################
 
             save_attempt=True
+            pre_save_gender=my_team.gender
+            pre_save_skill=my_team.skill
             if challenge.is_a_game:
                 roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
                 challenge_form=GameModelForm(request.POST,user=user, instance=challenge)
@@ -594,7 +595,8 @@ def edit_challenge(request, activity_id):
             else:#if confirm save
                 conflict_sweep=my_team.conflict_sweep()
 
-            if not captain_conflict and roster_form.is_valid() and challenge_form.is_valid():#this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
+            if not captain_conflict and roster_form.is_valid() and challenge_form.is_valid():
+                #this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
                 #this is only if just updating team, not creating new or swapping captains or anything
                 roster=roster_form.save()
                 if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
@@ -607,7 +609,12 @@ def edit_challenge(request, activity_id):
                 my_team=roster#keep this to get new saved data for my_team
                 save_success=True
             else:
-                print "Captain conflict or Errors: ",roster_form.errors, challenge_form.errors
+                #print "Captain conflict or Errors: ",roster_form.errors, challenge_form.errors
+                #to prevent rejected unsaved changes form showing up in form
+                if "gender" in problem_criteria:
+                    my_team.gender=pre_save_gender
+                if "skill" in problem_criteria:
+                    my_team.skill=pre_save_skill
 
         elif 'add skater' in request.POST:
             skater_added,add_fail=my_team.add_sk8er_challenge(request.POST['eligible_registrant'])
@@ -804,7 +811,7 @@ def challenge_respond(request):
                 my_old_team,my_team=challenge.replace_team(my_team,selected_team)
                 if my_old_team and my_old_team!= selected_team:
                     if my_old_team.captain and my_old_team.captain == registrant:#( can probably do this in method, but unsure if I'll always want
-                        print "this is probably where all the none teams are coming form, views line 769"
+                        #print "this is probably where all the none teams are coming form, views line 769"
                         my_old_team.captain=None
                         try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
                             if my_old_team and my_old_team.participants.all() and registrant in my_old_team.participants.all():
