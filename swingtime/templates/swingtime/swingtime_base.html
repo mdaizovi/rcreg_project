@@ -16,22 +16,80 @@
 {% block extended_head %}{% endblock %}
 </head>
 
+
+{% if user.is_the_boss %}
+
+
   <div class="row" id="moreInfo">
     <div class="col-sm-12">
-        <h1>Calendar</h1>
     <main role="main">
         {% block navigation %}
-        <nav>
-            <!--[<a href="{% url 'swingtime-monthly-view' current_datetime.year current_datetime.month %}">-->
-            <a href="{% url 'swingtime-monthly-view' up_con_year up_con_month %}">
-                Monthly View</a> &middot;
-            <a href="{% url 'swingtime-yearly-view' current_datetime.year %}">Yearly View</a> &middot;
-            <a href="{% url 'swingtime-events' %}">Event Listing</a>
-        </nav>
+          <table class="table header_calendar"><tr>
+            <td><div class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Upcoming Con
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              {%for d in upcoming_days%}
+              <li><a href="{% url 'swingtime-daily-view' d.year d.month d.day %}">{{ d|date:"D M d Y" }}</a></li>
+              {%endfor%}
+            </ul>
+          </div></td>
+
+            <td><div class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Challenges
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#">Submitted</a></li>
+              <li><a href="#">Approved</a></li>
+              <li><a href="#">Rejected</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="#">Un-Scheduled</a></li>
+              <li><a href="#">Scheduled</a></li>
+            </ul>
+          </div></td>
+
+
+          <td><div class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Trainings
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#">Submitted</a></li>
+              <li><a href="#">Approved</a></li>
+              <li><a href="#">Rejected</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="#">Un-Scheduled</a></li>
+              <li><a href="#">Scheduled</a></li>
+            </ul>
+          </div></td>
+
+          <td><div class="dropdown">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Schedule
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#">Make Visible</a></li>
+              <li><a href="#">Make <b>Final</b></a></li>
+            </ul>
+          </div></td>
+
+        </tr></table>
+
         {% endblock navigation %}
         {% block main_content %}{% endblock main_content %}
     </main>
     <footer role="contentinfo"></footer>
 </div>
 </div>
+
+{%else%}
+{% include "no_permission.html" %}
+{%endif%}
+
 {% endblock %}

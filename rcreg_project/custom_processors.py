@@ -42,3 +42,10 @@ def get_upcoming_con_context(request):
     from con_event.models import Con
     upcoming_con_context=Con.objects.most_upcoming()
     return {'up_con_year':upcoming_con_context.start.year,'up_con_month':upcoming_con_context.start.month}
+
+def upcoming_days(request):
+    from con_event.models import Con
+    upcoming=Con.objects.most_upcoming()
+    upcoming_days=upcoming.get_date_range()
+
+    return {'upcoming_days':upcoming_days}

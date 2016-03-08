@@ -7,6 +7,7 @@ from django import http
 from django.db import models
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
 
 from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
@@ -17,8 +18,18 @@ from dateutil import parser
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
 
+#-------------------------------------------------------------------------------
+@login_required
+def calendar_home(
+    request,
+    template='calendar_home.html',
+    **extra_context
+):
+
+    return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
+@login_required
 def event_listing(
     request,
     template='swingtime/event_list.html',
@@ -45,6 +56,7 @@ def event_listing(
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def event_view(
     request,
     pk,
@@ -92,6 +104,7 @@ def event_view(
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def occurrence_view(
     request,
     event_pk,
@@ -123,6 +136,7 @@ def occurrence_view(
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def add_event(
     request,
     template='swingtime/add_event.html',
@@ -175,6 +189,7 @@ def add_event(
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def _datetime_view(
     request,
     template,
@@ -214,6 +229,7 @@ def _datetime_view(
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def day_view(request, year, month, day, template='swingtime/daily_view.html', **params):
     '''
     See documentation for function``_datetime_view``.
@@ -224,6 +240,7 @@ def day_view(request, year, month, day, template='swingtime/daily_view.html', **
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def today_view(request, template='swingtime/daily_view.html', **params):
     '''
     See documentation for function``_datetime_view``.
@@ -233,6 +250,7 @@ def today_view(request, template='swingtime/daily_view.html', **params):
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def year_view(request, year, template='swingtime/yearly_view.html', queryset=None):
     '''
 
@@ -278,6 +296,7 @@ def year_view(request, year, template='swingtime/yearly_view.html', queryset=Non
 
 
 #-------------------------------------------------------------------------------
+@login_required
 def month_view(
     request,
     year,

@@ -6,7 +6,12 @@ urlpatterns = [
     url(r'^intro/$',TemplateView.as_view(template_name='intro.html'), name='demo-home'),
     url(r'^$', TemplateView.as_view(template_name='karate.html'), name='karate-home'),
     #url(r'^swingtime/events/type/([^/]+)/$', views.event_type, name='karate-event'),
-    url(r'^calendar/home/$', TemplateView.as_view(template_name='calendar_home.html'), name='calendar_home'),
+
+    url(
+        r'^calendar/home/$',
+        views.calendar_home,
+        name='calendar_home'
+    ),
 
     url(
         r'^(?:calendar/)?$',

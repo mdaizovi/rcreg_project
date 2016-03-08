@@ -5,6 +5,9 @@ th { font-weight: bold; }
 ul, ol { margin-left: 2em; }
 
 .center { text-align : center; }
+
+.header_calendar {background-color: #ddd;}
+
 dt { font-weight: bold; }
 dd { margin-bottom: .5em; }
 form table { width: 100%; border: 1px solid #aaa; }
@@ -15,32 +18,7 @@ form table { width: 100%; border: 1px solid #aaa; }
     form tfoot td { text-align: center; }
     form input[type="text"] { padding: 2px 4px; border-radius: 2px; border: 1px solid #ccc; }
 a.plain { text-decoration: none; }
-.btn {
-    display: inline-block;
-    padding: 2px 8px;
-    text-decoration: none;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #a9db80;
-    background: -moz-linear-gradient(top,  #a9db80 0%, #96c56f 100%);
-    background: -webkit-linear-gradient(top,  #a9db80 0%,#96c56f 100%);
-    background: -ms-linear-gradient(top,  #a9db80 0%,#96c56f 100%);
-    background: linear-gradient(to bottom,  #a9db80 0%,#96c56f 100%);
-}
-.btn:hover {
-    background: #96c56f;
-    background: -moz-linear-gradient(top,  #96c56f 0%, #a9db80 100%);
-    background: -webkit-linear-gradient(top,  #96c56f 0%,#a9db80 100%);
-    background: -ms-linear-gradient(top,  #96c56f 0%,#a9db80 100%);
-    background: linear-gradient(to bottom,  #96c56f 0%,#a9db80 100%);
-}
-nav a.btn {
-    display: block;
-    width: 14em;
-    margin: 1em auto;
-    padding: 4px;
-    text-align: center;
-}
+
 .errorlist { color: #af0917; font-weight: bold; }
 .form-errors { background: #baa; padding: 1em 4px; text-align: center; font-weight: bold; color: #af0917;}
 .form-indent { margin-left: 2.5em; }

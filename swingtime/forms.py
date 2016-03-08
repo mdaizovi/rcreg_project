@@ -408,7 +408,6 @@ class EventForm(forms.ModelForm):
         super(EventForm, self).__init__(*args, **kws)
         self.fields['description'].required = False
         if date:
-            con=Con.objects.get(start__lte=date, end__gte=date)
             try:
                 con=Con.objects.get(start__lte=date, end__gte=date)
                 self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
