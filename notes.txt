@@ -24,13 +24,8 @@ used openpyxl, don’t know if will incorporate
 swing time and demo requirements
 cd django-swingtime-master/
 pip install -r requirements.txt
-remember to make db username longer:
+my requirements.txt is copied from swing time, haven’t added any of my previous ones.
 
-1.Login to your mysql in terminal(mysql -uroot -p)
-
-2.mysql use your_database_name;
-
-3.alter table auth_user modify username varchar(100);
 
 
 
@@ -39,14 +34,7 @@ mysql -urcregsite -hmysql.server -p
 
 
 
-TO COPY FROM DB FILE THAT IS IN REGULAR FILES SECTION
-This worked to impose upon blank database, I don’t know if it would work with some changes
-1. first, log on to mysql from back with:
-mysql -urcregsite -hmysql.server -p
-2. 
-USE rcregsite$default;    
-SOURCE /home/rcregsite/rcreg2016copy.sql;
-NONONONONO this does not copy everything for some reason
+
 
 
 mysqldump -hmysql.server  --user rcregsite --password=mice4rice --databases ‘rcregsite$default' < /home/rcregsite/rcreg2016copy.sql

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static "css/swingtime.css" %}" type="text/css" media="screen" />
+  <title>{% block title %}{% endblock %}</title>
+<!--[if lt IE 9]>
+<script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+
+{% block extended_head %}{% endblock %}
+</head>
+
+  <div class="row" id="moreInfo">
+    <div class="col-sm-12">
+        <h1>Calendar</h1>
+    <main role="main">
+        {% block navigation %}
+        <nav>
+            <a href="{% url 'swingtime-monthly-view' current_datetime.year current_datetime.month %}">
+                Monthly View</a> &middot;
+            <a href="{% url 'swingtime-yearly-view' current_datetime.year %}">Yearly View</a> &middot;
+            <a href="{% url 'swingtime-events' %}">Event Listing</a>
+        </nav>
+        {% endblock navigation %}
+        {% block main_content %}{% endblock main_content %}
+    </main>
+    <footer role="contentinfo"></footer>
+</div>
+</div>
+{% endblock %}

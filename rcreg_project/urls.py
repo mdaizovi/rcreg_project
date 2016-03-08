@@ -17,4 +17,7 @@ urlpatterns = [
     url(r'^con/', include ('con_event.urls')),
     url(r'^scheduler/', include ('scheduler.urls')),
     url(r'^accounts/', include('registration.backends.default.urls')),
+    #url(r'^swingtime/', include('swingtime.urls')),
+    url(r'^', include('swingtime.urls')),#this will work to avoid ugly swingtime url, just make it go straight through
+    #make sure to not use 'calendar' or 'events' elsewhere, else will ocnflict with swingtime urls
 ]

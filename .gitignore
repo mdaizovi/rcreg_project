@@ -1,6 +1,7 @@
 *.pyc
 .DS_Store
 rcregvenv
+rollertronvenv
 
 # I want my migrations to be DB local/production DB specific, this should ignore all folders named migrations #
 ##################
