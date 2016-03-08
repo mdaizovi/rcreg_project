@@ -27,19 +27,19 @@ def event_listing(
 ):
     '''
     View all ``events``.
-    
+
     If ``events`` is a queryset, clone it. If ``None`` default to all ``Event``s.
-    
+
     Context parameters:
-    
+
     ``events``
         an iterable of ``Event`` objects
-        
+
     ... plus all values passed in via **extra_context
     '''
     if events is None:
         events = Event.objects.all()
-    
+
     extra_context['events'] = events
     return render(request, template, extra_context)
 
@@ -60,10 +60,10 @@ def event_view(
 
     ``event``
         the event keyed by ``pk``
-        
+
     ``event_form``
         a form object for updating the event
-        
+
     ``recurrence_form``
         a form object for adding occurrences
     '''
@@ -101,9 +101,9 @@ def occurrence_view(
 ):
     '''
     View a specific occurrence and optionally handle any updates.
-    
+
     Context parameters:
-    
+
     ``occurrence``
         the occurrence object keyed by ``pk``
 
@@ -118,7 +118,7 @@ def occurrence_view(
             return http.HttpResponseRedirect(request.path)
     else:
         form = form_class(instance=occurrence)
-        
+
     return render(request, template, {'occurrence': occurrence, 'form': form})
 
 
@@ -131,19 +131,19 @@ def add_event(
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
-    
+
     Context parameters:
-    
+
     ``dtstart``
         a datetime.datetime object representing the GET request value if present,
         otherwise None
-    
+
     ``event_form``
         a form object for updating the event
 
     ``recurrence_form``
         a form object for adding occurrences
-    
+
     '''
     dtstart = None
     if request.method == 'POST':
@@ -153,7 +153,7 @@ def add_event(
             event = event_form.save()
             recurrence_form.save(event)
             return http.HttpResponseRedirect(event.get_absolute_url())
-            
+
     else:
         if 'dtstart' in request.GET:
             try:
@@ -161,11 +161,12 @@ def add_event(
             except(TypeError, ValueError) as exc:
                 # TODO: A badly formatted date is passed to add_event
                 logging.warning(exc)
-        
+
         dtstart = dtstart or datetime.now()
-        event_form = event_form_class()
+        event_form = event_form_class(date=dtstart)
+        #event_form = event_form_class()
         recurrence_form = recurrence_form_class(initial={'dtstart': dtstart})
-            
+
     return render(
         request,
         template,
@@ -185,25 +186,25 @@ def _datetime_view(
     '''
     Build a time slot grid representation for the given datetime ``dt``. See
     utils.create_timeslot_table documentation for items and params.
-    
+
     Context parameters:
-    
+
     ``day``
         the specified datetime value (dt)
-        
+
     ``next_day``
         day + 1 day
-        
+
     ``prev_day``
         day - 1 day
-        
+
     ``timeslots``
         time slot grid of (time, cells) rows
-        
+
     '''
     timeslot_factory = timeslot_factory or utils.create_timeslot_table
     params = params or {}
-    
+
     return render(request, template, {
         'day':       dt,
         'next_day':  dt + timedelta(days=+1),
@@ -216,7 +217,7 @@ def _datetime_view(
 def day_view(request, year, month, day, template='swingtime/daily_view.html', **params):
     '''
     See documentation for function``_datetime_view``.
-    
+
     '''
     dt = datetime(int(year), int(month), int(day))
     return _datetime_view(request, template, dt, **params)
@@ -226,7 +227,7 @@ def day_view(request, year, month, day, template='swingtime/daily_view.html', **
 def today_view(request, template='swingtime/daily_view.html', **params):
     '''
     See documentation for function``_datetime_view``.
-    
+
     '''
     return _datetime_view(request, template, datetime.now(), **params)
 
@@ -236,22 +237,22 @@ def year_view(request, year, template='swingtime/yearly_view.html', queryset=Non
     '''
 
     Context parameters:
-    
+
     ``year``
         an integer value for the year in questin
-        
+
     ``next_year``
         year + 1
-        
+
     ``last_year``
         year - 1
-        
+
     ``by_month``
         a sorted list of (month, occurrences) tuples where month is a
         datetime.datetime object for the first day of a month and occurrences
         is a (potentially empty) list of values for that month. Only months
         which have at least 1 occurrence is represented in the list
-        
+
     '''
     year = int(year)
     queryset = queryset._clone() if queryset is not None else Occurrence.objects.select_related()
@@ -272,7 +273,7 @@ def year_view(request, year, template='swingtime/yearly_view.html', queryset=Non
         'by_month': [(dt, list(o)) for dt,o in itertools.groupby(occurrences, group_key)],
         'next_year': year + 1,
         'last_year': year - 1
-        
+
     })
 
 
@@ -288,24 +289,24 @@ def month_view(
     Render a tradional calendar grid view with temporal navigation variables.
 
     Context parameters:
-    
+
     ``today``
         the current datetime.datetime value
-        
+
     ``calendar``
         a list of rows containing (day, items) cells, where day is the day of
         the month integer and items is a (potentially empty) list of occurrence
         for the day
-        
+
     ``this_month``
         a datetime.datetime representing the first day of the month
-    
+
     ``next_month``
         this_month + 1 month
-    
+
     ``last_month``
         this_month - 1 month
-    
+
     '''
     year, month = int(year), int(month)
     cal         = calendar.monthcalendar(year, month)
@@ -320,7 +321,7 @@ def month_view(
 
     def start_day(o):
         return o.start_time.day
-    
+
     by_day = dict([(dt, list(o)) for dt,o in itertools.groupby(occurrences, start_day)])
     data = {
         'today':      datetime.now(),
@@ -331,4 +332,3 @@ def month_view(
     }
 
     return render(request, template, data)
-

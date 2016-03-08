@@ -22,7 +22,8 @@
     <main role="main">
         {% block navigation %}
         <nav>
-            <a href="{% url 'swingtime-monthly-view' current_datetime.year current_datetime.month %}">
+            <!--[<a href="{% url 'swingtime-monthly-view' current_datetime.year current_datetime.month %}">-->
+            <a href="{% url 'swingtime-monthly-view' up_con_year up_con_month %}">
                 Monthly View</a> &middot;
             <a href="{% url 'swingtime-yearly-view' current_datetime.year %}">Yearly View</a> &middot;
             <a href="{% url 'swingtime-events' %}">Event Listing</a>

@@ -14,6 +14,9 @@ from swingtime.conf import settings as swingtime_settings
 from swingtime.models import *
 from swingtime import utils
 
+from con_event.models import Con
+from scheduler.models import Challenge, Training
+
 FIELDS_REQUIRED = (VERSION[:2] >= (1, 6))
 
 WEEKDAY_SHORT = (
@@ -377,7 +380,7 @@ class MultipleOccurrenceForm(forms.Form):
 
         elif params['freq'] != rrule.DAILY:
             raise NotImplementedError(_('Unknown interval rule ' + params['freq']))
-        
+
         return params
 
 
@@ -396,8 +399,22 @@ class EventForm(forms.ModelForm):
 
     #---------------------------------------------------------------------------
     def __init__(self, *args, **kws):
+        #there's gott be a better way to do this. after i catch all times it's called mabe I can get rid of this
+        if 'date' in kws:
+            date = kws.pop('date')
+        else:
+            date = None
+            #########
         super(EventForm, self).__init__(*args, **kws)
         self.fields['description'].required = False
+        if date:
+            con=Con.objects.get(start__lte=date, end__gte=date)
+            try:
+                con=Con.objects.get(start__lte=date, end__gte=date)
+                self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
+                self.fields["training"].queryset =Training.objects.filter(con=con,RCaccepted=True)
+            except:
+                pass
 
 
 #===============================================================================
@@ -415,5 +432,3 @@ class SingleOccurrenceForm(forms.ModelForm):
         model = Occurrence
         if FIELDS_REQUIRED:
             fields = "__all__"
-
-
