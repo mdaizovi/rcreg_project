@@ -72,10 +72,10 @@ class Event(models.Model):
     '''
     Container model for general metadata and associated ``Occurrence`` entries.
     '''
-    title = models.CharField(_('title'), max_length=32)
-    description = models.CharField(_('description'), max_length=100)
-    event_type = models.ForeignKey(EventType, verbose_name=_('event type'))
-    notes = GenericRelation(Note, verbose_name=_('notes'))
+    title = models.CharField(_('title'), max_length=32,null=True,blank=True)
+    description = models.CharField(_('description'), max_length=100,null=True,blank=True)
+    event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
+    notes = GenericRelation(Note, verbose_name=_('notes'),null=True,blank=True)
 
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
@@ -88,7 +88,10 @@ class Event(models.Model):
 
     #---------------------------------------------------------------------------
     def __str__(self):
-        return self.title
+        if self.title:
+            return self.title
+        else:
+            return "no title yet"
 
     #---------------------------------------------------------------------------
     @models.permalink
@@ -224,7 +227,10 @@ class Occurrence(models.Model):
     #---------------------------------------------------------------------------
     @property
     def title(self):
-        return self.event.title
+        if self.event.title:
+            return self.event.title
+        else:
+            return "no title yet"
 
     #---------------------------------------------------------------------------
     @property

@@ -394,8 +394,9 @@ class EventForm(forms.ModelForm):
     #===========================================================================
     class Meta:
         model = Event
-        if FIELDS_REQUIRED:
-            fields = "__all__"
+        fields = ['challenge','training']
+        # if FIELDS_REQUIRED:
+        #     fields = "__all__"
 
     #---------------------------------------------------------------------------
     def __init__(self, *args, **kws):
@@ -406,7 +407,8 @@ class EventForm(forms.ModelForm):
             date = None
             #########
         super(EventForm, self).__init__(*args, **kws)
-        self.fields['description'].required = False
+        self.fields['challenge'].required = False
+        self.fields['training'].required = False
         if date:
             try:
                 con=Con.objects.get(start__lte=date, end__gte=date)
@@ -422,9 +424,23 @@ class SingleOccurrenceForm(forms.ModelForm):
     A simple form for adding and updating single Occurrence attributes
 
     '''
+    def __init__(self, *args, **kws):
+        #there's gott be a better way to do this. after i catch all times it's called mabe I can get rid of this
+        if 'date' in kws:
+            date = kws.pop('date')
+        else:
+            date = None
 
-    start_time = forms.DateTimeField(widget=SplitDateTimeWidget)
-    end_time = forms.DateTimeField(widget=SplitDateTimeWidget)
+        super(SingleOccurrenceForm,self).__init__(*args, **kws)
+        if date:
+            self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
+            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
+        else:
+            self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
+            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
+            #########
+        # start_time = forms.DateTimeField(widget=SplitDateTimeWidget)
+        # end_time = forms.DateTimeField(widget=SplitDateTimeWidget)
 
     #===========================================================================
     class Meta:

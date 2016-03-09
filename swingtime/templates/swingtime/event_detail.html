@@ -4,6 +4,7 @@
     <h3 class="margin-top-10">RollerCon Event</h3>
     <h4 class="margin-top-10">Event Details</h4>
     <form action="" method="post">
+        {% csrf_token %}
     <table>
         <tfoot>
             <tr>
@@ -52,6 +53,7 @@
 
     <h4>Add Occurrences</h4>
     <form action="" method="post">
+
     <table>
         <tfoot>
             <tr>
@@ -62,6 +64,8 @@
         {% include "swingtime/recurring_form_part.html" %}
         </tbody>
     </table>
+      {% csrf_token %}
     </form>
+      {% csrf_token %}
     </form>
 {% endblock %}

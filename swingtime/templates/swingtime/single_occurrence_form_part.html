@@ -1,0 +1,8 @@
+
+{%for field in single_occurrence_form %}
+  <tr><th>{{ field.label_tag }}</th>
+
+{%if field.errors%}<td>{{ field.errors }}{%endif%}
+
+      <td>{{ field }}</td></tr>
+{%endfor%}

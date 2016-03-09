@@ -141,7 +141,8 @@ def add_event(
     request,
     template='swingtime/add_event.html',
     event_form_class=forms.EventForm,
-    recurrence_form_class=forms.MultipleOccurrenceForm
+    #recurrence_form_class=forms.MultipleOccurrenceForm
+    recurrence_form_class=forms.SingleOccurrenceForm
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -165,13 +166,24 @@ def add_event(
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
             event = event_form.save()
-            recurrence_form.save(event)
+            occurrence=recurrence_form.save(commit=False)
+            occurrence.event=event
+            occurrence.save()
+
             return http.HttpResponseRedirect(event.get_absolute_url())
+        else:
+            if event_form.errors:
+                print "event form errors"
+                print event_form.errors
+            if recurrence_form.errors:
+                print "recurrence_form errors"
+                print recurrence_form.errors
 
     else:
         if 'dtstart' in request.GET:
             try:
                 dtstart = parser.parse(request.GET['dtstart'])
+                print dtstart
             except(TypeError, ValueError) as exc:
                 # TODO: A badly formatted date is passed to add_event
                 logging.warning(exc)
@@ -179,12 +191,14 @@ def add_event(
         dtstart = dtstart or datetime.now()
         event_form = event_form_class(date=dtstart)
         #event_form = event_form_class()
-        recurrence_form = recurrence_form_class(initial={'dtstart': dtstart})
+        #recurrence_form = recurrence_form_class(initial={'dtstart': dtstart})
+        recurrence_form = recurrence_form_class(date=dtstart)
 
     return render(
         request,
         template,
-        {'dtstart': dtstart, 'event_form': event_form, 'recurrence_form': recurrence_form}
+        # {'dtstart': dtstart, 'event_form': event_form, 'recurrence_form': recurrence_form}
+        {'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
     )
 
 

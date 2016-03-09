@@ -1,7 +1,7 @@
         <!--<tr><th>{{ event_form.event_type.label_tag }}</th>
             <td>{{ event_form.event_type.errors }}
                 {{ event_form.event_type }}</td></tr>-->
-
+  {% csrf_token %}
       <tr><th>{{ event_form.training.label_tag }}</th>
           <td>{{ event_form.training.errors }}
               {{ event_form.training }}</td></tr>
