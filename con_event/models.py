@@ -103,6 +103,7 @@ class Con(models.Model):
     state=models.ForeignKey(State,null=True, blank=True, on_delete=models.SET_NULL)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
     country = models.ForeignKey(Country, null=True, blank=True, on_delete=models.SET_NULL)
     start = models.DateField(auto_now=False, auto_now_add=False)
+    venue=models.ManyToManyField("scheduler.Venue", blank=True)
     end = models.DateField(auto_now=False, auto_now_add=False)
     challenge_submission_start=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
     training_submission_end=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
@@ -164,7 +165,6 @@ class Con(models.Model):
                 can_submit=True
         return can_submit
 
-
     def get_date_range(self):
         date_list=[]
         if self.start and self.end:
@@ -176,6 +176,16 @@ class Con(models.Model):
                 day += delta
 
         return date_list
+
+    def get_locations(self):
+        from scheduler.models import Location
+        venues=self.venue.all()
+        locations=[]
+        for v in venues:
+            for l in v.location_set.all():
+                if l not in locations:
+                    locations.append(l)
+        return locations
 
     def save(self, *args, **kwargs):
         '''saves self.year as start.year, if no year already saved'''

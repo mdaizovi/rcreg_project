@@ -88,7 +88,11 @@ class Event(models.Model):
 
     #---------------------------------------------------------------------------
     def __str__(self):
-        if self.title:
+        if self.challenge:
+            return self.challenge.name
+        elif self.training:
+            return self.training.name
+        elif self.title:
             return self.title
         else:
             return "no title yet"
@@ -227,10 +231,15 @@ class Occurrence(models.Model):
     #---------------------------------------------------------------------------
     @property
     def title(self):
-        if self.event.title:
+        if self.event.challenge:
+            return self.event.challenge.name
+        elif self.event.training:
+            return self.event.training.name
+        elif self.event.title:
             return self.event.title
         else:
             return "no title yet"
+
 
     #---------------------------------------------------------------------------
     @property

@@ -25,9 +25,9 @@ class EventNoteInline(GenericTabularInline):
 
 #===============================================================================
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'event_type', 'description')
-    list_filter = ('event_type', )
-    search_fields = ('title', 'description')
+    list_display = ('training','challenge')
+    #list_filter = ('event_type', )
+    search_fields = ('training','challenge')
     inlines = [EventNoteInline, OccurrenceInline]
 
 

@@ -8,10 +8,13 @@ from django.db import models
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 
 from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
+
+from con_event.models import Con
 
 from dateutil import parser
 
@@ -162,6 +165,7 @@ def add_event(
     '''
     dtstart = None
     if request.method == 'POST':
+        print "add event post"
         event_form = event_form_class(request.POST)
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
@@ -181,6 +185,7 @@ def add_event(
 
     else:
         if 'dtstart' in request.GET:
+            print "add event get"
             try:
                 dtstart = parser.parse(request.GET['dtstart'])
                 print dtstart
@@ -233,9 +238,17 @@ def _datetime_view(
     '''
     timeslot_factory = timeslot_factory or utils.create_timeslot_table
     params = params or {}
+    try:
+        con=Con.objects.get(start__lte=dt, end__gte=dt)
+        locations=con.get_locations()
+    except ObjectDoesNotExist:
+        con=locations=None
+        #locations=None
 
     return render(request, template, {
         'day':       dt,
+        'con':       con,
+        'locations': locations,
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
         'timeslots': timeslot_factory(dt, items, **params)

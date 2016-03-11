@@ -170,7 +170,7 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 030216.xlsx')
+#target_file=(import_path+'RollerTron Attendee 030916.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
@@ -268,16 +268,17 @@ def import_from_excel(complete_entries_file,con):
                     'favorite_part':favorite_part,'volunteer':volunteer}
                 for k,v in attr_dict.iteritems():
                     print k," is ",v
-                    value = getattr(this_reg, k)
-                    #Notice this only adds data that doesn't exist, it doesn't overwrite existing db data
-                    #I could make update by saying if old != new, if i wanted. dob't know if i want.
-                    if v and not value:
-                        print "setting ",this_reg,"s ",k
+                    #value = getattr(this_reg, k)
+                    #if v and not value:
+                    if v:
+                        print "setting or updating",this_reg,"s ",k
                         setattr(this_reg, k, v)
                     elif not v:
                         print "od doesn't have ",k
-                    elif value:
-                        print this_reg,"already has a ",k,": ",value
+                    # elif value:
+                    #     print this_reg,"already has a ",k,": ",value
+                        #NEW NOTE this was making everyone have default MVP Female setting
+
 
                 this_reg.save()
                 this_reg.save()#think I have to do twice tomake user? I forgot.

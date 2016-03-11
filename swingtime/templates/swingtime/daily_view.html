@@ -7,14 +7,17 @@
         {{ day|date:"l, N jS Y" }}
         <a class="plain" href="{% url 'swingtime-daily-view' next_day.year next_day.month next_day.day %}">&rarr;</a>
     </h4>
+
+{%if con%}
+
     <table class="calendar">
         <thead>
             <tr>
                 <th>Time</th>
-                <th>Main Room</th>
-                <th>Private 2</th>
-                <th>Private 3</th>
-                <th colspan="4">Private 4</th>
+                {%for location in locations%}
+                <th>{{location.name}}</th>
+                {%endfor%}
+
             </tr>
         </thead>
         <tbody>
@@ -33,4 +36,9 @@
             {% endfor %}
         </tbody>
     </table>
+
+{%else%}
+{% include "no_con.html" %}
+{%endif%}
+
 {% endblock %}
