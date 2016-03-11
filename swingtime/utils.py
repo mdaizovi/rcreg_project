@@ -10,6 +10,7 @@ from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from django.utils.encoding import python_2_unicode_compatible
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 
 from dateutil import rrule
 from swingtime.conf import settings as swingtime_settings
@@ -254,11 +255,22 @@ def create_timeslot_table(
                         proxy.event_class = next(column_classes[colkey][proxy])
             else:
                 index=column_range.index(colkey)
-                str1="<a href='{% url 'swingtime-add-event' %}?dtstart="
+                # str1="<a href='{% url 'swingtime-add-event' %}?dtstart="
+                # str2=str(rowkey.isoformat())
+                # str3="'>+</a>"
+
+                #MAKE NOT HARD CODED WHEN NOT DRUNK
+                #http://www.djangobook.com/en/2.0/chapter08.html
+                #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/
+                #http://stackoverflow.com/questions/43290/how-to-generate-urls-in-django
+                str1="<a href='/events/add/?dtstart="
                 str2=str(rowkey.isoformat())
                 str3="'>+</a>"
+
+
                 full_str =str1+str2+str3
                 cols[index] =str(full_str)
+
 
         table.append((rowkey, cols))
 

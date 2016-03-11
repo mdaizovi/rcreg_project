@@ -6,6 +6,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.conf import settings
+from django.core.urlresolvers import reverse
+
 #from con_event.models import Con
 from scheduler.models import Location, Challenge, Training
 
@@ -67,6 +69,17 @@ class EventType(models.Model):
 
 
 #===============================================================================
+
+class EventManager(models.Manager):
+
+    #---------------------------------------------------------------------------
+    def get_add_url(self):
+        """This is me trying to get a str of this link. I fail"""
+        #return reverse('swingtime.views.add_event', args=[dt=dt, location=str(location)])
+        pass
+
+#===============================================================================
+
 @python_2_unicode_compatible
 class Event(models.Model):
     '''
@@ -79,6 +92,8 @@ class Event(models.Model):
 
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
+
+    objects = EventManager()
 
     #===========================================================================
     class Meta:

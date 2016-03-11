@@ -28,7 +28,14 @@
                 {% for cell in cells %}
 
                 <td{% if cell.event_class %} class="{{cell.event_class}}"{% endif %} style="text-align:center;">
-      {{ cell|safe }} 
+
+                {% autoescape off %}
+                    {{ cell }}
+                {% endautoescape %}
+
+                <!-- {% if not cell.event_class %}
+                <a href="{% url 'swingtime-add-event' %}?dtstart={{ tm.isoformat }}">+</a>
+                {%endif%} -->
               </td>
                 {% endfor %}
             </tr>
