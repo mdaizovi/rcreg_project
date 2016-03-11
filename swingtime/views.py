@@ -246,16 +246,12 @@ def _datetime_view(
         con=None
         locations=[]
 
-    #min_columns=len(locations)
-    #print timeslot_factory(dt, items, **params)
-
     return render(request, template, {
         'day':       dt,
         'con':       con,
         'locations': locations,
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
-        #'timeslots': timeslot_factory(dt=dt, items=items,min_columns=min_columns, **params)
         'timeslots': timeslot_factory(dt=dt, items=items, **params)
     })
 

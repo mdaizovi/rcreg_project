@@ -202,7 +202,7 @@ def create_timeslot_table(
             # but on weird intervals
             continue
 
-        colkey = item.location.pk
+        colkey = int(item.location.pk)
         if colkey not in timeslot:
             proxy = proxy_class(item, colkey)
             timeslot[colkey] = proxy
@@ -223,7 +223,7 @@ def create_timeslot_table(
     column_lens = [len(x) for x in timeslots.values()]
     if con and locations:
         column_count=len(locations)
-        column_range = [l.id for l in locations]
+        column_range = [int(l.id) for l in locations]
     else:
         column_count = max((min_columns, max(column_lens) if column_lens else 0))
         column_range = range(column_count)
@@ -236,19 +236,29 @@ def create_timeslot_table(
 
     # create the chronological grid layout
     table = []
-
     for rowkey in sorted(timeslots.keys()):#rowkey is the datetime object within range for day
         cols = empty_columns[:]
-        for colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
-            proxy = timeslots[rowkey][colkey]
-            index=column_range.index(colkey)
-            cols[index] = proxy
+        #for colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
 
-            if not proxy.event_class and column_classes:
-                if proxy.event_type and proxy.event_type.abbr:
-                    proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])
-                else:
-                    proxy.event_class = next(column_classes[colkey][proxy])
+        for colkey in column_range:#colkey is a dict w/ k,v of {column:object}
+            if colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
+
+                proxy = timeslots[rowkey][colkey]
+                index=column_range.index(colkey)
+                cols[index] = proxy
+
+                if not proxy.event_class and column_classes:
+                    if proxy.event_type and proxy.event_type.abbr:
+                        proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])
+                    else:
+                        proxy.event_class = next(column_classes[colkey][proxy])
+            else:
+                index=column_range.index(colkey)
+                str1="<a href='{% url 'swingtime-add-event' %}?dtstart="
+                str2=str(rowkey.isoformat())
+                str3="'>+</a>"
+                full_str =str1+str2+str3
+                cols[index] =str(full_str)
 
         table.append((rowkey, cols))
 
