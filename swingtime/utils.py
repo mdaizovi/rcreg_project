@@ -9,10 +9,13 @@ import itertools
 from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from django.utils.encoding import python_2_unicode_compatible
+from django.core.exceptions import ObjectDoesNotExist
 
 from dateutil import rrule
 from swingtime.conf import settings as swingtime_settings
 from swingtime.models import EventType
+
+from con_event.models import Con
 
 
 #-------------------------------------------------------------------------------
@@ -124,7 +127,7 @@ def create_timeslot_table(
     start_time=swingtime_settings.TIMESLOT_START_TIME,
     end_time_delta=swingtime_settings.TIMESLOT_END_TIME_DURATION,
     time_delta=swingtime_settings.TIMESLOT_INTERVAL,
-    min_columns=swingtime_settings.TIMESLOT_MIN_COLUMNS,
+    min_columns=swingtime_settings.TIMESLOT_MIN_COLUMNS,#default, if no location list fed in via con and view
     css_class_cycles=css_class_cycler,
     proxy_class=DefaultOccurrenceProxy
 ):
@@ -158,6 +161,14 @@ def create_timeslot_table(
     dtstart = datetime.combine(dt.date(), start_time)
     dtend = dtstart + end_time_delta
 
+    try:
+        con=Con.objects.get(start__lte=dt, end__gte=dt)
+        locations=con.get_locations()
+    except ObjectDoesNotExist:
+        con=None
+        locations=[]
+
+
     if isinstance(items, QuerySet):
         items = items._clone()
     elif not items:
@@ -182,6 +193,7 @@ def create_timeslot_table(
             rowkey = current = dtstart
 
         timeslot = timeslots.get(rowkey, None)
+
         if timeslot is None:
             # TODO fix atypical interval boundry spans
             # This is rather draconian, we should probably try to find a better
@@ -190,32 +202,31 @@ def create_timeslot_table(
             # but on weird intervals
             continue
 
-        colkey = 0
-        while 1:
-            # keep searching for an open column to place this occurrence
-            if colkey not in timeslot:
-                proxy = proxy_class(item, colkey)
-                timeslot[colkey] = proxy
+        colkey = item.location.pk
+        if colkey not in timeslot:
+            proxy = proxy_class(item, colkey)
+            timeslot[colkey] = proxy
 
-                while current < item.end_time:
-                    rowkey = current
-                    row = timeslots.get(rowkey, None)
-                    if row is None:
-                        break
+            while current < item.end_time:
+                rowkey = current
+                row = timeslots.get(rowkey, None)
+                if row is None:
+                    break
 
-                    # we might want to put a sanity check in here to ensure that
-                    # we aren't trampling some other entry, but by virtue of
-                    # sorting all occurrence that shouldn't happen
-                    row[colkey] = proxy
-                    current += time_delta
-                break
-
-            colkey += 1
+                # we might want to put a sanity check in here to ensure that
+                # we aren't trampling some other entry, but by virtue of
+                # sorting all occurrence that shouldn't happen
+                row[colkey] = proxy
+                current += time_delta
 
     # determine the number of timeslot columns we should show
     column_lens = [len(x) for x in timeslots.values()]
-    column_count = max((min_columns, max(column_lens) if column_lens else 0))
-    column_range = range(column_count)
+    if con and locations:
+        column_count=len(locations)
+        column_range = [l.id for l in locations]
+    else:
+        column_count = max((min_columns, max(column_lens) if column_lens else 0))
+        column_range = range(column_count)
     empty_columns = ['' for x in column_range]
 
     if css_class_cycles:
@@ -225,11 +236,14 @@ def create_timeslot_table(
 
     # create the chronological grid layout
     table = []
-    for rowkey in sorted(timeslots.keys()):
+
+    for rowkey in sorted(timeslots.keys()):#rowkey is the datetime object within range for day
         cols = empty_columns[:]
-        for colkey in timeslots[rowkey]:
+        for colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
             proxy = timeslots[rowkey][colkey]
-            cols[colkey] = proxy
+            index=column_range.index(colkey)
+            cols[index] = proxy
+
             if not proxy.event_class and column_classes:
                 if proxy.event_type and proxy.event_type.abbr:
                     proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])

@@ -145,7 +145,8 @@ def add_event(
     template='swingtime/add_event.html',
     event_form_class=forms.EventForm,
     #recurrence_form_class=forms.MultipleOccurrenceForm
-    recurrence_form_class=forms.SingleOccurrenceForm
+    recurrence_form_class=forms.SingleOccurrenceForm,
+    location=None
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -197,7 +198,7 @@ def add_event(
         event_form = event_form_class(date=dtstart)
         #event_form = event_form_class()
         #recurrence_form = recurrence_form_class(initial={'dtstart': dtstart})
-        recurrence_form = recurrence_form_class(date=dtstart)
+        recurrence_form = recurrence_form_class(date=dtstart,initial={'location': location})
 
     return render(
         request,
@@ -242,8 +243,11 @@ def _datetime_view(
         con=Con.objects.get(start__lte=dt, end__gte=dt)
         locations=con.get_locations()
     except ObjectDoesNotExist:
-        con=locations=None
-        #locations=None
+        con=None
+        locations=[]
+
+    #min_columns=len(locations)
+    #print timeslot_factory(dt, items, **params)
 
     return render(request, template, {
         'day':       dt,
@@ -251,7 +255,8 @@ def _datetime_view(
         'locations': locations,
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
-        'timeslots': timeslot_factory(dt, items, **params)
+        #'timeslots': timeslot_factory(dt=dt, items=items,min_columns=min_columns, **params)
+        'timeslots': timeslot_factory(dt=dt, items=items, **params)
     })
 
 
