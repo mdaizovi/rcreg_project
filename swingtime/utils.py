@@ -10,7 +10,7 @@ from django.db.models.query import QuerySet
 from django.utils.safestring import mark_safe
 from django.utils.encoding import python_2_unicode_compatible
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse,resolve
 
 from dateutil import rrule
 from swingtime.conf import settings as swingtime_settings
@@ -255,21 +255,26 @@ def create_timeslot_table(
                         proxy.event_class = next(column_classes[colkey][proxy])
             else:
                 index=column_range.index(colkey)
-                # str1="<a href='{% url 'swingtime-add-event' %}?dtstart="
-                # str2=str(rowkey.isoformat())
-                # str3="'>+</a>"
 
                 #MAKE NOT HARD CODED WHEN NOT DRUNK
+                #I want the link to look something like this:
+                # http://127.0.0.1:8000/events/add/?dtstart=2016-07-28T07:15:00&location=5
+
                 #http://www.djangobook.com/en/2.0/chapter08.html
                 #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/
                 #http://stackoverflow.com/questions/43290/how-to-generate-urls-in-django
                 str1="<a href='/events/add/?dtstart="
                 str2=str(rowkey.isoformat())
-                str3="'>+</a>"
+                str3="&location="+str(colkey)
+                str4="'>+</a>"
 
-
-                full_str =str1+str2+str3
+                full_str =str1+str2+str3+str4
+                print full_str
                 cols[index] =str(full_str)
+                #
+                # test=reverse('swingtime-add-event')
+                # print "TEST line 275"
+                # print test
 
 
         table.append((rowkey, cols))

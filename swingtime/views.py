@@ -15,6 +15,7 @@ from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
 from con_event.models import Con
+from scheduler.models import Location
 
 from dateutil import parser
 
@@ -146,7 +147,6 @@ def add_event(
     event_form_class=forms.EventForm,
     #recurrence_form_class=forms.MultipleOccurrenceForm
     recurrence_form_class=forms.SingleOccurrenceForm,
-    location=None
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -186,13 +186,19 @@ def add_event(
 
     else:
         if 'dtstart' in request.GET:
-            print "add event get"
             try:
                 dtstart = parser.parse(request.GET['dtstart'])
                 print dtstart
             except(TypeError, ValueError) as exc:
                 # TODO: A badly formatted date is passed to add_event
                 logging.warning(exc)
+        if 'location' in request.GET:
+            try:
+                location=Location.objects.get(pk=request.GET['location'])
+            except ObjectDoesNotExist:
+                location=None
+        else:
+            location=None
 
         dtstart = dtstart or datetime.now()
         event_form = event_form_class(date=dtstart)
