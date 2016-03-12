@@ -24,11 +24,9 @@
             {% for tm,cells in timeslots %}
             <tr>
                 <th><b>{{ tm|date:"P" }}</b></th>
-
                 {% for cell in cells %}
-
-                <td{% if cell.event_class %} class="{{cell.event_class}}"{% endif %} style="text-align:center;">
-
+                {%if cell%}
+                <td{% if cell.event_class %} class="{{cell.event_class}}" rowspan="{{cell.rowspan}}" {% endif %} style="text-align:center;">
                 {% autoescape off %}
                     {{ cell }}
                 {% endautoescape %}
@@ -37,6 +35,7 @@
                 <a href="{% url 'swingtime-add-event' %}?dtstart={{ tm.isoformat }}">+</a>
                 {%endif%} -->
               </td>
+                {%endif%}
                 {% endfor %}
             </tr>
             {% endfor %}

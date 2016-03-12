@@ -100,11 +100,13 @@ class BaseOccurrenceProxy(object):
 @python_2_unicode_compatible
 class DefaultOccurrenceProxy(BaseOccurrenceProxy):
 
-    CONTINUATION_STRING = '^^'
+    #CONTINUATION_STRING = '^^'
+    CONTINUATION_STRING = None#this is so i can merge rows of activities
 
     #---------------------------------------------------------------------------
     def __init__(self, *args, **kws):
         super(DefaultOccurrenceProxy, self).__init__(*args, **kws)
+        rowspan=1
         link = '<a href="%s">%s</a>' % (
             self.get_absolute_url(),
             self.title
@@ -237,6 +239,18 @@ def create_timeslot_table(
 
     # create the chronological grid layout
     table = []
+    val_list=timeslots.values()
+    prox_obj_list=[]
+    prox_obj_unique=[]
+    for dic in val_list:
+        for obj in dic.values():
+            prox_obj_list.append(obj)
+            if obj not in prox_obj_unique:
+                prox_obj_unique.append(obj)
+    for obj in prox_obj_unique:
+        obj.rowspan=prox_obj_list.count(obj)
+
+    included_objs=[]
     for rowkey in sorted(timeslots.keys()):#rowkey is the datetime object within range for day
         cols = empty_columns[:]
         #for colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
@@ -245,14 +259,16 @@ def create_timeslot_table(
             if colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
 
                 proxy = timeslots[rowkey][colkey]
-                index=column_range.index(colkey)
-                cols[index] = proxy
+                if proxy and proxy not in included_objs:#this is so i can merge rows of activities
+                    included_objs.append(proxy)
+                    index=column_range.index(colkey)
+                    cols[index] = proxy
 
-                if not proxy.event_class and column_classes:
-                    if proxy.event_type and proxy.event_type.abbr:
-                        proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])
-                    else:
-                        proxy.event_class = next(column_classes[colkey][proxy])
+                    if not proxy.event_class and column_classes:
+                        if proxy.event_type and proxy.event_type.abbr:
+                            proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])
+                        else:
+                            proxy.event_class = next(column_classes[colkey][proxy])
             else:
                 index=column_range.index(colkey)
 
@@ -269,13 +285,7 @@ def create_timeslot_table(
                 str4="'>+</a>"
 
                 full_str =str1+str2+str3+str4
-                print full_str
                 cols[index] =str(full_str)
-                #
-                # test=reverse('swingtime-add-event')
-                # print "TEST line 275"
-                # print test
-
 
         table.append((rowkey, cols))
 
