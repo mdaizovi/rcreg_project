@@ -10,28 +10,28 @@
     </h3>
 
     {% if by_month %}
-    <table>
-        <thead>
-            <tr>
-                <th>Month</th>
-                <th>Title</th>
-                <th>Day</th>
-                <th>Start</th>
-                <th>End</th>
+    <table class="swingtime-table">
+        <thead class="swingtime-th">
+            <tr class="swingtime-tr">
+                <th class="swingtime-th">Month</th>
+                <th class="swingtime-th">Title</th>
+                <th class="swingtime-th">Day</th>
+                <th class="swingtime-th">Start</th>
+                <th class="swingtime-th">End</th>
             </tr>
         </thead>
         <tbody>
         {% for dt,occurrences in by_month %}
-        <tr class="month-divider">
-            <th rowspan="{{ occurrences|length }}">
+        <tr class="swingtime-tr month-divider">
+            <th class="swingtime-th" rowspan="{{ occurrences|length }}">
                 <a href="{% url 'swingtime-monthly-view' dt.year dt.month %}">
                     {{ dt|date:"F" }}</a>
             </th>
             {% for o in occurrences %}
-            <td><a href="{{ o.get_absolute_url }}">{{ o.title }}</a></td>
-            <td>{{ o.start_time|date:"M jS - l" }}</td>
-            <td>{{ o.start_time|date:"P" }}</td>
-            <td>{{ o.end_time|date:"P" }}</td>
+            <td class="swingtime-td"><a href="{{ o.get_absolute_url }}">{{ o.title }}</a></td>
+            <td class="swingtime-td">{{ o.start_time|date:"M jS - l" }}</td>
+            <td class="swingtime-td">{{ o.start_time|date:"P" }}</td>
+            <td class="swingtime-td">{{ o.end_time|date:"P" }}</td>
         </tr>
             {% if not forloop.last %}
         <tr>

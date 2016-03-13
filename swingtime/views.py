@@ -15,7 +15,7 @@ from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
 from con_event.models import Con
-from scheduler.models import Location
+from scheduler.models import Location, Training, Challenge
 
 from dateutil import parser
 
@@ -52,9 +52,10 @@ def act_sched(
     else:
         con=Con.objects.most_upcoming()
 
-
-    extra_context['con'] = con
-    extra_context['con_list']=list(Con.objects.all())
+    challenges=Occurrence.objects.filter(event__challenge__con=con)
+    trainings=Occurrence.objects.filter(event__training__con=con)
+    new_context={"activities":[challenges,trainings],"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------

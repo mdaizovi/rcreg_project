@@ -18,6 +18,14 @@ except ImportError:
 
 from swingtime.conf import settings as swingtime_settings
 
+#####NOTE to self (Dahmer):
+#temporarily got rid of Note, description field.
+#am thinking of getitng rid of title and Event type.
+#title is probably okay as long as I keep funciton to return chal or training
+#only get rid of event type if you know you'll never want to use the css helper function.
+#either way, need to resolve either of these in utils if get rid of them/
+
+
 __all__ = (
     #'Note',
     'EventType',
@@ -85,7 +93,7 @@ class Event(models.Model):
     '''
     Container model for general metadata and associated ``Occurrence`` entries.
     '''
-    title = models.CharField(_('title'), max_length=32,null=True,blank=True)
+    #title = models.CharField(_('title'), max_length=32,null=True,blank=True)
     #description = models.CharField(_('description'), max_length=100,null=True,blank=True)
     event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
     #notes = GenericRelation(Note, verbose_name=_('notes'),null=True,blank=True)
@@ -99,7 +107,7 @@ class Event(models.Model):
     class Meta:
         verbose_name = _('event')
         verbose_name_plural = _('events')
-        ordering = ('title', )
+        #ordering = ('title', )
 
     #---------------------------------------------------------------------------
     def __str__(self):
@@ -107,10 +115,8 @@ class Event(models.Model):
             return self.challenge.name
         elif self.training:
             return self.training.name
-        elif self.title:
-            return self.title
         else:
-            return "no title yet"
+            return "no challenge or training yet"
 
     #---------------------------------------------------------------------------
     @models.permalink

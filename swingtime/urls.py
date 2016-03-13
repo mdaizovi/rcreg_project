@@ -3,9 +3,6 @@ from swingtime import views
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    url(r'^intro/$',TemplateView.as_view(template_name='intro.html'), name='demo-home'),
-    url(r'^$', TemplateView.as_view(template_name='karate.html'), name='karate-home'),
-    #url(r'^swingtime/events/type/([^/]+)/$', views.event_type, name='karate-event'),
 #______________Dahmer custom URLS/Views, so templates can live together___________________
 
     url(r'^scheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_sched',name='act_sched'),

@@ -46,6 +46,7 @@ class Venue(models.Model):
 class Location(models.Model):
     venue=models.ForeignKey(Venue,on_delete=models.PROTECT)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
     name=models.CharField(max_length=50)
+    abbrv=models.CharField(max_length=50, null=True, blank=True)
     location_type=models.CharField(max_length=30, choices=LOCATION_TYPE)
 
     def __unicode__(self):

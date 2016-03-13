@@ -4,10 +4,11 @@
 
 {% block main_content %}
 <div class="row">
-    <h3 class="margin-top-10 text-center">Scheduled Activities
-    <br><table style="width:100%;"><tr><td style="border: none; text-align:center;"><small>These Challenges & Trainings have been <b>approved</b> and <b>scheduled</b> for {{con}}</small></h3></td>
 
-<td style="border: none; text-align:center;">
+    <h3 class="margin-top-10 text-center">Scheduled Activities</h3>
+  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Trainings have been <b>approved</b> and <b>scheduled</b> for {{con}}</small></h3></td>
+
+<td style="border: none; text-align:left;">
       <div class="dropdown">
       <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
         Other Cons
@@ -22,29 +23,23 @@
 </td></tr></table>
 <hr>
 
+
+{%for aq in activities %}
   <div class="col-sm-6 margin-top-10">
+      <h3 class="text-center">
+        {%cycle "Challenges" "Trainings" %}: {{ aq.count }}</h3>
 <table class="table table-striped">
-  <tr><th>Challenge</th><th>When</th><th class="text-right">Where</th></tr>
-  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+  <tr><th>{%cycle "Challenge" "Training" %} </th><th>When</th><th>Where</th></tr>
+  {%for a in aq%}
+<tr><td><b>{{forloop.counter}}.</b>
+    {%if a.event.challenge%}<a href="{{a.event.challenge.get_view_url}}">
+    {%elif a.event.training%}<a href="{{a.event.training.get_view_url}}">{%endif%}
+    {{a.title}}</a></td>
+  <td><a href="{{a.get_absolute_url}}">{{ a.start_time|date:"D M d f a" }}</a></td><td>{%if a.location.abbr%}{{a.location.abbr}}{%else%}{{a.location}}{%endif%}</td></tr>
+{%endfor%}
 </table>
 </div><!-- end col-sm-6-->
-
-<div class="col-sm-6 margin-top-10">
-<table class="table table-striped">
-<tr><th>Training</th><th>When</th><th class="text-right">Where</th></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
-</table>
-</div><!-- end col-sm-6-->
-
+{%endfor%}
 
 </div><!-- end row-->
 {% endblock %}
