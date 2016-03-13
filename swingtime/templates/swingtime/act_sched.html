@@ -1,0 +1,50 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Scheduled Activities{% endblock %}
+
+
+{% block main_content %}
+<div class="row">
+    <h3 class="margin-top-10 text-center">Scheduled Activities
+    <br><table style="width:100%;"><tr><td style="border: none; text-align:center;"><small>These Challenges & Trainings have been <b>approved</b> and <b>scheduled</b> for {{con}}</small></h3></td>
+
+<td style="border: none; text-align:center;">
+      <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        Other Cons
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+        {%for item in con_list%}
+        {% url 'act_sched' item.pk as sched_url %}
+        <li role="presentation"><a href="{{sched_url}}">{{item}}</a></li>{%endfor%}
+      </ul>
+    </div>
+</td></tr></table>
+<hr>
+
+  <div class="col-sm-6 margin-top-10">
+<table class="table table-striped">
+  <tr><th>Challenge</th><th>When</th><th class="text-right">Where</th></tr>
+  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+  <tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+</table>
+</div><!-- end col-sm-6-->
+
+<div class="col-sm-6 margin-top-10">
+<table class="table table-striped">
+<tr><th>Training</th><th>When</th><th class="text-right">Where</th></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+<tr> <td>shit</td><td>shit</td><td>shit</td></tr>
+</table>
+</div><!-- end col-sm-6-->
+
+
+</div><!-- end row-->
+{% endblock %}

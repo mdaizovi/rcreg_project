@@ -19,7 +19,7 @@ except ImportError:
 from swingtime.conf import settings as swingtime_settings
 
 __all__ = (
-    'Note',
+    #'Note',
     'EventType',
     'Event',
     'Occurrence',
@@ -27,26 +27,26 @@ __all__ = (
 )
 
 #===============================================================================
-@python_2_unicode_compatible
-class Note(models.Model):
-    '''
-    A generic model for adding simple, arbitrary notes to other models such as
-    ``Event`` or ``Occurrence``.
-    '''
-    note = models.TextField(_('note'))
-    created = models.DateTimeField(_('created'), auto_now_add=True)
-    content_type = models.ForeignKey(ContentType, verbose_name=_('content type'))
-    object_id = models.PositiveIntegerField(_('object id'))
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    #===========================================================================
-    class Meta:
-        verbose_name = _('note')
-        verbose_name_plural = _('notes')
-
-    #---------------------------------------------------------------------------
-    def __str__(self):
-        return self.note
+# @python_2_unicode_compatible
+# class Note(models.Model):
+#     '''
+#     A generic model for adding simple, arbitrary notes to other models such as
+#     ``Event`` or ``Occurrence``.
+#     '''
+#     note = models.TextField(_('note'))
+#     created = models.DateTimeField(_('created'), auto_now_add=True)
+#     content_type = models.ForeignKey(ContentType, verbose_name=_('content type'))
+#     object_id = models.PositiveIntegerField(_('object id'))
+#     content_object = GenericForeignKey('content_type', 'object_id')
+#
+#     #===========================================================================
+#     class Meta:
+#         verbose_name = _('note')
+#         verbose_name_plural = _('notes')
+#
+#     #---------------------------------------------------------------------------
+#     def __str__(self):
+#         return self.note
 
 
 #===============================================================================
@@ -86,9 +86,9 @@ class Event(models.Model):
     Container model for general metadata and associated ``Occurrence`` entries.
     '''
     title = models.CharField(_('title'), max_length=32,null=True,blank=True)
-    description = models.CharField(_('description'), max_length=100,null=True,blank=True)
+    #description = models.CharField(_('description'), max_length=100,null=True,blank=True)
     event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
-    notes = GenericRelation(Note, verbose_name=_('notes'),null=True,blank=True)
+    #notes = GenericRelation(Note, verbose_name=_('notes'),null=True,blank=True)
 
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
@@ -218,7 +218,7 @@ class Occurrence(models.Model):
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
     event = models.ForeignKey(Event, verbose_name=_('event'), editable=False)
-    notes = GenericRelation(Note, verbose_name=_('notes'))
+    #notes = GenericRelation(Note, verbose_name=_('notes'))
 
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -250,10 +250,8 @@ class Occurrence(models.Model):
             return self.event.challenge.name
         elif self.event.training:
             return self.event.training.name
-        elif self.event.title:
-            return self.event.title
         else:
-            return "no title yet"
+            return "no challenge or training chosen"
 
 
     #---------------------------------------------------------------------------
@@ -264,12 +262,12 @@ class Occurrence(models.Model):
 
 #-------------------------------------------------------------------------------
 def create_event(
-    title,
+    #title,
     event_type,
-    description='',
+    #description='',
     start_time=None,
     end_time=None,
-    note=None,
+    #note=None,
     **rrule_params
 ):
     '''
@@ -304,13 +302,13 @@ def create_event(
         )
 
     event = Event.objects.create(
-        title=title,
-        description=description,
+        #title=title,
+        #description=description,
         event_type=event_type
     )
 
-    if note is not None:
-        event.notes.create(note=note)
+    # if note is not None:
+    #     event.notes.create(note=note)
 
     start_time = start_time or datetime.now().replace(
         minute=0,

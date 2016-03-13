@@ -11,22 +11,22 @@
 {%if con%}
 
     <table class="calendar">
-        <thead>
-            <tr>
-                <th>Time</th>
+        <thead class="swingtime-th">
+            <tr class="swingtime-tr">
+                <th class="swingtime-th">Time</th>
                 {%for location in locations%}
-                <th>{{location.name}}</th>
+                <th class="swingtime-th">{{location.name}}</th>
                 {%endfor%}
 
             </tr>
         </thead>
         <tbody>
             {% for tm,cells in timeslots %}
-            <tr>
-                <th><b>{{ tm|date:"P" }}</b></th>
+            <tr class="swingtime-tr">
+                <th class="swingtime-th"><b>{{ tm|date:"P" }}</b></th>
                 {% for cell in cells %}
                 {%if cell%}
-                <td{% if cell.event_class %} class="{{cell.event_class}}" rowspan="{{cell.rowspan}}" {% endif %} style="text-align:center;">
+                <td{% if cell.event_class %} class="{{cell.event_class}} swingtime-td" rowspan="{{cell.rowspan}}"{%else %} class="swingtime-td" {% endif %} style="text-align:center;">
                 {% autoescape off %}
                     {{ cell }}
                 {% endautoescape %}

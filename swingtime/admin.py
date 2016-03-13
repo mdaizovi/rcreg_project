@@ -7,8 +7,8 @@ from django.contrib import admin
 from swingtime.models import *
 
 #===============================================================================
-class EventTypeAdmin(admin.ModelAdmin):
-    list_display = ('label', 'abbr')
+# class EventTypeAdmin(admin.ModelAdmin):
+#     list_display = ('label', 'abbr')
 
 
 #===============================================================================
@@ -18,9 +18,9 @@ class OccurrenceInline(admin.TabularInline):
 
 
 #===============================================================================
-class EventNoteInline(GenericTabularInline):
-    model = Note
-    extra = 1
+# class EventNoteInline(GenericTabularInline):
+#     model = Note
+#     extra = 1
 
 
 #===============================================================================
@@ -28,8 +28,9 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ('training','challenge')
     #list_filter = ('event_type', )
     search_fields = ('training','challenge')
-    inlines = [EventNoteInline, OccurrenceInline]
+    #inlines = [EventNoteInline, OccurrenceInline]
+    inlines = [OccurrenceInline]
 
 
 admin.site.register(Event, EventAdmin)
-admin.site.register(EventType, EventTypeAdmin)
+#admin.site.register(EventType, EventTypeAdmin)

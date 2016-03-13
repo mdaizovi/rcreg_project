@@ -13,6 +13,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
 <![endif]-->
 
+
 {% block extended_head %}{% endblock %}
 </head>
 
@@ -46,9 +47,6 @@
               <li><a href="#">Submitted</a></li>
               <li><a href="#">Approved</a></li>
               <li><a href="#">Rejected</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a href="#">Un-Scheduled</a></li>
-              <li><a href="#">Scheduled</a></li>
             </ul>
           </div></td>
 
@@ -62,9 +60,6 @@
               <li><a href="#">Submitted</a></li>
               <li><a href="#">Approved</a></li>
               <li><a href="#">Rejected</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a href="#">Un-Scheduled</a></li>
-              <li><a href="#">Scheduled</a></li>
             </ul>
           </div></td>
 
@@ -74,6 +69,9 @@
               <span class="caret"></span>
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#">Un-Scheduled </a></li>
+              <li><a href="{% url 'act_sched' %}">Scheduled</a></li>
+              <li role="separator" class="divider"></li>
               <li><a href="#">Make Visible</a></li>
               <li><a href="#">Make <b>Final</b></a></li>
             </ul>

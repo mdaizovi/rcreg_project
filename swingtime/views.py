@@ -22,6 +22,41 @@ from dateutil import parser
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
 
+@login_required
+def act_unsched(
+    request,
+    template='swingtime/act_unsched.html',
+    con_id=None,
+    **extra_context
+):
+    if con:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+
+    extra_context['con'] = con
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+
+@login_required
+def act_sched(
+    request,
+    template='swingtime/act_sched.html',
+    con_id=None,
+    **extra_context
+):
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+
+    extra_context['con'] = con
+    extra_context['con_list']=list(Con.objects.all())
+    return render(request, template, extra_context)
+
 #-------------------------------------------------------------------------------
 @login_required
 def calendar_home(

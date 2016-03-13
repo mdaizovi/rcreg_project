@@ -6,7 +6,17 @@ urlpatterns = [
     url(r'^intro/$',TemplateView.as_view(template_name='intro.html'), name='demo-home'),
     url(r'^$', TemplateView.as_view(template_name='karate.html'), name='karate-home'),
     #url(r'^swingtime/events/type/([^/]+)/$', views.event_type, name='karate-event'),
+#______________Dahmer custom URLS/Views, so templates can live together___________________
 
+    url(r'^scheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_sched',name='act_sched'),
+    url(r'^scheduled/$', 'swingtime.views.act_sched',name='act_sched'),
+    url(r'^unscheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_unsched',name='act_unsched'),
+    url(r'^unscheduled/$', 'swingtime.views.act_unsched',name='act_unsched'),
+
+
+
+
+#________________________end my custom URLS____________________________________
     url(
         r'^calendar/home/$',
         views.calendar_home,

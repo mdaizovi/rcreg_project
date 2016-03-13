@@ -8,7 +8,6 @@ from django.views.generic import TemplateView
 
 
 urlpatterns = patterns('',
-
     url(r'^challenges/con/(?P<con_id>\d+)/$', 'scheduler.views.challenges_home',name='challenges_home_con'),
     url(r'^challenges/$', 'scheduler.views.challenges_home',name='challenges_home'),
     url(r'^my_challenges/', 'scheduler.views.my_challenges',name='my_challenges'),
