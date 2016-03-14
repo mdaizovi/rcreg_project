@@ -434,13 +434,11 @@ class SingleOccurrenceForm(forms.ModelForm):
         super(SingleOccurrenceForm,self).__init__(*args, **kws)
         if date:
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
-            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
+            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, required=False,initial=date)
         else:
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-            #########
-        # start_time = forms.DateTimeField(widget=SplitDateTimeWidget)
-        # end_time = forms.DateTimeField(widget=SplitDateTimeWidget)
+            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
+
 
     #===========================================================================
     class Meta:

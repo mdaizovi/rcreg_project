@@ -440,25 +440,35 @@ def add_event(
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
             event = event_form.save()
+
+            if event.training:
+                duration=event.training.duration
+            elif event.challenge:
+                duration=float(event.challenge.duration)
+            else:
+                duration=1 #default 1 hour?
+
+            dur_delta=int(duration*60)
+
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
+            occurrence.end_time=occurrence.start_time+timedelta(minutes=dur_delta)
+
             occurrence.save()
             save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
             return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
-
-        else:
-            if event_form.errors:
-                print "event form errors"
-                print event_form.errors
-            if recurrence_form.errors:
-                print "recurrence_form errors"
-                print recurrence_form.errors
+        # else:
+        #     if event_form.errors:
+        #         print "event form errors"
+        #         print event_form.errors
+        #     if recurrence_form.errors:
+        #         print "recurrence_form errors"
+        #         print recurrence_form.errors
 
     else:
         if 'dtstart' in request.GET:
             try:
                 dtstart = parser.parse(request.GET['dtstart'])
-                print dtstart
             except(TypeError, ValueError) as exc:
                 # TODO: A badly formatted date is passed to add_event
                 logging.warning(exc)

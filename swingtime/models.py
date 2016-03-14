@@ -245,19 +245,19 @@ class Occurrence(models.Model):
     def validate_unique(self, *args, **kwargs):
         super(Occurrence, self).validate_unique(*args, **kwargs)
 
-        qs = self.__class__._default_manager.filter(
-            start_time__lt=self.end_time,
-            end_time__gt=self.start_time,
-            location=self.location
-        )
+        if self.start_time and self.end_time and self.location:
 
-        if not self._state.adding and self.pk is not None:
-            qs = qs.exclude(pk=self.pk)
+            qs = self.__class__._default_manager.filter(
+                start_time__lt=self.end_time,
+                end_time__gt=self.start_time,
+                location=self.location)
 
-        if qs.exists():
-            raise ValidationError({
-                NON_FIELD_ERRORS: ["You can't have more than 1 event in the same place at the same time",],
-            })
+            if not self._state.adding and self.pk is not None:
+                qs = qs.exclude(pk=self.pk)
+
+            if qs.exists():
+                raise ValidationError({
+                    NON_FIELD_ERRORS: ["You can't have more than 1 event in the same place at the same time",],})
 
 
 #-------------------------------------------------------------------------------

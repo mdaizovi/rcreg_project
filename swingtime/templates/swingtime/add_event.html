@@ -31,7 +31,15 @@
         </tfoot>
         <tbody>
         {% include "swingtime/event_form_part.html" %}
-        {% include "swingtime/single_occurrence_form_part.html" %}
+
+        <tr><th>{{ single_occurrence_form.start_time.label_tag }}</th>
+      {%if single_occurrence_form.start_time.errors%}<td>{{ single_occurrence_form.start_time.errors }}{%endif%}
+            <td>{{ single_occurrence_form.start_time }}</td></tr>
+
+            <tr><th>{{ single_occurrence_form.location.label_tag }}</th>
+          {%if single_occurrence_form.location.errors%}<td>{{ single_occurrence_form.location.errors }}{%endif%}
+                <td>{{ single_occurrence_form.location }}</td></tr>
+
         </tbody>
     </table>
     </form>
