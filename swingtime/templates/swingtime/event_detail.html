@@ -1,7 +1,12 @@
 {% extends "swingtime/swingtime_base.html" %}
 {% block title %}Event: {{ event }}{% endblock %}
 {% block main_content %}
-    <h3 class="margin-top-10">RollerCon Event</h3>
+    <h3 class="margin-top-10">RollerCon Event: {{event}}</h3>
+
+    {%if save_success %}
+    <div class="alert alert-success" role="alert">{{event}} successfully saved!</div>
+    {%endif%}
+
     <h4 class="margin-top-10">Event Details</h4>
     <form action="" method="post">
         {% csrf_token %}

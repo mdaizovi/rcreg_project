@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.conf import settings
 from django.core.urlresolvers import reverse
-
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 #from con_event.models import Con
 from scheduler.models import Location, Challenge, Training
 
@@ -264,6 +264,29 @@ class Occurrence(models.Model):
     @property
     def event_type(self):
         return self.event.event_type
+
+    #---------------------------------------------------------------------------
+
+    #reference: http://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
+
+    def validate_unique(self, *args, **kwargs):
+        super(Occurrence, self).validate_unique(*args, **kwargs)
+
+        qs = self.__class__._default_manager.filter(
+            start_time__lt=self.end_time,
+            end_time__gt=self.start_time,
+            location=self.location
+        )
+
+        if not self._state.adding and self.pk is not None:
+            qs = qs.exclude(pk=self.pk)
+
+        if qs.exists():
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["You can't have more than 1 event in the same place at the same time",],
+            })
+
+
 
 
 #-------------------------------------------------------------------------------

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, time
 from django import http
 from django.db import models
 from django.template.context import RequestContext
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -102,7 +102,8 @@ def event_view(
     pk,
     template='swingtime/event_detail.html',
     event_form_class=forms.EventForm,
-    recurrence_form_class=forms.MultipleOccurrenceForm
+    recurrence_form_class=forms.MultipleOccurrenceForm,
+    save_success=False,
 ):
     '''
     View an ``Event`` instance and optionally update either the event or its
@@ -126,16 +127,19 @@ def event_view(
             event_form = event_form_class(request.POST, instance=event)
             if event_form.is_valid():
                 event_form.save(event)
+                save_success=True
                 return http.HttpResponseRedirect(request.path)
         elif '_add' in request.POST:
             recurrence_form = recurrence_form_class(request.POST)
             if recurrence_form.is_valid():
                 recurrence_form.save(event)
+                save_success=True
                 return http.HttpResponseRedirect(request.path)
         else:
             return http.HttpResponseBadRequest('Bad Request')
 
     data = {
+        'save_success':save_success,#probably doesn't run
         'event': event,
         'event_form': event_form or event_form_class(instance=event),
         'recurrence_form': recurrence_form or recurrence_form_class(initial={'dtstart': datetime.now()})
@@ -150,7 +154,8 @@ def occurrence_view(
     event_pk,
     pk,
     template='swingtime/occurrence_detail.html',
-    form_class=forms.SingleOccurrenceForm
+    form_class=forms.SingleOccurrenceForm,
+    save_success=False
 ):
     '''
     View a specific occurrence and optionally handle any updates.
@@ -168,11 +173,13 @@ def occurrence_view(
         form = form_class(request.POST, instance=occurrence)
         if form.is_valid():
             form.save()
-            return http.HttpResponseRedirect(request.path)
+            save_success=True
+            return render(request, template, {'save_success':save_success,'occurrence': occurrence, 'form': form})
+
     else:
         form = form_class(instance=occurrence)
 
-    return render(request, template, {'occurrence': occurrence, 'form': form})
+    return render(request, template, {'save_success':save_success,'occurrence': occurrence, 'form': form})
 
 
 #-------------------------------------------------------------------------------
@@ -181,8 +188,8 @@ def add_event(
     request,
     template='swingtime/add_event.html',
     event_form_class=forms.EventForm,
-    #recurrence_form_class=forms.MultipleOccurrenceForm
     recurrence_form_class=forms.SingleOccurrenceForm,
+    save_success=False,
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -202,7 +209,6 @@ def add_event(
     '''
     dtstart = None
     if request.method == 'POST':
-        print "add event post"
         event_form = event_form_class(request.POST)
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
@@ -210,8 +216,10 @@ def add_event(
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
             occurrence.save()
+            save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
+            return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
+            #return http.HttpResponseRedirect(event.get_absolute_url())#important, otherwise can make new ones forever and think editing same one
 
-            return http.HttpResponseRedirect(event.get_absolute_url())
         else:
             if event_form.errors:
                 print "event form errors"
@@ -238,15 +246,12 @@ def add_event(
 
         dtstart = dtstart or datetime.now()
         event_form = event_form_class(date=dtstart)
-        #event_form = event_form_class()
-        #recurrence_form = recurrence_form_class(initial={'dtstart': dtstart})
         recurrence_form = recurrence_form_class(date=dtstart,initial={'location': location})
 
     return render(
         request,
         template,
-        # {'dtstart': dtstart, 'event_form': event_form, 'recurrence_form': recurrence_form}
-        {'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
+        {'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
     )
 
 
