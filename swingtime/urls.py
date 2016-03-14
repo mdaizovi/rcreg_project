@@ -7,6 +7,12 @@ urlpatterns = [
     url(r'^submitted/challenges/con/(?P<con_id>\d+)/$', 'swingtime.views.chal_submit',name='chal_submit'),
     url(r'^submitted/challenges/$', 'swingtime.views.chal_submit',name='chal_submit'),
 
+    url(r'^accepted/challenges/con/(?P<con_id>\d+)/$', 'swingtime.views.chal_accept',name='chal_accept'),
+    url(r'^accepted/challenges/$', 'swingtime.views.chal_accept',name='chal_accept'),
+
+    url(r'^rejected/challenges/con/(?P<con_id>\d+)/$', 'swingtime.views.chal_reject',name='chal_reject'),
+    url(r'^rejected/challenges/$', 'swingtime.views.chal_reject',name='chal_reject'),
+
     url(r'^scheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_sched',name='act_sched'),
     url(r'^scheduled/$', 'swingtime.views.act_sched',name='act_sched'),
     url(r'^unscheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_unsched',name='act_unsched'),

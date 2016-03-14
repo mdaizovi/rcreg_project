@@ -28,7 +28,6 @@ if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
 
 
 #-------------------------------------------------------------------------------
-
 @login_required
 def chal_submit(
     request,
@@ -42,23 +41,90 @@ def chal_submit(
     else:
         con=Con.objects.most_upcoming()
 
-    sub_q=Challenge.objects.filter(con=con).exclude(submitted_on=None).order_by('submitted_on')
-    submitted = collections.OrderedDict()
-    for c in sub_q:
-        submitted[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+    q=Challenge.objects.filter(con=con, RCrejected=False).exclude(roster1=None).exclude(roster2=None).exclude(submitted_on=None).order_by('submitted_on')
+    q_od  = collections.OrderedDict()
+    for c in q:
+        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
 
     save_success=0
     if request.method == 'POST':
-        for form in submitted.values():
+        for form in q_od.values():
             if form.is_valid():
-                form.save()
+                this_instance=form.save()
                 save_success+=1
+                if this_instance.RCrejected==True:
+                    del q_od[this_instance]#remove if no longer accepted
 
-    new_context={"save_success":save_success,"submitted":submitted,"con":con,"con_list":Con.objects.all()}
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
+@login_required
+def chal_accept(
+    request,
+    template='swingtime/chal_accept.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    q=Challenge.objects.filter(con=con, RCaccepted=True).exclude(submitted_on=None).order_by('submitted_on')
+    q_od = collections.OrderedDict()
+    for c in q:
+        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in q_od.values():
+            if form.is_valid():
+                this_instance=form.save()
+                save_success+=1
+                if this_instance.RCaccepted==False:
+                    del q_od[this_instance]#remove if no longer accepted
+
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+@login_required
+def chal_reject(
+    request,
+    template='swingtime/chal_reject.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    q=Challenge.objects.filter(con=con, RCrejected=True).exclude(submitted_on=None).order_by('submitted_on')
+    q_od = collections.OrderedDict()
+    for c in q:
+        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in q_od.values():
+            if form.is_valid():
+                this_instance=form.save()
+                save_success+=1
+                if this_instance.RCrejected==False:
+                    del q_od[this_instance]#remove if no longer accepted
+
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+
 @login_required
 def act_unsched(
     request,

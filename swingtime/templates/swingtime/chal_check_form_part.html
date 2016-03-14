@@ -1,0 +1,21 @@
+{%if save_success > 0 %}
+<div class="alert alert-success" role="alert">Challenges Successfully Updated!</div>
+  {%endif%}
+
+{%if q_od %}
+<form method="POST" class="post-form">
+{% csrf_token %}
+<table class="table table-striped">
+  <tr> <td><b>Challenge</b></td> <td><b>Captains</b></td>  <td><b>Submitted On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
+{%for chal,form in q_od.iteritems%}
+<tr><td> <a href="{{chal.get_view_url}}">{{chal.name}}</a></td><td>{{chal.roster1.captain.sk8name}} & {{chal.roster2.captain.sk8name}}</td><td>{{chal.submitted_on}}</td>
+    {%for field in form%}<td><b>{{ field.label }}</b></td><td>{{field}}</td>{%endfor%}</tr>
+{%endfor%}
+  </table>
+
+  <button type="submit" class="btn btn-success margin-top-10 center-block">Update Challenges</button>
+</form>
+{%else%}
+
+<p>No applicable Challenges or Games found</p>
+{%endif%}

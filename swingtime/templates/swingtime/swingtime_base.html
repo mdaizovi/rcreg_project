@@ -45,8 +45,8 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
               <li><a href="{% url 'chal_submit' %}">Submitted</a></li>
-              <li><a href="#">Approved</a></li>
-              <li><a href="#">Rejected</a></li>
+              <li><a href="{% url 'chal_accept' %}">Accepted</a></li>
+              <li><a href="{% url 'chal_reject' %}">Rejected</a></li>
             </ul>
           </div></td>
 
@@ -58,7 +58,7 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
               <li><a href="#">Submitted</a></li>
-              <li><a href="#">Approved</a></li>
+              <li><a href="#">Accepted</a></li>
               <li><a href="#">Rejected</a></li>
             </ul>
           </div></td>

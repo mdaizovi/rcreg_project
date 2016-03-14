@@ -5,8 +5,8 @@
 {% block main_content %}
 <div class="row">
 
-    <h3 class="margin-top-10 text-center">Submitted Challenges</h3>
-  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Games have been submitted for {{con}} and have not been <a href="{% url 'chal_reject' %}">rejected</a></small></h3></td>
+    <h3 class="margin-top-10 text-center">All Accepted Challenges</h3>
+  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Games have been submitted and accepted for {{con}}</small></h3></td>
 
 <td style="border: none; text-align:left;">
       <div class="dropdown">
@@ -16,7 +16,7 @@
       </button>
       <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
         {%for item in con_list%}
-        {% url 'chal_submit' item.pk as sub_url %}
+        {% url 'chal_accept' item.pk as sub_url %}
         <li role="presentation"><a href="{{sub_url}}">{{item}}</a></li>{%endfor%}
       </ul>
     </div>
@@ -24,7 +24,6 @@
 <hr>
 
   {% include "swingtime/chal_check_form_part.html" %}
-
 
 </div><!-- end row-->
 {% endblock %}
