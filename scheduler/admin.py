@@ -26,8 +26,10 @@ class VenueAdmin(admin.ModelAdmin):
     ]
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display= ('venue','name','location_type')
-    search_fields = ('venue__name','name','location_type')
+    list_display= ('venue','name','abbrv','location_type')
+    search_fields = ('venue__name','name','abbrv','location_type')
+    list_filter = ('location_type','venue__name')
+    list_display_links = list_display
 
 
 class RegisteredInline(admin.StackedInline):

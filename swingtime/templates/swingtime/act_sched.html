@@ -35,7 +35,8 @@
     {%if a.event.challenge%}<a href="{{a.event.challenge.get_view_url}}">
     {%elif a.event.training%}<a href="{{a.event.training.get_view_url}}">{%endif%}
     {{a.title}}</a></td>
-  <td><a href="{{a.get_absolute_url}}">{{ a.start_time|date:"D M d f a" }}</a></td><td>{%if a.location.abbr%}{{a.location.abbr}}{%else%}{{a.location}}{%endif%}</td></tr>
+  <td><a href="{{a.get_absolute_url}}">{{ a.start_time|date:"D M d f a" }}</a></td>
+  <td>{%if a.location.abbrv%}{{a.location.abbrv}}{%else%}{{a.location}}{%endif%}</td></tr>
 {%endfor%}
 </table>
 </div><!-- end col-sm-6-->

@@ -17,18 +17,18 @@
             <tr class="swingtime-tr">
                 <th class="swingtime-th">Time</th>
                 {%for location in locations%}
-                <th class="swingtime-th">{{location.name}}</th>
+                <th class="swingtime-th" style="text-align:center; width:{{maxwidth}}%;">
+                  {%if location.abbrv%}{{location.abbrv}}{%else%}{{location}}{%endif%}</th>
                 {%endfor%}
-
             </tr>
         </thead>
         <tbody>
             {% for tm,cells in timeslots %}
             <tr class="swingtime-tr">
-                <th class="swingtime-th"><b>{{ tm|date:"P" }}</b></th>
+                <th class="swingtime-th" style="width:{{maxwidth}}%;"><b>{{ tm|date:"P" }}</b></th>
                 {% for cell in cells %}
                 {%if cell%}
-                <td{% if cell.event_class %} class="{{cell.event_class}} swingtime-td" rowspan="{{cell.rowspan}}"{%else %} class="swingtime-td" {% endif %} style="text-align:center;">
+                <td{% if cell.event_class %} class="{{cell.event_class}} swingtime-td" rowspan="{{cell.rowspan}}"{%else %} class="swingtime-td" {% endif %} style="text-align:center; width:{{maxwidth}}%;">
                 {% autoescape off %}
                     {{ cell }}
                 {% endautoescape %}

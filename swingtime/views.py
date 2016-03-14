@@ -325,6 +325,7 @@ def _datetime_view(
         'day':       dt,
         'con':       con,
         'locations': locations,
+        'maxwidth': 99/(len(locations)+1),
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
         'timeslots': timeslot_factory(dt=dt, items=items, **params)
