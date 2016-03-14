@@ -728,25 +728,3 @@ class Coach(models.Model):
 
     class Meta:
         ordering=('user',)
-
-#
-# class Happening(models.Model):#nut sure about ordering and how that affects everything
-#     #invisible=models.BooleanField(default=False)
-#     #con = models.ForeignKey(Con,null=True,on_delete=models.SET_NULL)
-#     start=models.DateTimeField(null=True, blank=True)
-#     end=models.DateTimeField(null=True, blank=True)
-#     interest=models.CharField(max_length=30, null=True, blank=True,choices=INTEREST_RATING)
-#     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.PROTECT)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
-#
-#     #made 1:1 instead of fk bc rosters have to be unique.
-#     #just make another training if going to happen more than once, I mad eit so name is not unique
-#     #maybe a better way to do this?
-#     challenge = models.OneToOneField(Challenge,null=True, blank=True,on_delete=models.SET_NULL)
-#     training = models.OneToOneField(Training,null=True, blank=True,on_delete=models.SET_NULL)
-#
-#     def __unicode__(self):
-#        return "%s: %s-%s" % (self.name, self.start, self.end)
-#
-#     class Meta:
-#         ordering=('-start','-end')
-#         unique_together = ("location","start","end")

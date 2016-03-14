@@ -30,13 +30,13 @@ def act_unsched(
     con_id=None,
     **extra_context
 ):
-    if con:
+    if con_id:
         con=Con.objects.get(pk=con_id)
     else:
         con=Con.objects.most_upcoming()
 
-
     extra_context['con'] = con
+    extra_context['con_list'] = Con.objects.all()
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
@@ -247,7 +247,6 @@ def add_event(
             occurrence.save()
             save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
             return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
-            #return http.HttpResponseRedirect(event.get_absolute_url())#important, otherwise can make new ones forever and think editing same one
 
         else:
             if event_form.errors:

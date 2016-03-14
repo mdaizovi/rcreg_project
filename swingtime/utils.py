@@ -253,7 +253,6 @@ def create_timeslot_table(
     included_objs=[]
     for rowkey in sorted(timeslots.keys()):#rowkey is the datetime object within range for day
         cols = empty_columns[:]
-        #for colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}
 
         for colkey in column_range:#colkey is a dict w/ k,v of {column:object}
             if colkey in timeslots[rowkey].keys():#colkey is a dict w/ k,v of {column:object}

@@ -3,8 +3,26 @@
 
 
 {% block main_content %}
-    <h3 class="margin-top-10 text-center">Scheduled Activities
-    <br><small>These Challenges & Trainings have been <b>approved</b> and <b>scheduled</b> for {{con}}</small></h3>
+
+    <h3 class="margin-top-10 text-center">Un-Scheduled Activities</h3>
+  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Trainings have been approved, but <b>not</b> scheduled for {{con}}</small></h3></td>
+
+<td style="border: none; text-align:left;">
+      <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        Other Cons
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+        {%for item in con_list%}
+        {% url 'act_unsched' item.pk as unsched_url %}
+        <li role="presentation"><a href="{{unsched_url}}">{{item}}</a></li>{%endfor%}
+      </ul>
+    </div>
+</td></tr></table>
+<hr>
+
+<h1 class="text-center">This is probably where the Schedule Hole Filler will go</h1>
 
 
 {% endblock %}

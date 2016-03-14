@@ -211,16 +211,9 @@ class CoachAdmin(ImportExportModelAdmin):
     view_on_site = True
 
 
-# class HappeningAdmin(admin.ModelAdmin):
-#     #list_display= ('name', 'captain','cap')
-#     #search_fields = ('name', 'captain')
-#     #exclude=('participants',)
-#     list_display = [field.name for field in Happening._meta.fields if field.name != "id"]#shows all but m2m fields
-
 admin.site.register(Venue, VenueAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Roster, RosterAdmin)
 admin.site.register(Challenge, ChallengeAdmin)
 admin.site.register(Training, TrainingAdmin)
 admin.site.register(Coach, CoachAdmin)
-#admin.site.register(Happening, HappeningAdmin)
