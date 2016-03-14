@@ -53,7 +53,8 @@ class Location(models.Model):
        return "%s, %s" % (self.name, self.venue.name)
 
     class Meta:
-        ordering=('name','venue')
+        #ordering=('abbrv','venue','name')
+        ordering=('venue','name')
         unique_together = ('name','venue')
 
 
