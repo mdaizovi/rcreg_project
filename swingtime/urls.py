@@ -4,6 +4,8 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
 #______________Dahmer custom URLS/Views, so templates can live together___________________
+    url(r'^submitted/challenges/con/(?P<con_id>\d+)/$', 'swingtime.views.chal_submit',name='chal_submit'),
+    url(r'^submitted/challenges/$', 'swingtime.views.chal_submit',name='chal_submit'),
 
     url(r'^scheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_sched',name='act_sched'),
     url(r'^scheduled/$', 'swingtime.views.act_sched',name='act_sched'),

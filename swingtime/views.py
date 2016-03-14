@@ -1,6 +1,7 @@
 import calendar
 import itertools
 import logging
+import collections
 from datetime import datetime, timedelta, time
 
 from django import http
@@ -9,6 +10,7 @@ from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+#from django.forms import modelformset_factory
 
 from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
@@ -17,12 +19,46 @@ from swingtime.conf import settings as swingtime_settings
 from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
+from scheduler.forms import ChalStatusForm
 
 from dateutil import parser
 
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
 
+
+#-------------------------------------------------------------------------------
+
+@login_required
+def chal_submit(
+    request,
+    template='swingtime/chal_submit.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    sub_q=Challenge.objects.filter(con=con).exclude(submitted_on=None).order_by('submitted_on')
+    submitted = collections.OrderedDict()
+    for c in sub_q:
+        submitted[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in submitted.values():
+            if form.is_valid():
+                form.save()
+                save_success+=1
+
+    new_context={"save_success":save_success,"submitted":submitted,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
 @login_required
 def act_unsched(
     request,
@@ -69,7 +105,6 @@ def sched_status(
     save_success=False
 ):
     if con_id:
-
         con = get_object_or_404(Con, pk=con_id)
     else:
         con = get_object_or_404(Con, pk=Con.objects.most_upcoming().pk)

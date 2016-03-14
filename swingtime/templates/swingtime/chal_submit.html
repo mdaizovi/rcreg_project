@@ -1,0 +1,49 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Submitted Challenges{% endblock %}
+
+
+{% block main_content %}
+<div class="row">
+
+    <h3 class="margin-top-10 text-center">All Submitted Challenges</h3>
+  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Games have been submitted for {{con}}</small></h3></td>
+
+<td style="border: none; text-align:left;">
+      <div class="dropdown">
+      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        Other Cons
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+        {%for item in con_list%}
+        {% url 'chal_submit' item.pk as sub_url %}
+        <li role="presentation"><a href="{{sub_url}}">{{item}}</a></li>{%endfor%}
+      </ul>
+    </div>
+</td></tr></table>
+<hr>
+
+{%if save_success > 0 %}
+<div class="alert alert-success" role="alert">{{save_success}} Challenges Successfully Updated!</div>
+  {%endif%}
+
+
+{%if submitted %}
+<form method="POST" class="post-form">
+{% csrf_token %}
+<table class="table table-striped">
+  <tr> <td><b>Challenge</b></td> <td><b>Captains</b></td>  <td><b>Submitted On </b></td>  <td colspan="5"><b>Status</b></td></tr>
+{%for chal,form in submitted.iteritems%}
+<tr><td>{{chal.name}}</td><td>{{chal.roster1.captain.sk8name}} & {{chal.roster2.captain.sk8name}}</td><td>{{chal.submitted_on}}</td>
+    {%for field in form%}<td><b>{{ field.label }}</b></td><td>{{field}}</td>{%endfor%}</tr>
+{%endfor%}
+  </table>
+
+  <button type="submit" class="btn btn-success margin-top-10 center-block"> Update Status </button>
+</form>
+{%else%}
+<p>No submitted Challenges or Games for this Con.</p>
+{%endif%}
+
+</div><!-- end row-->
+{% endblock %}

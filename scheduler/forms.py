@@ -276,3 +276,21 @@ class CoachProfileForm(ModelForm):
     class Meta:
         model = Coach
         fields =['can_email','description']
+
+class ChalStatusForm(ModelForm):
+    class Meta:
+        model = Challenge
+        fields = ['RCaccepted','RCrejected']
+        labels = {
+            'RCaccepted': _('Accepted'),
+            'RCrejected': _('Rejected'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ChalStatusForm, self).__init__(*args, **kwargs)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
+                })
