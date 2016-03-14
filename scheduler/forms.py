@@ -294,3 +294,21 @@ class ChalStatusForm(ModelForm):
                 'class': 'form-control',
                 'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
                 })
+
+class TrainStatusForm(ModelForm):
+    class Meta:
+        model = Training
+        fields = ['RCaccepted','RCrejected']
+        labels = {
+            'RCaccepted': _('Accepted'),
+            'RCrejected': _('Rejected'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(TrainStatusForm, self).__init__(*args, **kwargs)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
+                })

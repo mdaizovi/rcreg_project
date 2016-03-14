@@ -19,7 +19,7 @@ from swingtime.conf import settings as swingtime_settings
 from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
-from scheduler.forms import ChalStatusForm
+from scheduler.forms import ChalStatusForm,TrainStatusForm
 
 from dateutil import parser
 
@@ -109,6 +109,103 @@ def chal_reject(
     q_od = collections.OrderedDict()
     for c in q:
         q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in q_od.values():
+            if form.is_valid():
+                this_instance=form.save()
+                save_success+=1
+                if this_instance.RCrejected==False:
+                    del q_od[this_instance]#remove if no longer accepted
+
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+
+@login_required
+def train_submit(
+    request,
+    template='swingtime/train_submit.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    q=Training.objects.filter(con=con, RCrejected=False).order_by('created_on')
+    q_od  = collections.OrderedDict()
+    for c in q:
+        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in q_od.values():
+            if form.is_valid():
+                this_instance=form.save()
+                save_success+=1
+                if this_instance.RCrejected==True:
+                    del q_od[this_instance]#remove if no longer accepted
+
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+@login_required
+def train_accept(
+    request,
+    template='swingtime/train_accept.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    q=Training.objects.filter(con=con, RCaccepted=True).order_by('created_on')
+    q_od = collections.OrderedDict()
+    for c in q:
+        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+
+    save_success=0
+    if request.method == 'POST':
+        for form in q_od.values():
+            if form.is_valid():
+                this_instance=form.save()
+                save_success+=1
+                if this_instance.RCaccepted==False:
+                    del q_od[this_instance]#remove if no longer accepted
+
+    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+@login_required
+def train_reject(
+    request,
+    template='swingtime/train_reject.html',
+    con_id=None,
+    **extra_context
+):
+
+    if con_id:
+        con=Con.objects.get(pk=con_id)
+    else:
+        con=Con.objects.most_upcoming()
+
+    q=Training.objects.filter(con=con, RCrejected=True).order_by('created_on')
+    q_od = collections.OrderedDict()
+    for c in q:
+        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
 
     save_success=0
     if request.method == 'POST':
