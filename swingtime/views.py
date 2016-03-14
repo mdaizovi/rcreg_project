@@ -15,6 +15,7 @@ from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
 from con_event.models import Con
+from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 
 from dateutil import parser
@@ -57,6 +58,34 @@ def act_sched(
     new_context={"activities":[challenges,trainings],"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
+
+#-------------------------------------------------------------------------------
+@login_required
+def sched_status(
+    request,
+    template='swingtime/sched_status.html',
+    con_id=None,
+    form_class=ConSchedStatusForm,
+    save_success=False
+):
+    if con_id:
+
+        con = get_object_or_404(Con, pk=con_id)
+    else:
+        con = get_object_or_404(Con, pk=Con.objects.most_upcoming().pk)
+
+    if request.method == 'POST':
+        form = form_class(request.POST, instance=con)
+        if form.is_valid():
+            form.save()
+            save_success=True
+            return render(request, template, {'save_success':save_success,'con':con, 'con_list':Con.objects.all(),'form': form})
+
+    else:
+        form = form_class(instance=con)
+
+    return render(request, template, {'save_success':save_success,'con':con,'con_list':Con.objects.all(),'form': form})
+
 
 #-------------------------------------------------------------------------------
 @login_required

@@ -1,0 +1,61 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Schedule Final{% endblock %}
+
+
+{% block main_content %}
+<div class="row">
+
+
+  {%if save_success%}
+  <div class="alert alert-success" role="alert">{{con}} Schedule Status Successfully Updated!</div>
+    {%endif%}
+
+
+
+<table style="width:100%;"><tr><td style="border: none; text-align:center;">
+      <h3 class="margin-top-10 text-center">Schedule Status: {{con}}</h3></td>
+
+  <td style="border: none; text-align:left;">
+        <div class="dropdown">
+        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          Other Cons
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+          {%for item in con_list%}
+          {% url 'sched_status' item.pk as sched_status_url %}
+          <li role="presentation"><a href="{{sched_status_url}}">{{item}}</a></li>{%endfor%}
+        </ul>
+      </div>
+  </td></tr></table>
+
+
+{%if form%}
+    <div class="col-md-4 center-block" style="float: none; margin: 0 auto;">
+      <div class="well well-md margin-top-10">
+
+
+<form method="POST" class="post-form">
+{% csrf_token %}
+
+{%if form.errors%}
+{% for field, errors in form.errors.items %}
+    {% for error in errors %}
+    <p class="text-warning">{{error}}</p>
+    {%endfor%}{%endfor%}{%endif%}
+
+
+<table class="table">
+{%for field in form%}
+<tr><td style="border:none;"><b>{{ field.label }}</b></td><td style="border:none;">{{field}}</td></tr>
+{%endfor%}
+</table>
+<button type="submit" class="btn btn-success margin-top-10 center-block"> Save Schedule Status </button>
+</div><!-- end well-->
+</div><!-- end col-md-4-->
+{%endif%}
+
+
+
+</div><!-- end row-->
+{% endblock %}

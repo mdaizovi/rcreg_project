@@ -1,7 +1,7 @@
 #con_event.forms
 from django import forms
 from django.forms import ModelForm
-from con_event.models import Registrant,Blackout,SKILL_LEVEL_SK8R
+from con_event.models import Con, Registrant,Blackout,SKILL_LEVEL_SK8R
 from datetimewidget.widgets import DateTimeWidget
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
@@ -109,6 +109,23 @@ class EligibleRegistrantForm(forms.Form):
 
         self.fields['eligible_registrant']=forms.CharField(required=True,label="Skaters",
             widget=forms.Select(choices=ELIGIBLE_REGISTRANTS))
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                })
+
+class ConSchedStatusForm(ModelForm):
+    class Meta:
+        model = Con
+        fields = ['sched_visible','sched_final']
+        labels = {
+            'sched_visible': _('Schedule Visible'),
+            'sched_final': _('Schedule Final'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ConSchedStatusForm, self).__init__(*args, **kwargs)
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({

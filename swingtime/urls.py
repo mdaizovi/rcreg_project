@@ -10,7 +10,8 @@ urlpatterns = [
     url(r'^unscheduled/con/(?P<con_id>\d+)/$', 'swingtime.views.act_unsched',name='act_unsched'),
     url(r'^unscheduled/$', 'swingtime.views.act_unsched',name='act_unsched'),
 
-
+    url(r'^schedule/status/con/(?P<con_id>\d+)/$', 'swingtime.views.sched_status',name='sched_status'),
+    url(r'^schedule/status/$', 'swingtime.views.sched_status',name='sched_status'),
 
 
 #________________________end my custom URLS____________________________________

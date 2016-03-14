@@ -105,13 +105,17 @@ class Con(models.Model):
     start = models.DateField(auto_now=False, auto_now_add=False)
     venue=models.ManyToManyField("scheduler.Venue", blank=True)
     end = models.DateField(auto_now=False, auto_now_add=False)
+    year = models.IntegerField()
+
     challenge_submission_start=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
     training_submission_end=models.DateField(auto_now=False, auto_now_add=False,null=True, blank=True)
-    year = models.IntegerField()
+    sched_visible=models.BooleanField(default=False)
+    sched_final=models.BooleanField(default=False)
+
     BPT_event_id=models.CharField(max_length=100,null=True, blank=True)
-    objects = ConManager()
     ticket_link=models.URLField(null=True, blank=True)
     hotel_book_link=models.URLField(null=True, blank=True)
+    objects = ConManager()
 
     def __unicode__(self):
        return "%s %s" % (self.year, self.city)
@@ -211,7 +215,6 @@ class Con(models.Model):
             self.hotel_book_link="http://rollercon.com/register/hotel-reservations/"
         if not self.ticket_link:
             self.ticket_link="http://rollercon.com/register/rollercon-pass/"
-
 
         super(Con, self).save()
 

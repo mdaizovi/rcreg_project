@@ -12,7 +12,7 @@ a.plain { text-decoration: none; }
 #recurrence-options { float: left; margin-left: 1em; }
     #recurrence-options li { margin-bottom: 4px; }
 .calendar { width: 100%; }
-    .calendar td, .calendar th { width: 20%; padding: 4px; }
+    .calendar td, .calendar th { width: 20%; padding: 4px; border-color: #ccc;}
 .month-view { width: 100%; }
 .month-view td { vertical-align: top; height: 10em; }
     .month-view td, .month-view th { width: 14.285%; }
