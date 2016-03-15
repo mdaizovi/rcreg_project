@@ -6,12 +6,12 @@
 <form method="POST" class="post-form">
 {% csrf_token %}
 <table class="table table-striped">
-  <tr> <td><b>Training</b></td> <td><b>Coaches</b></td>  <td><b>Created On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
+  <tr> <td style="max-width: 150px;"><b>Training</b></td> <td style="max-width: 150px;"><b>Coaches</b></td>  <td style="width: 125px;"><b>Created On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
 {%for train,form in q_od.iteritems%}
-<tr><td> <a href="{{train.get_view_url}}">{{train.name}}</a></td>
-  <td>{%for coach in train.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
+<tr><td style="max-width: 150px;"> <a href="{{train.get_view_url}}">{{train.name}}</a></td>
+  <td style="max-width: 150px;">{%for coach in train.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
   {{coach.user.first_name}}</a>{%endfor%}</td>
-  <td>{{train.created_on}}</td>
+  <td style="width: 125px;">{{train.created_on}}</td>
     {%for field in form%}<td><b>{{ field.label }}</b></td><td>{{field}}</td>{%endfor%}</tr>
 {%endfor%}
   </table>
