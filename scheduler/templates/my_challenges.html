@@ -49,7 +49,7 @@
 {%if dict.pending %}
 {%if not dict.con.can_submit_chlg%}
       {%if  dict.sub_full %}
-      <div class="alert alert-danger" role="alert">{{CLOSE_CHAL_SUB_AT}} Challenges have already been submitted for {{dict.con}} and submission is now closed.</div>
+      <div class="alert alert-danger" role="alert">The cap for Challenge sumbission has been reached for {{dict.con}} and submission is now closed.</div>
       {%elif not dict.can_sub_date %}
       <div class="alert alert-danger" role="alert">Challenge Submission opens on {{ dict.con.challenge_submission_start }}</div>
       {% endif %}
@@ -72,7 +72,7 @@ event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_C
       {%for item in dict.pending%}
 
       <tr td class="danger"><td>{{item.name}}</td><td>
-          <span class="glyphicon tooltip-bottom" aria-hidden="true" title="This challenge has NOT{%if item.captain1accepted and item.captain2accepted %} been submitted{%else%} been accepted by both captains{%endif%} yet">
+          <span class="glyphicon tooltip-bottom" aria-hidden="true" title="This challenge/game has NOT{%if item.captain1accepted and item.captain2accepted %} been submitted{%else%} been accepted by both captains{%endif%} yet">
             <i class="fa fa-exclamation"></i><b>
               {%if item.captain1accepted and item.captain2accepted %}Unsubmitted{%else%} Requires<br>Acceptance{%endif%}
             </b></span></td>

@@ -133,11 +133,11 @@ class Con(models.Model):
             return None
 
     def schedule_final(self):
-        #hard coded badly for now, fix later
-        if self.start>=datetime.date.today():
-            return False
-        else:
+        #I should find everywhere I put this and jusr replace it
+        if self.sched_final:
             return True
+        else:
+            return False
 
     def can_submit_chlg_by_date(self):
         """"only checks to see if there is a chalenge submission date and that date has passed.
@@ -149,7 +149,7 @@ class Con(models.Model):
         return can_submit
 
     def can_submit_chlg(self):
-        """Checks both is submisison date has passed and if submission isn't clused due to too many submisisons"""
+        """Checks both is submisison date has passed and if submission isn't clused due to too many submissions"""
         from scheduler.models import Challenge
         can_submit=self.can_submit_chlg_by_date()
 

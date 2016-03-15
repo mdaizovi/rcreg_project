@@ -441,8 +441,9 @@ class Activity(models.Model):
 class ChallengeManager(models.Manager):
 
     def submission_full(self,con):
-        """If we have too many challenges submitted this year, returns true. Else, false"""
-        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None))
+        """If we have too many challenges submitted this year, returns true. Else, false
+        Excludes Games from count"""
+        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None,is_a_game=True))
         if len(submissions)<CLOSE_CHAL_SUB_AT:
             return False
         else:
@@ -575,14 +576,20 @@ class Challenge(Activity):
         return old_team,selected_team
 
     def can_submit_chlg(self):
-        """first checks if con allows submission through method of same name, then checks if both captains have accepted"""
-        if self.con.can_submit_chlg():
-            if self.roster1 and self.captain1accepted and self.roster2 and self.captain2accepted:
-                return True
-            else:
-                return False
-        else:
-            return False
+        """
+        first checks to see if both captains have accepted.
+        If yes and is a Game, can submit as long as firs sub date has passed and schedule is not final.
+        If yes and is a Challenge, can submit as long as first sub date has passed and max chal cp hasn't been reached.
+        """
+        can_sub=False
+        if self.roster1 and self.captain1accepted and self.roster2 and self.captain2accepted:
+            if self.con.can_submit_chlg_by_date():
+                if self.is_a_game and not self.con.sched_final:
+                    can_sub= True
+                elif not self.is_a_game and self.con.can_submit_chlg():
+                    can_sub= True
+
+        return can_sub
 
     class Meta:
         #insted should i make a save method that makes roster1 name v roster2 name as the name?
