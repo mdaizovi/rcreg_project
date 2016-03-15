@@ -151,6 +151,11 @@ class Event(models.Model):
         '''
         return Occurrence.objects.daily_occurrences(dt=dt, event=self)
 
+    def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate 
+        if self.training and self.challenge:
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
+
 
 #===============================================================================
 class OccurrenceManager(models.Manager):

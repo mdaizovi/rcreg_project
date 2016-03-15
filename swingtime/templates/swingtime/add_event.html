@@ -18,9 +18,7 @@
 
     {{ event_form.non_field_errors }}
     {{ single_occurrence_form.non_field_errors }}
-    {% if event_form.errors or single_occurrence_form.errors %}
-    <p class="form-errors">Please fix any errors.</p>
-    {% endif %}
+
     <form method="post" action="">
         {% csrf_token %}
     <table class="swingtime-table">

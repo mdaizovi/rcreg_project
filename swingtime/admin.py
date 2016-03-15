@@ -11,7 +11,7 @@ from swingtime.models import *
 #===============================================================================
 # class EventTypeAdmin(admin.ModelAdmin):
 #     list_display = ('label', 'abbr')
-
+#
 
 #===============================================================================
 class OccurrenceInline(admin.TabularInline):

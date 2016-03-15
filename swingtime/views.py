@@ -436,10 +436,22 @@ def add_event(
     '''
     dtstart = None
     if request.method == 'POST':
+
+        selection = request.POST.copy()
+        print "selection", selection
+
         event_form = event_form_class(request.POST)
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
-            event = event_form.save()
+
+            try:
+                if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
+                    event=Event.objects.get(challenge__pk=request.POST['challenge'])
+                elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
+                    event=Event.objects.get(training__pk=request.POST['training'])
+            except ObjectDoesNotExist:
+                event = event_form.save()
+
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
             occurrence.end_time=occurrence.get_endtime()
