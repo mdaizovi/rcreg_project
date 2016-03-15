@@ -262,7 +262,8 @@
             <input type="hidden" name="activity_id" value="{{ challenge.id }}" />
             {%if opponent%}<input type="hidden" name="opponent_id" value="{{ opponent.id }}" />{%endif%}
             <input type="hidden" name="my_team_id" value="{{ my_team.id }}" />
-          <input class="btn btn-danger margin-top-15 center-block btn-xs" type="submit" method="post" name="reject" value="Reject Challenge">
+          <input class="btn btn-danger margin-top-15 center-block btn-xs" type="submit" method="post" name="reject" value="Reject Challenge"
+            {%if challenge.RCaccepted and challenge.con.schedule_final%}disabled{%endif%}>
           </form>
 
     {%else%}<!-- if you have not accepted challenge-->

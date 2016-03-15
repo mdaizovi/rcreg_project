@@ -151,7 +151,7 @@ class Event(models.Model):
         '''
         return Occurrence.objects.daily_occurrences(dt=dt, event=self)
 
-    def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate 
+    def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate
         if self.training and self.challenge:
             raise ValidationError({
                 NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
@@ -275,7 +275,10 @@ class Occurrence(models.Model):
         if self.event.training:
             duration=float(self.event.training.duration)
         elif self.event.challenge:
-            duration=float(self.event.challenge.duration)
+            if self.event.challenge.is_a_game:
+                duration=1
+            else:
+                duration=float(self.event.challenge.duration)
             padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
             padding=round(padding, 2)
         else:

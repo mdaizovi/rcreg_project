@@ -444,7 +444,6 @@ class Registrant(Matching_Criteria):
         from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
         my_rosters=list(Roster.objects.filter(captain=self))
         unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
-        #print "my unsubmitted",unsubmitted
         return unsubmitted
 
     def pending_challenges(self):
@@ -467,9 +466,15 @@ class Registrant(Matching_Criteria):
     def unconfirmed_challenges(self):
         '''Returns a list of all chellenges in which Registrant is on a roster,
         chalenge has been submitted, but is not accepted by RC. This is wheter or not reg is a captain, captian is irrelevant'''
-        from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
+        from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
         my_rosters=list(self.roster_set.all())
-        unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
+        my_cap_rosters=list(Roster.objects.filter(captain=self))
+        for r in my_cap_rosters:
+            if r not in my_rosters:
+                my_rosters.append(r)
+        #this was making challenges disappear, not ready to show whether scheduled yet.
+        #unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
+        unconfirmed=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
         return unconfirmed
 
     def scheduled_trainings(self):
@@ -487,7 +492,8 @@ class Registrant(Matching_Criteria):
         except:
             coach_me=None
         if coach_me:
-            unconfirmed=list(coach_me.training_set.filter(RCaccepted=False, con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
+            #unconfirmed=list(coach_me.training_set.filter(RCaccepted=False, con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
+            unconfirmed=list(coach_me.training_set.filter(con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
             return unconfirmed
         else:
             return None
