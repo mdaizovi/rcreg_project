@@ -442,7 +442,7 @@ def add_event(
             event = event_form.save()
 
             if event.training:
-                duration=event.training.duration
+                duration=float(event.training.duration)
             elif event.challenge:
                 duration=float(event.challenge.duration)
             else:
