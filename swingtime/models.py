@@ -259,6 +259,29 @@ class Occurrence(models.Model):
                 raise ValidationError({
                     NON_FIELD_ERRORS: ["You can't have more than 1 event in the same place at the same time",],})
 
+    #---------------------------------------------------------------------------
+    def get_endtime(self):
+        """Dahmer custom funct to get end time based on the train/chal it's linked to,
+        and pad an extra 15 mins for 30 min chal or 30 mins for 90 min chal
+        REQUIRES event and start time"""
+
+        padding=0
+
+        if self.event.training:
+            duration=float(self.event.training.duration)
+        elif self.event.challenge:
+            duration=float(self.event.challenge.duration)
+            padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
+            padding=round(padding, 2)
+        else:
+            duration=1 #default 1 hour?
+
+        dur_delta=int((duration+padding)*60)
+        end_time=self.start_time+timedelta(minutes=dur_delta)
+        return end_time
+
+
+    #---------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
 def create_event(
