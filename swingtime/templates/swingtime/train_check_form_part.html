@@ -8,7 +8,7 @@
 <table class="table table-striped">
   <tr> <td style="max-width: 150px;"><b>Training</b></td> <td style="max-width: 150px;"><b>Coaches</b></td>  <td style="width: 125px;"><b>Created On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
 {%for train,form in q_od.iteritems%}
-<tr><td style="max-width: 150px;"> <a href="{{train.get_view_url}}">{{train.name}}</a></td>
+<tr><td style="max-width: 150px;"> <a href="{{train.get_view_url}}">{{train.name}}</a><br>({{train.duration}} hr{{ train.duration|pluralize }}, {{train.location_type}})</td>
   <td style="max-width: 150px;">{%for coach in train.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
   {{coach.user.first_name}}</a>{%endfor%}</td>
   <td style="width: 125px;">{{train.created_on}}</td>

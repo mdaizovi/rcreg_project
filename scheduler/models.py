@@ -591,6 +591,50 @@ class Challenge(Activity):
 
         return can_sub
 
+    def skill_display(self):
+        """Like method of same name for Roster, makes it so I don't see A0, just A, or AB, or something more understandable
+        If different for 2 rosters, returns both. otehrwise if same, 1."""
+        r1skill=r2skill=display=None
+
+        if self.roster1:
+            r1skill=self.roster1.skill_display()
+        if self.roster2:
+            r2skill=self.roster2.skill_display()
+
+        if r1skill and r2skill:
+             if r1skill != r2skill:
+                 display="%s & %s"%(r1skill,r2skill)
+             else:
+                 display=r1skill
+        elif r1skill and not r2skill:
+            display=r1skill
+        elif r2skill and not r1skill:
+            display=r2skill
+
+        return display
+
+    def gender_display(self):
+        """Like skill display above but w/ gender."""
+        r1gen=r2gen=display=None
+
+        if self.roster1:
+            r1gen=self.roster1.gender
+        if self.roster2:
+            r2gen=self.roster2.gender
+
+        if r1gen and r2gen:
+             if r1gen != r2gen:
+                 display="%s & %s"%(r1gen,r2gen)
+             else:
+                 display=r1gen
+        elif r1gen and not r2gen:
+            display=r1gen
+        elif r2gen and not r1gen:
+            display=r2gen
+
+        return display
+
+
     class Meta:
         #insted should i make a save method that makes roster1 name v roster2 name as the name?
         ordering=('-con__start','name')
