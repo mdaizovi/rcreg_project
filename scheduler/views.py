@@ -290,6 +290,8 @@ def my_trainings(request):
 
 @login_required
 def edit_training(request, activity_id):
+    ###TODO: this has logic to allow Users to add coaches, but i removed function from template.
+    #Awaiting final confirm from Ivanna before changing view
     user=request.user
     registrant_list = list(user.registrant_set.all())
     training=Training.objects.get(pk=int(activity_id))

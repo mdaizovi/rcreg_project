@@ -378,7 +378,7 @@ class Roster(Matching_Criteria):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
 
     class Meta:
-        ordering=("-con",'name','captain')
+        ordering=("-con__start",'name','captain')
         unique_together = ('name','con','captain')
 
 post_save.connect(delete_homeless_roster_ros, sender=Roster)
@@ -593,7 +593,7 @@ class Challenge(Activity):
 
     class Meta:
         #insted should i make a save method that makes roster1 name v roster2 name as the name?
-        ordering=('-con','name')
+        ordering=('-con__start','name')
         unique_together = ('con','name','roster1','roster2')
 
 pre_save.connect(challenge_defaults, sender=Challenge)
@@ -694,7 +694,7 @@ class Training(Activity):
         super(Training, self).save()
 
     class Meta:
-        ordering=('-con','name')
+        ordering=('-con__start','name')
 
 class Coach(models.Model):
     user = models.OneToOneField(User, null=True, blank=True, on_delete=models.SET_NULL)

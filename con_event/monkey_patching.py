@@ -63,6 +63,19 @@ def trainings_coached(self):
     else:
         return None
 
+def all_cons(self):
+    conlist=[]
+    all_reg= self.registrants()
+    if all_reg:
+        for reg in all_reg:
+            conlist.append(reg.con)
+        if len(conlist)>0:
+            return conlist
+        else:
+            return None
+    else:
+        return None
+
 def upcoming_registrants(self):
     #Import Registrant here because otherwise it imports too before apps are declared in settings
     #and it throws a long mess of bullshit:
@@ -120,6 +133,7 @@ User.add_to_class("is_a_coach",is_a_coach)
 User.add_to_class("is_a_coach_this_con",is_a_coach_this_con)
 User.add_to_class("can_edit_score",can_edit_score)
 User.add_to_class("registrants",registrants)
+User.add_to_class('all_cons',all_cons)
 User.add_to_class('upcoming_cons',upcoming_cons)
 User.add_to_class("trainings_coached",trainings_coached)
 User.add_to_class("upcoming_registrants",upcoming_registrants)

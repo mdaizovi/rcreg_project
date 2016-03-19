@@ -65,7 +65,8 @@ class TrainingModelForm(ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
         super(TrainingModelForm, self).__init__(*args, **kwargs)
-        conlist=user.upcoming_cons()
+        #conlist=user.upcoming_cons()#this broke for coaches editing old trainings, if didn't have pass for this year
+        conlist=user.all_cons()
         try:#have to do it this way so making a new object doesn't break it, but will still populate if editing a past event
             if self.instance.con not in conlist:#found this bug when logged in as admin w/out many cons. or maybe because was no longer upcoming.
                 conlist.append(self.instance.con)
