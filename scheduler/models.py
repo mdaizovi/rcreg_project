@@ -396,6 +396,7 @@ class Activity(models.Model):
     duration=models.CharField(max_length=30,choices=DURATION,null=True, blank=True)
 
     internal_notes= models.TextField(null=True,blank=True)
+    communication = models.TextField(null=True,blank=True)
 
     def editable_by(self):
         '''returns list of Users that can edit Activity
@@ -467,9 +468,19 @@ class Challenge(Activity):
 
     def save(self, *args, **kwargs):
 
-        if self.internal_notes:
-            cleaned_notes=ascii_only(self.internal_notes)
-            self.internal_notes=cleaned_notes
+        # if self.internal_notes:
+        #     cleaned_notes=ascii_only(self.internal_notes)
+        #     self.internal_notes=cleaned_notes
+        #used ot be like above, but adding communicaiton as well so changing to below
+        string_fields=['internal_notes','communication']
+        for item in string_fields:
+            att_unclean=getattr(self, item)
+            if att_unclean:
+                #NOTEE: I'm allowing punctuation in name and description, hope this doesn't bite me
+                #usualy I strip all punctuation
+                cleaned_att=ascii_only(att_unclean)
+                setattr(self, item, cleaned_att)
+
 
         if self.roster1:#this doesn't matter since i don't save it, does it?
             if not self.roster1.cap:
@@ -716,7 +727,7 @@ class Training(Activity):
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names, colors'''
-        string_fields=['name','description']
+        string_fields=['name','description','communication']
         for item in string_fields:
             att_unclean=getattr(self, item)
             if att_unclean:
