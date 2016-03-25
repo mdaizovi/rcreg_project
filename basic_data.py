@@ -138,9 +138,23 @@ def email_dupes(xlfile):
     for od in all_data:
         email2=od.get("AB")
         email_list.append(email2)
-        if len(email2)>=30:
-            print "long email ",email2
-            long_emails.append(od)
+        try:
+            if len(email2)>=30:
+                print "long email ",email2
+                long_emails.append(od)
+        except:
+            print "error with ",od
+
+            #thought i had error, don't think this is necessary
+    # for od in all_data:
+    #     email2=od.get("AB")
+    #     if not email2:
+    #         email2=od.get("Q")
+    #     email_list.append(email2)
+    #     if len(email)>=30:
+    #         print "long email ",email
+    #         long_emails.append(od)
+
 
 
     for od in all_data:
@@ -170,7 +184,7 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 030916.xlsx')
+#target_file=(import_path+'RollerTron Attendee 032316.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))

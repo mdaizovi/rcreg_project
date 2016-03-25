@@ -401,7 +401,9 @@ def propose_new_training(request):
 
         elif 'clone training' in request.POST:
             cloned=Training.objects.get(pk=request.POST['cloned_training_id'])
+            print "cloned",cloned
             initial_training={'location_type':cloned.location_type,
+                #need to change con
                 'name':cloned.name,
                 'onsk8s':cloned.onsk8s,
                 'contact':cloned.contact,
@@ -412,6 +414,7 @@ def propose_new_training(request):
             return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 
         else: #if training_id not in post, ie if training is just being made
+            print "trying to mke training"
             trainingmodelform=TrainingModelForm(request.POST,user=user)
             trainingregisteredmodelform=TrainingRegisteredModelForm(request.POST)
             if trainingmodelform.is_valid() and trainingregisteredmodelform.is_valid():
@@ -440,6 +443,13 @@ def propose_new_training(request):
                     return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
             else:
                 add_fail=True
+                # print "errors"
+                # if not trainingmodelform.is_valid():
+                #     print "trainingmodelform.errors"
+                #     print trainingmodelform.errors
+                # if not trainingregisteredmodelform.is_valid():
+                #     print "trainingregisteredmodelform.errors"
+                #     print trainingregisteredmodelform.errors
 
         return render_to_response('new_training_made.html', {'add_fail':add_fail,'training_made':training_made},context_instance=RequestContext(request))
 

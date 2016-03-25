@@ -48,7 +48,7 @@ class TrainingRegisteredModelForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(TrainingRegisteredModelForm, self).__init__(*args, **kwargs)
         #the stuff up here takes precedence over stuff in meta, apparently
-        self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_TNG),initial=SKILL_LEVEL_TNG[1][0], label='Skill Level')
+        self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_TNG),initial=SKILL_LEVEL_TNG[1][0], required=False, label='Skill Level')
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
@@ -78,7 +78,7 @@ class TrainingModelForm(ModelForm):
         self.fields["contact"]=forms.CharField(widget=forms.Select(choices=BINARY_HALF_WORDS),initial=BINARY_HALF_WORDS[1][0], label='Contact?')
         self.fields["location_type"]=forms.CharField(widget=forms.Select(choices=LOCATION_TYPE), initial=LOCATION_TYPE[0][0], label='Location Type')
         self.fields["sessions"]=forms.CharField(widget=forms.Select(choices=SESSIONS_TR), initial=SESSIONS_TR[0][0], label='How Many Sessions Would You Like to Offer?')
-        self.fields["con"].initial=conlist[-1]
+        self.fields["con"].initial=conlist[0]
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
