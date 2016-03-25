@@ -21,14 +21,12 @@
     <h2 class="text-center">{%if challenge.roster1 and challenge.roster1.name%}{{challenge.roster1.name}}{%else%}Unnamed Team{%endif%}</h2>
 
 {%if score_form %}
-{% url 'view_challange'  challenge.id as submit_url %}
+{% url 'view_challenge'  challenge.id as submit_url %}
 <form method="post">
   {% csrf_token %}
 <input class="form-control" id="{{ score_form.roster1_score.id_for_label }}" maxlength="30" name="{{ score_form.roster1_score.html_name }}"
         {%if challenge.roster1score%} placeholder="{{challenge.roster1score}}"{%else%} placeholder="{{score_form.roster1_score.label}}"{%endif%}>
 {%elif challenge.roster1score%}<h2 style="text-align:center;"><small>{{challenge.roster1score}}</small></h2>{%endif%}
-
-
   </div>
 
   <div class="col-sm-4">
@@ -51,6 +49,21 @@
 
 </div>
 
+{%if participating%}
+<div class="well well-md center-block margin-top-15">
+{%if communication_saved%}<div class="alert alert-success" role="alert">Successfully Updated!</div>{%endif%}
+  <h4 class="text-center">Captain/NSO Communication
+    <small><i> Visible to Officials as well as Skaters on both teams. Only Captains and NSOs can edit.</i></small></h4>
+    <form method="post">
+      {% csrf_token %}
+{{communication_form.communication}}
+  {%if can_edit%}
+  <button type="submit" class="btn btn-success btn-s center-block margin-top-10">Save Communication</button>
+  {%endif%}
+</form>
+</div><!-- end well-->
+<hr>
+{%endif%}
 
 
 <div class="row" id="moreInfo">

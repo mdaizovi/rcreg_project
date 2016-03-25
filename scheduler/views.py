@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingRegisteredModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingRegisteredModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
 from scheduler.models import Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
@@ -881,6 +881,11 @@ def challenge_respond(request):
 
 
 def view_challenge(request, activity_id):
+    participating=False
+    can_edit=False
+    score_form=None
+    communication_form=None
+    communication_saved=False
     user=request.user
     try:
         registrant_list=list(user.registrant_set.all())
@@ -894,23 +899,40 @@ def view_challenge(request, activity_id):
         challenge=None
         rosters=None
 
-    if challenge and registrant_list and user.can_edit_score():
-        if request.method == "POST":
-            form=ScoreFormDouble(request.POST, my_arg=challenge)
-            if form.is_valid():
-                roster1_score = request.POST['roster1_score']
-                roster2_score = request.POST['roster2_score']
-                challenge.roster1score=roster1_score
-                challenge.roster2score=roster2_score
+    if challenge and registrant_list:
+
+        if len( set(challenge.participating_in()).intersection(registrant_list) ) > 0:
+            participating=True
+
+        if user.can_edit_score() or (user in challenge.editable_by()) or participating:
+            #these are all the people that can see communication
+            if not request.method == "POST":
+                communication_form=CommunicationForm(initial={'communication':challenge.communication})
+
+            if user.can_edit_score() or (user in challenge.editable_by()):
+                can_edit=True
+                if request.method == "POST" and 'communication' in request.POST:
+                    communication_form=CommunicationForm(request.POST)
+                    if communication_form.is_valid():
+                        challenge.communication=request.POST['communication']
+                        challenge.save()
+                        communication_saved=True
+            else:#if just a skater
+                communication_form.fields['communication'].widget.attrs['readonly'] = True
+                communication_form.fields['communication'].widget.attrs.update({'style' : 'background-color:white;'})
+
+        if user.can_edit_score():
+            score_form=ScoreFormDouble(request.POST or None,my_arg=challenge)
+            if request.method == "POST" and score_form.is_valid():
+                if 'roster1_score' in request.POST and (request.POST['roster1_score'] not in [u'',"",None,"None"]):
+                    challenge.roster1score=request.POST['roster1_score']
+                if 'roster2_score' in request.POST and (request.POST['roster2_score'] not in [u'',"",None,"None"]):
+                    challenge.roster2score=request.POST['roster2_score']
                 challenge.save()
             else:
-                print "errors: ",form.errors
+                print "not post or errors: ",score_form.errors
 
-        score_form=ScoreFormDouble(my_arg=challenge)
-    else:
-        score_form=None
-
-    return render_to_response('view_challenge.html',{'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
+    return render_to_response('view_challenge.html',{"communication_saved":communication_saved,"can_edit":can_edit,'participating':participating,'communication_form':communication_form,'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
 
 
 

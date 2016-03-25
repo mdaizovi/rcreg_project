@@ -149,6 +149,7 @@ class ChallengeModelForm(ModelForm):
         self.fields["location_type"]=forms.CharField(widget=forms.Select(choices=LOCATION_TYPE[:3]), initial=LOCATION_TYPE[0][0], label='Location Type')
         self.fields["ruleset"]=forms.CharField(widget=forms.Select(choices=RULESET), initial=RULESET[0][0], label='Rules')
         self.fields["gametype"]=forms.CharField(widget=forms.Select(choices=GAMETYPE[:-1]), initial=GAMETYPE[0][0], label='Type')
+        self.fields["communication"]=forms.CharField(widget=forms.Textarea(),label='Notes Between Captains & Officials (visible to skaters on both teams; can be left blank)',required=False)
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
@@ -157,7 +158,7 @@ class ChallengeModelForm(ModelForm):
 
     class Meta:
         model = Challenge
-        fields = ['con','location_type','ruleset','gametype']
+        fields = ['con','location_type','ruleset','gametype','communication']
 
 class MyRosterSelectForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -241,6 +242,13 @@ class ScoreFormDouble(forms.Form):
 
         self.fields["roster1_score"]=forms.IntegerField(label=('%s Score'%(roster1name)), min_value=0,required=False)
         self.fields["roster2_score"]=forms.IntegerField(label=('%s Score'%(roster2name)), min_value=0,required=False)
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+class CommunicationForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(CommunicationForm, self).__init__(*args, **kwargs)
+        self.fields["communication"]=forms.CharField(widget=forms.Textarea,required=False)
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({'class': 'form-control'})
 

@@ -414,6 +414,28 @@ class Activity(models.Model):
                 allowed_editors.append(self.roster2.captain.user)
         return allowed_editors
 
+    def participating_in(self):
+        '''returns list of Registrants that are on either skating/participating roster, or are Coach
+        For use in Scheduling as well as seeing Communication between NSO/skaters'''
+        participating=[]
+
+        if hasattr(self, 'coach'):#if this is a training
+            for c in self.coach.all():
+                for reg in c.user.registrant_set.all():
+                    if reg.con==self.con:
+                        participating.append(reg)
+            for ros in [self.registered, self.auditing]:
+                if ros:
+                    for sk8 in ros.participants.all():
+                        participating.append(sk8)
+
+        elif hasattr(self, 'roster1'):#if this is a challenge:
+            for ros in [self.roster1,self.roster2]:
+                if ros:
+                    for sk8 in ros.participants.all():
+                        participating.append(sk8)
+        return participating
+
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
         if hasattr(self, 'coach'):#if this is a training
