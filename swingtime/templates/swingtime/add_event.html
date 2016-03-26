@@ -25,6 +25,17 @@
       <li>{{k.name}}: {%for s in v%}{% if not forloop.first %}, {% endif %}{{ s.sk8name }} {%endfor%}</li>{%endfor%}
       {%endif%}</ul>
 
+      {%if conflict.figurehead_conflict%}<b>Figurehead (Captains/Coaches) Partiicpation</b>
+      <ul>{%for k,v in conflict.figurehead_conflict.iteritems%}
+      <li>{{k.name}}: {%for s in v%}{% if not forloop.first %}, {% endif %}{{ s.sk8name }} {%endfor%}</li>{%endfor%}
+      {%endif%}</ul>
+
+      {%if conflict.blackout_conflict%}<b>Figurehead (Captains/Coaches) Blackouts</b>
+      <ul>{%for k,v in conflict.blackout_conflict.iteritems%}
+      <li>{{k.sk8name}}: {%for b in v%}{% if not forloop.first %}, {% endif %}{{ b}} {%endfor%}</li>{%endfor%}
+      {%endif%}</ul>
+
+
     </div>
     {%endif%}
 

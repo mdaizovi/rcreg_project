@@ -458,10 +458,17 @@ def add_event(
                 occurrence.end_time=occurrence.get_endtime()
                 #else assume she did that time for a reason
 
+#this seems to not refresh conflict items, for some reason
+            figurehead_conflict=occurrence.figurehead_conflict()
+            if figurehead_conflict:
+                conflict["figurehead_conflict"]=figurehead_conflict
             participant_conflict=occurrence.participant_conflict()
             if participant_conflict:
                 conflict["participant_conflict"]=participant_conflict
-            print "conflict",conflict
+            blackout_conflict=occurrence.blackout_conflict()
+            if blackout_conflict:
+                conflict["blackout_conflict"]=blackout_conflict
+
 
             if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
                 event.save()
