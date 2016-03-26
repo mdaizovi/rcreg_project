@@ -437,8 +437,8 @@ def add_event(
     dtstart = None
     if request.method == 'POST':
 
-        selection = request.POST.copy()
-        print "selection", selection
+        #selection = request.POST.copy()
+        #print "selection", selection
 
         event_form = event_form_class(request.POST)
         recurrence_form = recurrence_form_class(request.POST)

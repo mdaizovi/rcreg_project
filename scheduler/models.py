@@ -434,6 +434,8 @@ class Activity(models.Model):
                 if ros:
                     for sk8 in ros.participants.all():
                         participating.append(sk8)
+                    if ros.captain and ros.captain not in participating:
+                        participating.append(ros.captain)
         return participating
 
 #maybe i should rename this to get absolute url so view on site is easier?
