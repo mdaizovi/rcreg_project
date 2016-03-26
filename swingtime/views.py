@@ -454,7 +454,11 @@ def add_event(
 
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
-            occurrence.end_time=occurrence.get_endtime()
+            if occurrence.end_time==occurrence.start_time:
+                print "end and start are same, about to run get_endtime"
+                occurrence.end_time=occurrence.get_endtime()
+                #else assume she did that time for a reason
+
             occurrence.save()
             save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
             return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one

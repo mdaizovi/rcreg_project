@@ -156,6 +156,10 @@ class Event(models.Model):
             raise ValidationError({
                 NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
 
+        if not self.training and not self.challenge:
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Please choose either a Challenge or Training",],})
+
 
 #===============================================================================
 class OccurrenceManager(models.Manager):
