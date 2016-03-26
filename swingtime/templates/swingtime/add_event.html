@@ -16,6 +16,10 @@
    {% endwith %}{%endif%}
     {%endif%}
 
+    {%if conflict %}
+    <div class="alert alert-danger" role="alert">Schedule Conflict Found!</div>
+    {%endif%}
+
     {{ event_form.non_field_errors }}
     {{ single_occurrence_form.non_field_errors }}
 
@@ -24,7 +28,11 @@
     <table class="swingtime-table">
         <tfoot>
             <tr>
-                <td colspan="2" class="swingtime-td"><input type="submit" value="Submit" /></td>
+                <td colspan="2" class="swingtime-td">
+                  {%if conflict %}<input type="submit" name="save_anyway" value="Save Anyway" />
+                  {%else%}<input type="submit" value="Submit" />
+                  {%endif%}
+                </td>
             </tr>
         </tfoot>
         <tbody>

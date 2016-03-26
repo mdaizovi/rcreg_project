@@ -417,6 +417,7 @@ def add_event(
     event_form_class=forms.EventForm,
     recurrence_form_class=forms.SingleOccurrenceForm,
     save_success=False,
+    conflict=None
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -435,10 +436,8 @@ def add_event(
 
     '''
     dtstart = None
-    if request.method == 'POST':
 
-        #selection = request.POST.copy()
-        #print "selection", selection
+    if request.method == 'POST':
 
         event_form = event_form_class(request.POST)
         recurrence_form = recurrence_form_class(request.POST)
@@ -450,49 +449,65 @@ def add_event(
                 elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
                     event=Event.objects.get(training__pk=request.POST['training'])
             except ObjectDoesNotExist:
-                event = event_form.save()
+                event = event_form.save(commit=False)
 
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
+
             if occurrence.end_time==occurrence.start_time:
-                print "end and start are same, about to run get_endtime"
                 occurrence.end_time=occurrence.get_endtime()
                 #else assume she did that time for a reason
 
-            occurrence.save()
-            save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
-            return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
-        # else:
-        #     if event_form.errors:
-        #         print "event form errors"
-        #         print event_form.errors
-        #     if recurrence_form.errors:
-        #         print "recurrence_form errors"
-        #         print recurrence_form.errors
+            conflict=occurrence.participant_conflict()
+            if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
+                event.save()
+                occurrence.save()
+                save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
+                return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
+            else:
+                print "no save anyway or participant conflict"
+                print "conflict is ",conflict
 
+    recurrence_dict={}
+    event_dict={}
+    if 'dtstart' in request.GET:
+        try:
+            dtstart = parser.parse(request.GET['dtstart'])
+        except(TypeError, ValueError) as exc:
+            # TODO: A badly formatted date is passed to add_event
+            logging.warning(exc)
+    if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
+        event_dict['challenge']=Challenge.objects.get(pk=request.POST['challenge'])
+    elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
+        event_dict['training']=Training.objects.get(pk=request.POST['training'])
+
+    if 'location' in request.POST and request.POST['location'] not in ["",u'',None,"None"]:
+        recurrence_dict['location']=Location.objects.get(pk=request.POST['location'])
+    elif 'location' in request.GET:
+        recurrence_dict['location']=Location.objects.get(pk=request.GET['location'])
+
+    dtstart = dtstart or datetime.now()
+    recurrence_dict["start_time"]=dtstart
+    dtend_post=[u'end_time_1',u'end_time_0_year',u'end_time_0_month','end_time_0_day']
+    if len( set(dtend_post).intersection(request.POST.keys() )) > 0:
+        dtend_str=request.POST['end_time_0_year']+"-"+request.POST['end_time_0_month']+"-"+request.POST['end_time_0_day']+"T"+request.POST['end_time_1']
+        try:
+            dtend=parser.parse(dtend_str)
+            if dtend==dtstart and occurrence:
+                dtend=occurrence.get_endtime()
+            recurrence_dict['end_time']=dtend
+        except:
+            recurrence_dict['end_time']=dtstart
     else:
-        if 'dtstart' in request.GET:
-            try:
-                dtstart = parser.parse(request.GET['dtstart'])
-            except(TypeError, ValueError) as exc:
-                # TODO: A badly formatted date is passed to add_event
-                logging.warning(exc)
-        if 'location' in request.GET:
-            try:
-                location=Location.objects.get(pk=request.GET['location'])
-            except ObjectDoesNotExist:
-                location=None
-        else:
-            location=None
+        recurrence_dict['end_time']=dtstart
 
-        dtstart = dtstart or datetime.now()
-        event_form = event_form_class(date=dtstart)
-        recurrence_form = recurrence_form_class(date=dtstart,initial={'location': location})
+    event_form = event_form_class(date=dtstart, initial=event_dict)
+    recurrence_form = recurrence_form_class(initial=recurrence_dict)
 
     return render(
         request,
         template,
-        {'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
+        {'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
     )
 
 

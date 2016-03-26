@@ -316,7 +316,7 @@ class Occurrence(models.Model):
             occur_part = activity.participating_in()
         #does that really cover it? seems too easy
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-        #print "concurrent",concurrent
+        print "concurrent",concurrent
 
         conflict_dict={}
         for o in concurrent:
@@ -328,8 +328,13 @@ class Occurrence(models.Model):
                 #print "conflict"
                 conflict_dict[event_activity]=event_part
 
+
+########still need to add blackouts
+
+
+
         if len(conflict_dict)>0:
-            #print "conflict_dict",conflict_dict
+            print "conflict_dict",conflict_dict
             return conflict_dict
         else:
             return None
