@@ -310,26 +310,26 @@ class Occurrence(models.Model):
 
     def participant_conflict(self):
         """Dahmer custom function. Checks to see if any Event participants are participating in other occurrances at same time.
-        If so, returns dict w/ skater list k, activity v, but has no teeth, can be overridden, is just an FYI warning"""
+        If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
         activity=self.event.get_activity()
         if activity:
             occur_part = activity.participating_in()
         #does that really cover it? seems too easy
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-        print "concurrent",concurrent
+        #print "concurrent",concurrent
 
         conflict_dict={}
-        for e in concurrent:
-            print "E",e
-            event_activity=e.get_activity()
+        for o in concurrent:
+            event_activity=o.event.get_activity()
+            #print "event_activity",event_activity
             event_part=event_activity.participating_in()
-            print "event_part",event_part
+            #print "event_part",event_part
             if len( set(occur_part).intersection(event_part) ) > 0:
-                print "conflict"
-                conflict_dict[event_part]=event_activity
+                #print "conflict"
+                conflict_dict[event_activity]=event_part
 
         if len(conflict_dict)>0:
-            print "conflict_dict",conflict_dict
+            #print "conflict_dict",conflict_dict
             return conflict_dict
         else:
             return None
