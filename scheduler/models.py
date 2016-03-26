@@ -398,20 +398,31 @@ class Activity(models.Model):
     internal_notes= models.TextField(null=True,blank=True)
     communication = models.TextField(null=True,blank=True)
 
+    def get_figurehead_registrants(self):
+        """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""
+        figureheads=[]
+        if hasattr(self, 'coach'):#if this is a training
+            for c in self.coach.all():
+                for r in c.user.registrant_set.all():
+                    if r.con==self.con:
+                        figureheads.append(r)
+        elif hasattr(self, 'roster1'):#if this is a challenge:
+            for r in [self.roster1,self.roster2]:
+                if r and r.captain:
+                    figureheads.append(r.captain)
+
+        return figureheads
+
     def editable_by(self):
         '''returns list of Users that can edit Activity
         keep in mind being captain of EITHER team makes this True
         Also, boss ladies, but no NSOs or Volunteers'''
         allowed_editors=list(User.objects.filter(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
 
-        if hasattr(self, 'coach'):#if this is a training
-            for c in self.coach.all():
-                allowed_editors.append(c.user)
-        elif hasattr(self, 'roster1'):#if this is a challenge:
-            if self.roster1 and self.roster1.captain:
-                allowed_editors.append(self.roster1.captain.user)
-            if self.roster2 and self.roster2.captain:
-                allowed_editors.append(self.roster2.captain.user)
+        figureheads=get_figurehead_registrants()#see above. Registrants of captains and coaches.
+        for f in figureheads:
+            allowed_editors.append(f.user)
+
         return allowed_editors
 
     def participating_in(self):

@@ -3,6 +3,7 @@ from dateutil import rrule
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.dateparse import parse_datetime,parse_time
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.conf import settings
@@ -10,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 #from con_event.models import Con
 from scheduler.models import Location, Challenge, Training
+from con_event.models import Blackout,Registrant
 
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -307,18 +309,44 @@ class Occurrence(models.Model):
 
 
     #---------------------------------------------------------------------------
+    def figurehead_conflict(self):
+        """Dahmer custom function. Checks to see if any Event figureheads (coach, captain) are participating in other occurrances at same time.
+        If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
+        activity=self.event.get_activity()
+        figureheads=[]
+        conflict_dict={}
 
+        if activity:
+            figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
+
+        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
+
+        for o in concurrent:
+            event_activity=o.event.get_activity()
+            event_part=event_activity.participating_in()
+            conflict=set(figureheads).intersection(event_part)
+            if len( conflict ) > 0:
+                conflict_dict[event_activity]=list(conflict)
+
+        if len(conflict_dict)>0:
+            return conflict_dict
+        else:
+            return None
+
+    #-------------------------------------------------------------------------------
     def participant_conflict(self):
         """Dahmer custom function. Checks to see if any Event participants are participating in other occurrances at same time.
         If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
         activity=self.event.get_activity()
+        figureheads=[]
+        conflict_dict={}
+
         if activity:
             occur_part = activity.participating_in()
-        #does that really cover it? seems too easy
-        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-        print "concurrent",concurrent
 
-        conflict_dict={}
+        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
+        #print "concurrent",concurrent
+
         for o in concurrent:
             event_activity=o.event.get_activity()
             #print "event_activity",event_activity
@@ -328,17 +356,42 @@ class Occurrence(models.Model):
                 #print "conflict"
                 conflict_dict[event_activity]=event_part
 
-
-########still need to add blackouts
-
-
-
         if len(conflict_dict)>0:
-            print "conflict_dict",conflict_dict
+            #print "conflict_dict",conflict_dict
             return conflict_dict
         else:
             return None
 
+    #-------------------------------------------------------------------------------
+    def blackout_conflict(self):
+        """Dahmer custom function. Checks to see if any Event figureheads (coach, captain have blackouts during Occu time.
+        If so, returns dict w/  blackout k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
+        activity=self.event.get_activity()
+        figureheads=[]
+        conflict_dict={}
+        daypart=[]
+
+        if activity:
+            figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
+
+        odate=self.start_time.date()
+        #if self.start_time.time() >= '12:00:00':
+        if self.start_time.time() >= parse_time('12:00:00'):
+            daypart.append("PM")
+        else:
+            daypart.append("AM")
+        if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
+            daypart.append("PM")
+
+        for f in figureheads:
+            potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)
+            if len(list(potential_bouts))>0:
+                conflict_dict[f]=list(potential_bouts)
+
+        if len(conflict_dict)>0:
+            return conflict_dict
+        else:
+            return None
 
 #-------------------------------------------------------------------------------
 def create_event(

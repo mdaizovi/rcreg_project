@@ -416,8 +416,6 @@ def add_event(
     template='swingtime/add_event.html',
     event_form_class=forms.EventForm,
     recurrence_form_class=forms.SingleOccurrenceForm,
-    save_success=False,
-    conflict=None
 ):
     '''
     Add a new ``Event`` instance and 1 or more associated ``Occurrence``s.
@@ -435,7 +433,9 @@ def add_event(
         a form object for adding occurrences
 
     '''
+    save_success=False
     dtstart = None
+    conflict={}
 
     if request.method == 'POST':
 
@@ -458,7 +458,11 @@ def add_event(
                 occurrence.end_time=occurrence.get_endtime()
                 #else assume she did that time for a reason
 
-            conflict=occurrence.participant_conflict()
+            participant_conflict=occurrence.participant_conflict()
+            if participant_conflict:
+                conflict["participant_conflict"]=participant_conflict
+            print "conflict",conflict
+
             if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
                 event.save()
                 occurrence.save()
@@ -489,7 +493,7 @@ def add_event(
     dtstart = dtstart or datetime.now()
     recurrence_dict["start_time"]=dtstart
     dtend_post=[u'end_time_1',u'end_time_0_year',u'end_time_0_month','end_time_0_day']
-    if len( set(dtend_post).intersection(request.POST.keys() )) > 0:
+    if len( set(dtend_post).intersection(request.POST.keys())) > 0:
         dtend_str=request.POST['end_time_0_year']+"-"+request.POST['end_time_0_month']+"-"+request.POST['end_time_0_day']+"T"+request.POST['end_time_1']
         try:
             dtend=parser.parse(dtend_str)
