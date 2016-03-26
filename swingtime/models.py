@@ -345,7 +345,6 @@ class Occurrence(models.Model):
             occur_part = activity.participating_in()
 
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-        #print "concurrent",concurrent
 
         for o in concurrent:
             event_activity=o.event.get_activity()
@@ -375,13 +374,13 @@ class Occurrence(models.Model):
             figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
 
         odate=self.start_time.date()
-        #if self.start_time.time() >= '12:00:00':
         if self.start_time.time() >= parse_time('12:00:00'):
             daypart.append("PM")
         else:
             daypart.append("AM")
         if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
             daypart.append("PM")
+        print "daypart",daypart
 
         for f in figureheads:
             potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)

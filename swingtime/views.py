@@ -436,6 +436,7 @@ def add_event(
     save_success=False
     dtstart = None
     conflict={}
+    print "conflict",conflict
 
     if request.method == 'POST':
 
@@ -468,7 +469,6 @@ def add_event(
             blackout_conflict=occurrence.blackout_conflict()
             if blackout_conflict:
                 conflict["blackout_conflict"]=blackout_conflict
-
 
             if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
                 event.save()
