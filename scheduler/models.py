@@ -419,7 +419,7 @@ class Activity(models.Model):
         Also, boss ladies, but no NSOs or Volunteers'''
         allowed_editors=list(User.objects.filter(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
 
-        figureheads=get_figurehead_registrants()#see above. Registrants of captains and coaches.
+        figureheads=self.get_figurehead_registrants()#see above. Registrants of captains and coaches.
         for f in figureheads:
             allowed_editors.append(f.user)
 
