@@ -136,7 +136,7 @@ class RosterAdmin(ImportExportModelAdmin):#this has its own obvious expost butto
 class ChallengeResource(resources.ModelResource):
     class Meta:
         model = Challenge
-        fields = ('id','name','roster1','roster1__name','roster1__captain','roster1__captain__sk8name','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','created_on','submitted_on','internal_notes','con','con__city','con__year')
+        fields = ('id','name','roster1','roster1__name','roster1__captain','roster1__captain__sk8name','communication','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','created_on','submitted_on','internal_notes','con','con__city','con__year')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
