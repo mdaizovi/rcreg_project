@@ -541,7 +541,7 @@ class Registrant(Matching_Criteria):
 
     def update_blackouts(self,date_dict):
         """Takes in a dictionary w/ date object as key, list w/ ["AM","PM"], or 1, as value.
-        These are all of the blackouts that *shoud* exist. Takes dict and creates and deletes as appropriate."""
+        These are all of the blackouts that *should* exist. Takes dict and creates and deletes as appropriate."""
         existing_blackouts=self.blackout.all()
         bo_dict={}
         date_dict_keys=date_dict.keys()

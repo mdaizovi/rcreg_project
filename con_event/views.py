@@ -80,6 +80,7 @@ def registrant_profile(request):
                 ampmitems=request.POST.getlist(string_of_date)
                 #print "ampmitems",ampmitems
                 if string_of_date not in request.POST:
+                    #If date not in post at all, assume both boxes unchecked.
                     date_dict[string_of_date]=["AM","PM"]
                 else:#assuming there's an ampmitem list, bc the date is in post
                     if "AM" not in ampmitems:
@@ -110,7 +111,7 @@ def registrant_profile(request):
         datelist=None
         form = RegistrantProfileForm(instance=registrant)
 
-        #maybe i should only run this is con hasn't happened yet? or of coach and/or captain?
+        #maybe i should only run this is con hasn't happened yet?
         if (registrant.con.start > datetime.date.today()):
             if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
                 datelist=registrant.con.get_date_range()
@@ -118,6 +119,7 @@ def registrant_profile(request):
                     bo_list.append((bo.date,bo.ampm,None,"Available "+bo.ampm))
                 for date in datelist:
                     if (date,"AM",None,"Available AM") not in bo_list:
+                        #if no BO, that means they're available, check the box in the template. None for item 2 will not check the box.
                         bo_list.append((date,"AM","checked","Available AM"))
                     if (date,"PM",None,"Available PM") not in bo_list:
                         bo_list.append((date,"PM","checked","Available PM"))

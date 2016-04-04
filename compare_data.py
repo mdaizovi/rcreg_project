@@ -7,7 +7,6 @@ import openpyxl
 import collections
 
 
-
 """This whole file is for helping me compare excel files of who SHOULD BE in RollerTron
 and who ACTUALLY IS in RollerTron.
 Assumes the ACUALLY IS is re-arranged from export to look like BPT excel.
@@ -316,8 +315,8 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
 
 #python manage.py shell
 #from compare_data import*
-#db_xlfile=(import_path+'RollerTron IN 03 02 2016.xlsx')
-#bpt_xlfile=(import_path+'BPTAttendee030216.xlsx')
+#db_xlfile=(import_path+'RegistrantsAll.xlsx')
+#bpt_xlfile=(import_path+'BPTAll.xlsx')
 #sort_it_out(db_xlfile,bpt_xlfile)
 def sort_it_out(db_xlfile,bpt_xlfile):
     """bundles all of my funcitons together so I don't have to type so much"""
@@ -326,7 +325,7 @@ def sort_it_out(db_xlfile,bpt_xlfile):
 
     db_obj_list,db_dict_connection=make_temp_registrants(db_all_data)
     bpt_obj_list,bpt_dict_connection=make_temp_registrants(bpt_all_data)
-    
+
     in_db_obj, not_found_yet_obj=comp_obj_lists(db_obj_list, bpt_obj_list)
 
     in_db=[]

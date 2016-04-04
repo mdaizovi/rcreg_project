@@ -184,7 +184,7 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 032316.xlsx')
+#target_file=(import_path+'merged copy.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
@@ -277,9 +277,13 @@ def import_from_excel(complete_entries_file,con):
                             this_reg=Registrant(con=con, email=email,first_name=first_name,last_name=last_name)
 
             if this_reg:#ie if no repeat email
-                attr_dict={'sk8name':sk8name,'sk8number':sk8number,'skill':skill,"gender":gender,'pass_type':pass_type,'first_name':first_name,'last_name':last_name,
-                    'country':country,'state':state,'BPT_Ticket_ID':BPT_Ticket_ID,'affiliation':affiliation,'ins_carrier':ins_carrier,'ins_number':ins_number,'age_group':age_group,
-                    'favorite_part':favorite_part,'volunteer':volunteer}
+                # attr_dict={'sk8name':sk8name,'sk8number':sk8number,'skill':skill,"gender":gender,'pass_type':pass_type,'first_name':first_name,'last_name':last_name,
+                #     'country':country,'state':state,'BPT_Ticket_ID':BPT_Ticket_ID,'affiliation':affiliation,'ins_carrier':ins_carrier,'ins_number':ins_number,'age_group':age_group,
+                #     'favorite_part':favorite_part,'volunteer':volunteer}
+
+
+                attr_dict={"gender":gender,'pass_type':pass_type}
+
                 for k,v in attr_dict.iteritems():
                     print k," is ",v
                     #value = getattr(this_reg, k)
@@ -295,7 +299,7 @@ def import_from_excel(complete_entries_file,con):
 
 
                 this_reg.save()
-                this_reg.save()#think I have to do twice tomake user? I forgot.
+                #this_reg.save()#think I have to do twice tomake user? I forgot.
                 success_list.append(od)
                 print this_reg," Succesfully made"
         except:
