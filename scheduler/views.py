@@ -18,7 +18,7 @@ import collections
 from django.core.mail import EmailMessage, send_mail
 from django.core.exceptions import ObjectDoesNotExist
 from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
-
+from swingtime.models import Event, Occurrence
 
 
 #syntx reference:
@@ -468,17 +468,22 @@ def challenges_home(request,con_id=None,):
         con=Con.objects.most_upcoming()
     else:
         con=Con.objects.get(pk=con_id)
-    scheduled=list(Challenge.objects.filter(con=con, RCaccepted=True))
 
-    if len(scheduled)>0:
-        #hard coding for now because this is just for display
-        day = con.start
-        delta = timedelta(days=1)
-        iter_no=0
-        date_dict=collections.OrderedDict()#https://pymotw.com/2/collections/ordereddict.html
-        while day <= con.end:
-            date_dict[day]=scheduled
-            day += delta
+    #scheduled=list(Challenge.objects.filter(con=con, RCaccepted=True))
+    scheduled=list(Occurrence.objects.filter(event__challenge__con=con))
+
+    if len(scheduled)>0 and con.sched_visible:
+        date_dict=collections.OrderedDict()
+        for day in con.get_date_range():
+            date_dict[day]=[]
+
+        for o in scheduled:
+            temp_list=date_dict.get(o.start_time.date())
+            temp_list.append(o)
+            date_dict[o.start_time.date()]=list(temp_list)
+
+        for v in date_dict.values():
+            v.sort(key=lambda o: o.start_time)
     else:
         date_dict=None
 
