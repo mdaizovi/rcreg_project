@@ -136,20 +136,21 @@ def trainings_home(request,con_id=None,):
     else:
         con=Con.objects.get(pk=con_id)
 
-    scheduled=list(Training.objects.filter(con=con,RCaccepted=True))
+    #scheduled=list(Training.objects.filter(con=con,RCaccepted=True))
+    scheduled=list(Occurrence.objects.filter(event__training__con=con))
 
-    if len(scheduled)>0:
-        share=int(len(scheduled)/5) #hard coding for now because this is just for display
+    if len(scheduled)>0 and con.sched_visible:
+        date_dict=collections.OrderedDict()
+        for day in con.get_date_range():
+            date_dict[day]=[]
 
-        day = con.start
-        delta = timedelta(days=1)
-        iter_no=0
-        date_dict=collections.OrderedDict()#https://pymotw.com/2/collections/ordereddict.html
-        while day <= con.end:
-            this_share=scheduled[(share*iter_no):(share*(iter_no+1))]
-            date_dict[day]=this_share
-            day += delta
-            iter_no+=1
+        for o in scheduled:
+            temp_list=date_dict.get(o.start_time.date())
+            temp_list.append(o)
+            date_dict[o.start_time.date()]=list(temp_list)
+
+        for v in date_dict.values():
+            v.sort(key=lambda o: o.start_time)
     else:
         date_dict=None
 
@@ -469,7 +470,6 @@ def challenges_home(request,con_id=None,):
     else:
         con=Con.objects.get(pk=con_id)
 
-    #scheduled=list(Challenge.objects.filter(con=con, RCaccepted=True))
     scheduled=list(Occurrence.objects.filter(event__challenge__con=con))
 
     if len(scheduled)>0 and con.sched_visible:

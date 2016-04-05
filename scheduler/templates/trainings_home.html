@@ -68,22 +68,23 @@
   </a></h3>
 
 
-{%for training in value %}
-  <a href="{{training.get_view_url}}" class="list-group-item">
-  <h4 class="list-group-item-heading">{{training.name}}<small> {{ training.display_coach_names }}</small></h4>
+{%for  o in value %}
+  <a href="{{o.event.training.get_view_url}}" class="list-group-item">
+  <h4 class="list-group-item-heading">{{o.event.training.name}}<small> {{ o.event.training.display_coach_names }}</small></h4>
   <p class="list-group-item-text">
-
     <table class="table-condensed" style="margin: 0px 0px -15px 0px; width:100%;"><tr>
-    <td style="width:400px;"><br></td>
-<!-- <td style="width:400px;">Time<br>Location</td>-->
+    <!--<td style="width:400px;"><br></td>-->
+<td class="text-left container-fluid" style="width:400px;">{{o.start_time|date:"P"}} - {{o.end_time|date:"P"}}<br>{{o.location.name}} </td>
 
-    <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center; width:100px;">
+    <td class="text-left container-fluid tooltip-bottom" title="{{o.event.training.registered.skill_tooltip_title}}" style="border:none; text-align: center; width:100px;">
       <span class="glyphicon" aria-hidden="true"> Skill:<br>
-{%if training.registered.skill %}{{ training.registered.skill_display }}
-{%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
-    <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
-    <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>
-    <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{training.contact_icon}}"></i></span></td>
+{%if o.event.training.registered.skill %}{{ o.event.training.registered.skill_display }}
+{%else%}<i class="{{o.event.training.registered.skill_icon}}"></i>{%endif%}
+    <td class="text-left container-fluid tooltip-bottom" title="{{o.event.training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{o.event.training.onsk8s_icon}}"></i></span></td>
+    {%if o.event.training.registered.intl %}
+    <td class="text-center container-fluid tooltip-bottom" title="{{o.event.training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{o.event.training.registered.intl_icon}}"></i></span></td>
+    {%endif%}
+    <td class="text-left container-fluid tooltip-bottom" title="{{o.event.training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{o.event.training.contact_icon}}"></i></span></td>
     </tr></table></p>
 </a>{%endfor%}
 </div>
