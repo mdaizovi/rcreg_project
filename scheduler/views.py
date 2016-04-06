@@ -724,6 +724,9 @@ def edit_challenge(request, activity_id):
             participants=EligibleRegistrantForm(my_arg=my_team.participants.exclude(pk=my_team.captain.pk))
             participants.fields['eligible_registrant'].label = "Rostered Skaters"
 
+            captain_replacements=EligibleRegistrantForm(my_arg=my_team.participants.filter(captaining__lt=MAX_CAPTAIN_LIMIT).exclude(pk=my_team.captain.pk ))
+            captain_replacements.fields['eligible_registrant'].label = "Potential Captains"
+
 
             if not opponent or not opponent.captain or not opponent_acceptance:
                 if entry_query:
@@ -762,7 +765,7 @@ def edit_challenge(request, activity_id):
 
             formlist=[roster_form,challenge_form]
 
-    big_dict={'game_teams_form':game_teams_form,'problem_criteria':problem_criteria,'save_attempt':save_attempt,'save_success':save_success,'captain_conflict':captain_conflict,'coed_beginner':coed_beginner,'skater_search_form':skater_search_form,'invited_captain':invited_captain,'formlist':formlist,'eligible_participants':eligible_participants,'participants':participants,'opponent_form_list':opponent_form_list,'my_team':my_team,'opponent':opponent,'challenge':challenge,
+    big_dict={'game_teams_form':game_teams_form,'problem_criteria':problem_criteria,'save_attempt':save_attempt,'save_success':save_success,'captain_conflict':captain_conflict,'coed_beginner':coed_beginner,'skater_search_form':skater_search_form,'invited_captain':invited_captain,'formlist':formlist,'eligible_participants':eligible_participants,'participants':participants,'captain_replacements':captain_replacements,'opponent_form_list':opponent_form_list,'my_team':my_team,'opponent':opponent,'challenge':challenge,
         'add_fail':add_fail,'skater_added':skater_added,'skater_remove':skater_remove,'remove_fail':remove_fail,'opponent_acceptance':opponent_acceptance,'my_acceptance':my_acceptance}
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
