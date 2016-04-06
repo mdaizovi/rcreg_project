@@ -13,6 +13,7 @@ from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
 from scheduler.app_settings import CLOSE_CHAL_SUB_AT
+from copy import deepcopy
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
@@ -373,13 +374,31 @@ class Roster(Matching_Criteria):
         else:
             return False
 
+    def restore_defaults(self):
+        self.captain=None
+        self.participants.clear()
+        self.name=None
+        self.color=None
+        self.can_email=True
+        self.save() #save here, or elsewhere?
+
+    def clone_roster(self):
+        clone=deepcopy(self)
+        clone.pk=None
+        clone.id=None
+        clone.save()
+        clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
+        #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
+        clone.save()
+        return clone
+
 
     def get_edit_url(self):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
 
     class Meta:
         ordering=("-con__start",'name','captain')
-        unique_together = ('name','con','captain')
+        #unique_together = ('name','con','captain')#I think this is my original sin. fuck me.
 
 post_save.connect(delete_homeless_roster_ros, sender=Roster)
 pre_delete.connect(adjust_captaining_no, sender=Roster)
@@ -624,7 +643,7 @@ class Challenge(Activity):
     def can_submit_chlg(self):
         """
         first checks to see if both captains have accepted.
-        If yes and is a Game, can submit as long as firs sub date has passed and schedule is not final.
+        If yes and is a Game, can submit as long as first sub date has passed, and schedule is not final.
         If yes and is a Challenge, can submit as long as first sub date has passed and max chal cp hasn't been reached.
         """
         can_sub=False

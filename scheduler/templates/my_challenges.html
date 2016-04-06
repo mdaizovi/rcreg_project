@@ -48,12 +48,17 @@
 
 {%if dict.pending %}
 {%if not dict.con.can_submit_chlg%}
-      {%if  dict.sub_full %}
+      {%if dict.sub_full %}
       <div class="alert alert-danger" role="alert">The cap for Challenge sumbission has been reached for {{dict.con}} and submission is now closed.</div>
       {%elif not dict.can_sub_date %}
       <div class="alert alert-danger" role="alert">Challenge Submission opens on {{ dict.con.challenge_submission_start }}</div>
       {% endif %}
 {% endif %}
+
+{%if dict.cap_exceeded%}<div class="alert alert-danger" role="alert">You can only be captain of {{MAX_CAPTAIN_LIMIT}} submitted Challenge{{ MAX_CAPTAIN_LIMIT|pluralize }}.
+  {%if dict.chals_submitted|length < MAX_CAPTAIN_LIMIT %}After you submit {{MAX_CAPTAIN_LIMIT}}, you will no longer be able to submit the rest, and can
+  {%else%}You have already submitted the maximum amount. Please{%endif%}
+  either designate another captain for the others, or reject them on the Edit Challenge page.</div>{%endif%}
 
 {%if ALL_CHALLENGE_NOTIFY%}
 <div class="alert alert-danger" role="alert">You have<ul>
@@ -83,7 +88,7 @@ event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_C
                     {% csrf_token %}
                     <input type="hidden" name="activity_id" value="{{ item.id }}" />
               <input class="btn btn-danger btn-block" type="submit" method="post" name="submit_challenge" value="Submit Challenge"
-              {%if not item.can_submit_chlg %}disabled{%endif%}>
+              {%if not item.can_submit_chlg or dict.chals_submitted|length >= MAX_CAPTAIN_LIMIT %}disabled{%endif%}>
               </form>
 
             </td>

@@ -136,7 +136,6 @@ def trainings_home(request,con_id=None,):
     else:
         con=Con.objects.get(pk=con_id)
 
-    #scheduled=list(Training.objects.filter(con=con,RCaccepted=True))
     scheduled=list(Occurrence.objects.filter(event__training__con=con))
 
     if len(scheduled)>0 and con.sched_visible:
@@ -573,18 +572,6 @@ def edit_challenge(request, activity_id):
     if request.method == "POST":
 
         if 'confirm save' in request.POST or 'save team' in request.POST:
-#################I'm having problems with people trying to save existing teams as same name as other existing teams
-                #so I need to get their existing team and swap them out, if exist.
-            existing_team=None
-            if 'name' in request.POST:
-                my_team_name=ascii_only_no_punct(request.POST['name'])
-                try:
-                    existing_team=Roster.objects.get(con=registrant.con,captain=registrant, name=my_team_name)
-                    old_team,selected_team=challenge.replace_team(my_team,existing_team)
-                    my_team=selected_team
-                except:
-                    pass #if it still thows dupe entry errors I'll know this didn't work.
-########################################
 
             save_attempt=True
             pre_save_gender=my_team.gender
@@ -613,7 +600,7 @@ def edit_challenge(request, activity_id):
                 conflict_sweep=my_team.conflict_sweep()
 
             if not captain_conflict and roster_form.is_valid() and challenge_form.is_valid():
-                #this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
+                #this should run regardless of save team or confirm save, assuming it doesn't jump to conflict warning
                 #this is only if just updating team, not creating new or swapping captains or anything
                 roster=roster_form.save()
                 if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
@@ -711,7 +698,7 @@ def edit_challenge(request, activity_id):
 
             return render_to_response('captain_swap_confirm.html',{'swap_attempt':swap_attempt,'new_captain':new_captain,'roster':my_team,'activity_id':activity_id},context_instance=RequestContext(request))
 
-    #this line starts things that happen regard;ess of whether is request.post or not
+    #this line starts things that happen regardless of whether is request.post or not
     my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
 
     if my_team:
@@ -740,15 +727,10 @@ def edit_challenge(request, activity_id):
 
             if not opponent or not opponent.captain or not opponent_acceptance:
                 if entry_query:
-                    if challenge.is_a_game:
-                        eligible_opponents = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk).order_by('sk8name','last_name','first_name')
-                    else:
-                        eligible_opponents = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C'],captaining__lt=MAX_CAPTAIN_LIMIT).exclude(pk=registrant.pk).order_by('sk8name','last_name','first_name')
+                    #these used to be lists, but i don't think it matters. but if stops working, that's why
+                    eligible_opponents = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk).order_by('sk8name','last_name','first_name')
                 else:
-                    if challenge.is_a_game:
-                        eligible_opponents=list(Registrant.objects.filter(con=challenge.con,pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk))
-                    else:
-                        eligible_opponents=list(Registrant.objects.filter(con=challenge.con,pass_type__in=['MVP','Skater'], skill__in=['A','B','C'],captaining__lt=MAX_CAPTAIN_LIMIT).exclude(pk=registrant.pk))
+                    eligible_opponents=Registrant.objects.filter(con=challenge.con,pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk)
 
                 eligibleregistrantform=EligibleRegistrantForm(my_arg=eligible_opponents)
                 if entry_query:
@@ -955,7 +937,14 @@ def my_challenges(request):
         unconfirmed=registrant.unconfirmed_challenges()
         can_sub_date=registrant.con.can_submit_chlg_by_date()
         sub_full=Challenge.objects.submission_full(registrant.con)
-        registrant_dict={'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
+        #see how many times captaining a challenge, games are excluded
+        chals_cap=list(Challenge.objects.filter(Q(roster1__captain=registrant)|Q(roster2__captain=registrant)).exclude(is_a_game=True))
+        if len(chals_cap)>MAX_CAPTAIN_LIMIT:
+            cap_exceeded=True
+        else:
+            cap_exceeded=False
+        chals_submitted=[c for c in chals_cap if c.submitted_on]
+        registrant_dict={'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()
@@ -968,7 +957,7 @@ def my_challenges(request):
         except:
             active=None
 
-    return render_to_response('my_challenges.html', {'CLOSE_CHAL_SUB_AT':CLOSE_CHAL_SUB_AT,'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response('my_challenges.html', {'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'CLOSE_CHAL_SUB_AT':CLOSE_CHAL_SUB_AT,'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
 @login_required
 def propose_new_game(request):
