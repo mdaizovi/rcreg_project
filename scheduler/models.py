@@ -585,7 +585,6 @@ class Challenge(Activity):
                     cappy=r.captain
                     #this should always run now that i made rosters unique to challenges but I'll keep just in case
                     if len(list(r.roster1.all())+list(r.roster2.all()))==1:#if this is this rosters only challange
-                        print "about to delete ",r," in roster reject"
                         r.delete()
                     if cappy:
                         cappy.save()#to reset captain number

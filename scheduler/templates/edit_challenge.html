@@ -36,77 +36,14 @@
     <div class="well well-md">
     {%if opponent.captain or invited_captain%}
         <div class="alert alert-danger" role="alert"> {%if invited_captain%}{{invited_captain.sk8name}}{%else%}{{opponent.captain.sk8name}}{%endif%} has not acccepted this challenge yet. If you do not have a confirmed opponent, your challenge may not be scheduled.</div>
-        {%if not challenge.is_a_game%}<p>Would you like to rescind invitation and challenge another captain?</p>{%endif%}
+        <p>Would you like to rescind invitation and challenge another captain?</p>
     {%else%}<!-- if you don't have an opponent-->
       <div class="alert alert-danger" role="alert">You don't have an opponent! If you do not have a confirmed opponent, your challenge may not be scheduled.</div>
     {%endif%}<!-- if opponent-->
-    <p style="text-align:center;"><b>Challenge another {%if challenge.is_a_game%}team{%else%}captain{%endif%}?</b></p>
+    <p style="text-align:center;"><b>Challenge another captain?</b></p>
 
 
-    {% if challenge.is_a_game and opponent_form_list %}
-    <div class="row" id="moreInfo">
-
-    <div class="col-sm-6">
-      <form method="POST" class="post-form">
-        {% csrf_token %}
-          <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
-      {%with challenge.id as challenge_id%}<input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
-      <div class="well well-sm" style="min-height:170px;">
-          <h4>Sanctioned/Regulation Teams for {{challenge.con}}</h4>
-          {%if game_teams_form %}
-          <table class="table margin-top-25">
-            {%for field in game_teams_form %}
-              <tr><td style="border:none;vertical-align: middle;">
-                <b>Game Teams</b></td>
-                <td style="border:none;">{{ field }}</td>
-                  <td style="border:none; text-align: center;">
-                    <input class="btn btn-success btn-block" type="submit" method="post" name="challenge team" value="Oppose"></td></tr>
-                {%endfor%}
-              </form>
-              </table>
-          {%else%}
-          <p class="margin-top-25" style="text-align:center;"><i>No other Game teams yet, just yours!<br>Please check back later.</i></p>
-          {%endif%}
-            </div><!-- end well -->
-            </div><!-- end col-sm-6 -->
-
-
-      <div class="col-sm-6">
-      <form method="POST" class="post-form">
-        {% csrf_token %}
-
-    <div class="well well-sm" style="min-height:170px;">
-                <h4>Search/Select Skater to Challenge</h4>
-          <table class="table">
-                  {%for form in opponent_form_list%}
-                      <form method="POST" class="post-form">
-                        {% csrf_token %}
-                        {%with challenge.id as challenge_id%}
-                        <input type="hidden" name="challenge_id" value="{{ challenge_id }}" />{%endwith%}
-                        <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
-                  {%for field in form %}
-                  <tr {%if form.tooltip%}style="tooltip-bottom" title="{{form.tooltip}}"{%endif%}><td style="border:none;vertical-align: middle;">
-
-                    <b>{% cycle 'Search' 'Captains' %}</b></td>
-
-                    <td style="border:none;">{{ field }}</td>
-                      <td style="border:none; text-align: center;">
-                        <input class="btn btn-{% cycle 'primary' 'success' %} btn-block" type="submit" method="post"
-                        name="{% cycle 'search captain' 'invite captain' %}" value="{% cycle 'Find' 'Invite' %}">
-                      </td>
-                    </tr>
-                    {%endfor%}
-                  </form>
-                  {%endfor%}
-                  </table>
-                  </div><!-- end well -->
-                </div><!-- end col-sm-6 -->
-              </div>
-
-
-    {% elif not challenge.is_a_game and opponent_form_list %}<!--if opponent_form_list but not a game  -->
-
-
+    {%if opponent_form_list %}
     <form method="POST" class="post-form form-inline">
           {% csrf_token %}
           <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
@@ -164,7 +101,6 @@
         </form>
         {%endif%} <!--if form-->
       </div><!--end col-sm-6-->
-
 
   <div class="col-sm-6"><h3 class="text-center">Edit Team Roster</h3>
 
@@ -230,7 +166,7 @@
 <form method="POST" class="post-form" action="#editteamsection">
      {% csrf_token %}
 <h4>Replace Yourself as Captain<br>
-<small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge.
+<small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge. Replacement captin must not already exceed maximum captain limit.
 </small></h4>
 {{captain_replacements}}
 <input type="hidden" name="roster_id" value="{{ my_team.id }}" />

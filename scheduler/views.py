@@ -546,7 +546,6 @@ def edit_challenge(request, activity_id):
         challenge=None
         return render_to_response('edit_challenge.html',{},context_instance=RequestContext(request))
 
-
     opponent_form_list=None
     participants=None
     captain_replacements=None
@@ -568,7 +567,6 @@ def edit_challenge(request, activity_id):
     save_attempt=False
     save_success=False
     entry_query=None
-    game_teams_form=None
 
     if request.method == "POST":
 
@@ -752,21 +750,9 @@ def edit_challenge(request, activity_id):
                 captain_search_form.fields['search_q'].label = "Captain Name"
                 opponent_form_list=[captain_search_form,eligibleregistrantform]
 
-                if challenge.is_a_game:
-                    existing_games=Challenge.objects.filter(con=challenge.con,is_a_game=True)
-                    game_teams=[]
-                    for game in existing_games:
-                        if game.roster1 and game.roster1.captain and game.roster1.captain != registrant and game.roster1.name and game.roster1 not in game_teams:
-                            game_teams.append(game.roster1)
-                        if game.roster2 and game.roster2.captain and game.roster2.captain != registrant and game.roster2.name and game.roster2 not in game_teams:
-                            game_teams.append(game.roster2)
-
-                    if len(game_teams)>0:
-                        game_teams_form=MyRosterSelectForm(team_list=game_teams)
-
             formlist=[roster_form,challenge_form]
 
-    big_dict={'game_teams_form':game_teams_form,'problem_criteria':problem_criteria,'save_attempt':save_attempt,'save_success':save_success,'captain_conflict':captain_conflict,'coed_beginner':coed_beginner,'skater_search_form':skater_search_form,'invited_captain':invited_captain,'formlist':formlist,'eligible_participants':eligible_participants,'participants':participants,'captain_replacements':captain_replacements,'opponent_form_list':opponent_form_list,'my_team':my_team,'opponent':opponent,'challenge':challenge,
+    big_dict={'problem_criteria':problem_criteria,'save_attempt':save_attempt,'save_success':save_success,'captain_conflict':captain_conflict,'coed_beginner':coed_beginner,'skater_search_form':skater_search_form,'invited_captain':invited_captain,'formlist':formlist,'eligible_participants':eligible_participants,'participants':participants,'captain_replacements':captain_replacements,'opponent_form_list':opponent_form_list,'my_team':my_team,'opponent':opponent,'challenge':challenge,
         'add_fail':add_fail,'skater_added':skater_added,'skater_remove':skater_remove,'remove_fail':remove_fail,'opponent_acceptance':opponent_acceptance,'my_acceptance':my_acceptance}
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
@@ -783,13 +769,10 @@ def challenge_respond(request):
         my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
 
         if 'reject' in request.POST  or 'reject_confirm' in request.POST:
-            print "reject line 786"
             if 'reject_confirm' in request.POST:
-                print "reject ocnfirm"
                 challenge.rosterreject(my_team)#has to be first to reject properly, otherwise is still accepted
                 old_team,selected_team=challenge.replace_team(my_team,None)#this is necessary, otherwise it won't save challenge
                 challenge.rosterreject(my_team)#to delete homeless challenge
-                print "rosterreject twice"
                 if challenge.pk:#if challenge has not just been deleted
                     challenge.save()#this is necessary
 
@@ -831,7 +814,6 @@ def challenge_respond(request):
             elif challenge.roster2 and challenge.roster2.captain and challenge.roster2.captain==registrant:
                 challenge.captain2accepted=True
             challenge.save()
-
 
             return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
     else:#this should never happen, should always be post
