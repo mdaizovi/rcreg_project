@@ -783,10 +783,13 @@ def challenge_respond(request):
         my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
 
         if 'reject' in request.POST  or 'reject_confirm' in request.POST:
+            print "reject line 786"
             if 'reject_confirm' in request.POST:
+                print "reject ocnfirm"
                 challenge.rosterreject(my_team)#has to be first to reject properly, otherwise is still accepted
                 old_team,selected_team=challenge.replace_team(my_team,None)#this is necessary, otherwise it won't save challenge
                 challenge.rosterreject(my_team)#to delete homeless challenge
+                print "rosterreject twice"
                 if challenge.pk:#if challenge has not just been deleted
                     challenge.save()#this is necessary
 

@@ -565,6 +565,7 @@ class Challenge(Activity):
 
     def rosterreject(self,roster):
         """takes in roster, rejects challenge. if both have rejected, deletes challenge."""
+        print "runnng rosterreject"
         opposing_cap=None
         opposing=None
 
@@ -579,14 +580,15 @@ class Challenge(Activity):
                 opposing=self.roster1
 
         if not self.captain1accepted and not self.captain2accepted:
-            if opposing and not opposing.name:#only want to delete roster is homeless, captain has not named it.
-                if opposing.captain:
-                    opposing_cap=opposing.captain
-                if len(list(opposing.roster1.all())+list(opposing.roster2.all()))==1:#if this is this rosters only challange
-                    print "about to delete ",opposing," in roster reject"
-                    opposing.delete()
-                if opposing_cap:
-                    opposing_cap.save()#to reset captain number
+            for r in [self.roster1, self.roster2]:
+                if r :
+                    cappy=r.captain
+                    #this should always run now that i made rosters unique to challenges but I'll keep just in case
+                    if len(list(r.roster1.all())+list(r.roster2.all()))==1:#if this is this rosters only challange
+                        print "about to delete ",r," in roster reject"
+                        r.delete()
+                    if cappy:
+                        cappy.save()#to reset captain number
 
             if self.id and self.pk:
                 self.delete()
