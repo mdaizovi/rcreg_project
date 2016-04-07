@@ -11,6 +11,59 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 import openpyxl
 import collections
 
+#########temporary roster splitting funcitons############
+####### maybe temporarily disable delete signals and replace w/ print statements in case I fuck up somewhere, so i won't accidentally delete all?######
+
+#python manage.py shell
+#from basic_data import*
+
+#lessthan1,just1,morethan1=get_shared_rosters()
+def get_shared_rosters():
+    lessthan1=[]
+    just1=[]
+    morethan1=[]
+    for r in Roster.objects.all():
+        connections=list(r.roster1.all())+list(r.roster2.all())
+        if len(connections)==1:
+            just1.append(r)
+        elif len(connections)<1 and not r.registered and not r.auditing:
+            print "homeless roster ",r," pk: ",r.pk
+            lessthan1.append(r)
+        elif len(connections)>1:
+            print "dual roster: ",r," pk: ",r.pk
+            morethan1.append(r)
+
+    print "final tally: "
+    print "homeless: ",len(lessthan1)
+    print "just1: ",len(just1)
+    print "morethan1: ",len(morethan1)
+
+    return lessthan1,just1,morethan1
+
+#unglue(morethan1)
+def unglue(roster_list):
+    for r in roster_list:
+        print "starting to unglue ",r
+        connections=list(r.roster1.all())+list(r.roster2.all())
+        print len(connections)," connections :",connections
+
+        for c in connections[1:]:
+            this_clone=r.clone_roster()
+
+            old_team,selected_team=c.replace_team(r,this_clone)
+
+            print old_team," is no longer in ",c," now it's ",selected_team
+            c.save()
+
+        print "prev captain #: ",r.captain.captaining
+        r.captain.save()#to reset captain#
+        print "new captain #: ",r.captain.captaining
+        print "done ungluing ",r
+    print "done with unglue function"
+
+##########after done, re enable delete signals#########
+###########################start real basic data#########################
+
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'
 export_path=static_path+'exported/'

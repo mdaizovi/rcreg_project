@@ -389,7 +389,7 @@ class Roster(Matching_Criteria):
         clone.id=None
         clone.internal_notes=None
         clone.save()
-        print "model mehtod clone, team",clone
+        print "model method clone, team",clone
         print "captain is",clone.captain
         clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
         #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
