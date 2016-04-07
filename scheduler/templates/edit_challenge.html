@@ -137,12 +137,6 @@
         {%if formlist %}
         <h3 class="text-center">Edit Team Details</h3>
 
-        {%if challenge.is_a_game%}
-        <p class="margin-top-15"><i>Please note that since this is a Sanctioned/Regulation Game team, any changes made to the Name, Color, or Roster will
-          carry over to all other Games in which this team participates during this Con.
-        <br>Rules and Location Type can vary by Game and do not carry over.</i></p>
-          {%endif%}
-
         {%if save_attempt %}
         {% if coed_beginner %}
             <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>

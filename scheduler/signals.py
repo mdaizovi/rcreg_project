@@ -25,7 +25,7 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
-    """Deletes Challeng if it has no Rosters"""
+    """Deletes Challenge if it has no Rosters"""
     if not instance.roster1 and not instance.roster2:
         instance.delete()
 
@@ -34,17 +34,12 @@ def adjust_captaining_no(sender, instance,**kwargs):
     '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
     #somehow this is related to why my User name would change after I deleted all of the Registrant's rosters,
     #But I'm still nt sure why. Registrant didn't get deleted did it?
-
     #actualy cap number is realted to chalenges, not rosters. this should run when a cap leaves/delets a challenge, or not at all
-
-    print "running adjust_captaining_no"
     if instance.captain:
         captain=instance.captain
         instance.captain=None
         #instance.save()#this is probably not necessary
-        print "initial cap #",captain.captaining
         captain.save()
-        print "second cap #",captain.captaining
 
 def challenge_defaults(sender, instance,**kwargs):
     """Pre-save Challenge
@@ -58,17 +53,17 @@ def challenge_defaults(sender, instance,**kwargs):
         roster.skill=SKILL_LEVEL_CHG[0][0]#no skill restricitons
         roster.gender=GENDER[-1][0]#na coed
         roster.intl=False
-        roster.save()
 
     if instance.is_a_game:
         instance.gametype=GAMETYPE[-1][0]
         if not instance.duration:
             instance.duration=DEFAULT_SANCTIONED_DURATION
-        for r in [instance.roster1,instance.roster2]:
-            if r:
-                r.cap=GAME_CAP
+    for r in [instance.roster1,instance.roster2]:
+        if r and not r.cap:
+            r.cap=GAME_CAP
+            if instance.is_a_game:
                 set_mc(r)
-
+            r.save()
     else:
         if not instance.duration:
             instance.duration=DEFAULT_CHALLENGE_DURATION

@@ -215,6 +215,7 @@ class GameModelForm(ModelForm):
         self.fields["con"].initial=conlist[-1]
         self.fields["location_type"]=forms.CharField(widget=forms.Select(choices=LOCATION_TYPE[:3]), initial=LOCATION_TYPE[0][0], label='Location Type')
         self.fields["ruleset"]=forms.CharField(widget=forms.Select(choices=RULESET), initial=RULESET[0][0], label='Rules')
+        self.fields["communication"]=forms.CharField(widget=forms.Textarea(),label='Notes Between Captains & Officials (visible to skaters on both teams; can be left blank)',required=False)
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
@@ -223,7 +224,7 @@ class GameModelForm(ModelForm):
 
     class Meta:
         model = Challenge
-        fields = ['con','location_type','ruleset']
+        fields = ['con','location_type','ruleset','communication']
 
 
 class ScoreFormDouble(forms.Form):

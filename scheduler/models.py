@@ -383,12 +383,14 @@ class Roster(Matching_Criteria):
         self.save() #save here, or elsewhere?
 
     def clone_roster(self):
-        """Clones team, including roster. Not meant for trainigns, just challenge rosters."""
+        """Clones team, including roster. Not meant for trainings, just challenge rosters."""
         clone=deepcopy(self)
         clone.pk=None
         clone.id=None
         clone.internal_notes=None
         clone.save()
+        print "model mehtod clone, team",clone
+        print "captain is",clone.captain
         clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
         #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
         clone.save()
@@ -537,34 +539,14 @@ class Challenge(Activity):
                 cleaned_att=ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
-
-        if self.roster1:#this doesn't matter since i don't save it, does it?
-            if not self.roster1.cap:
-                self.roster1.cap= GAME_CAP
-            if not self.is_a_game:
-                if not self.roster1.skill:
-                    self.roster1.skill="BC"
-            if self.roster1.name:
-                name1=self.roster1.name
-            else:
-                name1="?"
-            #self.roster1.save()
+        if self.roster1 and self.roster1.name:
+            name1=self.roster1.name
         else:
             name1="?"
-
-        if self.roster2:#this doesn't matter since i don't save it, does it?
-            if not self.roster2.cap:
-                self.roster2.cap= GAME_CAP
-            if not self.is_a_game:
-                if not self.roster2.skill:
-                    self.roster2.skill="BC"
-            if self.roster2.name:
-                name2=self.roster2.name
-            else:
-                name2="?"
+        if self.roster2 and self.roster2.name:
+            name2=self.roster2.name
         else:
             name2="?"
-
         self.name= "%s vs %s" % (name1,name2)
 
         if not self.duration:

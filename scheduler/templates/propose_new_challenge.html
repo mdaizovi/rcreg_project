@@ -17,7 +17,7 @@
         <br>To propose Challenge between unofficial, unaffiliated teams, <a href="{%url 'propose_new_challenge' %}">
     {%else%}Challenge<br>
       <small>For unaffiliated, non-chartered teams. Example: Vagine Regime, Team SeXY, Yellow Fever, etc.
-        <br>To propose a sanctioned/regulation Game between official teams, <a href="{%url 'propose_new_game' %}">
+        <br>To propose a sanctioned/regulation Game between official, league-affiliated teams, <a href="{%url 'propose_new_game' %}">
           {%endif%}click here</a></small></h3>
 
           {% if captain_conflict %}
@@ -29,12 +29,35 @@
 
 {%if upcoming_registrants and cansk8 %}
 {%if cancaptain %}
-{%if my_teams_as_cap%}<p class="margin-top-15"><b>Select from your existing teams or
-  {%if is_a_game %}<a href="{%url 'propose_new_game_new_team' %}">
-  {%else %}<a href="{%url 'propose_new_challenge_new_team' %}">{%endif%}Create new team</a></b></p>{%endif%}
+  <p class="margin-top-15"><b>{%if my_teams_as_cap%}Clone one of your existing teams or c{%else%}C{%endif%}reate new team</b></p>
 
 {%if formlist %}
 <div class="col-sm-6">
+
+
+  {%if my_teams_as_cap %}
+    <div class="list-group">
+    <div class="dropdown">
+    <button class="list-group-item active btn btn-default dropdown-toggle list-group-item" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true">
+    Clone a Team I'm Captaining
+    </button>
+    <ul class="dropdown-menu" style= "width: 100%; text-align: center;" aria-labelledby="dropdownMenu1">
+    {%for t in my_teams_as_cap%}
+    {%with t.id as to_clone_id %}
+    <form method="POST" class="post-form">
+          {% csrf_token %}
+  <input type="hidden" name="roster_to_clone_id" value="{{ to_clone_id }}" />{%endwith%}
+      <li class="list-group-item">
+        <input type="submit" class="btn btn-primary btn-block" name="clone roster" value="{{ t.name|truncatechars:40}}: {{t.con}}">
+    </li>
+  </form>
+    {%endfor%}
+      </ul></div></div>
+  {%endif%}
+
+
+
+
 <form method="POST" class="post-form">
       {% csrf_token %}
 

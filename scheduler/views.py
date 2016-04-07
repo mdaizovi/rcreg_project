@@ -806,19 +806,16 @@ def challenge_respond(request):
                 registrant.save()#reset captian #
             else:
                 skill_str=registrant.skill+"O"
-                if 'create_new_team' in request.POST:
-                    pass #i jsut want to use old team, but save gender etc below
-                else:
-                    my_teams_as_cap=list(registrant.captain.exclude(name=None))
-                    if len(my_teams_as_cap)>0:
+                my_teams_as_cap=list(registrant.captain.exclude(name=None))
+                if len(my_teams_as_cap)>0:
+                    form=MyRosterSelectForm(team_list=my_teams_as_cap)
+                    if my_team in my_teams_as_cap:
                         form=MyRosterSelectForm(team_list=my_teams_as_cap)
-                        if my_team in my_teams_as_cap:
-                            form=MyRosterSelectForm(team_list=my_teams_as_cap)
-                            form.fields["game_team"].initial =str(my_team.pk)
-                        else:
-                             form=MyRosterSelectForm(team_list=my_teams_as_cap)
+                        form.fields["game_team"].initial =str(my_team.pk)
+                    else:
+                         form=MyRosterSelectForm(team_list=my_teams_as_cap)
 
-                        return render_to_response('challenge_respond.html',{'form':form,'opponent':opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
+                    return render_to_response('challenge_respond.html',{'form':form,'opponent':opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
                 #I don't want these to run f game team
                 my_team.gender=registrant.gender#to avoid weird save errors w/ eligibility
                 my_team.skill=skill_str#to avoid weird save errors w/ eligibility
@@ -934,36 +931,26 @@ def my_challenges(request):
 def propose_new_game(request):
     """propose_new_game and propose_new_challenge are mostly the same, with mild differences sorted out in propose_new_activity"""
     return propose_new_activity(request,is_a_game=True)
-@login_required
-def propose_new_game_new_team(request):
-    """propose_new_game and propose_new_challenge are mostly the same, with mild differences sorted out in propose_new_activity"""
-    return propose_new_activity(request,is_a_game=True,create_new_team=True)
+
 @login_required
 def propose_new_challenge(request):
     return propose_new_activity(request)
-@login_required
-def propose_new_challenge_new_team(request):
-    """propose_new_challenge but with creating a new team instead of looking for your old ones"""
-    return propose_new_activity(request,is_a_game=False,create_new_team=True)
-
 
 
 @login_required
-def propose_new_activity(request,is_a_game=False,create_new_team=False):
+def propose_new_activity(request,is_a_game=False):
     #reminder: challenge.is_a_game and is_a_game both exist. is_a_game exists for when the chalenge hasn't been made yet, to know user intention.
     user=request.user
     cansk8=False
     cancaptain=False
-    registrant=None
     formlist=None
     coed_beginner=None
     my_teams_as_cap=None
-    game_teams_form=None
     captain_conflict=None
     problem_criteria=None
-    opposing_roster=None
-    challenged_captain=None
-    IntegrityErrorMSG=None
+    my_team=None
+    challenge=None
+    roster_form=None
 
     upcoming_registrants=user.upcoming_registrants()
     if upcoming_registrants:
@@ -975,85 +962,34 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                 cancaptain=True
 
         if request.method == "POST":
-            challenged_captain=None
-            my_team=None
+
             if 'is_a_game' in request.POST:
                 is_a_game=True
-
-            if 'challenge_id' in request.POST:
-                challenge=Challenge.objects.get(pk=request.POST['challenge_id'])
+                challenge_form=GameModelForm(request.POST or None,user=user)
             else:
-                challenge=False
+                challenge_form=ChallengeModelForm(request.POST or None,user=user)
 
-            if 'con' in request.POST:#somehow I'm gonna find out the fucking con
-                con=Con.objects.get(pk=request.POST['con'])
-            elif challenge:
-                con=challenge.con
-            elif challenged_captain:
-                con=challenged_captain.con
-
-            if 'eligible_registrant' in request.POST and (request.POST['eligible_registrant'] not in ['None',None]):#if selected a captain to challenge
-                eligibleregistrantform=EligibleRegistrantForm(request.POST, my_arg=None)
-                if eligibleregistrantform.is_valid():
-                    challenged_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                    #if not select existing opposing game team, this us okay for either
-                    #need to make new roster skill and gender suit captain, otherwise when they try to save profile they get a confusing conflict sweep message
-                    skill_str=challenged_captain.skill+"O"#this will make default team skill either AO,BO,or CO
-                    opposing_roster=Roster(captain=challenged_captain, con=challenged_captain.con, gender=challenged_captain.gender, skill=skill_str)
-                    opposing_roster.save()
-                    opposing_roster.save()#again, to add cap to roster
-                    challenge.roster2=opposing_roster
-                    challenge.save()
-                    formlist=None
-                    opposing_roster.save()#needs to happen twice to add captain to roster, so will show up in their my challenges
-                    challenged_captain.save()#to adjust captaining number
-                else:
-                    print "Errors: "
-
-            elif 'challenge team' in request.POST:#if made a game and selected opponent from existing game teams
-                opposing_roster=Roster.objects.get(pk=request.POST['game_team'])
-                challenge.roster2=opposing_roster
-                challenge.save()
-                challenged_captain=opposing_roster.captain
-                formlist=None
-
-            else:#if  eligible registrant not in post, ie if challenge is just being made
-                try:
-                    registrant=Registrant.objects.get(user=user, con__id=request.POST['con'])
-                    if is_a_game:
-                        challenge_form=GameModelForm(request.POST,user=user)
-                    else:
-                        challenge_form=ChallengeModelForm(request.POST,user=user)
-                except:
-                    pass
-
-                #where i figure out or make my team
-                if 'game_team' in request.POST or 'my_team'in request.POST or 'name' in request.POST:
-                    if 'game_team' in request.POST:
-                        my_team=Roster.objects.get(pk=request.POST['game_team'])
-                        roster_form=None
-                    elif 'my_team'in request.POST:
-                        my_team=Roster.objects.get(pk=request.POST['my_team'])
-                    elif 'name' in request.POST:
-                        if request.POST['name'] not in [None,"None","",u'']:
-                            my_team_name=ascii_only_no_punct(request.POST['name'])
-                            try:
-                                my_team=Roster.objects.get(con=con,captain=registrant, name=my_team_name)
-                            except:
-                                my_team=Roster(con=con,captain=registrant, name=my_team_name)
-                        else:
-                            my_team=Roster(con=con,captain=registrant)
-
+            #where i figure out or make my team
+            if 'clone roster' in request.POST:
+                old_team=Roster.objects.get(pk=request.POST['roster_to_clone_id'])
+                my_team=old_team.clone_roster()
                 if is_a_game:
-                    roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
+                    roster_form=GameRosterCreateModelForm(instance=my_team)
                 else:
-                    roster_form=ChallengeRosterModelForm(request.POST,user=user,instance=my_team)
+                    roster_form=ChallengeRosterModelForm(user=user,instance=my_team)
+                challenge=Challenge(roster1=my_team,con=my_team.con)
+                challenge.save()
+                my_team.captain.save()#to adjust captaining number
 
-                if registrant and cancaptain:#so this should be true if is_a_game, bc of top of view
-                    if not my_team and roster_form:
-                        if roster_form.is_valid():#HERE's where I los emy rost                        print "my_team before roster form sacv",my_team
-                            my_team=roster_form.save(commit=False)
-                            problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
+            else:
+                if is_a_game:
+                    roster_form=GameRosterCreateModelForm(request.POST)
+                else:
+                    roster_form=ChallengeRosterModelForm(request.POST,user=user)
+
+                if roster_form.is_valid():
+                    my_team=roster_form.save(commit=False)
+                    problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
 
                     if not captain_conflict and challenge_form.is_valid():
                         my_team.save()
@@ -1067,81 +1003,36 @@ def propose_new_activity(request,is_a_game=False,create_new_team=False):
                             challenge.is_a_game=True
                         else:
                             coed_beginner=my_team.coed_beginner()
-                            if coed_beginner:
-                                my_team.save()
 
                         challenge.save()
-                        registrant.save()#to adjust captaining number
+                        my_team.captain.save()#to adjust captaining number
 
-            if not challenged_captain or not opposing_roster:#I don't need to see these forms if they just invited someone
-
-                if is_a_game:
-                    if challenge:#I'm not sure how this is running w/out kniwing the challenge,i got errors about challenge being a bool,
-                    #so trying to supply con otherwise just in case.
-                        existing_games=Challenge.objects.filter(con=challenge.con,is_a_game=True)
-                    else:
-                        existing_games=Challenge.objects.filter(con=con,is_a_game=True)
-                    game_teams=[]
-                    for game in existing_games:
-                        if game.roster1 and game.roster1.captain and game.roster1.captain not in upcoming_registrants and game.roster1.name and game.roster1 not in game_teams:
-                            game_teams.append(game.roster1)
-                        if game.roster2 and game.roster2.captain and game.roster2.captain not in upcoming_registrants and game.roster2.name and game.roster2 not in game_teams:
-                            game_teams.append(game.roster2)
-
-                    if len(game_teams)>0:
-                        game_teams_form=MyRosterSelectForm(team_list=game_teams)
-                    else:
-                        game_teams_form=None
-
-                search_form=SearchForm(request.POST or None)
-                entry_query=None
-                if 'search_q' in request.POST:
-                    my_team=Roster.objects.get(pk=request.POST['my_team'])
-                    entry_query = search_form.get_query(['sk8name','last_name','first_name'])
-                if entry_query:
-                    if challenge and challenge.is_a_game:#if is a game, max captain limit doesn't matter
-                        captains = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C']).exclude(id__in=[o.id for o in upcoming_registrants]).order_by('sk8name','last_name','first_name')
-                    else:
-                        captains = Registrant.objects.filter(entry_query).filter(con=con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C'], captaining__lt=MAX_CAPTAIN_LIMIT).exclude(id__in=[o.id for o in upcoming_registrants]).order_by('sk8name','last_name','first_name')
-                else:#if no search querty or search fail
-                    if challenge and challenge.is_a_game:
-                        captains=Registrant.objects.filter(con=challenge.con, pass_type__in=['MVP','Skater'],skill__in=['A','B','C']).exclude(id__in=[o.id for o in upcoming_registrants])
-                    else:
-                        captains=Registrant.objects.filter(con=con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C'], captaining__lt=MAX_CAPTAIN_LIMIT).exclude(id__in=[o.id for o in upcoming_registrants])
-
-                eligibleregistrantform=EligibleRegistrantForm(my_arg=captains)
-                formlist=[search_form,eligibleregistrantform]
-
-            if challenge and (my_team or opposing_roster) and not captain_conflict:
+            #regardless of whether cloned or made by post, if bew challenge has been born
+            if challenge and my_team and not captain_conflict:
                 return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
 
         #this is where not request.post starts
-        if not challenged_captain or not opposing_roster:#I don't need to see these forms if they just invited someone
-            if cansk8:
-                formlist=[]
-                my_teams_as_cap=[]
-                for r in upcoming_registrants:
-                    #my_teams_as_cap+=list(r.captain.exclude(name=None))
-                    rosters=list(Roster.objects.filter(captain=r))
-                    for r in rosters:#I don't know why i ahve to do it this way. .exclude name=None ecludes all, for osme reason
-                        if not r.name:
-                            rosters.remove(r)
-                    my_teams_as_cap+=list(rosters)
-                if len(my_teams_as_cap)>0 and not create_new_team:
-                    if is_a_game or cancaptain:
-                        formlist=[MyRosterSelectForm(team_list=my_teams_as_cap)]
-                else:
-                    if is_a_game:
-                        formlist=[GameRosterCreateModelForm(request.POST or None)]
-                    elif cancaptain:
-                        formlist=[ChallengeRosterModelForm(user=user)]
-                    my_teams_as_cap=None
-                if is_a_game:
-                    formlist+=[GameModelForm(request.POST or None,user=user)]
-                else:
-                    formlist+=[ChallengeModelForm(user=user)]
+        if cansk8:
+            formlist=[]
+            my_teams_as_cap=[]
+            for r in upcoming_registrants:
+                #my_teams_as_cap+=list(r.captain.exclude(name=None))
+                rosters=list(Roster.objects.filter(captain=r))
+                for r in rosters:#I don't know why i ahve to do it this way. .exclude name=None ecludes all, for osme reason
+                    if not r.name:
+                        rosters.remove(r)
+                my_teams_as_cap+=list(rosters)
 
-    return render_to_response('propose_new_challenge.html', {'IntegrityErrorMSG:IntegrityErrorMSG''problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'registrant':registrant,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
+            if is_a_game:
+                if not roster_form:
+                    roster_form=GameRosterCreateModelForm(request.POST or None)
+                formlist=[roster_form,GameModelForm(request.POST or None,user=user)]
+            elif cancaptain:#I'm not sure why tis has request post but challenge does not...?
+                if not roster_form:
+                    roster_form=ChallengeRosterModelForm(user=user)
+                formlist=[roster_form,ChallengeModelForm(request.POST or None,user=user)]
+
+    return render_to_response('propose_new_challenge.html', {'problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
 
 @login_required
 def challenge_submit(request):
