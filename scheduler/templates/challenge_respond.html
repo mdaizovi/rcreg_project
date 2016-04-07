@@ -5,14 +5,18 @@
 
 {% block content %}
 <head>
-<title>{% block title %}Edit Challenge{% endblock %}</title>
+<title>{% block title %}Respond to Challenge{% endblock %}</title>
 </head>
 
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
       <div class="well well-sm">
-        <h3 class="text-center">Which Team will you be captaining against {{opponent.name}}?<br><small>Please select an existing team, or click "Create New Team"</small></h3>
+        <h3 class="text-center">Which Team will you be captaining against {{opponent.name}}?<br>
+          <small>Please select an existing team to  <span class="tooltip-bottom" title="All team details, INCLUDING skater roster, will be copied.">
+            clone <span class="glyphicon glyphicon-question-sign" aria-hidden="true" >,</span></span>
+            or click "Create New Team"</small></h3>
+
 <hr>
         <form method="POST" class="post-form" action="{% url 'challenge_respond' %}">
               {% csrf_token %}
@@ -33,7 +37,7 @@
             {{ field }}</td>
 
   <td style="border:none; text-align: center;">
-  <input class="btn btn-primary" type="submit" method="post" name="select_existing_team" value="Select Existing Team">
+  <input class="btn btn-primary" type="submit" method="post" name="clone_existing_team" value="Clone Existing Team">
 </td>{%endfor%}
 
       <td style="border:none; text-align: center;">
@@ -44,5 +48,4 @@
   </div><!-- well -->
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
-
 {% endblock %}

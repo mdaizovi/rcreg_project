@@ -383,9 +383,11 @@ class Roster(Matching_Criteria):
         self.save() #save here, or elsewhere?
 
     def clone_roster(self):
+        """Clones team, including roster. Not meant for trainigns, just challenge rosters."""
         clone=deepcopy(self)
         clone.pk=None
         clone.id=None
+        clone.internal_notes=None
         clone.save()
         clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
         #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
@@ -604,12 +606,12 @@ class Challenge(Activity):
                 if opposing_cap:
                     opposing_cap.save()#to reset captain number
 
-            if self.id:
+            if self.id and self.pk:
                 self.delete()
         else:
-            #set rejected roster back to defaults
+            #set rejected roster back to defaults. gets saved in method.
             roster.restore_defaults()
-            self.save()#make sure after naked roster is saved, so chal name will include ? again 
+            self.save()#make sure after naked roster is saved, so chal name will include ? again
 
 
     def my_team_status(self, registrant_list):

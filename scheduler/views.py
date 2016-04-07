@@ -549,6 +549,7 @@ def edit_challenge(request, activity_id):
 
     opponent_form_list=None
     participants=None
+    captain_replacements=None
     eligible_participants=None
     roster_form=None
     challenge_form=None
@@ -791,36 +792,18 @@ def challenge_respond(request):
 
                 registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
-            else:#if just 'reject' in post, need to confirm first 
+            else:#if just 'reject' in post, need to confirm first
                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
 
         elif "accept" in request.POST:
-            if 'select_existing_team' in request.POST:
+            if 'clone_existing_team' in request.POST:
                 selected_team=Roster.objects.get(pk=request.POST['game_team'])
-                my_old_team,my_team=challenge.replace_team(my_team,selected_team)
-                if my_old_team and my_old_team!= selected_team:
-                    if my_old_team.captain and my_old_team.captain == registrant:#( can probably do this in method, but unsure if I'll always want
-                        #print "this is probably where all the none teams are coming form, views line 769"
-                        my_old_team.captain=None
-                        try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
-                            if my_old_team and my_old_team.participants.all() and registrant in my_old_team.participants.all():
-                                my_old_team.participants.remove(registrant)
-                        except:
-                            pass
-
-                        try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
-                            if not my_old_team.name and not my_old_team.captain and my_old_team.is_homeless:
-                                print "about to delete",my_team," a la scheduler views line 825"
-                                my_old_team.delete()
-                            else:
-                                my_old_team.save()
-                        except:
-                            try:
-                                my_old_team.save()
-                            except:
-                                pass #i really need to check this when it's not 2am
-
-                        registrant.save()#reset captian #
+                new_clone=selected_team.clone_roster()
+                if new_clone.con!=registrant.con:#This is not necessary, I only look for teams this year. Didn't know that when I wrot eit, decided to keep it as safeguard in case i ever let it look at old teams as well.
+                    new_clone.particpiants.clear()
+                    new_clone.con=registrant.con
+                    new_clone.save()#captain should be added here
+                registrant.save()#reset captian #
             else:
                 skill_str=registrant.skill+"O"
                 if 'create_new_team' in request.POST:
@@ -841,7 +824,6 @@ def challenge_respond(request):
                 my_team.skill=skill_str#to avoid weird save errors w/ eligibility
                 my_team.name=None
                 my_team.save()
-
 
             #is a game but want new team, or if a game but no other teams, or if not  game. all accept.
             if challenge.roster1 and challenge.roster1.captain and challenge.roster1.captain==registrant:
