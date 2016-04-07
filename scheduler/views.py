@@ -642,10 +642,6 @@ def edit_challenge(request, activity_id):
                          opponent=Roster(captain=invited_captain, con=invited_captain.con)
                          opponent.save()
 
-            elif 'game_team' in request.POST:
-                opponent=Roster.objects.get(pk=request.POST['game_team'])
-                invited_captain=opponent.captain
-
             if my_team==challenge.roster1:
                 challenge.roster2=opponent
             elif my_team==challenge.roster2:
@@ -967,16 +963,25 @@ def propose_new_activity(request,is_a_game=False):
                 my_team.captain.save()#to adjust captaining number
 
             else:
+                print "views line 966"
                 if is_a_game:
                     roster_form=GameRosterCreateModelForm(request.POST)
                 else:
                     roster_form=ChallengeRosterModelForm(request.POST,user=user)
+                print "have roster form"
 
                 if roster_form.is_valid():
+                    print "roster form is valid"
                     my_team=roster_form.save(commit=False)
-                    problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
+                    try:
+                        my_team.captain=Registrant.objects.get(user=user, con__id=request.POST['con'])
+                        print "my team captain1", my_team.captain
+                        problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
+                    except:
+                        pass#if can't get registrant
 
-                    if not captain_conflict and challenge_form.is_valid():
+                    if my_team and not captain_conflict and challenge_form.is_valid():
+                        print "my team captain2", my_team.captain
                         my_team.save()
                         my_team.save()#put self on roster
                         challenge=challenge_form.save(commit=False)
@@ -991,6 +996,16 @@ def propose_new_activity(request,is_a_game=False):
 
                         challenge.save()
                         my_team.captain.save()#to adjust captaining number
+                    else:
+                        if captain_conflict:
+                            print "captain conflict"
+                        if not challenge_form.is_valid():
+                            print "challenge_form not valid"
+                            print challenge_form.errors
+                else:
+                    print "roster form errors"
+                    print roster_form.errors
+
 
             #regardless of whether cloned or made by post, if bew challenge has been born
             if challenge and my_team and not captain_conflict:
