@@ -780,32 +780,18 @@ def challenge_respond(request):
         challenge=Challenge.objects.get(pk=request.POST['activity_id'])
         registrant=Registrant.objects.get(pk=request.POST['registrant_id'])
         my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
-        if 'reject' in request.POST  or 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
-            if 'reject remain captain' in request.POST or 'reject leave team' in request.POST:
-                challenge.rosterreject(my_team)#has to be first to reject properly, oterwise is still accepted
+
+        if 'reject' in request.POST  or 'reject_confirm' in request.POST:
+            if 'reject_confirm' in request.POST:
+                challenge.rosterreject(my_team)#has to be first to reject properly, otherwise is still accepted
                 old_team,selected_team=challenge.replace_team(my_team,None)#this is necessary, otherwise it won't save challenge
                 challenge.rosterreject(my_team)#to delete homeless challenge
                 if challenge.pk:#if challenge has not just been deleted
-                    challenge.save()#this is necessary, otherwise it won't save challenge
-
-                if 'reject leave team' in request.POST:
-                    old_chal_set=list(my_team.roster1.all())+list(my_team.roster2.all())
-                    for c in old_chal_set:
-                        c.rosterreject(my_team)
-                        old_team,selected_team=c.replace_team(my_team,None)
-                        if c.pk:
-                            c.save()
-                    try:#because it's 1am and maybe i'm wrong # think this is redundant actually.
-                        if my_team and my_team.participants.all() and registrant in my_team.participants.all():
-                            my_team.participants.remove(registrant)
-                    except:
-                        pass
-                    print "about to delete",my_team," a la scheduler views line 801"
-                    my_team.delete()
+                    challenge.save()#this is necessary
 
                 registrant.save()#this is important to reset captain number
                 return redirect('/scheduler/my_challenges/')
-            else:
+            else:#if just 'reject' in post, need to confirm first 
                 return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
 
         elif "accept" in request.POST:

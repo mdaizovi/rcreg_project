@@ -607,7 +607,9 @@ class Challenge(Activity):
             if self.id:
                 self.delete()
         else:
-            self.save()
+            #set rejected roster back to defaults
+            roster.restore_defaults()
+            self.save()#make sure after naked roster is saved, so chal name will include ? again 
 
 
     def my_team_status(self, registrant_list):

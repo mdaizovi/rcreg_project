@@ -600,7 +600,6 @@ class Registrant(Matching_Criteria):
         else:
             self.captaining=0
 
-
         if not self.intl:#if you manually make them intl, fine, it'll stay.
             self.intl=self.is_intl(self.con)
         super(Registrant, self).save()
