@@ -382,6 +382,20 @@ class Roster(Matching_Criteria):
         self.can_email=True
         self.save() #save here, or elsewhere?
 
+    def defaults_match_captain(self):
+        print "running defaults match captain"
+        if self.captain:
+            print "has captain"
+            self.gender=self.captain.gender
+            cap_skill=str(self.captain.skill)
+            self.skill=cap_skill+"O"
+            self.con=self.captain.con
+            print "defaults: ", self.gender, self.skill, self.con
+            self.save()
+        else:
+            print "no captain"
+            self.restore_defaults()#saved internally
+
     def clone_roster(self):
         """Clones team, including roster. Not meant for trainings, just challenge rosters."""
         clone=deepcopy(self)
