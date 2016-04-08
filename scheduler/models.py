@@ -383,17 +383,13 @@ class Roster(Matching_Criteria):
         self.save() #save here, or elsewhere?
 
     def defaults_match_captain(self):
-        print "running defaults match captain"
         if self.captain:
-            print "has captain"
             self.gender=self.captain.gender
             cap_skill=str(self.captain.skill)
             self.skill=cap_skill+"O"
             self.con=self.captain.con
-            print "defaults: ", self.gender, self.skill, self.con
             self.save()
         else:
-            print "no captain"
             self.restore_defaults()#saved internally
 
     def clone_roster(self):
@@ -594,11 +590,13 @@ class Challenge(Activity):
                 opposing=self.roster1
 
         if not self.captain1accepted and not self.captain2accepted:
+            print "neither accepted"
             for r in [self.roster1, self.roster2]:
                 if r :
                     cappy=r.captain
                     #this should always run now that i made rosters unique to challenges but I'll keep just in case
                     if len(list(r.roster1.all())+list(r.roster2.all()))==1:#if this is this rosters only challange
+                        print "deleting ",r
                         r.delete()
                     if cappy:
                         cappy.save()#to reset captain number

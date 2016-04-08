@@ -13,7 +13,7 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
             connections=list(r.roster1.all())+list(r.roster2.all())
             if len(connections)<=1:
                 print "this si where I would delete ",r
-                #r.delete()
+                r.delete()
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Post Save from Roster
@@ -27,14 +27,14 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
     if len(my_connections)<1 and not instance.captain and not instance.registered and not instance.auditing:
         #print "about to delete ",instance
         print "this is where I WOULD delete ",instance
-        #instance.delete()
+        instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
     """Deletes Challenge if it has no Rosters"""
     if not instance.roster1 and not instance.roster2:
         #print "about to delete homeless challenge",instance
         print "this is where I WOULD delete ",instance
-        #instance.delete()
+        instance.delete()
 
 
 def adjust_captaining_no(sender, instance,**kwargs):
