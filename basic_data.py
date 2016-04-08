@@ -11,59 +11,6 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 import openpyxl
 import collections
 
-#########temporary roster splitting funcitons############
-####### maybe temporarily disable delete signals and replace w/ print statements in case I fuck up somewhere, so i won't accidentally delete all?######
-
-#python manage.py shell
-#from basic_data import*
-
-#lessthan1,just1,morethan1=get_shared_rosters()
-def get_shared_rosters():
-    lessthan1=[]
-    just1=[]
-    morethan1=[]
-    for r in Roster.objects.all():
-        connections=list(r.roster1.all())+list(r.roster2.all())
-        if len(connections)==1:
-            just1.append(r)
-        elif len(connections)<1 and not r.registered and not r.auditing:
-            print "homeless roster ",r," pk: ",r.pk
-            lessthan1.append(r)
-        elif len(connections)>1:
-            print "dual roster: ",r," pk: ",r.pk
-            morethan1.append(r)
-
-    print "final tally: "
-    print "homeless: ",len(lessthan1)
-    print "just1: ",len(just1)
-    print "morethan1: ",len(morethan1)
-
-    return lessthan1,just1,morethan1
-
-#unglue(morethan1)
-def unglue(roster_list):
-    for r in roster_list:
-        print "starting to unglue ",r
-        connections=list(r.roster1.all())+list(r.roster2.all())
-        print len(connections)," connections :",connections
-
-        for c in connections[1:]:
-            this_clone=r.clone_roster()
-
-            old_team,selected_team=c.replace_team(r,this_clone)
-
-            print old_team," is no longer in ",c," now it's ",selected_team
-            c.save()
-
-        print "prev captain #: ",r.captain.captaining
-        r.captain.save()#to reset captain#
-        print "new captain #: ",r.captain.captaining
-        print "done ungluing ",r
-    print "done with unglue function"
-
-##########after done, re enable delete signals#########
-###########################start real basic data#########################
-
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'
 export_path=static_path+'exported/'
@@ -237,7 +184,7 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 032316.xlsx')
+#target_file=(import_path+'RollerTron Attendee 040616.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
@@ -374,359 +321,55 @@ def import_from_excel(complete_entries_file,con):
         print "repeat_email_list written"
 
 
-########none of this should work anymore, i removed the csv files
-#also, should be unnecessary, now that db is live and i can't just dump it all the time
-# def make_countries():
-#     csvfile=(static_path+"All countries.csv")
+# #########temporary roster splitting funcitons############
+# ####### maybe temporarily disable delete signals and replace w/ print statements in case I fuck up somewhere, so i won't accidentally delete all?######
 #
-#     with open(csvfile) as file1:
-#         data = csv.reader(file1, delimiter=',')
-#         rownumber=0
-#         countryinfo=[]
-#         errorlist=[]
-#         for row in data:
-#             rownumber = rownumber +1
-#             if rownumber >= 2:
-#                 countryinfo.append(row)
+# #python manage.py shell
+# #from basic_data import*
 #
-#     for datalist in countryinfo:
-#         try:
-#             slugname=datalist[0]
-#             name=datalist[1]
-#             county, created=Country.objects.get_or_create(name=name, slugname=slugname)
-#             print "%s (%s) made successfully" % (country.name, country.slugname)
-#         except:
-#             errorlist.append(datalist)
+# #lessthan1,just1,morethan1=get_shared_rosters()
+# def get_shared_rosters():
+#     lessthan1=[]
+#     just1=[]
+#     morethan1=[]
+#     for r in Roster.objects.all():
+#         connections=list(r.roster1.all())+list(r.roster2.all())
+#         if len(connections)==1:
+#             just1.append(r)
+#         elif len(connections)<1 and not r.registered and not r.auditing:
+#             print "homeless roster ",r," pk: ",r.pk
+#             lessthan1.append(r)
+#         elif len(connections)>1:
+#             print "dual roster: ",r," pk: ",r.pk
+#             morethan1.append(r)
 #
-#     if errorlist:
-#         f=open(export_path+"Country Errors.csv", "wb")
-#         writer = csv.writer(f, delimiter=',', quoting=csv.QUOTE_ALL)
-#         for error in errorlist:
-#             writer.writerow(error)
+#     print "final tally: "
+#     print "homeless: ",len(lessthan1)
+#     print "just1: ",len(just1)
+#     print "morethan1: ",len(morethan1)
 #
-#         f.close()
+#     return lessthan1,just1,morethan1
 #
-# def make_states():
-#     csvfile=(static_path+"statesall.csv")
+# #unglue(morethan1)
+# def unglue(roster_list):
+#     for r in roster_list:
+#         print "starting to unglue ",r
+#         connections=list(r.roster1.all())+list(r.roster2.all())
+#         print len(connections)," connections :",connections
 #
-#     with open(csvfile) as file1:
-#         data = csv.reader(file1, delimiter=',')
-#         rownumber=0
-#         stateinfo=[]
-#         errorlist=[]
-#         for row in data:
-#             rownumber = rownumber +1
-#             if rownumber >= 2:
-#                 stateinfo.append(row)
+#         for c in connections[1:]:
+#             this_clone=r.clone_roster()
 #
-#     for datalist in stateinfo:
-#         try:
-#             slugname=datalist[0]
-#             name=datalist[1]
-#             country_name=datalist[2]
-#             try:
-#                 country=Country.objects.get(name=country_name)
-#             except:
-#                 country=Country.objects.get(name="United States")
+#             old_team,selected_team=c.replace_team(r,this_clone)
 #
-#             state, created=State.objects.get_or_create(name=name, slugname=slugname, country=country)
-#             print "5"
-#             state.save()
-#             print "%s %s (%s) made successfully" % (state.name, state.slugname, state.country)
-#         except:
-#             errorlist.append(datalist)
+#             print old_team," is no longer in ",c," now it's ",selected_team
+#             c.save()
 #
-#     if errorlist:
-#         f=open(export_path+"State Errors.csv", "wb")
-#         writer = csv.writer(f, delimiter=',', quoting=csv.QUOTE_ALL)
-#         for error in errorlist:
-#             writer.writerow(error)
-#         f.close()
+#         print "prev captain #: ",r.captain.captaining
+#         r.captain.save()#to reset captain#
+#         print "new captain #: ",r.captain.captaining
+#         print "done ungluing ",r
+#     print "done with unglue function"
 #
-# def make_rcs():
-#     rc1, created1=Con.objects.get_or_create(start=datetime.date(2015, 07, 22),end=datetime.date(2015, 07, 26))
-#     rc2, created2=Con.objects.get_or_create(BPT_event_id='2304351',start=datetime.date(2016, 07, 27),end=datetime.date(2016, 07, 31))
-#     rc2.save()
-#     rc3, created3=Con.objects.get_or_create(start=datetime.date(2017, 07, 26),end=datetime.date(2017, 07, 30))
-#     for r in [rc1,rc2,rc3]:
-#         r.ticket_link="http://rollercon.com/register/rollercon-pass/"
-#         r.hotel_book_link="http://rollercon.com/register/hotel-reservations/"
-#         r.save()
-#
-#
-# def venue_setup():
-#     venue, created=Venue.objects.get_or_create(name="The Westgate Resort & Convention Center")
-#     l1, created1=Location.objects.get_or_create(venue=venue,location_type='Seminar Room',name="RC Classroom 231")
-#     l2, created2=Location.objects.get_or_create(venue=venue,location_type='Seminar Room',name="RC Classroom 233")
-#     l3, created3=Location.objects.get_or_create(venue=venue,location_type='Seminar Room',name="RC Classroom 235")
-#     l4, created4=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC MVP-1 Training Track One")
-#     l5, created5=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC MVP-2 Training Track Two")
-#     l6, created6=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC MVP-3 Training Track Three")
-#     l7, created7=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC MVP-4 Training Track Four")
-#     l8, created8=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC MVP-5 Training Track Five")
-#     l9, created9=Location.objects.get_or_create(venue=venue,location_type='Banked Track',name="RC-BT Banked Track")
-#     l10, created10=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC-C1 Competition Track One")
-#     l11, created11=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC-C2 Competition Track Two")
-#     l12, created12=Location.objects.get_or_create(venue=venue,location_type='Flat Track',name="RC-C3 Scrimmage Track")
-#
-# def make_registrants():
-#     con1=Con.objects.get(pk=1)
-#     con2=Con.objects.get(pk=2)
-#     password="@$$p3nn13$"
-#     r1, created1=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="B", email="mdaizovi@gmail.com",first_name="Michela",last_name="Dai Zovi", sk8name="Dahmernatrix",sk8number="505", country=Country.objects.get(name="Thailand"))
-#     r2, created2=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="A", email="denise.grimes@gmail.com",first_name="Denise",last_name="Grimes", sk8name="Ivanna S. Pankin",sk8number="22", country=Country.objects.get(name="United States"))
-#     r3, created3=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="A", email="derbydish99@gmail.com",first_name="Patricia",last_name="Ethier", sk8name="Trish the Dish",sk8number="99", country=Country.objects.get(name="United States"))
-#     r4, created4=Registrant.objects.get_or_create(con=con1, pass_type="MVP", gender="Female", skill="B", email="coordinator@rollercon.com",first_name="Angela",last_name="Parrill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
-#
-#     r5, created1=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="B", email="mdaizovi@gmail.com",first_name="Michela",last_name="Dai Zovi", sk8name="Dahmernatrix",sk8number="505", country=Country.objects.get(name="Thailand"))
-#     r6, created2=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="A", email="denise.grimes@gmail.com",first_name="Denise",last_name="Grimes", sk8name="Ivanna S. Pankin",sk8number="22", country=Country.objects.get(name="United States"))
-#     r7, created3=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="A", email="derbydish99@gmail.com",first_name="Patricia",last_name="Ethier", sk8name="Trish the Dish",sk8number="99", country=Country.objects.get(name="United States"))
-#     r8, created4=Registrant.objects.get_or_create(con=con2, pass_type="MVP", gender="Female", skill="B", email="coordinator@rollercon.com",first_name="Angela",last_name="Parrill", sk8name="Leggs'n Bacon",sk8number="11", country=Country.objects.get(name="United States"))
-#
-#     user_list=[r1,r2,r3,r4]
-#     for u in user_list:
-#         u.user.set_password(password)
-#         u.user.save()
-#
-# def make_coaches():
-#     con=Con.objects.get(year="2015")
-#
-#     csvfile=(import_path+"coaches_data.csv")
-#     coach_list=[]
-#
-#     with open(csvfile) as file1:
-#         data = csv.reader(file1, delimiter=',')
-#         rownumber=0
-#         info=[]
-#         errorlist=[]
-#         for row in data:
-#             rownumber = rownumber +1
-#             if rownumber >= 2:
-#                 info.append(row)
-#
-#     for datalist in info:
-#         try:
-#             sk8name=str(datalist[0])
-#             print "sk8name ",sk8name
-#             last_name=str(datalist[2])
-#             print "last_name ",last_name
-#             first_name=str(datalist[3])
-#             print "first_name ",first_name
-#             intl_str=str(datalist[4])
-#             print "intl_str",intl_str
-#             gender=str(datalist[5])
-#             print "gender",gender
-#             email=str(datalist[6])
-#             print "email",email
-#             country_str=str(datalist[8])
-#             print "country_str",country_str
-#             state_slugname=datalist[10]
-#             print "state_slugname",state_slugname
-#             coach_description=datalist[11]
-#
-#             if not intl_str or len(intl_str)<1:
-#                 intl=False
-#             else:
-#                 intl=True
-#
-#             if country_str:
-#                 try:
-#                     country=Country.objects.get(name=country_str)
-#                 except:
-#                     print "error finding country",country_str
-#                     country=Country.objects.get(name="United States")
-#             else:
-#                 country=Country.objects.get(name="United States")
-#
-#             if state_slugname:
-#                 try:
-#                     state=State.objects.get(slugname=state_slugname)
-#                 except:
-#                     print "error finding state",state_slugname
-#             else:
-#                 state=None
-#
-#             print "about to make coach"
-#             coach=None#to serest who it is
-#
-#             r_query=Registrant.objects.filter(con=con,sk8name=sk8name)
-#             for entry in r_query:
-#                 entry.delete()
-#             try:
-#                 coach=Registrant.objects.get(con=con,email=email,first_name=first_name,last_name=last_name)
-#                 sk8name=sk8name
-#                 sk8number="X"
-#                 skill="A"
-#                 coach.country=country
-#                 coach.state=state
-#                 coach.gender=gender
-#
-#             except:
-#                 coach=Registrant(con=con,email=email,first_name=first_name,last_name=last_name,sk8name=sk8name,sk8number="X",skill="A",country=country,state=state,gender=gender)
-#
-#             print "coach",coach
-#
-#             coach.save()
-#             coach.save()#save twice to make sure has user?
-#             print "saved!"
-#             coach_list.append(coach)
-#
-#             coach_object,created=Coach.objects.get_or_create(user=coach.user)
-#             coach_object.description=coach_description
-#             print "COACH OBJECT ",coach_object,coach_object.description
-#             coach_object.save()
-#
-#         except:
-#             print "ERROR with ",sk8name
-#             errorlist.append(datalist)
-#
-#     if errorlist:
-#         f=open(export_path+"Coach Errors.csv", "wb")
-#         writer = csv.writer(f, delimiter=',', quoting=csv.QUOTE_ALL)
-#         for error in errorlist:
-#             writer.writerow(error)
-#         f.close()
-#
-#     return "done! %s coaches!"%str(len(coach_list))
-#
-# def swap_captain_name():
-#     csvfile=(import_path+"Training.csv")
-#     training_list=[]
-#
-#     with open(csvfile) as file1:
-#         data = csv.reader(file1, delimiter=',')
-#         rownumber=0
-#         info=[]
-#         errorlist=[]
-#         for row in data:
-#             rownumber = rownumber +1
-#             if rownumber >= 2:
-#                 info.append(row)
-#
-#     replacement_info=[]
-#     for datalist in info:
-#         training_pk=int(datalist[0])
-#         #print "training_pk",training_pk
-#         training=Training.objects.get(pk=training_pk)
-#         #print "training",training
-#         coach_names=training.display_coach_names()
-#         #print "coach_names",coach_names
-#         datalist[10]=coach_names
-#         #print "datalist",datalist
-#         replacement_info.append(datalist)
-#
-#     f=open(static_path+"TrainingCoaches.csv", "wb")
-#     writer = csv.writer(f, delimiter=',', quoting=csv.QUOTE_ALL)
-#     for data in replacement_info:
-#         writer.writerow(data)
-#     f.close()
-#
-# def t_setup():
-#     con=Con.objects.get(pk=1)
-#     csvfile=(import_path+"TrainingCoaches.csv")
-#
-#     training_list=[]
-#
-#     with open(csvfile) as file1:
-#         data = csv.reader(file1, delimiter=',')
-#         info=[]
-#         for row in data:
-#             info.append(row)
-#
-#         for datalist in info:
-#             training_pk=int(datalist[0])
-#             name=datalist[1]
-#             location_type=datalist[2]
-#             RCaccepted_str=datalist[3]
-#             if RCaccepted_str:
-#                 RCaccepted=True
-#             else:
-#                 RCaccepted=False
-#             intl_str=datalist[4]
-#             if intl_str:
-#                 intl=True
-#             else:
-#                 intl=False
-#             skill=datalist[5]
-#             if skill in [0,"0"]:
-#                 skill=None
-#             gender=datalist[6]
-#             duration=datalist[7]
-#             onsk8s_str=datalist[8]
-#             if onsk8s_str:
-#                 onsk8s=True
-#             else:
-#                 onsk8s=False
-#             contact_str=datalist[9]
-#             if contact_str:
-#                 contact=True
-#             else:
-#                 contact=False
-#             coach_names=datalist[10]
-#             coach_list=coach_names.split(', ')
-#             print "coach_list",coach_list
-#             description=datalist[11]
-#
-#             print "about to make training"
-#             training=None#to serest who it is
-#
-#             t_query=Training.objects.filter(name=name, con=con)
-#             if len(t_query)>=1:
-#                 for entry in t_query:
-#                     entry.delete()
-#
-#
-#             print "A"
-#             training=Training(name=name,duration=duration,onsk8s=onsk8s,contact=contact,con=con,location_type=location_type,RCaccepted=RCaccepted,description=description)
-#             registered=Roster(gender=gender,skill=skill,intl=False,con=con)
-#             auditing=Roster(gender='NA/Coed',skill=None,intl=False,con=con)
-#             auditing.save()
-#             print "c"
-#             registered.save()
-#             print "d"
-#
-#             training.save()
-#             registered.registered=training
-#             auditing.auditing=training
-#             registered.registered=training
-#             auditing.auditing=training
-#             auditing.save()
-#             registered.save()
-#             try:
-#                 for coach_n in coach_list:
-#                     print "getting coach: ",coach_n
-#
-#                     coach_list=Registrant.objects.filter(sk8name=coach_n, con=con)
-#                     coach=coach_list[0]
-#                     if len(coach_list)>1:
-#                         for item in coach_list[1:]:
-#                             item.delete()
-#
-#                     user_coach=Coach.objects.get(user=coach.user)
-#                     training.coach.add(user_coach)
-#             except:
-#                 pass
-#
-#             training.save()
-#             print "training %s saved!"%(training)
-#             training_list.append(training)
-#     print "done! %s Trainings made"%(str(len(training_list)))
-#
-# def make_groups():
-#     g1,created1=Group.objects.get_or_create(name="Khaleesi")
-#     g2,created2=Group.objects.get_or_create(name="Blood Rider")
-#     g3,created3=Group.objects.get_or_create(name="NSO")
-#     g4,created4=Group.objects.get_or_create(name="Volunteer")
-#
-# def easy_pws(user_list):
-#     password="password"
-#     for u in user_list:
-#         u.set_password(password)
-#         u.save()
-#
-# def set_pws(user_list,password):
-#     #user_list=list(User.objects.filter(username__in=["mdaizovi@gmail.com","denise.grimes@gmail.com","derbydish99@gmail.com","rollerconcoordinator@gmail.com"]))
-#     #password="@$$p3nn13$"
-#     for u in user_list:
-#         u.set_password(pw)
-#         u.save()
+# ##########after done, re enable delete signals#########
+# ###########################start real basic data#########################
