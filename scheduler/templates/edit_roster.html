@@ -12,6 +12,10 @@
   <div class="row center-block">
   <div class="col-sm-12">
 
+    {%if not roster %}
+      <div class="alert alert-danger" role="alert">This Roster does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+    {%else%}
+
 {%if user in roster.editable_by%}
 <h3>Edit {{roster.name}}
 {%if challenge%}<a href="{{challenge.get_view_url}}"><button type="button" class="btn btn-primary">See Challenge</button></a>{%endif%}
@@ -130,7 +134,7 @@
       You have not have permission to edit this roster. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
     {%endif%}<!-- if user not in editable_by -->
 
-
+{%endif%}<!-- If no exist -->
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
 

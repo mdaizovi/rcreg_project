@@ -11,6 +11,10 @@
 </head>
 
 <div class="row" id="moreInfo">
+  {%if not training %}
+    <div class="alert alert-danger" role="alert">This Training does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+  {%else%}
+
     <h2 class="text-center">{{training.name}}<small>
 {%for coach in training.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
 {{coach.user.first_name}}</a>{%endfor%}</small></h2>
@@ -83,7 +87,7 @@
 </div><!-- end col-sm-6-->
 
 {%endfor%}
-
+{%endif%}<!-- If no exist -->
 </div><!-- end row-->
 
 {% endblock %}

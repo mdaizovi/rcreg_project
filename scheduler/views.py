@@ -116,15 +116,21 @@ def email_coach(request, coach_id):
 
 
 def view_coach(request, coach_id):
-    coach=Coach.objects.get(pk=coach_id)
-    return render_to_response('view_coach.html',{'coach':coach}, context_instance=RequestContext(request))
+    try:
+        coach=Coach.objects.get(pk=coach_id)
+        return render_to_response('view_coach.html',{'coach':coach}, context_instance=RequestContext(request))
+    except ObjectDoesNotExist:
+        return render_to_response('view_coach.html',{},context_instance=RequestContext(request))
 
 
 def view_training(request, activity_id):
     user=request.user
-    training=Training.objects.get(pk=int(activity_id))
-    rosters=[training.registered, training.auditing]
-    return render_to_response('view_training.html',{'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+    try:
+        training=Training.objects.get(pk=int(activity_id))
+        rosters=[training.registered, training.auditing]
+        return render_to_response('view_training.html',{'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+    except ObjectDoesNotExist:
+        return render_to_response('view_training.html',{},context_instance=RequestContext(request))
 
 
 def trainings_home(request,con_id=None,):
@@ -160,15 +166,17 @@ def trainings_home(request,con_id=None,):
 def register_training(request, activity_id):
     #to do:
     #if volunteer, check time before allowing register. Right now only checks editable by
-
     user=request.user
-    training=Training.objects.get(pk=int(activity_id))
-    auditing, created=Roster.objects.get_or_create(con=training.con, auditing=training)
     add_fail=None
     skater_added=None
     remove_fail=None
     skater_remove=None
     roster=None
+    try:
+        training=Training.objects.get(pk=int(activity_id))
+        auditing, created=Roster.objects.get_or_create(con=training.con, auditing=training)
+    except ObjectDoesNotExist:
+        return render_to_response('register_training.html',{},context_instance=RequestContext(request))
 
     if user in training.registered.editable_by():
         #TODO: check if volunteer, if so, check time of class. if boss, let do this any time.
@@ -495,7 +503,10 @@ def edit_roster(request, roster_id):
         #This is for NSOs and Boss Ladies, not captains. Captains are meant to use edit_challenge
         #right now only shows you eligible skaters. Should I let NSOs and boss ladies register anyone?
     user=request.user
-    roster=Roster.objects.get(pk=roster_id)
+    try:
+        roster=Roster.objects.get(pk=roster_id)
+    except ObjectDoesNotExist:
+        return render_to_response('edit_roster.html',{},context_instance=RequestContext(request))
 
     #make sure this works with Game rosters tht can have several challenges attached to it
     try:

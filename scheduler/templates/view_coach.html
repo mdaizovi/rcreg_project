@@ -14,6 +14,11 @@
 
 <div class="col-sm-12">
 
+  {%if not coach %}
+    <div class="alert alert-danger" role="alert">This Coach does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+  {%else%}
+
+
   <div class="panel panel-default margin-top-15">
     <!-- Default panel contents -->
     <div class="panel-heading"><h2 class="text-center">{{coach.user.first_name}}
@@ -31,10 +36,9 @@
       <tr><td><a href="{{training.get_view_url}}">{{ training.name }}</a></td><td class="text-right">{{training.con}}</td></tr>{%endfor%}
     </table>
   </div>
+
+  {%endif%}<!-- If no exist -->
 </div><!-- end col-sm-6-->
-
-
-
 </div><!-- end row-->
 
 {% endblock %}
