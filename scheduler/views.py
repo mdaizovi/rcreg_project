@@ -778,13 +778,18 @@ def challenge_respond(request):
 
         elif "accept" in request.POST:
             if 'clone_existing_team' in request.POST:
-                selected_team=Roster.objects.get(pk=request.POST['game_team'])
-                new_clone=selected_team.clone_roster()
-                if new_clone.con!=registrant.con:#This is not necessary, I only look for teams this year. Didn't know that when I wrot eit, decided to keep it as safeguard in case i ever let it look at old teams as well.
-                    new_clone.particpiants.clear()
-                    new_clone.con=registrant.con
-                    new_clone.save()#captain should be added here
+                ###I couldn't decide whether it would be better to clone a rostr and delete old one, or use existing roster to make just like one to be clones.
+                #I decided to mimic, keeping in mind I'd hav to update if i ever change relevant attributes that need to be mimicked 
+                team2mimic=Roster.objects.get(pk=request.POST['game_team'])
+                my_team.mimic_roster(team2mimic)
+
+                if my_team.con!=registrant.con:#This is not necessary, I only look for teams this year. Didn't know that when I wrot eit, decided to keep it as safeguard in case i ever let it look at old teams as well.
+                    my_team.participants.clear()
+                    my_team.con=registrant.con
+                    my_team.save()#captain should be added here
+
                 registrant.save()#reset captian #
+
             elif 'create_new_team' in request.POST:
                 skill_str=registrant.skill+"O"
                 #I don't want these to run f game team

@@ -393,19 +393,26 @@ class Roster(Matching_Criteria):
             self.restore_defaults()#saved internally
 
     def clone_roster(self):
-        """Clones team, including roster. Not meant for trainings, just challenge rosters."""
+        """Clones team, including roster. Not meant for trainings, just challenge rosters.
+        Makes a new one, whcih might be inapporpriate for purposes. To make existing roster mimic other, see mimic_roster"""
         clone=deepcopy(self)
         clone.pk=None
         clone.id=None
         clone.internal_notes=None
         clone.save()
-        print "model method clone, team",clone
-        print "captain is",clone.captain
         clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
         #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
         clone.save()
         return clone
 
+    def mimic_roster(self,original):
+        """makes self look just like original roster, except for pk, of course."""
+        for attr in ['cap','name','captain','color','can_email']:
+            value=getattr(original,attr)
+            setattr(self, attr, value)
+        self.save()
+        self.participants.add(*original.participants.all())
+        self.save()
 
     def get_edit_url(self):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
