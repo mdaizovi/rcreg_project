@@ -11,6 +11,12 @@
 
 <div class="row" id="moreInfo">
 
+  {%if not training %}
+    <div class="alert alert-danger" role="alert">This Training does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+  {%else%}
+
+
+
   {%if not formlist%}
   <div class="alert alert-danger" role="alert">
     You have not have permission to edit this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
@@ -50,6 +56,6 @@
   </div><!-- end well-->
 {%endif%}
 
-
+{%endif%}<!-- If no exist -->
 
 {% endblock %}

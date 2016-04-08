@@ -294,8 +294,6 @@ def edit_training(request, activity_id):
     #Awaiting final confirm from Ivanna before changing view
     user=request.user
     registrant_list = list(user.registrant_set.all())
-    training=Training.objects.get(pk=int(activity_id))
-    editable_by=training.editable_by()
     eligible_coaches=None
     coaches=None
     add_fail=False
@@ -307,6 +305,11 @@ def edit_training(request, activity_id):
     search_form=SearchForm()
     coach_users=[]
 
+    try:
+        training=Training.objects.get(pk=int(activity_id))
+        editable_by=training.editable_by()
+    except ObjectDoesNotExist:
+        return render_to_response('edit_training.html',{},context_instance=RequestContext(request))
 
     if request.method == "POST":
 
@@ -779,7 +782,7 @@ def challenge_respond(request):
         elif "accept" in request.POST:
             if 'clone_existing_team' in request.POST:
                 ###I couldn't decide whether it would be better to clone a rostr and delete old one, or use existing roster to make just like one to be clones.
-                #I decided to mimic, keeping in mind I'd hav to update if i ever change relevant attributes that need to be mimicked 
+                #I decided to mimic, keeping in mind I'd hav to update if i ever change relevant attributes that need to be mimicked
                 team2mimic=Roster.objects.get(pk=request.POST['game_team'])
                 my_team.mimic_roster(team2mimic)
 
