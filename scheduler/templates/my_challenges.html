@@ -88,7 +88,11 @@ event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_C
                     {% csrf_token %}
                     <input type="hidden" name="activity_id" value="{{ item.id }}" />
               <input class="btn btn-danger btn-block" type="submit" method="post" name="submit_challenge" value="Submit Challenge"
-              {%if not item.can_submit_chlg or dict.chals_submitted|length >= MAX_CAPTAIN_LIMIT %}disabled{%endif%}>
+              {%if not item.is_a_game%}
+              {%if not item.can_submit_chlg or dict.chals_submitted|length >= MAX_CAPTAIN_LIMIT %}
+              disabled
+              {%endif%}
+              {%endif%}>
               </form>
 
             </td>

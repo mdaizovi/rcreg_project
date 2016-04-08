@@ -888,7 +888,7 @@ def my_challenges(request):
         sub_full=Challenge.objects.submission_full(registrant.con)
         #see how many times captaining a challenge, games are excluded
         chals_cap=list(Challenge.objects.filter(Q(roster1__captain=registrant)|Q(roster2__captain=registrant)).exclude(is_a_game=True))
-        if len(chals_cap)>MAX_CAPTAIN_LIMIT:
+        if len(chals_cap)>=MAX_CAPTAIN_LIMIT:
             cap_exceeded=True
         else:
             cap_exceeded=False
