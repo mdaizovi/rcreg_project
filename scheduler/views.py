@@ -66,7 +66,10 @@ def coach_profile(request):
     save_attempt=False
     save_success=False
     user=request.user
-    coach=Coach.objects.get(user=user)
+    try:
+        coach=Coach.objects.get(user=user)
+    except ObjectDoesNotExist:
+        return render_to_response('coach_profile.html',{},context_instance=RequestContext(request))
 
     if request.method == 'POST':
         form=CoachProfileForm(request.POST,instance=coach)

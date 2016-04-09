@@ -16,7 +16,7 @@
     <h3>My Coach Profile<small><i><a href="{% url 'registrant_profile' %}"> Back to Registration Profile</a></i></small></h3>
     <h4><a href="{{coach.get_absolute_url}}">My Public Coach Page</a></h4>
 
-    {%if not user.is_a_coach %}
+    {%if not coach or not user.is_a_coach %}
     <div class="alert alert-danger" role="alert">
     You have not submitted any Trainings. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
     {%else%}
