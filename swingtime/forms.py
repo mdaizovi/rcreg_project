@@ -415,7 +415,8 @@ class EventForm(forms.ModelForm):
                 self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
                 self.fields["training"].queryset =Training.objects.filter(con=con,RCaccepted=True)
             except:
-                pass
+                self.fields["challenge"].queryset =Challenge.objects.filter(RCaccepted=True)
+                self.fields["training"].queryset =Training.objects.filter(RCaccepted=True)
 
 
 #===============================================================================

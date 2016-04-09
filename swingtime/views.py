@@ -436,19 +436,27 @@ def add_event(
     save_success=False
     dtstart = None
     conflict={}
-    print "conflict",conflict
+    if 'dtstart' in request.GET:
+        try:
+            dtstart = parser.parse(request.GET['dtstart'])
+        except(TypeError, ValueError) as exc:
+            # TODO: A badly formatted date is passed to add_event
+            logging.warning(exc)
 
     if request.method == 'POST':
+        print "post"
 
-        event_form = event_form_class(request.POST)
+        event_form = event_form_class(request.POST,date=dtstart)
         recurrence_form = recurrence_form_class(request.POST)
         if event_form.is_valid() and recurrence_form.is_valid():
 
             try:
                 if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
                     event=Event.objects.get(challenge__pk=request.POST['challenge'])
+                    print "1event is a challenge: ",event
                 elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
                     event=Event.objects.get(training__pk=request.POST['training'])
+                    print "1event is a training: ",event
             except ObjectDoesNotExist:
                 event = event_form.save(commit=False)
 
@@ -472,21 +480,23 @@ def add_event(
 
             if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
                 event.save()
+                occurrence.event=event
                 occurrence.save()
                 save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
                 return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
             else:
                 print "no save anyway or participant conflict"
                 print "conflict is ",conflict
+        else:#if forms not valid
+            return render(request,template,
+                {'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form})
+
 
     recurrence_dict={}
     event_dict={}
-    if 'dtstart' in request.GET:
-        try:
-            dtstart = parser.parse(request.GET['dtstart'])
-        except(TypeError, ValueError) as exc:
-            # TODO: A badly formatted date is passed to add_event
-            logging.warning(exc)
+
+#why do I have this twice? oh, for event_dict
+
     if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
         event_dict['challenge']=Challenge.objects.get(pk=request.POST['challenge'])
     elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
