@@ -55,7 +55,7 @@
         {%if training.registered.skill %}{{ training.registered.skill_display }}
         {%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
         <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
-        <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>
+        {%if training.registered.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>{%endif%}
         <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{training.contact_icon}}"></i></span></td>
         </tr></table>
     </div>
@@ -105,7 +105,7 @@
  title="{{training.registered.passes_tooltip_title}}"
  {%endif%}
     style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="glyphicon icon-shoes"></i></span></td>
-    <td class="text-center container-fluid tooltip-bottom" title="{{training.auditing.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.auditing.intl_icon}}"></i></span></td>
+    {%if training.auditing.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{training.auditing.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.auditing.intl_icon}}"></i></span></td>{%endif%}
     <td class="text-left container-fluid tooltip-bottom" title="Auditing a training does not include Contact" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="glyphicon icon-nocontact"></i></span></td>
     </tr></table>
       </div>
