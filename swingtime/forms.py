@@ -412,8 +412,22 @@ class EventForm(forms.ModelForm):
         if date:
             try:
                 con=Con.objects.get(start__lte=date, end__gte=date)
-                self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
-                self.fields["training"].queryset =Training.objects.filter(con=con,RCaccepted=True)
+                #works, doesn't let me filter out ones w/ a event attached
+                # self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
+                # self.fields["training"].queryset =Training.objects.filter(con=con,RCaccepted=True)
+                ########to filter out c/t that have events attached ot them
+                cs=Challenge.objects.filter(con=con,RCaccepted=True)
+                ts=Training.objects.filter(con=con,RCaccepted=True)
+                CnoE=[]
+                TnoE=[]
+                for c in cs:
+                    if len(c.event_set.all())==0:
+                        CnoE.append(c.pk)
+                for t in ts:
+                    if len(t.event_set.all())==0:
+                        TnoE.append(t.pk)
+                self.fields["challenge"].queryset =Challenge.objects.filter(pk__in=CnoE)
+                self.fields["training"].queryset =Training.objects.filter(pk__in=TnoE)
             except:
                 self.fields["challenge"].queryset =Challenge.objects.filter(RCaccepted=True)
                 self.fields["training"].queryset =Training.objects.filter(RCaccepted=True)

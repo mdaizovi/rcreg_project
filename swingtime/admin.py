@@ -16,16 +16,18 @@ from swingtime.models import *
 #===============================================================================
 class OccurrenceInline(admin.TabularInline):
     model = Occurrence
-    extra = 1
-
+    extra = 0
+    max_num=0#gets rid of + Another button
+    view_on_site = False
 
 #===============================================================================
 class EventAdmin(admin.ModelAdmin):#No import/export
     list_display = ('training','challenge')
     list_display_links = list_display#makes everything in list display clickable to get to object
-    #list_filter = ('event_type', )
     search_fields = ('training__name','challenge__name')
+    fields = ['training','challenge']
     inlines = [OccurrenceInline]
+    view_on_site = False
 
 #===============================================================================
 class OccurrenceResource(resources.ModelResource):
@@ -50,6 +52,6 @@ class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost b
 
 
 
-#admin.site.register(Event, EventAdmin)
-admin.site.register(Occurrence, OccurrenceAdmin)
+admin.site.register(Event, EventAdmin)
+#admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.
 #admin.site.register(EventType, EventTypeAdmin)
