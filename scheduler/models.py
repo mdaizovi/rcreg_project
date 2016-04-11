@@ -14,6 +14,7 @@ from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
 from scheduler.app_settings import CLOSE_CHAL_SUB_AT
 from copy import deepcopy
+from swingtime.conf.swingtime_settings import TIMESLOT_INTERVAL,TIMESLOT_START_TIME,TIMESLOT_END_TIME_DURATION
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
@@ -52,6 +53,20 @@ class Location(models.Model):
 
     def __unicode__(self):
        return "%s, %s" % (self.name, self.venue.name)
+
+    def is_free(self, start_time,end_time):
+        """Checks to see if Location has any Occurrences for the time between start and end provided."""
+        from swingtime.models import Occurrence
+        qs = list(Occurrence.objects.filter(
+            start_time__lt=end_time,
+            end_time__gt=start_time,
+            location=self))
+
+        if len(qs)>0:
+            return False
+        else:
+            return True
+
 
     class Meta:
         #ordering=('abbrv','venue','name')
@@ -489,6 +504,47 @@ class Activity(models.Model):
                         participating.append(ros.captain)
         return participating
 
+    def possible_locations(self):
+        """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
+        Will prob need to write anoter further refining, splitting up competition and training tracks"""
+        venues=self.con.venue.all()
+        if self.location_type == 'EITHER Flat or Banked Track':
+            return list(Location.objects.filter(venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+        else:
+            return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
+
+    def dummy_occurrences(self):
+        """Makes unsaved Occurrence objects for all possible location time combos for activity"""
+        #this works, but it makes about 2500 on my first test run.
+        from swingtime.models import Event, Occurrence
+        occurrences=[]
+        pls=self.possible_locations()
+        if hasattr(self, 'coach'):#if this is a training
+            challenge=None
+            training=self
+        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+            challenge=self
+            training=None
+        event=Event(challenge=challenge,training=training)
+
+        for d in self.con.get_date_range():
+            day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
+            day_end=day_start+TIMESLOT_END_TIME_DURATION
+            duration=float(self.duration)*60
+
+            slot_start=day_start
+            slot_end=slot_start+datetime.timedelta(minutes=duration)
+            while slot_end<day_end:
+
+                for l in pls:
+                    if l.is_free(slot_start,slot_end):
+                        o=Occurrence(event=event,start_time=slot_start,end_time=slot_end,location=l)
+                        occurrences.append(o)
+                slot_start+=TIMESLOT_INTERVAL
+                slot_end+=TIMESLOT_INTERVAL
+
+        return occurrences
+
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
         if hasattr(self, 'coach'):#if this is a training
@@ -508,6 +564,14 @@ class Activity(models.Model):
             #I think this might actually be stupid
             from scheduler.views import edit_challenge
             return reverse('scheduler.views.edit_challenge', args=[str(self.pk)])
+
+    def get_schedule_url(self):
+        if hasattr(self, 'coach'):#if this is a training
+            from swingtime.views import sched_assist_tr
+            return reverse('swingtime.views.sched_assist_tr', args=[str(self.pk)])
+        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):#if this is a challenge:
+            from swingtime.views import sched_assist_ch
+            return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 
 
     class Meta:

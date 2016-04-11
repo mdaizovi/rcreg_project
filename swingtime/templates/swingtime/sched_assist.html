@@ -1,0 +1,23 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Schedule Assistant{% endblock %}
+
+
+{% block main_content %}
+<div class="row">
+    <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for {{act.name}}</small></h3>
+<hr>
+
+
+
+<table class="table table-striped">
+
+  <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th>Conflicts</th><th>Intersections</th></tr>
+
+{%for p in possible %}
+<tr><td>Date</td><td>Start</td><td>End</td><td>Location</td><td>Conflicts</td><td>Intersections</td></tr>
+</table>
+
+{%endfor%}
+
+</div><!-- end row-->
+{% endblock %}

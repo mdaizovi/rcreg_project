@@ -1,8 +1,9 @@
 {% extends "swingtime/swingtime_base.html" %}
-{% block title %}Scheduled Activities{% endblock %}
+{% block title %}Unscheduled Activities{% endblock %}
 
 
 {% block main_content %}
+<div class="row">
 
     <h3 class="margin-top-10 text-center">Un-Scheduled Activities</h3>
   <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Challenges & Trainings have been approved, but <b>not</b> scheduled for {{con}}</small></h3></td>
@@ -21,8 +22,26 @@
     </div>
 </td></tr></table>
 <hr>
+<h3 class="text-center">Trainings that want to be cloned</h3>
+<hr>
 
-<h1 class="text-center">This is probably where the Schedule Hole Filler will go</h1>
+{%for aq in activities %}
+  <div class="col-sm-6 margin-top-10">
+      <h3 class="text-center">
+        {%cycle "Challenges" "Trainings" %}: {{ aq.count }}</h3>
+<table class="table table-striped">
+  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: right;">Available Slot Hours</th></tr>
+  {%for a in aq%}
+<tr><td><b>{{forloop.counter}}.</b>
+    <a href="{{a.get_view_url}}">
+    {{a.name}}</a></td>
+  <td style="text-align: right;"><a href="{{a.get_schedule_url}}">Click ME!</a></td>
+</tr>
+{%endfor%}
+</table>
+</div><!-- end col-sm-6-->
+{%endfor%}
 
 
+</div><!-- end row-->
 {% endblock %}

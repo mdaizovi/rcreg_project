@@ -234,8 +234,20 @@ def act_unsched(
     else:
         con=Con.objects.most_upcoming()
 
-    extra_context['con'] = con
-    extra_context['con_list'] = Con.objects.all()
+    #########later these chal and train lists will need to be ordered by available time slot hours, and paired in a dict
+    challenges=[]
+    for c in Challenge.objects.filter(con=con, RCaccepted=True):
+        if len(c.event_set.all())<=0:
+            challenges.append(c)
+    trainings=[]
+    for t in Training.objects.filter(con=con, RCaccepted=True):
+        if len(t.event_set.all())<=0:
+            trainings.append(t)
+
+    new_context={"activities":[challenges,trainings],"con":con,"con_list":Con.objects.all()}
+    extra_context.update(new_context)
+    #extra_context['con'] = con
+    #extra_context['con_list'] = Con.objects.all()
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
@@ -284,6 +296,25 @@ def sched_status(
 
     return render(request, template, {'save_success':save_success,'con':con,'con_list':Con.objects.all(),'form': form})
 
+#-------------------------------------------------------------------------------
+@login_required
+def sched_assist_tr(
+    request,
+    act_id,
+    template='swingtime/sched_assist.html',
+):
+    act=Training.objects.get(pk=act_id)
+    possible=[1]
+    return render(request, template, {'act':act,'possible':possible})
+
+#-------------------------------------------------------------------------------
+@login_required
+def sched_assist_ch(
+    request,
+    act_id,
+    template='swingtime/sched_assist.html',
+):
+    pass
 
 #-------------------------------------------------------------------------------
 @login_required

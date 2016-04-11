@@ -26,6 +26,9 @@ urlpatterns = [
     url(r'^schedule/status/con/(?P<con_id>\d+)/$', 'swingtime.views.sched_status',name='sched_status'),
     url(r'^schedule/status/$', 'swingtime.views.sched_status',name='sched_status'),
 
+    url(r'^schedule/assistance/training/(?P<act_id>\d+)/$', 'swingtime.views.sched_assist_tr',name='sched_assist_tr'),
+    url(r'^schedule/assistance/challenge/(?P<act_id>\d+)/$', 'swingtime.views.sched_assist_ch',name='sched_assist_ch'),
+
 
 #________________________end my custom URLS____________________________________
     url(
