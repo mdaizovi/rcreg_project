@@ -445,7 +445,6 @@ class SingleOccurrenceForm(forms.ModelForm):
             date = kws.pop('date')
         else:
             date = None
-
         super(SingleOccurrenceForm,self).__init__(*args, **kws)
         if date:
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)

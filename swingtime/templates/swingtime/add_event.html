@@ -18,7 +18,6 @@
 
 
     {%if conflict %}
-
     <div class="alert alert-danger" role="alert">Scheduling this would cause the following conflicts:<br>
       {%if conflict.participant_conflict%}<b>Participation</b>
       <ul>{%for k,v in conflict.participant_conflict.iteritems%}
@@ -34,11 +33,10 @@
       <ul>{%for k,v in conflict.blackout_conflict.iteritems%}
       <li>{{k.sk8name}}: {%for b in v%}{% if not forloop.first %}, {% endif %}{{b.date}} ({{b.ampm}}) {%endfor%}</li>{%endfor%}
       {%endif%}</ul>
-
-
     </div>
     {%endif%}
 
+    {%if conflict_free%}<div class="alert alert-success" role="alert">No scheduling conflicts found!</div>{%endif%}
 
     {{ event_form.non_field_errors }}
     {{ single_occurrence_form.non_field_errors }}
@@ -49,9 +47,11 @@
         <tfoot>
             <tr>
                 <td colspan="2" class="swingtime-td">
-                  {%if conflict %}<input type="submit" name="save_anyway" value="Save Anyway" />
-                  {%else%}<input type="submit" value="Submit" />
+                  <input type="submit" name="check" value="Check Schedule" />
+
+                  {%if conflict or conflict_free%}<input type="submit" name="save" value="Save" />
                   {%endif%}
+
                 </td>
             </tr>
         </tfoot>

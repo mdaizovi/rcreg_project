@@ -303,7 +303,11 @@ class Occurrence(models.Model):
         else:
             duration=1 #default 1 hour?
 
+        print "duration is ",duration
+
         dur_delta=int((duration+padding)*60)
+        print "dur_delta is",dur_delta
+        print "start time is",self.start_time
         end_time=self.start_time+timedelta(minutes=dur_delta)
         return end_time
 

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, time
 from django import http
 from django.db import models
 from django.template.context import RequestContext
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render, redirect,HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 #from django.forms import modelformset_factory
@@ -435,101 +435,123 @@ def add_event(
     '''
     save_success=False
     dtstart = None
+    drend=None
+    training=None
+    challenge=None
+    location=None
     conflict={}
+    conflict_free=False
+    no_list=["",u'',None,"None"]
+    recurrence_dict={}
+    event_dict={}
+    get_dict={}
+    #########fetch all get values as intials##########
     if 'dtstart' in request.GET:
         try:
-            dtstart = parser.parse(request.GET['dtstart'])
+            dtend = dtstart = parser.parse(request.GET['dtstart'])
+            get_dict["start_time"]=dtstart
+            recurrence_dict["start_time"]=dtstart
+            recurrence_dict["end_time"]=dtend#setting initial as same, chang elater d/t post info or model method
         except(TypeError, ValueError) as exc:
             # TODO: A badly formatted date is passed to add_event
             logging.warning(exc)
+    if "training" in request.GET and request.GET['training'] not in no_list:
+        training=Training.objects.get(pk=request.GET['training'])
+        get_dict['training']=training
+        event_dict['training']=training
+    if "challenge" in request.GET and request.GET['challenge'] not in no_list:
+        challenge=Challenge.objects.get(pk=request.GET['challenge'])
+        get_dict['challenge']=challenge
+        event_dict['challenge']=challenge
+    if "location" in request.GET and request.GET['location'] not in no_list:
+        location=Location.objects.get(pk=request.GET['location'])
+        get_dict['location']=location
+        recurrence_dict['location']=location
+    #print "get dict",get_dict
+    ########done fetching get values#########
+
+    #initial offering, might get overwritten w/post
+    event_form = event_form_class(date=dtstart, initial=event_dict)
+    recurrence_form = recurrence_form_class(initial=recurrence_dict)
+    ##########################
 
     if request.method == 'POST':
-        print "post"
+        selection = request.POST.copy()
+        print "selection", selection
+
+        dtend_post=[u'end_time_1',u'end_time_0_year',u'end_time_0_month','end_time_0_day']
+        if len( set(dtend_post).intersection(request.POST.keys())) > 0:
+            dtend_str=request.POST['end_time_0_year']+"-"+request.POST['end_time_0_month']+"-"+request.POST['end_time_0_day']+"T"+request.POST['end_time_1']
+            dtend=parser.parse(dtend_str)
+            recurrence_dict['end_time']=dtend#I think this is unnecessary
+
+        #these will override the train/chal set from get, if they're there.
+        if "challenge" in request.POST and request.POST['challenge'] not in no_list:
+            challenge=Challenge.objects.get(pk=request.POST['challenge'])
+        if "training" in request.POST and request.POST['training'] not in no_list:
+            training=Training.objects.get(pk=request.POST['training'])
 
         event_form = event_form_class(request.POST,date=dtstart)
         recurrence_form = recurrence_form_class(request.POST)
-        if event_form.is_valid() and recurrence_form.is_valid():
 
-            try:
-                if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
-                    event=Event.objects.get(challenge__pk=request.POST['challenge'])
-                    print "1event is a challenge: ",event
-                elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
-                    event=Event.objects.get(training__pk=request.POST['training'])
-                    print "1event is a training: ",event
+        if event_form.is_valid() and recurrence_form.is_valid():
+            try:#both chal and train could be a thing, or none
+                print "trying t get event with chal/t"
+                event=Event.objects.get(challenge=challenge, training=training)
             except ObjectDoesNotExist:
+                print "does not exist"
                 event = event_form.save(commit=False)
 
             occurrence=recurrence_form.save(commit=False)
             occurrence.event=event
 
-            if occurrence.end_time==occurrence.start_time:
+            if occurrence.end_time<=occurrence.start_time:
                 occurrence.end_time=occurrence.get_endtime()
-                #else assume she did that time for a reason
+            recurrence_form = recurrence_form_class(instance=occurrence)#to keeo calculated end time if conflict
 
 #this seems to not refresh conflict items, for some reason
-            figurehead_conflict=occurrence.figurehead_conflict()
-            if figurehead_conflict:
-                conflict["figurehead_conflict"]=figurehead_conflict
-            participant_conflict=occurrence.participant_conflict()
-            if participant_conflict:
-                conflict["participant_conflict"]=participant_conflict
-            blackout_conflict=occurrence.blackout_conflict()
-            if blackout_conflict:
-                conflict["blackout_conflict"]=blackout_conflict
+            if ("check" in request.POST):#will this run if not saved yet?
+                figurehead_conflict=occurrence.figurehead_conflict()
+                if figurehead_conflict:
+                    conflict["figurehead_conflict"]=figurehead_conflict
+                participant_conflict=occurrence.participant_conflict()
+                if participant_conflict:
+                    conflict["participant_conflict"]=participant_conflict
+                blackout_conflict=occurrence.blackout_conflict()
+                if blackout_conflict:
+                    conflict["blackout_conflict"]=blackout_conflict
+                if len(conflict)<=0:
+                    conflict_free=True
 
-            if ("save_anyway" in request.POST) or not conflict:#will this run if not saved yet?
+            if ("save" in request.POST):
                 event.save()
                 occurrence.event=event
                 occurrence.save()
                 save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
                 return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
-            else:
-                print "no save anyway or participant conflict"
-                print "conflict is ",conflict
-        else:#if forms not valid
-            return render(request,template,
-                {'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form})
+            # elif "recheck" in request.POST:
+            #     dstr_str=request.POST['start_time_0_year']+"-"+request.POST['start_time_0_month']+"-"+request.POST['start_time_0_day']+"T"+request.POST['start_time_1']
+            #     locstr=str(request.GET['location'])
+            #     url_str='?dtstart=%s&location=%s'%(dstr_str,locstr)
+                # if "training" in request.GET and request.GET['training'] not in ["",u'',None,"None"]:
+                #     tpk=str(request.GET['training'])
+                #     url_str+="&training=%s"%(tpk)
+                # elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
+                #     tpk=str(request.POST['training'])
+                #     url_str+="&training=%s"%(tpk)
+                #
+                # if "challenge" in request.GET and request.GET['challenge'] not in ["",u'',None,"None"]:
+                #     cpk=str(request.GET['challenge'])
+                #     url_str+="&challenge=%s"%(cpk)
+                # elif "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
+                #     cpk=str(request.POST['challenge'])
+                #     url_str+="&challenge=%s"%(cpk)
 
+                # return HttpResponseRedirect(url_str)
 
-    recurrence_dict={}
-    event_dict={}
-
-#why do I have this twice? oh, for event_dict
-
-    if "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
-        event_dict['challenge']=Challenge.objects.get(pk=request.POST['challenge'])
-    elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
-        event_dict['training']=Training.objects.get(pk=request.POST['training'])
-
-    if 'location' in request.POST and request.POST['location'] not in ["",u'',None,"None"]:
-        recurrence_dict['location']=Location.objects.get(pk=request.POST['location'])
-    elif 'location' in request.GET:
-        recurrence_dict['location']=Location.objects.get(pk=request.GET['location'])
-
-    dtstart = dtstart or datetime.now()
-    recurrence_dict["start_time"]=dtstart
-    dtend_post=[u'end_time_1',u'end_time_0_year',u'end_time_0_month','end_time_0_day']
-    if len( set(dtend_post).intersection(request.POST.keys())) > 0:
-        dtend_str=request.POST['end_time_0_year']+"-"+request.POST['end_time_0_month']+"-"+request.POST['end_time_0_day']+"T"+request.POST['end_time_1']
-        try:
-            dtend=parser.parse(dtend_str)
-            if dtend==dtstart and occurrence:
-                dtend=occurrence.get_endtime()
-            recurrence_dict['end_time']=dtend
-        except:
-            recurrence_dict['end_time']=dtstart
-    else:
-        recurrence_dict['end_time']=dtstart
-
-    event_form = event_form_class(date=dtstart, initial=event_dict)
-    recurrence_form = recurrence_form_class(initial=recurrence_dict)
-
-    return render(
-        request,
-        template,
-        {'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form}
-    )
+    # #this happens regardless of post or not
+    return render(request,template,
+        {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form})
 
 
 #-------------------------------------------------------------------------------
