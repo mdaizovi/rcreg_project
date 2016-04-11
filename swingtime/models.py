@@ -303,11 +303,7 @@ class Occurrence(models.Model):
         else:
             duration=1 #default 1 hour?
 
-        print "duration is ",duration
-
         dur_delta=int((duration+padding)*60)
-        print "dur_delta is",dur_delta
-        print "start time is",self.start_time
         end_time=self.start_time+timedelta(minutes=dur_delta)
         return end_time
 
@@ -384,7 +380,6 @@ class Occurrence(models.Model):
             daypart.append("AM")
         if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
             daypart.append("PM")
-        print "daypart",daypart
 
         for f in figureheads:
             potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)

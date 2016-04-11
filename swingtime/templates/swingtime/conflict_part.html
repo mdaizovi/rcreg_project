@@ -1,0 +1,20 @@
+{%if conflict %}
+<div class="alert alert-danger" role="alert">Scheduling this would cause the following conflicts:<br>
+  {%if conflict.participant_conflict%}<b>Participation</b>
+  <ul>{%for k,v in conflict.participant_conflict.iteritems%}
+  <li>{{k.name}}: {%for s in v%}{% if not forloop.first %}, {% endif %}{{ s.sk8name }} {%endfor%}</li>{%endfor%}
+  {%endif%}</ul>
+
+  {%if conflict.figurehead_conflict%}<b>Figurehead (Captains/Coaches) Participation</b>
+  <ul>{%for k,v in conflict.figurehead_conflict.iteritems%}
+  <li>{{k.name}}: {%for s in v%}{% if not forloop.first %}, {% endif %}{{ s.sk8name }} {%endfor%}</li>{%endfor%}
+  {%endif%}</ul>
+
+  {%if conflict.blackout_conflict%}<b>Figurehead (Captains/Coaches) Blackouts</b>
+  <ul>{%for k,v in conflict.blackout_conflict.iteritems%}
+  <li>{{k.sk8name}}: {%for b in v%}{% if not forloop.first %}, {% endif %}{{b.date}} ({{b.ampm}}) {%endfor%}</li>{%endfor%}
+  {%endif%}</ul>
+</div>
+{%endif%}
+
+{%if conflict_free%}<div class="alert alert-success" role="alert">No scheduling conflicts found!</div>{%endif%}

@@ -396,17 +396,32 @@ def occurrence_view(
         a form object for updating the occurrence
     '''
     occurrence = get_object_or_404(Occurrence, pk=pk, event__pk=event_pk)
+    conflict_free=False
+    conflict={}
+
     if request.method == 'POST':
         form = form_class(request.POST, instance=occurrence)
         if form.is_valid():
-            form.save()
-            save_success=True
-            return render(request, template, {'save_success':save_success,'occurrence': occurrence, 'form': form})
-
+            if "update" in request.POST:
+                form.save()
+                save_success=True
+                #return render(request, template, {'save_success':save_success,'occurrence': occurrence, 'form': form})
+            elif "check" in request.POST:
+                figurehead_conflict=occurrence.figurehead_conflict()
+                if figurehead_conflict:
+                    conflict["figurehead_conflict"]=figurehead_conflict
+                participant_conflict=occurrence.participant_conflict()
+                if participant_conflict:
+                    conflict["participant_conflict"]=participant_conflict
+                blackout_conflict=occurrence.blackout_conflict()
+                if blackout_conflict:
+                    conflict["blackout_conflict"]=blackout_conflict
+                if len(conflict)<=0:
+                    conflict_free=True
     else:
         form = form_class(instance=occurrence)
 
-    return render(request, template, {'save_success':save_success,'occurrence': occurrence, 'form': form})
+    return render(request, template, {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'occurrence': occurrence, 'form': form})
 
 
 #-------------------------------------------------------------------------------
