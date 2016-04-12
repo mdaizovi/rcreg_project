@@ -21,7 +21,7 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
 
 #con=Con.objects.get(year="2016")
 #qset=list(Training.objects.filter(con=con))
-#loc=show_loc(con)
+#loc=show_loc(qset)
 def show_loc(qset):
     loc={}
     for t in qset:

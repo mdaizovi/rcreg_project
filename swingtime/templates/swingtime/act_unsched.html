@@ -26,12 +26,12 @@
 <hr>
 
 {%for od in activities %}
-{%for k, aq in od.iteritems%}
   <div class="col-sm-6 margin-top-10">
       <h3 class="text-center">
-        {%cycle "Challenges" "Trainings" %}: {{ aq|length }}</h3>
+        {%cycle "Challenges" "Trainings" %}: {{ od|length }}</h3>
 <table class="table table-striped">
   <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: center;">Blackouts</th></tr>
+  {%for k, aq in od.iteritems%}
   {%for a in aq%}
 <tr><td><b>{{forloop.counter}}.</b>
     <a href="{{a.get_view_url}}">

@@ -19,9 +19,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 AMPM=(('AM','AM'),('PM','PM'))
-LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'),('Off Skates Athletic Training Space', 'Off Skates Athletic Training Space'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
-LOCATION_CATEGORY=(("Competition","Competition"),("Training","Training"),("Classroom","Classroom"))
+#deleting unused locations
+LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'),('Off Skates Athletic Training', 'Off Skates Athletic Training'), ('Seminar/Conference Room', 'Seminar/Conference Room'))
 
+LOCATION_CATEGORY=(("Competition","Competition"),("Training","Training"),("Classroom","Classroom"))
+#all original locaiton types
+#LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'),('Off Skates Athletic Training Space', 'Off Skates Athletic Training Space'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
 #LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
 GENDER= (('Female', 'Female'), ('Male', 'Male'), ('NA/Coed','NA/Coed'))
 SKILL_LEVEL_SK8R= ((None,'NA'),('D', 'Rookie'), ('C', 'Beginner'),('B', 'Intermediate'), ('A', 'Advanced'))

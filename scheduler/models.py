@@ -50,8 +50,8 @@ class Location(models.Model):
     venue=models.ForeignKey(Venue,on_delete=models.PROTECT)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
     name=models.CharField(max_length=50)
     abbrv=models.CharField(max_length=50, null=True, blank=True)
-    location_type=models.CharField(max_length=30, choices=LOCATION_TYPE)
-    #location_category=models.CharField(max_length=30, null=True, blank=True,choices=LOCATION_CATEGORY)
+    location_type=models.CharField(max_length=50, choices=LOCATION_TYPE)
+    location_category=models.CharField(max_length=50, null=True, blank=True,choices=LOCATION_CATEGORY)
 
     def __unicode__(self):
        return "%s, %s" % (self.name, self.venue.name)

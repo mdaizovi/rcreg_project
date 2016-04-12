@@ -407,6 +407,8 @@ def propose_new_training(request):
     most_upcoming_con=Con.objects.most_upcoming()
 
     if request.method == "POST":
+        #selection = request.POST.copy()
+        #print "selection", selection
 
         if 'duration' in request.POST:
             training_made=Training.objects.get(pk=request.POST['training_id'])
