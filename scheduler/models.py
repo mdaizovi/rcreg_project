@@ -1,5 +1,6 @@
 #scheduler.models
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
@@ -518,10 +519,29 @@ class Activity(models.Model):
         """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
         Will prob need to write anoter further refining, splitting up competition and training tracks"""
         venues=self.con.venue.all()
-        if self.location_type == 'EITHER Flat or Banked Track':
-            return list(Location.objects.filter(venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+        # if self.location_type == 'EITHER Flat or Banked Track':
+        #     return list(Location.objects.filter(venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+        # else:
+        #     return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
+
+        if self.location_type =='Flat Track':
+            if hasattr(self, 'coach'):#if this is a training
+                return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
+            elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+                if self.is_a_game or float(self.duration)>=1:#has to be in C1
+                #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
+                    return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
+                else:#can be n C1 or C2
+                    return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"]))
+
+        elif self.location_type == 'EITHER Flat or Banked Track':
+            if hasattr(self, 'coach'):#if this is a training
+                return list(Location.objects.filter(location_category__in=["Training","Training or Competition"], venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+            elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+                return list(Location.objects.filter(location_category__in=["Training or Competition","Competition Half Length Only","Competition Any Length"],venue__in=venues, location_type__in=['Flat Track','Banked Track']))
         else:
             return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
+
 
     def dummy_occurrences(self):
         """Makes unsaved Occurrence objects for all possible location time combos for activity"""
