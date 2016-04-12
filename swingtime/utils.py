@@ -17,6 +17,7 @@ from swingtime.conf import settings as swingtime_settings
 from swingtime.models import EventType
 
 from con_event.models import Con
+from scheduler.models import Location
 
 
 #-------------------------------------------------------------------------------
@@ -127,6 +128,7 @@ class DefaultOccurrenceProxy(BaseOccurrenceProxy):
 def create_timeslot_table(
     dt=None,
     items=None,
+    loc_id=None,
     start_time=swingtime_settings.TIMESLOT_START_TIME,
     end_time_delta=swingtime_settings.TIMESLOT_END_TIME_DURATION,
     time_delta=swingtime_settings.TIMESLOT_INTERVAL,
@@ -166,16 +168,19 @@ def create_timeslot_table(
 
     try:
         con=Con.objects.get(start__lte=dt, end__gte=dt)
-        locations=con.get_locations()
+        if loc_id:
+            locations=[Location.objects.get(pk=int(loc_id))]
+        else:
+            locations=con.get_locations()
     except ObjectDoesNotExist:
         con=None
         locations=[]
-
 
     if isinstance(items, QuerySet):
         items = items._clone()
     elif not items:
         items = Occurrence.objects.daily_occurrences(dt).select_related('event')
+        #items = Occurrence.objects.daily_occurrences(dt).select_related('event').filter(location__in=locations)
 
     # build a mapping of timeslot "buckets"
     timeslots = {}

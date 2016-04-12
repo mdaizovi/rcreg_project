@@ -627,6 +627,7 @@ def _datetime_view(
     request,
     template,
     dt,
+    loc_id=None,
     timeslot_factory=None,
     items=None,
     params=None
@@ -652,12 +653,20 @@ def _datetime_view(
     '''
     timeslot_factory = timeslot_factory or utils.create_timeslot_table
     params = params or {}
+    # try:
+    #     con=Con.objects.get(start__lte=dt, end__gte=dt)
+    #     locations=con.get_locations()
+    # except ObjectDoesNotExist:
+    #     con=None
+    #     locations=[]
     try:
         con=Con.objects.get(start__lte=dt, end__gte=dt)
-        locations=con.get_locations()
+        if loc_id:
+            locations=[Location.objects.get(pk=int(loc_id))]
+        else:
+            locations=con.get_locations()
     except ObjectDoesNotExist:
         con=None
-        locations=[]
 
     return render(request, template, {
         'day':       dt,
@@ -666,7 +675,7 @@ def _datetime_view(
         'maxwidth': 99/(len(locations)+1),
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
-        'timeslots': timeslot_factory(dt=dt, items=items, **params)
+        'timeslots': timeslot_factory(dt=dt, items=items, loc_id=loc_id,**params)
     })
 
 
@@ -680,6 +689,16 @@ def day_view(request, year, month, day, template='swingtime/daily_view.html', **
     dt = datetime(int(year), int(month), int(day))
     return _datetime_view(request, template, dt, **params)
 
+
+#-------------------------------------------------------------------------------
+@login_required
+def day_location_view(request, loc_id, year, month, day, template='swingtime/daily_view.html', **params):
+    '''
+    See documentation for function``_datetime_view``.
+
+    '''
+    dt = datetime(int(year), int(month), int(day))
+    return _datetime_view(request, template, dt, loc_id, **params)
 
 #-------------------------------------------------------------------------------
 @login_required
