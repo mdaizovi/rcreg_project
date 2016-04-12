@@ -22,21 +22,23 @@
     </div>
 </td></tr></table>
 <hr>
-<h3 class="text-center">Trainings that want to be cloned</h3>
+<h3 class="text-center">Trainings that want to be cloned (more than 1 session) will probably go here</h3>
 <hr>
 
-{%for aq in activities %}
+{%for od in activities %}
+{%for k, aq in od.iteritems%}
   <div class="col-sm-6 margin-top-10">
       <h3 class="text-center">
-        {%cycle "Challenges" "Trainings" %}: {{ aq.count }}</h3>
+        {%cycle "Challenges" "Trainings" %}: {{ aq|length }}</h3>
 <table class="table table-striped">
-  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: right;">Available Slot Hours<br>or Blackouts?</th></tr>
+  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: center;">Blackouts</th></tr>
   {%for a in aq%}
 <tr><td><b>{{forloop.counter}}.</b>
     <a href="{{a.get_view_url}}">
     {{a.name}}</a></td>
-  <td style="text-align: right;"><a href="{{a.get_sched_assist_url}}">Click ME!</a></td>
+  <td style="text-align: center;"><a href="{{a.get_sched_assist_url}}">{{k}}</a></td>
 </tr>
+{%endfor%}
 {%endfor%}
 </table>
 </div><!-- end col-sm-6-->

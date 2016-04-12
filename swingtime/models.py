@@ -392,10 +392,10 @@ class Occurrence(models.Model):
             return None
 #-------------------------------------------------------------------------------
     def get_add_url(self):
+        """Creates string of URL to call add-event page.
+        Like a DIY get abdolute url"""
 
-        print "starting get add url"
         dstr_str=self.start_time.isoformat()
-        print "dstr_str: ",dstr_str
 
         url_str='/events/add/?dtstart=%s&location=%s'%(dstr_str,str(self.location.pk))
         if self.event.training:
@@ -403,7 +403,6 @@ class Occurrence(models.Model):
         if self.event.challenge:
             url_str+="&challenge=%s"%(str(self.event.challenge.pk))
 
-        print "url_str is ",url_str
         return url_str
 
 #-------------------------------------------------------------------------------

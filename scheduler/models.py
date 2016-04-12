@@ -469,6 +469,14 @@ class Activity(models.Model):
 
         return figureheads
 
+    def get_figurehead_blackouts(self):
+        """Gets Blackouts for activity, from all coaches or captains, but not participants."""
+        from con_event.models import Blackout
+        figureheads=self.get_figurehead_registrants()
+        b_outs=list(Blackout.objects.filter(registrant__in=figureheads))
+        return b_outs
+
+
     def editable_by(self):
         '''returns list of Users that can edit Activity
         keep in mind being captain of EITHER team makes this True

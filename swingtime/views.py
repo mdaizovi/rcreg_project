@@ -234,20 +234,29 @@ def act_unsched(
     else:
         con=Con.objects.most_upcoming()
 
-    #########later these chal and train lists will need to be ordered by available time slot hours, and paired in a dict
-    challenges=[]
-    for c in Challenge.objects.filter(con=con, RCaccepted=True):
-        if len(c.event_set.all())<=0:
-            challenges.append(c)
-    trainings=[]
-    for t in Training.objects.filter(con=con, RCaccepted=True):
-        if len(t.event_set.all())<=0:
-            trainings.append(t)
+    activities=[]
+    for q in [Challenge.objects.filter(con=con, RCaccepted=True),Training.objects.filter(con=con, RCaccepted=True)]:
+        temp_dict={}
+        for obj in q:
+            if len(obj.event_set.all())<=0:
+                score=len(obj.get_figurehead_blackouts())
+                if score not in temp_dict:
+                    temp_dict[score]=[obj]
+                else:
+                    this_list=temp_dict.get(score)
+                    this_list.append(obj)
+                    temp_dict[score]=list(this_list)
+        score_list=temp_dict.keys()
+        score_list.sort(reverse=True)
+        od  = collections.OrderedDict()
+        for score in score_list:
+            temp_list=temp_dict.get(score)
+            od[score]=temp_list
+        activities.append(od)
 
-    new_context={"activities":[challenges,trainings],"con":con,"con_list":Con.objects.all()}
+    new_context={"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
-    #extra_context['con'] = con
-    #extra_context['con_list'] = Con.objects.all()
+
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
@@ -319,7 +328,14 @@ def sched_assist_ch(
     act_id,
     template='swingtime/sched_assist.html',
 ):
-    pass
+    try:
+        act=Challenge.objects.get(pk=act_id)
+    except:
+        return render(request, template, {})
+
+    possible=act.sched_conflict_score()
+
+    return render(request, template, {'act':act,'possible':possible})
 
 #-------------------------------------------------------------------------------
 @login_required
