@@ -10,8 +10,23 @@
 
 {%if con%}
 
+<div class="dropdown argin-top-10">
+<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+  Locations
+  <span class="caret"></span>
+</button>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
 
-     <table class="calendar">
+  <li role="presentation"><a href="{% url 'swingtime-daily-view' day.year day.month day.day %}"><b>All Locations</b></a></li>
+      <li role="separator" class="divider"></li>
+  {%for item in con.get_locations%}
+  <li role="presentation">
+    <a href="{% url 'swingtime-daily-location-view' item.pk day.year day.month day.day %}">
+      {{item.abbrv}}</a></li>{%endfor%}
+</ul>
+</div>
+
+     <table class="calendar margin-top-15">
       <!-- <table class="table table-striped">-->
         <thead class="swingtime-th">
             <tr class="swingtime-tr">
