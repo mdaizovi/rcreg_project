@@ -623,13 +623,13 @@ class Activity(models.Model):
 
             figurehead_conflict=o.figurehead_conflict()
             if figurehead_conflict:
-                this_score=len(blackout_conflict)*10
+                this_score=len(figurehead_conflict)*10
                 #print "figurehead score: ",this_score
                 score+=this_score
 
             participant_conflict=o.participant_conflict()
             if participant_conflict:
-                this_score=len(blackout_conflict)*1
+                this_score=len(participant_conflict)*1
                 #print "participant score: ",this_score
                 score+=this_score
 
