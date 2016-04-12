@@ -19,7 +19,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 AMPM=(('AM','AM'),('PM','PM'))
-LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
+LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'),('Off Skates Athletic Training Space', 'Off Skates Athletic Training Space'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
+LOCATION_CATEGORY=(("Competition","Competition"),("Training","Training"),("Classroom","Classroom"))
+
+#LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
 GENDER= (('Female', 'Female'), ('Male', 'Male'), ('NA/Coed','NA/Coed'))
 SKILL_LEVEL_SK8R= ((None,'NA'),('D', 'Rookie'), ('C', 'Beginner'),('B', 'Intermediate'), ('A', 'Advanced'))
 SKILL_LEVEL_ACT= ((None, "No skill restrictions; all levels welcome"),('ABC', 'All Contact Safe (A-C)'),('CO', 'Beginner Only- no Coed (C)'),('BC', 'Beginner/Intermediate Only (B-C)'),('BO', 'Intermediate Only (B)'),('AB', 'Intermediate / Advanced Only (A-B)'),('AO', 'Advanced Only (A)'))

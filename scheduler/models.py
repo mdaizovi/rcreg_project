@@ -9,7 +9,7 @@ import string
 import collections
 #from django.db.models.signals import pre_save, post_save,post_delete
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL
+from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,LOCATION_CATEGORY,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
@@ -51,6 +51,7 @@ class Location(models.Model):
     name=models.CharField(max_length=50)
     abbrv=models.CharField(max_length=50, null=True, blank=True)
     location_type=models.CharField(max_length=30, choices=LOCATION_TYPE)
+    #location_category=models.CharField(max_length=30, null=True, blank=True,choices=LOCATION_CATEGORY)
 
     def __unicode__(self):
        return "%s, %s" % (self.name, self.venue.name)

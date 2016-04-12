@@ -1,7 +1,7 @@
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
 from con_event.models import Country, State, Con, Registrant, Blog
 from django.contrib.auth.models import Group, User
-from swingtime.models import Event, Occurrence 
+from swingtime.models import Event, Occurrence
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 import csv
@@ -18,6 +18,21 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+
+#con=Con.objects.get(year="2016")
+#qset=list(Training.objects.filter(con=con))
+#loc=show_loc(con)
+def show_loc(qset):
+    loc={}
+    for t in qset:
+        if t.location_type not in loc:
+            loc[t.location_type]=[t]
+        else:
+            temp=loc.get(t.location_type)
+            temp.append(t)
+            loc[t.location_type]=list(temp)
+    return loc
+
 
 def wb_or_str(xlfile):
     """cehcks is xlfile input is a strong of name, or wb object. either makes or returns object."""
