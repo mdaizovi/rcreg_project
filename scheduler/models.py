@@ -6,6 +6,7 @@ from django.core.urlresolvers import reverse#for absolute url #https://docs.djan
 #from datetime import datetime, timedelta
 import datetime
 import string
+import collections
 #from django.db.models.signals import pre_save, post_save,post_delete
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL
@@ -545,6 +546,82 @@ class Activity(models.Model):
 
         return occurrences
 
+    # def sched_conflict_split(self):
+    #     """Makes dict of smaller dicts, smaller dict has occurrence as k, conflicts and v.
+    #     Later look for the k,v pair that is an occurrence and an empty dict to find ones w/ no conflict."""
+    #     print "about to start sched_conflict_split"
+    #     occurrences=self.dummy_occurrences()
+    #     conflict={"blackout_conflict":[],"figurehead_conflict":[],"participant_conflict":[],"no_conflict":[]}
+    #
+    #     for o in occurrences:
+    #         blackout_conflict=o.blackout_conflict()
+    #         if blackout_conflict:
+    #             temp_list=conflict.get("blackout_conflict")
+    #             temp_list.append(o)
+    #             conflict["blackout_conflict"]=list(temp_list)
+    #         figurehead_conflict=o.figurehead_conflict()
+    #         if figurehead_conflict:
+    #             temp_list=conflict.get("figurehead_conflict")
+    #             temp_list.append(o)
+    #             conflict["figurehead_conflict"]=list(temp_list)
+    #         participant_conflict=o.participant_conflict()
+    #         if participant_conflict:
+    #             temp_list=conflict.get("blackout_conflict")
+    #             temp_list.append(o)
+    #             conflict["participant_conflict"]=list(temp_list)
+    #         if not blackout_conflict and not figurehead_conflict and not participant_conflict:
+    #             temp_list=conflict.get("no_conflict")
+    #             temp_list.append(o)
+    #             conflict["no_conflict"]=list(temp_list)
+    #     print "finished sched_conflict_split"
+    #     return conflict
+
+    def sched_conflict_score(self):
+        """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
+        scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
+        Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest"""
+        print "about to start sched_conflict_score"
+        occurrences=self.dummy_occurrences()
+        conflict={}
+
+        for o in occurrences:
+            score=0
+            blackout_conflict=o.blackout_conflict()
+            if blackout_conflict:
+                this_score=len(blackout_conflict)*100
+                #print "blackout score: ",this_score
+                score+=this_score
+
+            figurehead_conflict=o.figurehead_conflict()
+            if figurehead_conflict:
+                this_score=len(blackout_conflict)*10
+                #print "figurehead score: ",this_score
+                score+=this_score
+
+            participant_conflict=o.participant_conflict()
+            if participant_conflict:
+                this_score=len(blackout_conflict)*1
+                #print "participant score: ",this_score
+                score+=this_score
+
+            if score not in conflict:
+                conflict[score]=[o]
+            else:
+                this_list=conflict.get(score)
+                this_list.append(o)
+                conflict[score]=list(this_list)
+
+        print "finished sched_conflict_score, about to sort"
+        score_list=conflict.keys()
+        score_list.sort()
+        possible  = collections.OrderedDict()
+        for score in score_list:
+            temp_list=conflict.get(score)
+            possible[score]=temp_list
+        print "finished sorting, returning value"
+        return possible
+
+
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
         if hasattr(self, 'coach'):#if this is a training
@@ -565,7 +642,7 @@ class Activity(models.Model):
             from scheduler.views import edit_challenge
             return reverse('scheduler.views.edit_challenge', args=[str(self.pk)])
 
-    def get_schedule_url(self):
+    def get_sched_assist_url(self):
         if hasattr(self, 'coach'):#if this is a training
             from swingtime.views import sched_assist_tr
             return reverse('swingtime.views.sched_assist_tr', args=[str(self.pk)])

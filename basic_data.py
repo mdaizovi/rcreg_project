@@ -1,6 +1,7 @@
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
 from con_event.models import Country, State, Con, Registrant, Blog
 from django.contrib.auth.models import Group, User
+from swingtime.models import Event, Occurrence 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 import csv

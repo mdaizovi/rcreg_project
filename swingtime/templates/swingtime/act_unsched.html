@@ -30,12 +30,12 @@
       <h3 class="text-center">
         {%cycle "Challenges" "Trainings" %}: {{ aq.count }}</h3>
 <table class="table table-striped">
-  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: right;">Available Slot Hours</th></tr>
+  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: right;">Available Slot Hours<br>or Blackouts?</th></tr>
   {%for a in aq%}
 <tr><td><b>{{forloop.counter}}.</b>
     <a href="{{a.get_view_url}}">
     {{a.name}}</a></td>
-  <td style="text-align: right;"><a href="{{a.get_schedule_url}}">Click ME!</a></td>
+  <td style="text-align: right;"><a href="{{a.get_sched_assist_url}}">Click ME!</a></td>
 </tr>
 {%endfor%}
 </table>

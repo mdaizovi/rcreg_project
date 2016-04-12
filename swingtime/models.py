@@ -390,6 +390,21 @@ class Occurrence(models.Model):
             return conflict_dict
         else:
             return None
+#-------------------------------------------------------------------------------
+    def get_add_url(self):
+
+        print "starting get add url"
+        dstr_str=self.start_time.isoformat()
+        print "dstr_str: ",dstr_str
+
+        url_str='/events/add/?dtstart=%s&location=%s'%(dstr_str,str(self.location.pk))
+        if self.event.training:
+            url_str+="&training=%s"%(str(self.event.training.pk))
+        if self.event.challenge:
+            url_str+="&challenge=%s"%(str(self.event.challenge.pk))
+
+        print "url_str is ",url_str
+        return url_str
 
 #-------------------------------------------------------------------------------
 def create_event(

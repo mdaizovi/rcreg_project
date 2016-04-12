@@ -4,6 +4,9 @@
 
 {% block main_content %}
 <div class="row">
+  {%if not act%}
+  <div class="alert alert-danger" role="alert">This Activity does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+{%else%}
     <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for {{act.name}}</small></h3>
 <hr>
 
@@ -11,13 +14,19 @@
 
 <table class="table table-striped">
 
-  <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th>Conflicts</th><th>Intersections</th></tr>
+  <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th style="text-align:center;">Conflicts</th></tr>
 
-{%for p in possible %}
-<tr><td>Date</td><td>Start</td><td>End</td><td>Location</td><td>Conflicts</td><td>Intersections</td></tr>
+{%for k,v  in possible.iteritems %}
+{%for o in v%}
+<tr><td>{{ o.start_time|date:"D d" }}</td><td>{{ o.start_time|date:"f a" }}</td><td>{{ o.end_time|date:"f a" }}</td>
+  <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td style="text-align:center;">
+    {% with o.get_add_url as add_url %}
+    <a href="{{add_url}}">{{k}}</a></td></tr>{%endwith%}
+{%endfor%}
+{%endfor%}
 </table>
 
-{%endfor%}
 
+{%endif%}
 </div><!-- end row-->
 {% endblock %}

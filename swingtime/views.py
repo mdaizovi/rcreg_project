@@ -303,8 +303,13 @@ def sched_assist_tr(
     act_id,
     template='swingtime/sched_assist.html',
 ):
-    act=Training.objects.get(pk=act_id)
-    possible=[1]
+    try:
+        act=Training.objects.get(pk=act_id)
+    except:
+        return render(request, template, {})
+
+    possible=act.sched_conflict_score()
+
     return render(request, template, {'act':act,'possible':possible})
 
 #-------------------------------------------------------------------------------
@@ -522,8 +527,8 @@ def add_event(
     ##########################
 
     if request.method == 'POST':
-        selection = request.POST.copy()
-        print "selection", selection
+        #selection = request.POST.copy()
+        #print "selection", selection
 
         dtend_post=[u'end_time_1',u'end_time_0_year',u'end_time_0_month','end_time_0_day']
         if len( set(dtend_post).intersection(request.POST.keys())) > 0:
