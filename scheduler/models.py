@@ -548,22 +548,31 @@ class Activity(models.Model):
         #this works, but it makes about 2500 on my first test run.
         from swingtime.models import Event, Occurrence
         occurrences=[]
+        padding=0
         pls=self.possible_locations()
         if hasattr(self, 'coach'):#if this is a training
             challenge=None
             training=self
+            duration=float(self.duration)
         elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
             challenge=self
             training=None
+            if self.is_a_game:
+                duration=1
+            else:
+                duration=float(self.duration)
+            padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
+            padding=round(padding, 2)
+
         event=Event(challenge=challenge,training=training)
+        dur_delta=int((duration+padding)*60)
 
         for d in self.con.get_date_range():
             day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
             day_end=day_start+TIMESLOT_END_TIME_DURATION
-            duration=float(self.duration)*60
-
             slot_start=day_start
-            slot_end=slot_start+datetime.timedelta(minutes=duration)
+            slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
+
             while slot_end<day_end:
 
                 for l in pls:
