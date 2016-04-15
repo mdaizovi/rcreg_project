@@ -6,9 +6,14 @@
 <form method="POST" class="post-form">
 {% csrf_token %}
 <table class="table table-striped">
-  <tr> <td style="max-width: 150px;"><b>Challenge</b></td> <td style="max-width: 150px;"><b>Captains</b></td>  <td style="width: 125px;"><b>Submitted On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
+  <tr> <td style="max-width: 150px;"><b>Challenge</b></td><td><b>Game?</b></td><td><b>Location Type</b></td><td style="max-width: 150px;"><b>Captains</b></td>  <td style="width: 125px;"><b>Submitted On </b></td>  <td colspan="5" style="text-align:center;"><b>Status</b></td></tr>
 {%for chal,form in q_od.iteritems%}
 <tr><td style="max-width: 150px;"> <a href="{{chal.get_view_url}}">{{chal.name}}</a><br>({{chal.skill_display}}, {{chal.gender_display}})</td>
+<td>{%if chal.is_a_game%}
+  <span class="glyphicon" aria-hidden="true"><i class="fa fa-trophy" style="text-align:center;"></i></span>{%endif%}
+</td>
+<td>{{chal.get_location_type_display}}</td>
+
   <td style="max-width: 150px;">{{chal.roster1.captain.sk8name}} & {{chal.roster2.captain.sk8name}}</td>
   <td style="width: 125px;">{{chal.submitted_on}}</td>
     {%for field in form%}<td><b>{{ field.label }}</b></td><td>{{field}}</td>{%endfor%}</tr>

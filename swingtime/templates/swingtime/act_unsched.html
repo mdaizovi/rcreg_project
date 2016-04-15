@@ -30,13 +30,13 @@
       <h3 class="text-center">
         {%cycle "Challenges" "Trainings" %}</h3>
 <table class="table table-striped">
-  <tr><th>{%cycle "Challenge" "Training" %} </th><th style="text-align: center;">Blackouts</th></tr>
+  <tr><th>{%cycle "Challenge" "Training" %}</th><th>Location</th><th style="text-align: center;">Blackouts</th></tr>
   {%for k, aq in od.iteritems%}
   {%for a in aq%}
-<tr><td><b>{{forloop.counter}}.</b>
-    <a href="{{a.get_view_url}}">
-    {{a.name}}</a></td>
-  <td style="text-align: center;"><a href="{{a.get_sched_assist_url}}">{{k}}</a></td>
+<tr><td>
+    <a href="{{a.get_view_url}}">{{a.name}}</a></td>
+    <td style="max-width:125px;">{{a.location_type}}</td>
+  <td style="text-align: center; max-width:75px;"><a href="{{a.get_sched_assist_url}}">{{k}}</a></td>
 </tr>
 {%endfor%}
 {%endfor%}

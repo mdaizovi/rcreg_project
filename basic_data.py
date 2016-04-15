@@ -200,7 +200,7 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 040616.xlsx')
+#target_file=(import_path+'RollerTron Attendee 041316.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
