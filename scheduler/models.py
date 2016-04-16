@@ -659,6 +659,43 @@ class Activity(models.Model):
         print "finished sorting, returning value"
         return possible
 
+    def get_activity_type(self):
+        """Written so can easily see if is snctioned game/chal in templates.
+        Might as well throw in some training data too,
+        but this was mostly written so can use Cycle template tag for both chal and train"""
+
+        loc_str=""
+
+        #both have location_type
+        if self.location_type=='EITHER Flat or Banked Track':
+            loc_str="FT or BT "
+        elif self.location_type=="Flat Track":
+            loc_str="FT "
+        elif self.location_type=='Banked Track':
+            loc_str="BT "
+        elif self.location_type=='Off Skates Athletic Training':
+            loc_str="Xsk8 Athletic "
+        elif self.location_type=='Seminar/Conference Room':
+            loc_str="Xsk8  "
+
+
+        if hasattr(self, 'coach'):#if this is a training
+            #loc_str+=self.get_duration_display()
+            loc_str+=("("+self.duration+" Hrs)")
+
+        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):#if this is a challenge:
+            if self.gametype in ['3CHAL','6CHAL','36CHAL']:
+                if self.gametype=='3CHAL':
+                    loc_str+="30m"
+                elif self.gametype=='6CHAL':
+                    loc_str+="60m"
+                elif self.gametype=='36CHAL':
+                    loc_str+="30 or 60m"
+                loc_str+=" Challenge"
+            elif self.is_a_game or self.gametype=="6GAME":
+                loc_str+="60m Reg/San Game"
+
+        return loc_str
 
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):

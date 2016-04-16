@@ -225,6 +225,7 @@ class Occurrence(models.Model):
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
     event = models.ForeignKey(Event, verbose_name=_('event'), editable=False)
+    #Why did i say null=true for locaiton?
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = OccurrenceManager()
