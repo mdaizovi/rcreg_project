@@ -68,7 +68,9 @@ def chal_submit(
                 data.remove(dic)
 
     table = ChallengeTable(data)
-    RequestConfig(request).configure(table)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
+
 
     new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
@@ -112,7 +114,8 @@ def chal_accept(
                     data.remove(dic)
 
     table = ChallengeTable(data)
-    RequestConfig(request).configure(table)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
     new_context={'table':table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
@@ -151,7 +154,8 @@ def chal_reject(
                     del q_od[this_instance]#remove if no longer accepted
 
     table = ChallengeTable(data)
-    RequestConfig(request).configure(table)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
     new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
