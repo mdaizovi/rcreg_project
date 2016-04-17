@@ -2,7 +2,7 @@
 from con_event.models import Con,Registrant, SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL, SKILL_LEVEL_ACT
 from django.contrib import admin
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
-from import_export import resources
+from import_export import resources,fields
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from django.core.urlresolvers import reverse, resolve
 #ImportMixin, ExportMixin, ImportExportMixin
@@ -134,11 +134,26 @@ class RosterAdmin(ImportExportModelAdmin):#this has its own obvious expost butto
 
 
 class ChallengeResource(resources.ModelResource):
+    #thanks! http://stackoverflow.com/questions/25849480/django-import-export-export-from-models-functions
+    duration_display=fields.Field()
+    gametype_display=fields.Field()
+
+    def dehydrate_duration_display(self,challenge):
+        return challenge.get_duration_display()
+
+    def dehydrate_gametype_display(self,challenge):
+        return challenge.get_gametype_display()
+
     class Meta:
         model = Challenge
-        fields = ('id','name','roster1','roster1__name','roster1__captain','roster1__captain__sk8name','communication','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','created_on','submitted_on','internal_notes','con','con__city','con__year')
+        #fields = ('id','name','roster1','duration_display','gametype_display','roster1__name','roster1__captain','roster1__captain__sk8name','communication','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','ruleset','submitted_on','internal_notes','con','con__city','con__year')
+        fields = ('id','name','roster1','duration_display','gametype_display','roster1__captain__sk8name','communication','captain1accepted','roster2','roster2__captain__sk8name','captain2accepted','is_a_game','location_type','RCaccepted','ruleset','submitted_on','con__year')
+
+
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
-        export_order=fields
+        #export_order=fields
+        export_order= ('id','name','is_a_game','duration_display','gametype_display','location_type','RCaccepted','submitted_on','ruleset','communication','captain1accepted','captain2accepted','roster1','roster1__captain__sk8name','roster2','roster2__captain__sk8name','con__year')
+
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
         import_id_fields = ('roster1','roster1__captain','roster2','roster2__captain','con')
         skip_unchanged = True
@@ -168,10 +183,30 @@ class ChallengeAdmin(ImportExportModelAdmin):#this has its own obvious expost bu
             return super(ChallengeAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 class TrainingResource(resources.ModelResource):
+
+    duration_display=fields.Field()
+    coach_name=fields.Field()
+
+    def dehydrate_duration_display(self,training):
+        return training.get_duration_display()
+
+    def dehydrate_coach_name(self,training):
+        names=""
+        for c in training.coach.all():
+            names+=c.user.first_name+", "
+        if len(names)>2:
+            names=names[:-2]
+
+        return names
+
+
     class Meta:
         model = Training
-        fields = ('id','name','location_type','RCaccepted','registered__intl','registered__skill','registered__gender','duration','onsk8s','contact','coach','created_on','description','regcap','audcap','internal_notes','con','con__city','con__year')
+        # fields = ('id','name','location_type','RCaccepted','registered__intl','registered__skill','duration','onsk8s','contact','coach','created_on','description','regcap','audcap','internal_notes','con','con__city','con__year')
+        # export_order=fields
+        fields = ('id','name','location_type','duration_display','RCaccepted','registered__intl','registered__skill','onsk8s','contact','coach_name','created_on','description','regcap','audcap','con__year')
         export_order=fields
+
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
         import_id_fields = ('coach','con')
         skip_unchanged = True
