@@ -10,6 +10,7 @@ from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render, redirect,HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.forms.models import model_to_dict
 #from django.forms import modelformset_factory
 
 from swingtime.models import Event, Occurrence
@@ -22,6 +23,10 @@ from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm
 
 from dateutil import parser
+
+import django_tables2 as tables
+from scheduler.tables import ChallengeTable
+from django_tables2  import RequestConfig
 
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
@@ -43,8 +48,13 @@ def chal_submit(
 
     q=Challenge.objects.filter(con=con, RCrejected=False).exclude(roster1=None).exclude(roster2=None).exclude(submitted_on=None).order_by('submitted_on')
     q_od  = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"c":c,"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -52,10 +62,15 @@ def chal_submit(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCrejected==True:
-                    del q_od[this_instance]#remove if no longer accepted
+        for dic in data:
+            chal=dic.get("c")
+            if chal.RCrejected==True:
+                data.remove(dic)
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    table = ChallengeTable(data)
+    RequestConfig(request).configure(table)
+
+    new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
@@ -75,8 +90,13 @@ def chal_accept(
 
     q=Challenge.objects.filter(con=con, RCaccepted=True).exclude(submitted_on=None).order_by('submitted_on')
     q_od = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"c":c,"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -84,10 +104,16 @@ def chal_accept(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCaccepted==False:
-                    del q_od[this_instance]#remove if no longer accepted
+                # if this_instance.RCaccepted==False:
+                #     del q_od[this_instance]#remove if no longer accepted
+            for dic in data:
+                chal=dic.get("c")
+                if chal.RCaccepted==False:
+                    data.remove(dic)
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    table = ChallengeTable(data)
+    RequestConfig(request).configure(table)
+    new_context={'table':table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
@@ -107,8 +133,13 @@ def chal_reject(
 
     q=Challenge.objects.filter(con=con, RCrejected=True).exclude(submitted_on=None).order_by('submitted_on')
     q_od = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -119,7 +150,9 @@ def chal_reject(
                 if this_instance.RCrejected==False:
                     del q_od[this_instance]#remove if no longer accepted
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    table = ChallengeTable(data)
+    RequestConfig(request).configure(table)
+    new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 

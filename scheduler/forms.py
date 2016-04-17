@@ -303,6 +303,7 @@ class ChalStatusForm(ModelForm):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
                 'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
+                #'style': "max-lrngth:100px;",
                 })
 
 class TrainStatusForm(ModelForm):
