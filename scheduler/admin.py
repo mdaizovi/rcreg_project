@@ -138,21 +138,29 @@ class ChallengeResource(resources.ModelResource):
     duration_display=fields.Field()
     gametype_display=fields.Field()
 
+    skill_display=fields.Field()
+    gender_display=fields.Field()
+
+
     def dehydrate_duration_display(self,challenge):
         return challenge.get_duration_display()
 
     def dehydrate_gametype_display(self,challenge):
         return challenge.get_gametype_display()
 
+    def dehydrate_skill_display(self,challenge):
+        return challenge.skill_display()
+
+    def dehydrate_gender_display(self,challenge):
+        return challenge.gender_display()
+
     class Meta:
         model = Challenge
         #fields = ('id','name','roster1','duration_display','gametype_display','roster1__name','roster1__captain','roster1__captain__sk8name','communication','captain1accepted','roster1score','roster2','roster2__name','roster2__captain','roster2__captain__sk8name','captain2accepted','roster2score','is_a_game','location_type','RCaccepted','ruleset','submitted_on','internal_notes','con','con__city','con__year')
-        fields = ('id','name','roster1','duration_display','gametype_display','roster1__captain__sk8name','communication','captain1accepted','roster2','roster2__captain__sk8name','captain2accepted','is_a_game','location_type','RCaccepted','ruleset','submitted_on','con__year')
-
-
+        fields = ('id','name','roster1','duration_display','gametype_display','skill_display','gender_display','roster1__captain__sk8name','communication','captain1accepted','roster2','roster2__captain__sk8name','captain2accepted','is_a_game','location_type','RCaccepted','ruleset','submitted_on','con__year')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         #export_order=fields
-        export_order= ('id','name','is_a_game','duration_display','gametype_display','location_type','RCaccepted','submitted_on','ruleset','communication','captain1accepted','captain2accepted','roster1','roster1__captain__sk8name','roster2','roster2__captain__sk8name','con__year')
+        export_order= ('id','name','skill_display','gender_display','is_a_game','duration_display','gametype_display','location_type','RCaccepted','submitted_on','ruleset','communication','captain1accepted','captain2accepted','roster1','roster1__captain__sk8name','roster2','roster2__captain__sk8name','con__year')
 
         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
         import_id_fields = ('roster1','roster1__captain','roster2','roster2__captain','con')
