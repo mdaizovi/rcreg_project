@@ -50,7 +50,7 @@ def chal_submit(
     q_od  = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"c":c,"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        thisdict={"name":c,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
         form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
         data.append(thisdict)
@@ -63,7 +63,7 @@ def chal_submit(
                 this_instance=form.save()
                 save_success+=1
         for dic in data:
-            chal=dic.get("c")
+            chal=dic.get("name")
             if chal.RCrejected==True:
                 data.remove(dic)
 
@@ -94,7 +94,7 @@ def chal_accept(
     q_od = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"c":c,"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        thisdict={"name":c,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
         form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
         data.append(thisdict)
@@ -109,7 +109,7 @@ def chal_accept(
                 # if this_instance.RCaccepted==False:
                 #     del q_od[this_instance]#remove if no longer accepted
             for dic in data:
-                chal=dic.get("c")
+                chal=dic.get("name")
                 if chal.RCaccepted==False:
                     data.remove(dic)
 
@@ -138,7 +138,7 @@ def chal_reject(
     q_od = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"name":c.name,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
+        thisdict={"name":c,"gametype":c.get_gametype_display(),"location_type":c.location_type,"duration":c.get_duration_display(),"submitted_on":c.submitted_on}
         form=ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
         data.append(thisdict)
@@ -150,8 +150,12 @@ def chal_reject(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCrejected==False:
-                    del q_od[this_instance]#remove if no longer accepted
+            for dic in data:
+                chal=dic.get("name")
+                if chal.RCrejected==False:
+                    data.remove(dic)
+                # if this_instance.RCrejected==False:
+                #     del q_od[this_instance]#remove if no longer accepted
 
     table = ChallengeTable(data)
     #RequestConfig(request).configure(table)

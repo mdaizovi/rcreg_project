@@ -1,6 +1,9 @@
 {% load django_tables2 %}
 {% load i18n %}
 
+
+{%if table%}
+
 <div class="table-container">
 {% block table %}
 <table{% if table.attrs %} {{ table.attrs.as_html }}{% endif %}>
@@ -34,7 +37,13 @@
                   <td><b>{{ cell.RCrejected.label }}</b></td><td>{{cell.RCrejected}}</td>
 {%else%}
 
-                  {% if column.localize == None %} {{ cell|truncatechars:40 }} {% else %}{% if column.localize %}{{ cell|localize }}{% else %}{{ cell|unlocalize }}{% endif %}{% endif %}</td>
+                  {% if column.localize == None %}
+                  {%if "href" in cell%}
+                  {% autoescape on %}{{ cell }} {% endautoescape %}
+                  {%else%}
+                  {{ cell|truncatechars:50 }}
+                  {%endif%}
+                  {% else %}{% if column.localize %}{{ cell|localize }}{% else %}{{ cell|unlocalize }}{% endif %}{% endif %}</td>
 {%endif%}
             {% endfor %}
 
@@ -99,5 +108,6 @@
 {% endblock pagination %}
 {% endwith %}
 {% endwith %}
+{% endif %}
 {% endif %}
 </div>
