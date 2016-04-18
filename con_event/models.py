@@ -545,39 +545,27 @@ class Registrant(Matching_Criteria):
             return False
 
 
-    def update_blackouts(self,date_dict):
+    def update_blackouts(self,bo_tup_list):
         """Takes in a dictionary w/ date object as key, list w/ ["AM","PM"], or 1, as value.
         These are all of the blackouts that *should* exist. Takes dict and creates and deletes as appropriate."""
         existing_blackouts=self.blackout.all()
-        bo_dict={}
-        date_dict_keys=date_dict.keys()
+        existing_bo_tup_list=[]
         for bo in existing_blackouts:
-            string_of_date=bo.date.strftime("%B %d, %Y")
-            if string_of_date not in bo_dict:
-                bo_dict[string_of_date]=[bo.ampm]
-            else:
-                temp=bo_dict.get(string_of_date)
-                temp.append(bo.ampm)
-                bo_dict[string_of_date]=list(temp)
+            existing_bo_tup_list.append((bo.date,bo.ampm))
 
         #make new ones
-        for date,ampmlist in date_dict.iteritems():
-            for ampmitem in ampmlist:
-                date_object = datetime.datetime.strptime(date, "%B %d, %Y")
-                Blackout.objects.get_or_create(registrant=self,ampm=ampmitem,date=date_object)
+        for tup in bo_tup_list:
+            if tup not in existing_bo_tup_list:
+                date=tup[0]
+                ampmitem=tup[1]
+                Blackout.objects.get_or_create(registrant=self,ampm=ampmitem,date=date)
 
         #delete old ones
-        for date,ampmlist in bo_dict.iteritems():
-            date_object = datetime.datetime.strptime(date, "%B %d, %Y")
-            if date not in date_dict:
-                Blackout.objects.filter(registrant=self,date=date_object).delete()
-            else:
-                equivolent_date_dict_value=date_dict.get(date)
-
-                for ampmitem in ampmlist:
-                    if ampmitem not in equivolent_date_dict_value:
-                        Blackout.objects.filter(registrant=self,date=date_object,ampm=ampmitem).delete()
-
+        for tup in existing_bo_tup_list:
+            if tup not in bo_tup_list:
+                date=tup[0]
+                ampmitem=tup[1]
+                Blackout.objects.get(registrant=self,date=date,ampm=ampmitem).delete()
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names

@@ -2,7 +2,7 @@ from django.shortcuts import render,render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
-from con_event.forms import RegistrantProfileForm
+from con_event.forms import RegistrantProfileForm,AvailabilityForm
 from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
@@ -53,6 +53,11 @@ def registrant_profile(request):
 
 
     if request.method == 'POST':
+        selection = request.POST.copy()
+        print "selection", selection
+        #selectiondict=dict(selection.lists())
+        #print "selectiondict: ",selectiondict
+
         save_attempt=True
         this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
         this_con=this_reg.con
@@ -71,23 +76,20 @@ def registrant_profile(request):
         problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
 
         if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!
-            these_date_strings=[]
-            date_dict={}
-            these_dates=this_con.get_date_range()
-            for date in these_dates:
-                #don't change the way you convert to string, this method needs to be the same for update_blackouts to work.
-                string_of_date=date.strftime("%B %d, %Y")
-                ampmitems=request.POST.getlist(string_of_date)
-                #print "ampmitems",ampmitems
-                if string_of_date not in request.POST:
-                    #If date not in post at all, assume both boxes unchecked.
-                    date_dict[string_of_date]=["AM","PM"]
-                else:#assuming there's an ampmitem list, bc the date is in post
-                    if "AM" not in ampmitems:
-                        date_dict[string_of_date]=["AM"]
-                    elif "PM" not in ampmitems:
-                        date_dict[string_of_date]=["PM"]
-            this_reg.update_blackouts(date_dict)
+            bo_tup_list=[]
+            available=[]
+            for key, value in request.POST.items():
+                if value==u'on':
+                    available.append(key)
+
+            for date in this_con.get_date_range():
+                ampmlist=[]
+                if str(date)+"-am" not in available:
+                    bo_tup_list.append((date,"AM"))
+                if str(date)+"-pm" not in available:
+                    bo_tup_list.append((date,"PM"))
+            if len(bo_tup_list)>0:
+                this_reg.update_blackouts(bo_tup_list)
 
         if not captain_conflict:
             if problem_criteria or potential_conflicts:
@@ -108,6 +110,7 @@ def registrant_profile(request):
     registrant_list= list(user.registrant_set.all())
     for registrant in registrant_list:
         bo_list=[]
+        bo_form_list=[]
         datelist=None
         form = RegistrantProfileForm(instance=registrant)
 
@@ -116,20 +119,21 @@ def registrant_profile(request):
             if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
                 datelist=registrant.con.get_date_range()
                 for bo in registrant.blackout.all():
-                    bo_list.append((bo.date,bo.ampm,None,"Available "+bo.ampm))
-                for date in datelist:
-                    if (date,"AM",None,"Available AM") not in bo_list:
-                        #if no BO, that means they're available, check the box in the template. None for item 2 will not check the box.
-                        bo_list.append((date,"AM","checked","Available AM"))
-                    if (date,"PM",None,"Available PM") not in bo_list:
-                        bo_list.append((date,"PM","checked","Available PM"))
-                bo_list.sort()
+                    bo_list.append((bo.date,bo.ampm))
 
+                for date in datelist:
+                    initial={}
+                    if (date,"AM") in bo_list:
+                        initial["am"]=False
+                    if (date,"PM") in bo_list:
+                        initial["pm"]=False
+                    availabilityform=AvailabilityForm(date=date,initial=initial,prefix=str(date))
+                    bo_form_list.append(availabilityform)
         else:
             datelist=None
             bo_list=None
 
-        registrant_dict={'bo_list':bo_list,'datelist':datelist,'con':registrant.con, 'registrant':registrant,'form':form}
+        registrant_dict={'bo_form_list':bo_form_list,'datelist':datelist,'con':registrant.con, 'registrant':registrant,'form':form}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()
@@ -145,4 +149,4 @@ def registrant_profile(request):
             active=None
 
 
-    return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response('registrant_profile.html',{'availabilityform':availabilityform,'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))

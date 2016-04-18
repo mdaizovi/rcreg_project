@@ -131,3 +131,26 @@ class ConSchedStatusForm(ModelForm):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
                 })
+
+
+class AvailabilityForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        date = kwargs.pop('date')
+        super(AvailabilityForm, self).__init__(*args, **kwargs)
+
+        self.fields["date"] = forms.DateField(required=True,label="Date",initial=date.strftime("%a %B %d, %Y"))
+        self.fields["am"] = forms.BooleanField(label='Available AM', initial=True)
+        self.fields["pm"] = forms.BooleanField(label='Available PM', initial=True)
+
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                #'class': 'form-control',
+                 'id': str(date),
+                 'name': str(date),
+                })
+
+        self.fields['date'].widget.attrs['disabled'] = True
+        self.fields['am'].required = False
+        self.fields['pm'].required = False

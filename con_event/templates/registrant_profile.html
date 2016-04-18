@@ -89,7 +89,7 @@
 </div><!-- end col-md-6 center-block-->
 
 
-{%if dict.bo_list %}
+{%if dict.bo_form_list %}
 <input type="hidden" name="blackouts_visible" value="blackouts_visible" />
 <div class="col-md-6 pull-right">
 
@@ -98,18 +98,12 @@
     Please list times that would be acceptable to schedule Trainings you are coaching and/or Challenges you are captaining.</small></h4>
 
 <table class="table table-condensed">
+{%for form in dict.bo_form_list %}
+  <fieldset>
+<tr>{% for field in form%}<td>{{field.label}}</td><td>{{field}}</td>{%endfor%}</tr>
+</fieldset>
+{%endfor%}
 
-{%for item in dict.bo_list %}
-{%cycle "</tr>" "" %}
-{% with item.0|date:"D M d" as date_string %}
-<td>{%cycle date_string "" %}</td>
-
-<td><label class="checkbox-inline">
-  <input type="checkbox" id="{{item.0}}" name="{{item.0}}" value="{{item.1}}" {{item.2}}>{{item.3}}
-</label></td>
-
-{%cycle "" "</tr>" %}
-{%endwith%}{%endfor%}
 
 </table>
 </div>
@@ -124,10 +118,6 @@
  </fieldset>
  <input type="hidden" name="registrant_id" value="{{ dict.registrant.id }}" />
 </form>
-
-
-
-
 
         </div><!-- end tab-pane -->
         {%endwith%}{%endwith%}
