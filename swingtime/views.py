@@ -25,7 +25,7 @@ from scheduler.forms import ChalStatusForm,TrainStatusForm
 from dateutil import parser
 
 import django_tables2 as tables
-from scheduler.tables import ChallengeTable
+from scheduler.tables import ChallengeTable,TrainingTable
 from django_tables2  import RequestConfig
 
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
@@ -181,8 +181,14 @@ def train_submit(
 
     q=Training.objects.filter(con=con, RCrejected=False).order_by('created_on')
     q_od  = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+            "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
+        form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -190,10 +196,18 @@ def train_submit(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCrejected==True:
-                    del q_od[this_instance]#remove if no longer accepted
+        for dic in data:
+            train=dic.get("name")
+            if train.RCrejected==True:
+                data.remove(dic)
+                # if this_instance.RCrejected==True:
+                #     del q_od[this_instance]#remove if no longer accepted
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    table = TrainingTable(data)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
+
+    new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
@@ -213,8 +227,14 @@ def train_accept(
 
     q=Training.objects.filter(con=con, RCaccepted=True).order_by('created_on')
     q_od = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+            "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
+        form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -222,10 +242,19 @@ def train_accept(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCaccepted==False:
-                    del q_od[this_instance]#remove if no longer accepted
+        for dic in data:
+            train=dic.get("name")
+            if train.RCaccepted==False:
+                data.remove(dic)
+                # if this_instance.RCaccepted==False:
+                #     del q_od[this_instance]#remove if no longer accepted
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+
+    table = TrainingTable(data)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
+
+    new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
@@ -245,8 +274,14 @@ def train_reject(
 
     q=Training.objects.filter(con=con, RCrejected=True).order_by('created_on')
     q_od = collections.OrderedDict()
+    data=[]
     for c in q:
-        q_od[c]=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+            "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
+        form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
+        thisdict["status"]=form
+        data.append(thisdict)
+        q_od[c]=form
 
     save_success=0
     if request.method == 'POST':
@@ -254,10 +289,18 @@ def train_reject(
             if form.is_valid():
                 this_instance=form.save()
                 save_success+=1
-                if this_instance.RCrejected==False:
-                    del q_od[this_instance]#remove if no longer accepted
+        for dic in data:
+            train=dic.get("name")
+            if train.RCrejected==False:
+                data.remove(dic)
+                # if this_instance.RCrejected==False:
+                #     del q_od[this_instance]#remove if no longer accepted
 
-    new_context={"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
+    table = TrainingTable(data)
+    #RequestConfig(request).configure(table)
+    RequestConfig(request,paginate={"per_page": 300}).configure(table)
+
+    new_context={"table":table,"save_success":save_success,"q_od":q_od,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
 
