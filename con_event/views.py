@@ -54,7 +54,7 @@ def registrant_profile(request):
 
     if request.method == 'POST':
         selection = request.POST.copy()
-        print "selection", selection
+        #print "selection", selection
         #selectiondict=dict(selection.lists())
         #print "selectiondict: ",selectiondict
 
@@ -85,11 +85,12 @@ def registrant_profile(request):
             for date in this_con.get_date_range():
                 ampmlist=[]
                 if str(date)+"-am" not in available:
+                    #If it's not checked that means a Blackout needs to be made.
+                    #If it's checked, that day is available, don't want a blakcout for that day.
                     bo_tup_list.append((date,"AM"))
                 if str(date)+"-pm" not in available:
                     bo_tup_list.append((date,"PM"))
-            if len(bo_tup_list)>0:
-                this_reg.update_blackouts(bo_tup_list)
+            this_reg.update_blackouts(bo_tup_list)
 
         if not captain_conflict:
             if problem_criteria or potential_conflicts:

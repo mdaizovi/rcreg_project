@@ -548,9 +548,8 @@ class Registrant(Matching_Criteria):
     def update_blackouts(self,bo_tup_list):
         """Takes in a dictionary w/ date object as key, list w/ ["AM","PM"], or 1, as value.
         These are all of the blackouts that *should* exist. Takes dict and creates and deletes as appropriate."""
-        existing_blackouts=self.blackout.all()
         existing_bo_tup_list=[]
-        for bo in existing_blackouts:
+        for bo in self.blackout.all():
             existing_bo_tup_list.append((bo.date,bo.ampm))
 
         #make new ones
@@ -565,7 +564,10 @@ class Registrant(Matching_Criteria):
             if tup not in bo_tup_list:
                 date=tup[0]
                 ampmitem=tup[1]
-                Blackout.objects.get(registrant=self,date=date,ampm=ampmitem).delete()
+                try:
+                    Blackout.objects.get(registrant=self,date=date,ampm=ampmitem).delete()
+                except:
+                    print "error deleting blackout: ",self, date, ampmitem 
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names

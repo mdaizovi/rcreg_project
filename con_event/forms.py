@@ -139,7 +139,7 @@ class AvailabilityForm(forms.Form):
         date = kwargs.pop('date')
         super(AvailabilityForm, self).__init__(*args, **kwargs)
 
-        self.fields["date"] = forms.DateField(required=True,label="Date",initial=date.strftime("%a %B %d, %Y"))
+        self.fields["date"] = forms.DateField(required=True,label="Date:",initial=date.strftime("%a %B %d, %Y"))
         self.fields["am"] = forms.BooleanField(label='Available AM', initial=True)
         self.fields["pm"] = forms.BooleanField(label='Available PM', initial=True)
 
@@ -151,6 +151,8 @@ class AvailabilityForm(forms.Form):
                  'name': str(date),
                 })
 
+        #Doesn't seem to be any difference between disabled and readonly, in this case.
         self.fields['date'].widget.attrs['disabled'] = True
+        #self.fields['date'].widget.attrs['readonly'] = True
         self.fields['am'].required = False
         self.fields['pm'].required = False
