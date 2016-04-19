@@ -150,4 +150,4 @@ def registrant_profile(request):
             active=None
 
 
-    return render_to_response('registrant_profile.html',{'availabilityform':availabilityform,'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
