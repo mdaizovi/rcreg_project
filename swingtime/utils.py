@@ -187,7 +187,9 @@ def create_timeslot_table(
     if isinstance(items, QuerySet):
         items = items._clone()
     elif not items:
-        items = Occurrence.objects.daily_occurrences(dt).select_related('event')
+        items = Occurrence.objects.daily_occurrences(dt)
+        #items = Occurrence.objects.daily_occurrences(dt).select_related('event')
+        #above from april 21, trying to get rid of events. i don't know why below is commented out.
         #items = Occurrence.objects.daily_occurrences(dt).select_related('event').filter(location__in=locations)
 
     # build a mapping of timeslot "buckets"

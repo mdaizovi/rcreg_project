@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 #from django.forms import modelformset_factory
 
 from swingtime.models import Event, Occurrence
+#from swingtime.models import Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
@@ -432,89 +433,89 @@ def calendar_home(
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
-@login_required
-def event_listing(
-    request,
-    template='swingtime/event_list.html',
-    events=None,
-    **extra_context
-):
-    '''
-    View all ``events``.
-
-    If ``events`` is a queryset, clone it. If ``None`` default to all ``Event``s.
-
-    Context parameters:
-
-    ``events``
-        an iterable of ``Event`` objects
-
-    ... plus all values passed in via **extra_context
-    '''
-    if events is None:
-        events = Event.objects.all()
-
-    extra_context['events'] = events
-    return render(request, template, extra_context)
+# @login_required
+# def event_listing(
+#     request,
+#     template='swingtime/event_list.html',
+#     events=None,
+#     **extra_context
+# ):
+#     '''
+#     View all ``events``.
+#
+#     If ``events`` is a queryset, clone it. If ``None`` default to all ``Event``s.
+#
+#     Context parameters:
+#
+#     ``events``
+#         an iterable of ``Event`` objects
+#
+#     ... plus all values passed in via **extra_context
+#     '''
+#     if events is None:
+#         events = Event.objects.all()
+#
+#     extra_context['events'] = events
+#     return render(request, template, extra_context)
 
 
 #-------------------------------------------------------------------------------
-@login_required
-def event_view(
-    request,
-    pk,
-    template='swingtime/event_detail.html',
-    event_form_class=forms.EventForm,
-    recurrence_form_class=forms.MultipleOccurrenceForm,
-    save_success=False,
-):
-    '''
-    View an ``Event`` instance and optionally update either the event or its
-    occurrences.
-
-    Context parameters:
-
-    ``event``
-        the event keyed by ``pk``
-
-    ``event_form``
-        a form object for updating the event
-
-    ``recurrence_form``
-        a form object for adding occurrences
-    '''
-    event = get_object_or_404(Event, pk=pk)
-    event_form = recurrence_form = None
-    if request.method == 'POST':
-        if '_update' in request.POST:
-            event_form = event_form_class(request.POST, instance=event)
-            if event_form.is_valid():
-                event_form.save(event)
-                save_success=True
-                return http.HttpResponseRedirect(request.path)
-        elif '_add' in request.POST:
-            recurrence_form = recurrence_form_class(request.POST)
-            if recurrence_form.is_valid():
-                recurrence_form.save(event)
-                save_success=True
-                return http.HttpResponseRedirect(request.path)
-        else:
-            return http.HttpResponseBadRequest('Bad Request')
-
-    data = {
-        'save_success':save_success,#probably doesn't run
-        'event': event,
-        'event_form': event_form or event_form_class(instance=event),
-        'recurrence_form': recurrence_form or recurrence_form_class(initial={'dtstart': datetime.now()})
-    }
-    return render(request, template, data)
+# @login_required
+# def event_view(
+#     request,
+#     pk,
+#     template='swingtime/event_detail.html',
+#     event_form_class=forms.EventForm,
+#     recurrence_form_class=forms.MultipleOccurrenceForm,
+#     save_success=False,
+# ):
+#     '''
+#     View an ``Event`` instance and optionally update either the event or its
+#     occurrences.
+#
+#     Context parameters:
+#
+#     ``event``
+#         the event keyed by ``pk``
+#
+#     ``event_form``
+#         a form object for updating the event
+#
+#     ``recurrence_form``
+#         a form object for adding occurrences
+#     '''
+#     event = get_object_or_404(Event, pk=pk)
+#     event_form = recurrence_form = None
+#     if request.method == 'POST':
+#         if '_update' in request.POST:
+#             event_form = event_form_class(request.POST, instance=event)
+#             if event_form.is_valid():
+#                 event_form.save(event)
+#                 save_success=True
+#                 return http.HttpResponseRedirect(request.path)
+#         elif '_add' in request.POST:
+#             recurrence_form = recurrence_form_class(request.POST)
+#             if recurrence_form.is_valid():
+#                 recurrence_form.save(event)
+#                 save_success=True
+#                 return http.HttpResponseRedirect(request.path)
+#         else:
+#             return http.HttpResponseBadRequest('Bad Request')
+#
+#     data = {
+#         'save_success':save_success,#probably doesn't run
+#         'event': event,
+#         'event_form': event_form or event_form_class(instance=event),
+#         'recurrence_form': recurrence_form or recurrence_form_class(initial={'dtstart': datetime.now()})
+#     }
+#     return render(request, template, data)
 
 
 #-------------------------------------------------------------------------------
 @login_required
 def occurrence_view(
     request,
-    event_pk,
+    #event_pk,
     pk,
     template='swingtime/occurrence_detail.html',
     form_class=forms.SingleOccurrenceForm,
@@ -531,7 +532,7 @@ def occurrence_view(
     ``form``
         a form object for updating the occurrence
     '''
-    occurrence = get_object_or_404(Occurrence, pk=pk, event__pk=event_pk)
+    occurrence = get_object_or_404(Occurrence, pk=pk)
     conflict_free=False
     conflict={}
 

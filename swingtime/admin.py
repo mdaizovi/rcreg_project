@@ -47,4 +47,4 @@ class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost b
 
 
 admin.site.register(Event, EventAdmin)
-#admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.
+admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.

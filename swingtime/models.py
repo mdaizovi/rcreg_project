@@ -32,7 +32,7 @@ __all__ = (
     #'EventType',
     'Event',
     'Occurrence',
-    'create_event'
+    #'create_event'
 )
 
 
@@ -57,16 +57,6 @@ class EventType(models.Model):
 
 #===============================================================================
 
-class EventManager(models.Manager):
-
-    #---------------------------------------------------------------------------
-    def get_add_url(self):
-        """This is me trying to get a str of this link. I fail"""
-        #return reverse('swingtime.views.add_event', args=[dt=dt, location=str(location)])
-        pass
-
-#===============================================================================
-
 @python_2_unicode_compatible
 class Event(models.Model):
     '''
@@ -78,89 +68,11 @@ class Event(models.Model):
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
 
-    objects = EventManager()
-
     #===========================================================================
     class Meta:
         verbose_name = _('event')
         verbose_name_plural = _('events')
         #ordering = ('title', )
-
-    #---------------------------------------------------------------------------
-    def __str__(self):
-        if self.challenge:
-            return self.challenge.name
-        elif self.training:
-            return self.training.name
-        else:
-            return "no challenge or training yet"
-
-    #---------------------------------------------------------------------------
-    @models.permalink
-    def get_absolute_url(self):
-        return ('swingtime-event', [str(self.id)])
-
-    #---------------------------------------------------------------------------
-    def add_occurrences(self, start_time, end_time, **rrule_params):
-        '''
-        Add one or more occurences to the event using a comparable API to
-        ``dateutil.rrule``.
-
-        If ``rrule_params`` does not contain a ``freq``, one will be defaulted
-        to ``rrule.DAILY``.
-
-        Because ``rrule.rrule`` returns an iterator that can essentially be
-        unbounded, we need to slightly alter the expected behavior here in order
-        to enforce a finite number of occurrence creation.
-
-        If both ``count`` and ``until`` entries are missing from ``rrule_params``,
-        only a single ``Occurrence`` instance will be created using the exact
-        ``start_time`` and ``end_time`` values.
-        '''
-        count = rrule_params.get('count')
-        until = rrule_params.get('until')
-        if not (count or until):
-            self.occurrence_set.create(start_time=start_time, end_time=end_time)
-        else:
-            rrule_params.setdefault('freq', rrule.DAILY)
-            delta = end_time - start_time
-            occurrences = []
-            for ev in rrule.rrule(dtstart=start_time, **rrule_params):
-                occurrences.append(Occurrence(start_time=ev, end_time=ev + delta, event=self))
-            self.occurrence_set.bulk_create(occurrences)
-
-    #---------------------------------------------------------------------------
-    def upcoming_occurrences(self):
-        '''
-        Return all occurrences that are set to start on or after the current
-        time.
-        '''
-        return self.occurrence_set.filter(start_time__gte=datetime.now())
-
-    #---------------------------------------------------------------------------
-    def next_occurrence(self):
-        '''
-        Return the single occurrence set to start on or after the current time
-        if available, otherwise ``None``.
-        '''
-        upcoming = self.upcoming_occurrences()
-        return upcoming[0] if upcoming else None
-
-    #---------------------------------------------------------------------------
-    def daily_occurrences(self, dt=None):
-        '''
-        Convenience method wrapping ``Occurrence.objects.daily_occurrences``.
-        '''
-        return Occurrence.objects.daily_occurrences(dt=dt, event=self)
-
-    def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate
-        if self.training and self.challenge:
-            raise ValidationError({
-                NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
-
-        if not self.training and not self.challenge:
-            raise ValidationError({
-                NON_FIELD_ERRORS: ["Please choose either a Challenge or Training",],})
 
     #---------------------------------------------------------------------------
     def get_activity(self):
@@ -176,6 +88,79 @@ class Event(models.Model):
         return activity
 
     #---------------------------------------------------------------------------
+    def __str__(self):
+        activity=self.get_activity()
+        if activity:
+            return activity.name
+        else:
+            return "no challenge or training yet"
+
+    #---------------------------------------------------------------------------
+    # @models.permalink
+    # def get_absolute_url(self):
+    #     return ('swingtime-event', [str(self.id)])
+
+    #---------------------------------------------------------------------------
+    # def add_occurrences(self, start_time, end_time, **rrule_params):
+    #     '''
+    #     Add one or more occurences to the event using a comparable API to
+    #     ``dateutil.rrule``.
+    #
+    #     If ``rrule_params`` does not contain a ``freq``, one will be defaulted
+    #     to ``rrule.DAILY``.
+    #
+    #     Because ``rrule.rrule`` returns an iterator that can essentially be
+    #     unbounded, we need to slightly alter the expected behavior here in order
+    #     to enforce a finite number of occurrence creation.
+    #
+    #     If both ``count`` and ``until`` entries are missing from ``rrule_params``,
+    #     only a single ``Occurrence`` instance will be created using the exact
+    #     ``start_time`` and ``end_time`` values.
+    #     '''
+    #     count = rrule_params.get('count')
+    #     until = rrule_params.get('until')
+    #     if not (count or until):
+    #         self.occurrence_set.create(start_time=start_time, end_time=end_time)
+    #     else:
+    #         rrule_params.setdefault('freq', rrule.DAILY)
+    #         delta = end_time - start_time
+    #         occurrences = []
+    #         for ev in rrule.rrule(dtstart=start_time, **rrule_params):
+    #             occurrences.append(Occurrence(start_time=ev, end_time=ev + delta, event=self))
+    #         self.occurrence_set.bulk_create(occurrences)
+
+    #---------------------------------------------------------------------------
+    # def upcoming_occurrences(self):
+    #     '''
+    #     Return all occurrences that are set to start on or after the current
+    #     time.
+    #     '''
+    #     return self.occurrence_set.filter(start_time__gte=datetime.now())
+
+    #---------------------------------------------------------------------------
+    # def next_occurrence(self):
+    #     '''
+    #     Return the single occurrence set to start on or after the current time
+    #     if available, otherwise ``None``.
+    #     '''
+    #     upcoming = self.upcoming_occurrences()
+    #     return upcoming[0] if upcoming else None
+
+    #---------------------------------------------------------------------------
+    # def daily_occurrences(self, dt=None):
+    #     '''
+    #     Convenience method wrapping ``Occurrence.objects.daily_occurrences``.
+    #     '''
+    #     return Occurrence.objects.daily_occurrences(dt=dt, event=self)
+    #
+    # def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate
+    #     if self.training and self.challenge:
+    #         raise ValidationError({
+    #             NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
+    #
+    #     if not self.training and not self.challenge:
+    #         raise ValidationError({
+    #             NON_FIELD_ERRORS: ["Please choose either a Challenge or Training",],})
 
 
 #===============================================================================
@@ -184,7 +169,8 @@ class OccurrenceManager(models.Manager):
     use_for_related_fields = True
 
     #---------------------------------------------------------------------------
-    def daily_occurrences(self, dt=None, event=None):
+    def daily_occurrences(self, dt=None):
+    #def daily_occurrences(self, dt=None, event=None):
         '''
         Returns a queryset of for instances that have any overlap with a
         particular day.
@@ -212,7 +198,8 @@ class OccurrenceManager(models.Manager):
             )
         )
 
-        return qs.filter(event=event) if event else qs
+        #return qs.filter(event=event) if event else qs
+        return qs
 
 
 #===============================================================================
@@ -252,26 +239,29 @@ class Occurrence(models.Model):
     #---------------------------------------------------------------------------
     @models.permalink
     def get_absolute_url(self):
-        return ('swingtime-occurrence', [str(self.event.id), str(self.id)])
+        return ('swingtime-occurrence', [str(self.id)])
 
     #---------------------------------------------------------------------------
     def __lt__(self, other):
         return self.start_time < other.start_time
 
     #---------------------------------------------------------------------------
-    @property
-    def title(self):
-        activity=self.event.get_activity()
-        if activity:
-            return activity.name
-        else:
-            return "no challenge or training chosen"
+    # @property
+    # def title(self):
+    #     activity=self.event.get_activity()
+    #     if activity:
+    #         return activity.name
+    #     else:
+    #         return "no challenge or training chosen"
     #---------------------------------------------------------------------------
 ########eventually I want this to replace title######################
     @property
     def name(self):
-        activity=self.event.get_activity()
-        if activity:
+        if self.event:
+            activity=self.event.get_activity()
+
+        if self.event and activity:
+        #if activity:
             return activity.name
         else:
             return "Empty"
@@ -283,12 +273,29 @@ class Occurrence(models.Model):
     # def event_type(self):
     #     return self.event.event_type
 
+
+    # def get_activity(self):
+    #     '''
+    #     Dahmer custom. Returns training or activity related to Event.
+    #     '''
+    #     activity=None
+    #
+    #     if self.training or self.challenge:
+    #         if self.training:
+    #             activity=self.training
+    #         elif self.challenge:
+    #             activity=self.challenge
+    #
+    #     return activity
+
+
     #---------------------------------------------------------------------------
 #######eventually I want this to replace event model, just being cautious######################
     @property
     def activity(self):
+    #def event(self): #change to this somedaty?
         if self.event:
-            return self.event.get_activity()
+            return self.get_activity()
         else:
             return None
 
@@ -311,7 +318,13 @@ class Occurrence(models.Model):
 
             if qs.exists():
                 raise ValidationError({
-                    NON_FIELD_ERRORS: ["You can't have more than 1 event in the same place at the same time",],})
+                    NON_FIELD_ERRORS: ["You can't have more than 1 occurrence in the same place at the same time",],})
+
+        # if self.training and self.challenge:#can't add until occurrence has training and challenge
+        #     raise ValidationError({
+        #         NON_FIELD_ERRORS: ["Occurrence cannot be BOTH a Challenge and a Training",],})
+
+
 
     #---------------------------------------------------------------------------
     def get_endtime(self):
@@ -380,10 +393,10 @@ class Occurrence(models.Model):
             event_activity=o.event.get_activity()
             #print "event_activity",event_activity
             event_part=event_activity.participating_in()
-            #print "event_part",event_part
-            if len( set(occur_part).intersection(event_part) ) > 0:
-                #print "conflict"
-                conflict_dict[event_activity]=event_part
+            inter=set(occur_part).intersection(event_part)
+            if len( inter ) > 0:
+                conflict_dict[event_activity]=list(inter)
+                #conflict_dict[event_activity]=event_part#whoops, this adds all people, not just the intersection!
 
         if len(conflict_dict)>0:
             #print "conflict_dict",conflict_dict
@@ -436,54 +449,54 @@ class Occurrence(models.Model):
         return url_str
 
 #-------------------------------------------------------------------------------
-def create_event(
-    #title,
-    #event_type,
-    start_time=None,
-    end_time=None,
-    **rrule_params
-):
-    '''
-    Convenience function to create an ``Event``, optionally create an
-    ``EventType``, and associated ``Occurrence``s. ``Occurrence`` creation
-    rules match those for ``Event.add_occurrences``.
-
-    Returns the newly created ``Event`` instance.
-
-    Parameters
-
-    ``event_type``
-        can be either an ``EventType`` object or 2-tuple of ``(abbreviation,label)``,
-        from which an ``EventType`` is either created or retrieved.
-
-    ``start_time``
-        will default to the current hour if ``None``
-
-    ``end_time``
-        will default to ``start_time`` plus swingtime_settings.DEFAULT_OCCURRENCE_DURATION
-        hour if ``None``
-
-    ``freq``, ``count``, ``rrule_params``
-        follow the ``dateutils`` API (see http://labix.org/python-dateutil)
-
-    '''
-
-    # if isinstance(event_type, tuple):
-    #     event_type, created = EventType.objects.get_or_create(
-    #         abbr=event_type[0],
-    #         label=event_type[1]
-    #     )
-
-    event = Event.objects.create(
-        #event_type=event_type
-    )
-
-    start_time = start_time or datetime.now().replace(
-        minute=0,
-        second=0,
-        microsecond=0
-    )
-
-    end_time = end_time or (start_time + swingtime_settings.DEFAULT_OCCURRENCE_DURATION)
-    event.add_occurrences(start_time, end_time, **rrule_params)
-    return event
+# def create_event(
+#     #title,
+#     #event_type,
+#     start_time=None,
+#     end_time=None,
+#     **rrule_params
+# ):
+#     '''
+#     Convenience function to create an ``Event``, optionally create an
+#     ``EventType``, and associated ``Occurrence``s. ``Occurrence`` creation
+#     rules match those for ``Event.add_occurrences``.
+#
+#     Returns the newly created ``Event`` instance.
+#
+#     Parameters
+#
+#     ``event_type``
+#         can be either an ``EventType`` object or 2-tuple of ``(abbreviation,label)``,
+#         from which an ``EventType`` is either created or retrieved.
+#
+#     ``start_time``
+#         will default to the current hour if ``None``
+#
+#     ``end_time``
+#         will default to ``start_time`` plus swingtime_settings.DEFAULT_OCCURRENCE_DURATION
+#         hour if ``None``
+#
+#     ``freq``, ``count``, ``rrule_params``
+#         follow the ``dateutils`` API (see http://labix.org/python-dateutil)
+#
+#     '''
+#
+#     # if isinstance(event_type, tuple):
+#     #     event_type, created = EventType.objects.get_or_create(
+#     #         abbr=event_type[0],
+#     #         label=event_type[1]
+#     #     )
+#
+#     event = Event.objects.create(
+#         #event_type=event_type
+#     )
+#
+#     start_time = start_time or datetime.now().replace(
+#         minute=0,
+#         second=0,
+#         microsecond=0
+#     )
+#
+#     end_time = end_time or (start_time + swingtime_settings.DEFAULT_OCCURRENCE_DURATION)
+#     event.add_occurrences(start_time, end_time, **rrule_params)
+#     return event

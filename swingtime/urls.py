@@ -63,26 +63,28 @@ urlpatterns = [
         name='swingtime-daily-view'
     ),
 
-    url(
-        r'^events/$',
-        views.event_listing,
-        name='swingtime-events'
-    ),
-
+    # url(
+    #     r'^events/$',
+    #     views.event_listing,
+    #     name='swingtime-events'
+    # ),
+##################i use this one all the time, need to rewrite w/out events
     url(
         r'^events/add/$',
         views.add_event,
         name='swingtime-add-event'
     ),
+####################################################
+
+    # url(
+    #     r'^events/(\d+)/$',
+    #     views.event_view,
+    #     name='swingtime-event'
+    # ),
 
     url(
-        r'^events/(\d+)/$',
-        views.event_view,
-        name='swingtime-event'
-    ),
-
-    url(
-        r'^events/(\d+)/(\d+)/$',
+        #r'^events/(\d+)/(\d+)/$',
+        r'^occurrence/(\d+)/$',
         views.occurrence_view,
         name='swingtime-occurrence'
     ),
