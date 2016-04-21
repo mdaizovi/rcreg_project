@@ -25,7 +25,7 @@ COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquo
 GAMETYPE=(('3CHAL','30 minute Challenge'),('6CHAL','60 minute Challenge'),('36CHAL','30 or 60 minute Challenge'),('6GAME','60 min REGULATION or SANCTIONED Game (between two existing WFTDA/MRDA/RCDL/USARS teams)'))
 #GAMETYPE=(('3CHAL','30 minute Challenge'),('6CHAL','60 minute Challenge'),('36CHAL','30 or 60 minute Challenge'))
 RULESET=(('WFTDA','WFTDA'),('MRDA','MRDA'),('RDCL','RDCL'),('USARS','USARS'),('Other','Other'))
-INTEREST_RATING=(('0','NA'),('1', 'Very Low Interest'), ('2', 'Somewhat Low Interest'),('3', 'Medium'), ('4', 'Somewhat High Interest'), ('5', 'Very High Interest'))
+INTEREST_RATING=((0,'NA'),(1, 'Very Low Interest'), (2, 'Somewhat Low Interest'),(3, 'Medium'), (4, 'Somewhat High Interest'), (5, 'Very High Interest'))
 SESSIONS_TR=((1,1),(2,2),(3,3),(4,4),(5,5))
 DURATION=(('0.5','Half Hour (30 minutes)'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
 DEFAULT_ONSK8S_DURATION='2'
@@ -456,15 +456,31 @@ class Activity(models.Model):
     internal_notes= models.TextField(null=True,blank=True)
     communication = models.TextField(null=True,blank=True)
 
+    def is_a_challenge(self):
+        """ Tests to see if is Challenge. If else, probably a Training.
+        Just wanted to stop repeating self w/ hasattr, in case I ever change fields that dictate which it is"""
+        if hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+            return True
+        else:
+            return False
+
+    def is_a_training(self):
+        """ Tests to see if is Training If else, probably a Challenge.
+        Just wanted to stop repeating self w/ hasattr, in case I ever change fields that dictate which it is"""
+        if hasattr(self, 'coach'):
+            return True
+        else:
+            return False
+
     def get_figurehead_registrants(self):
         """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""
         figureheads=[]
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():
             for c in self.coach.all():
                 for r in c.user.registrant_set.all():
                     if r.con==self.con:
                         figureheads.append(r)
-        elif hasattr(self, 'roster1'):#if this is a challenge:
+        elif self.is_a_challenge():
             for r in [self.roster1,self.roster2]:
                 if r and r.captain:
                     figureheads.append(r.captain)
@@ -496,7 +512,7 @@ class Activity(models.Model):
         For use in Scheduling as well as seeing Communication between NSO/skaters'''
         participating=[]
 
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():
             for c in self.coach.all():
                 for reg in c.user.registrant_set.all():
                     if reg.con==self.con:
@@ -506,7 +522,7 @@ class Activity(models.Model):
                     for sk8 in ros.participants.all():
                         participating.append(sk8)
 
-        elif hasattr(self, 'roster1'):#if this is a challenge:
+        elif self.is_a_challenge():
             for ros in [self.roster1,self.roster2]:
                 if ros:
                     for sk8 in ros.participants.all():
@@ -525,9 +541,9 @@ class Activity(models.Model):
         #     return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
 
         if self.location_type =='Flat Track':
-            if hasattr(self, 'coach'):#if this is a training
+            if self.is_a_training():#if this is a training
                 return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
-            elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+            elif self.is_a_challenge():
                 if self.is_a_game or float(self.duration)>=1:#has to be in C1
                 #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
                     return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
@@ -535,9 +551,9 @@ class Activity(models.Model):
                     return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"]))
 
         elif self.location_type == 'EITHER Flat or Banked Track':
-            if hasattr(self, 'coach'):#if this is a training
+            if self.is_a_training():#if this is a training
                 return list(Location.objects.filter(location_category__in=["Training","Training or Competition"], venue__in=venues, location_type__in=['Flat Track','Banked Track']))
-            elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+            elif self.is_a_challenge():
                 return list(Location.objects.filter(location_category__in=["Training or Competition","Competition Half Length Only","Competition Any Length"],venue__in=venues, location_type__in=['Flat Track','Banked Track']))
         else:
             return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
@@ -550,11 +566,11 @@ class Activity(models.Model):
         occurrences=[]
         padding=0
         pls=self.possible_locations()
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():#if this is a training
             challenge=None
             training=self
             duration=float(self.duration)
-        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+        elif self.is_a_challenge():
             challenge=self
             training=None
             if self.is_a_game:
@@ -679,11 +695,11 @@ class Activity(models.Model):
             loc_str="Xsk8  "
 
 
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():#if this is a training
             #loc_str+=self.get_duration_display()
             loc_str+=("("+self.duration+" Hrs)")
 
-        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):#if this is a challenge:
+        elif self.is_a_challenge():
             if self.gametype in ['3CHAL','6CHAL','36CHAL']:
                 if self.gametype=='3CHAL':
                     loc_str+="30m"
@@ -699,29 +715,29 @@ class Activity(models.Model):
 
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():#if this is a training
             from scheduler.views import view_training
             return reverse('scheduler.views.view_training', args=[str(self.pk)])
 
-        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):#if this is a challenge:
+        elif self.is_a_challenge():
             from scheduler.views import view_challenge
             return reverse('scheduler.views.view_challenge', args=[str(self.pk)])
 
     def get_edit_url(self):
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():
             from scheduler.views import edit_training
             return reverse('scheduler.views.edit_training', args=[str(self.pk)])
 
-        elif hasattr(self, 'roster1'):#if this is a challenge:
+        elif self.is_a_challenge():
             #I think this might actually be stupid
             from scheduler.views import edit_challenge
             return reverse('scheduler.views.edit_challenge', args=[str(self.pk)])
 
     def get_sched_assist_url(self):
-        if hasattr(self, 'coach'):#if this is a training
+        if self.is_a_training():
             from swingtime.views import sched_assist_tr
             return reverse('swingtime.views.sched_assist_tr', args=[str(self.pk)])
-        elif hasattr(self, 'roster1') or hasattr(self, 'roster2'):#if this is a challenge:
+        elif self.is_a_challenge():
             from swingtime.views import sched_assist_ch
             return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 

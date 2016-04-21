@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 #from con_event.models import Con
-from scheduler.models import Location, Challenge, Training
+from scheduler.models import Location, Challenge, Training,INTEREST_RATING
 from con_event.models import Blackout,Registrant
 
 try:
@@ -224,9 +224,17 @@ class Occurrence(models.Model):
     '''
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
-    event = models.ForeignKey(Event, verbose_name=_('event'), editable=False)
+    #used to be
+    #event = models.ForeignKey(Event, verbose_name=_('event'), editable=False)
+    event = models.ForeignKey(Event, verbose_name=_('event'),null=True, blank=True,on_delete=models.SET_NULL)
     #Why did i say null=true for locaiton?
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
+    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING)
+
+    #will probably add soon, just sitting on for some more time
+    #this is part of idea to make event into a property instead of model
+    #training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
+    #challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
 
     objects = OccurrenceManager()
 
