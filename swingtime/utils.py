@@ -100,7 +100,8 @@ class BaseOccurrenceProxy(object):
 
     #---------------------------------------------------------------------------
     def __str__(self):
-        return self.title
+        #return self.title
+        return self.name
 
 
 #===============================================================================
@@ -116,7 +117,8 @@ class DefaultOccurrenceProxy(BaseOccurrenceProxy):
         rowspan=1
         link = '<a href="%s">%s</a>' % (
             self.get_absolute_url(),
-            self.title
+            #self.title
+            self.name
         )
 
         self._str = itertools.chain(

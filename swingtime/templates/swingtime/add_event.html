@@ -6,12 +6,12 @@
     <h3 class="margin-top-10">Add Event</h3>
 
     {%if save_success %}
-    <div class="alert alert-success" role="alert">{{occurrence.title}} successfully saved!</div>
+    <div class="alert alert-success" role="alert">{{occurrence.name}} successfully saved!</div>
     {%if occurrence%}
     {% with occurrence.start_time as st  %}
     <a href="{% url 'swingtime-daily-view' st.year st.month st.day %}">
      <i>Go back to {{ st|date:"l, F jS" }} Day View</i></a>
-         &ndash; <a href="{{ occurrence.event.get_absolute_url }}"><i>Add more Occurrences for {{occurrence.title}}</i></a>
+         &ndash; <a href="{{ occurrence.event.get_absolute_url }}"><i>Add more Occurrences for {{occurrence.name}}</i></a>
    </h4>
    {% endwith %}{%endif%}
     {%endif%}

@@ -28,7 +28,7 @@
                     {{ dt|date:"F" }}</a>
             </th>
             {% for o in occurrences %}
-            <td class="swingtime-td"><a href="{{ o.get_absolute_url }}">{{ o.title }}</a></td>
+            <td class="swingtime-td"><a href="{{ o.get_absolute_url }}">{{ o.name }}</a></td>
             <td class="swingtime-td">{{ o.start_time|date:"M jS - l" }}</td>
             <td class="swingtime-td">{{ o.start_time|date:"P" }}</td>
             <td class="swingtime-td">{{ o.end_time|date:"P" }}</td>

@@ -246,7 +246,8 @@ class Occurrence(models.Model):
 
     #---------------------------------------------------------------------------
     def __str__(self):
-        return '{}: {}'.format(self.title, self.start_time.isoformat())
+        #return '{}: {}'.format(self.title, self.start_time.isoformat())
+        return '{}: {}'.format(self.name, self.start_time.isoformat())
 
     #---------------------------------------------------------------------------
     @models.permalink
@@ -267,13 +268,13 @@ class Occurrence(models.Model):
             return "no challenge or training chosen"
     #---------------------------------------------------------------------------
 ########eventually I want this to replace title######################
-    # @property
-    # def name(self):
-    #     activity=self.event.get_activity()
-    #     if activity:
-    #         return activity.name
-    #     else:
-    #         return "Empty"
+    @property
+    def name(self):
+        activity=self.event.get_activity()
+        if activity:
+            return activity.name
+        else:
+            return "Empty"
     #---------------------------------------------------------------------------
 
 
@@ -283,10 +284,13 @@ class Occurrence(models.Model):
     #     return self.event.event_type
 
     #---------------------------------------------------------------------------
-########eventually I want this to replace event model, just being cautions######################
-    # @property
-    # def event(self):
-    #     return self.get_activity()
+#######eventually I want this to replace event model, just being cautious######################
+    @property
+    def activity(self):
+        if self.event:
+            return self.event.get_activity()
+        else:
+            return None
 
     #---------------------------------------------------------------------------
 

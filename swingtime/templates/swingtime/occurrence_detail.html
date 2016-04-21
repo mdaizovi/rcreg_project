@@ -1,13 +1,12 @@
 {% extends "swingtime/swingtime_base.html" %}
 {% block title %}Event Occurrence{% endblock %}
 {% block main_content %}
-     <h3 class="margin-top-10">{{occurrence.title}} Event Occurrence <small>{% with occurrence.start_time as st  %}{{ st|date:"l, F jS P" }} {% endwith %}</small></h3>
+     <h3 class="margin-top-10">{{occurrence.name}} Event Occurrence <small>{% with occurrence.start_time as st  %}{{ st|date:"l, F jS P" }} {% endwith %}</small></h3>
      <h4 class="margin-top-10">
 
        {% with occurrence.start_time as st  %}
        <a href="{% url 'swingtime-daily-view' st.year st.month st.day %}">
         <i>Go back to {{ st|date:"l, F jS" }} Day View</i></a>
-          <!--   &ndash; <a href="{{ occurrence.event.get_absolute_url }}"><i>Add more Occurrences for {{occurrence.title}}</i></a>-->
       </h4>
       {% endwith %}
 
@@ -15,7 +14,7 @@
   {% include "swingtime/conflict_part.html" %}
 
      {%if save_success %}
-     <div class="alert alert-success" role="alert">{{occurrence.title}} successfully saved!</div>
+     <div class="alert alert-success" role="alert">{{occurrence.name}} successfully saved!</div>
      {%endif%}
 
      <form action="" method="post">
