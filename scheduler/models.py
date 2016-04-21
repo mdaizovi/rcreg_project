@@ -452,6 +452,7 @@ class Activity(models.Model):
     created_on=models.DateTimeField(default=timezone.now)
     #because durationfileds are buggy in 1.8
     duration=models.CharField(max_length=30,choices=DURATION,null=True, blank=True)
+    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING)
 
     internal_notes= models.TextField(null=True,blank=True)
     communication = models.TextField(null=True,blank=True)

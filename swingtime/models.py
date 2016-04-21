@@ -220,8 +220,8 @@ class Occurrence(models.Model):
 
     #will probably add soon, just sitting on for some more time
     #this is part of idea to make event into a property instead of model
-    #training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
-    #challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
+    training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
+    challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
 
     objects = OccurrenceManager()
 
