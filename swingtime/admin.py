@@ -8,12 +8,6 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from swingtime.models import *
 
-#===============================================================================
-# class EventTypeAdmin(admin.ModelAdmin):
-#     list_display = ('label', 'abbr')
-#
-
-#===============================================================================
 class OccurrenceInline(admin.TabularInline):
     model = Occurrence
     extra = 0
@@ -54,4 +48,3 @@ class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost b
 
 admin.site.register(Event, EventAdmin)
 #admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.
-#admin.site.register(EventType, EventTypeAdmin)

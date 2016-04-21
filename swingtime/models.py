@@ -29,7 +29,7 @@ from swingtime.conf import settings as swingtime_settings
 
 
 __all__ = (
-    'EventType',
+    #'EventType',
     'Event',
     'Occurrence',
     'create_event'
@@ -73,7 +73,7 @@ class Event(models.Model):
     Container model for general metadata and associated ``Occurrence`` entries.
     '''
     #title = models.CharField(_('title'), max_length=32,null=True,blank=True)
-    event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
+    #event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
 
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
@@ -265,11 +265,28 @@ class Occurrence(models.Model):
             return activity.name
         else:
             return "no challenge or training chosen"
+    #---------------------------------------------------------------------------
+########eventually I want this to replace title######################
+    # @property
+    # def name(self):
+    #     activity=self.event.get_activity()
+    #     if activity:
+    #         return activity.name
+    #     else:
+    #         return "Empty"
+    #---------------------------------------------------------------------------
+
+
+#############practicing before deleting
+    # @property
+    # def event_type(self):
+    #     return self.event.event_type
 
     #---------------------------------------------------------------------------
-    @property
-    def event_type(self):
-        return self.event.event_type
+########eventually I want this to replace event model, just being cautions######################
+    # @property
+    # def event(self):
+    #     return self.get_activity()
 
     #---------------------------------------------------------------------------
 
@@ -417,7 +434,7 @@ class Occurrence(models.Model):
 #-------------------------------------------------------------------------------
 def create_event(
     #title,
-    event_type,
+    #event_type,
     start_time=None,
     end_time=None,
     **rrule_params
@@ -447,14 +464,14 @@ def create_event(
 
     '''
 
-    if isinstance(event_type, tuple):
-        event_type, created = EventType.objects.get_or_create(
-            abbr=event_type[0],
-            label=event_type[1]
-        )
+    # if isinstance(event_type, tuple):
+    #     event_type, created = EventType.objects.get_or_create(
+    #         abbr=event_type[0],
+    #         label=event_type[1]
+    #     )
 
     event = Event.objects.create(
-        event_type=event_type
+        #event_type=event_type
     )
 
     start_time = start_time or datetime.now().replace(

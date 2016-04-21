@@ -14,7 +14,8 @@ from django.core.urlresolvers import reverse,resolve
 
 from dateutil import rrule
 from swingtime.conf import settings as swingtime_settings
-from swingtime.models import EventType
+#from swingtime.models import EventType
+
 
 from con_event.models import Con
 from scheduler.models import Location
@@ -62,17 +63,22 @@ def default_css_class_cycler():
 
 #-------------------------------------------------------------------------------
 def css_class_cycler():
+
     '''
     Return a dictionary keyed by ``EventType`` abbreviations, whose values are an
     iterable or cycle of CSS class names.
 
     '''
     FMT = 'evt-{0}-{1}'.format
+    # return defaultdict(default_css_class_cycler, (
+    #     (e.abbr, itertools.cycle((FMT(e.abbr, 'even'), FMT(e.abbr, 'odd'))))
+    #     for e in EventType.objects.all()
+    # ))
     return defaultdict(default_css_class_cycler, (
-        (e.abbr, itertools.cycle((FMT(e.abbr, 'even'), FMT(e.abbr, 'odd'))))
-        for e in EventType.objects.all()
+        ("", itertools.cycle((FMT("", 'even'), FMT("", 'odd'))))
+        #for e in EventType.objects.all()
+        for e in []#so i can delete event type
     ))
-
 
 #===============================================================================
 @python_2_unicode_compatible
@@ -237,7 +243,7 @@ def create_timeslot_table(
         column_range = range(column_count)
     empty_columns = ['' for x in column_range]
 
-    if css_class_cycles:
+    if css_class_cycles:#this is necrssary to make bix box of long events
         column_classes = dict([(i, css_class_cycles()) for i in column_range])
     else:
         column_classes = None
@@ -269,10 +275,7 @@ def create_timeslot_table(
                     cols[index] = proxy
 
                     if not proxy.event_class and column_classes:
-                        if proxy.event_type and proxy.event_type.abbr:
-                            proxy.event_class = next(column_classes[colkey][proxy.event_type.abbr])
-                        else:
-                            proxy.event_class = next(column_classes[colkey][proxy])
+                        proxy.event_class = next(column_classes[colkey][proxy])
             else:
                 index=column_range.index(colkey)
 
