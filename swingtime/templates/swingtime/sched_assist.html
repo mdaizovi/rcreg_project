@@ -10,13 +10,12 @@
     <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for {{act.name}}</small></h3>
 <hr>
 
-
-
+{%for slotdict in slots %}
+<div class="col-sm-6 margin-top-10">
+    <h3 class="text-center">{%cycle "Empty" "Possible" %} Timeslots</h3>
 <table class="table table-striped">
-
   <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th style="text-align:center;">Conflict<br>Score</th></tr>
-
-{%for k,v  in possible.iteritems %}
+{%for k,v  in slotdict.iteritems %}
 {%for o in v%}
 <tr><td>{{ o.start_time|date:"D d" }}</td><td>{{ o.start_time|date:"f a" }}</td><td>{{ o.end_time|date:"f a" }}</td>
   <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td style="text-align:center;">
@@ -25,7 +24,9 @@
 {%endfor%}
 {%endfor%}
 </table>
-
+{%cycle "" "I've temporarily disabled this part while I work on it to make faster and better" %}
+</div><!-- end col-sm-6 possible timeslots-->
+{%endfor%}
 
 {%endif%}
 </div><!-- end row-->

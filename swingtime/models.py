@@ -211,15 +211,12 @@ class Occurrence(models.Model):
     '''
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
-    #used to be
-    #event = models.ForeignKey(Event, verbose_name=_('event'), editable=False)
+    #delete field eventually, when it feels safe
     event = models.ForeignKey(Event, verbose_name=_('event'),null=True, blank=True,on_delete=models.SET_NULL)
-    #Why did i say null=true for locaiton?
+    #Why did i say null=true for locaiton? prob so occurrance doesn't get deleted if locaiton does
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
     interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING)
 
-    #will probably add soon, just sitting on for some more time
-    #this is part of idea to make event into a property instead of model
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
 
@@ -363,10 +360,11 @@ class Occurrence(models.Model):
 
         for o in concurrent:
             event_activity=o.get_activity()
-            event_part=event_activity.participating_in()
-            conflict=set(figureheads).intersection(event_part)
-            if len( conflict ) > 0:
-                conflict_dict[event_activity]=list(conflict)
+            if event_activity: #could be an empty timeslot
+                event_part=event_activity.participating_in()
+                conflict=set(figureheads).intersection(event_part)
+                if len( conflict ) > 0:
+                    conflict_dict[event_activity]=list(conflict)
 
         if len(conflict_dict)>0:
             return conflict_dict
@@ -390,12 +388,12 @@ class Occurrence(models.Model):
 
         for o in concurrent:
             event_activity=o.get_activity()
-            #print "event_activity",event_activity
-            event_part=event_activity.participating_in()
-            inter=set(occur_part).intersection(event_part)
-            if len( inter ) > 0:
-                conflict_dict[event_activity]=list(inter)
-                #conflict_dict[event_activity]=event_part#whoops, this adds all people, not just the intersection!
+            if event_activity: #could be an empty timeslot
+                event_part=event_activity.participating_in()
+                inter=set(occur_part).intersection(event_part)
+                if len( inter ) > 0:
+                    conflict_dict[event_activity]=list(inter)
+                    #conflict_dict[event_activity]=event_part#whoops, this adds all people, not just the intersection!
 
         if len(conflict_dict)>0:
             #print "conflict_dict",conflict_dict
@@ -442,10 +440,11 @@ class Occurrence(models.Model):
         dstr_str=self.start_time.isoformat()
 
         url_str='/events/add/?dtstart=%s&location=%s'%(dstr_str,str(self.location.pk))
-        if self.event.training:
-            url_str+="&training=%s"%(str(self.event.training.pk))
-        if self.event.challenge:
-            url_str+="&challenge=%s"%(str(self.event.challenge.pk))
+
+        if self.training:
+            url_str+="&training=%s"%(str(self.training.pk))
+        if self.challenge:
+            url_str+="&challenge=%s"%(str(self.challenge.pk))
 
         return url_str
 

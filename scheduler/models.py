@@ -561,10 +561,12 @@ class Activity(models.Model):
 
 
     def dummy_occurrences(self):
-        """Makes unsaved Occurrence objects for all possible location time combos for activity"""
+        """Makes unsaved Occurrence objects for all possible location time combos for activity
+        EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
-        from swingtime.models import Event, Occurrence
-        occurrences=[]
+        from swingtime.models import Occurrence
+        #empties=[]
+        dummies=[]
         padding=0
         pls=self.possible_locations()
         if self.is_a_training():#if this is a training
@@ -581,25 +583,26 @@ class Activity(models.Model):
             padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
             padding=round(padding, 2)
 
-        event=Event(challenge=challenge,training=training)
         dur_delta=int((duration+padding)*60)
+        date_range=self.con.get_date_range()
+        #ideas not yet incorporateD: interwt matching, duration matches durdelta
+        empties=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end))
 
-        for d in self.con.get_date_range():
-            day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
-            day_end=day_start+TIMESLOT_END_TIME_DURATION
-            slot_start=day_start
-            slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
-
-            while slot_end<day_end:
-
-                for l in pls:
-                    if l.is_free(slot_start,slot_end):
-                        o=Occurrence(event=event,start_time=slot_start,end_time=slot_end,location=l)
-                        occurrences.append(o)
-                slot_start+=TIMESLOT_INTERVAL
-                slot_end+=TIMESLOT_INTERVAL
-
-        return occurrences
+#works, but is time consuming, pausing for now
+        # for d in date_range:
+        #     day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
+        #     day_end=day_start+TIMESLOT_END_TIME_DURATION
+        #     slot_start=day_start
+        #     slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
+        #
+        #     while slot_end<day_end:
+        #         for l in pls:
+        #             if l.is_free(slot_start,slot_end):
+        #                 o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
+        #                 dummies.append(o)
+        #         slot_start+=TIMESLOT_INTERVAL
+        #         slot_end+=TIMESLOT_INTERVAL
+        return [empties,dummies]
 
     # def sched_conflict_split(self):
     #     """Makes dict of smaller dicts, smaller dict has occurrence as k, conflicts and v.
@@ -636,45 +639,51 @@ class Activity(models.Model):
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
         Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest"""
         print "about to start sched_conflict_score"
-        occurrences=self.dummy_occurrences()
-        conflict={}
+        odict_list=[]
 
-        for o in occurrences:
-            score=0
-            blackout_conflict=o.blackout_conflict()
-            if blackout_conflict:
-                this_score=len(blackout_conflict)*100
-                #print "blackout score: ",this_score
-                score+=this_score
+        #for o in dummy_occurrences:
+        for olist in list(self.dummy_occurrences()):
+            if len(olist)>0:
+                print "olist: ",olist
+                for o in olist:
+                    conflict={}
+                    score=0
+                    blackout_conflict=o.blackout_conflict()
+                    if blackout_conflict:
+                        this_score=len(blackout_conflict)*100
+                        #print "blackout score: ",this_score
+                        score+=this_score
 
-            figurehead_conflict=o.figurehead_conflict()
-            if figurehead_conflict:
-                this_score=len(figurehead_conflict)*10
-                #print "figurehead score: ",this_score
-                score+=this_score
+                    figurehead_conflict=o.figurehead_conflict()
+                    if figurehead_conflict:
+                        this_score=len(figurehead_conflict)*10
+                        #print "figurehead score: ",this_score
+                        score+=this_score
 
-            participant_conflict=o.participant_conflict()
-            if participant_conflict:
-                this_score=len(participant_conflict)*1
-                #print "participant score: ",this_score
-                score+=this_score
+                    participant_conflict=o.participant_conflict()
+                    if participant_conflict:
+                        this_score=len(participant_conflict)*1
+                        #print "participant score: ",this_score
+                        score+=this_score
 
-            if score not in conflict:
-                conflict[score]=[o]
-            else:
-                this_list=conflict.get(score)
-                this_list.append(o)
-                conflict[score]=list(this_list)
+                    if score not in conflict:
+                        conflict[score]=[o]
+                    else:
+                        this_list=conflict.get(score)
+                        this_list.append(o)
+                        conflict[score]=list(this_list)
+            else:#if empty list, otherwise uses last conflict and returns wrond occurrence
+                conflict={}
 
-        print "finished sched_conflict_score, about to sort"
-        score_list=conflict.keys()
-        score_list.sort()
-        possible  = collections.OrderedDict()
-        for score in score_list:
-            temp_list=conflict.get(score)
-            possible[score]=temp_list
-        print "finished sorting, returning value"
-        return possible
+            score_list=list(conflict.keys())
+            score_list.sort()
+            odict  = dict(collections.OrderedDict())
+            for score in score_list:
+                temp_list=conflict.get(score)
+                odict[score]=temp_list
+            odict_list.append(odict)
+
+        return odict_list
 
     def get_activity_type(self):
         """Written so can easily see if is snctioned game/chal in templates.

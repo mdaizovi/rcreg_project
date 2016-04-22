@@ -323,7 +323,7 @@ def act_unsched(
     for q in [Challenge.objects.filter(con=con, RCaccepted=True),Training.objects.filter(con=con, RCaccepted=True)]:
         temp_dict={}
         for obj in q:
-            if len(obj.event_set.all())<=0:
+            if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
                 score=len(obj.get_figurehead_blackouts())
                 if score not in temp_dict:
                     temp_dict[score]=[obj]
@@ -358,8 +358,9 @@ def act_sched(
     else:
         con=Con.objects.most_upcoming()
 
-    challenges=Occurrence.objects.filter(event__challenge__con=con)
-    trainings=Occurrence.objects.filter(event__training__con=con)
+    challenges=Occurrence.objects.filter(challenge__con=con)
+    trainings=Occurrence.objects.filter(training__con=con)
+
     new_context={"activities":[challenges,trainings],"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
@@ -402,9 +403,9 @@ def sched_assist_tr(
     except:
         return render(request, template, {})
 
-    possible=act.sched_conflict_score()
-
-    return render(request, template, {'act':act,'possible':possible})
+    slots= act.sched_conflict_score()
+    
+    return render(request, template, {'act':act,'slots':slots})
 
 #-------------------------------------------------------------------------------
 @login_required
