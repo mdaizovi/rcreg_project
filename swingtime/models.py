@@ -254,41 +254,31 @@ class Occurrence(models.Model):
     #     else:
     #         return "no challenge or training chosen"
     #---------------------------------------------------------------------------
-########eventually I want this to replace title######################
-    @property
-    def name(self):
-        if self.event:
-            activity=self.event.get_activity()
-
-        if self.event and activity:
-        #if activity:
-            return activity.name
-        else:
-            return "Empty"
-    #---------------------------------------------------------------------------
-
 
 #############practicing before deleting
     # @property
     # def event_type(self):
     #     return self.event.event_type
 
+    #---------------------------------------------------------------------------
+    def get_activity(self):
+        '''
+        Dahmer custom. Returns training or activity related to Event.
+        Currently written to ease the transition to not having Event as a model
+        '''
+        activity=None
+        if hasattr(self, 'event'):
+            if self.event:
+                activity=self.event.get_activity()
+        if not activity:#either bc no attr, or no activity
 
-    # def get_activity(self):
-    #     '''
-    #     Dahmer custom. Returns training or activity related to Event.
-    #     '''
-    #     activity=None
-    #
-    #     if self.training or self.challenge:
-    #         if self.training:
-    #             activity=self.training
-    #         elif self.challenge:
-    #             activity=self.challenge
-    #
-    #     return activity
+            if self.training or self.challenge:
+                if self.training:
+                    activity=self.training
+                elif self.challenge:
+                    activity=self.challenge
 
-
+        return activity
     #---------------------------------------------------------------------------
 #######eventually I want this to replace event model, just being cautious######################
     @property
@@ -299,6 +289,16 @@ class Occurrence(models.Model):
         else:
             return None
 
+    #---------------------------------------------------------------------------
+########eventually I want this to replace title######################
+    @property
+    def name(self):
+        activity=self.get_activity()
+
+        if activity and activity.name:
+            return activity.name
+        else:
+            return "Empty"
     #---------------------------------------------------------------------------
 
     #reference: http://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
@@ -320,9 +320,9 @@ class Occurrence(models.Model):
                 raise ValidationError({
                     NON_FIELD_ERRORS: ["You can't have more than 1 occurrence in the same place at the same time",],})
 
-        # if self.training and self.challenge:#can't add until occurrence has training and challenge
-        #     raise ValidationError({
-        #         NON_FIELD_ERRORS: ["Occurrence cannot be BOTH a Challenge and a Training",],})
+        if self.training and self.challenge:#can't add until occurrence has training and challenge
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Occurrence cannot be BOTH a Challenge and a Training",],})
 
 
 
@@ -331,20 +331,14 @@ class Occurrence(models.Model):
         """Dahmer custom funct to get end time based on the train/chal it's linked to,
         and pad an extra 15 mins for 30 min chal or 30 mins for 90 min chal
         REQUIRES event and start time"""
-
+        duration=1#default, may be overridden
         padding=0
-
-        if self.event.training:
-            duration=float(self.event.training.duration)
-        elif self.event.challenge:
-            if self.event.challenge.is_a_game:
-                duration=1
-            else:
-                duration=float(self.event.challenge.duration)
+        activity=self.get_activity()
+        if activity and activity.duration:
+            duration=float(activity.duration)
+        if activity and activity.is_a_challenge():
             padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
             padding=round(padding, 2)
-        else:
-            duration=1 #default 1 hour?
 
         dur_delta=int((duration+padding)*60)
         end_time=self.start_time+timedelta(minutes=dur_delta)
@@ -355,17 +349,20 @@ class Occurrence(models.Model):
     def figurehead_conflict(self):
         """Dahmer custom function. Checks to see if any Event figureheads (coach, captain) are participating in other occurrances at same time.
         If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.event.get_activity()
+        activity=self.get_activity()
         figureheads=[]
         conflict_dict={}
 
         if activity:
             figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
+        else:
+            figureheads=[]
+
 
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
 
         for o in concurrent:
-            event_activity=o.event.get_activity()
+            event_activity=o.get_activity()
             event_part=event_activity.participating_in()
             conflict=set(figureheads).intersection(event_part)
             if len( conflict ) > 0:
@@ -380,17 +377,19 @@ class Occurrence(models.Model):
     def participant_conflict(self):
         """Dahmer custom function. Checks to see if any Event participants are participating in other occurrances at same time.
         If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.event.get_activity()
+        activity=self.get_activity()
         figureheads=[]
         conflict_dict={}
 
         if activity:
             occur_part = activity.participating_in()
+        else:
+            occur_part=[]
 
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
 
         for o in concurrent:
-            event_activity=o.event.get_activity()
+            event_activity=o.get_activity()
             #print "event_activity",event_activity
             event_part=event_activity.participating_in()
             inter=set(occur_part).intersection(event_part)
@@ -408,13 +407,15 @@ class Occurrence(models.Model):
     def blackout_conflict(self):
         """Dahmer custom function. Checks to see if any Event figureheads (coach, captain have blackouts during Occu time.
         If so, returns dict w/  blackout k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.event.get_activity()
+        activity=self.get_activity()
         figureheads=[]
         conflict_dict={}
         daypart=[]
 
         if activity:
             figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
+        else:
+            figureheads=[]
 
         odate=self.start_time.date()
         if self.start_time.time() >= parse_time('12:00:00'):

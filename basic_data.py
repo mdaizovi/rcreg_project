@@ -2,6 +2,7 @@ from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
 from con_event.models import Country, State, Con, Registrant, Blog
 from django.contrib.auth.models import Group, User
 from swingtime.models import Event, Occurrence
+#from swingtime.models import Occurrence
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 import csv
@@ -18,6 +19,75 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+
+
+
+
+def get_o():
+    o_no_e=[]
+
+    events=[]
+    two_act=[]
+    no_act=[]
+
+    homeless_events=[]
+
+    for o in Occurrence.objects.all():
+        if o.event:
+
+            if o.event.challenge and o.event.training:
+                two_act.append(o.event)
+            elif not o.event.challenge and not o.event.training:
+                no_act.append(o.event)
+            else:
+                events.append(o.event)
+
+        else:
+            o_no_e.append(o)
+
+    for e in Events.objects.all():
+        if e not in events:
+            homeless_events.append(e)
+
+    print "Occurrances without events: ",len(o_no_e)
+    print "Events w/1 Activity: ",len(events)
+    print "Events w/2 Activities ",len(two_act)
+    print "Events w/no Activities ",len(no_act)
+    print "Homeless Events: ",len(homeless_events)
+
+    return o_no_e,events,two_act,no_act,homeless_events
+
+def monogamous_event(events):
+    mono=[]
+    poly=[]
+    solo=[]
+    misc=[]
+
+    for e in events:
+        o_set=list(e.occurrence__set.all())
+        if len(o_set)>1:
+            poly.append(e)
+        elif len(o_set)<1:
+            solo.append(e)
+        elif len(o_set)==1:
+            mono.append(e)
+        else:
+            misc.append(e)
+
+    print "Monogamous Events: ",len(mono)
+    print "Poly Events: ",len(poly)
+    print "Solo Events: ",len(solo)
+    print "Misc Events: ",len(misc)
+
+    return mono,poly,solo,misc
+
+#o_no_e,events,two_act,no_act,homeless_events=get_o()
+#mono,poly,solo,misc=monogamous_event(events)
+
+def replace_events():
+    pass
+
+
 
 #con=Con.objects.get(year="2016")
 #qset=list(Training.objects.filter(con=con))
@@ -200,7 +270,6 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 041316.xlsx')
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
@@ -209,8 +278,10 @@ def sort_BPT_excel(target_file):
 
     return single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file
 
-#single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
+#from basic_data import*
+#target_file=(import_path+'RollerTron Attendee 042016.xlsx')
 #con=Con.objects.get(year="2016")
+#single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 def import_from_excel(complete_entries_file,con):
     """This assumes that I've already checked for duplicate emails and lack of name, sk8name.
     This is data that could be ready for import via Django import/export, but I think this will be faster.

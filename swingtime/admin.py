@@ -27,7 +27,7 @@ class EventAdmin(admin.ModelAdmin):#No import/export
 class OccurrenceResource(resources.ModelResource):
     class Meta:
         model = Occurrence
-        fields = ('start_time','end_time','event','event__training','event__challenge','location__abbrv')
+        fields = ('start_time','end_time','event','training','challenge','location__abbrv')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
@@ -37,11 +37,12 @@ class OccurrenceResource(resources.ModelResource):
 #===============================================================================
 class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
 #class OccurrenceAdmin(admin.ModelAdmin):No import/export
-    list_display = ('event','start_time','end_time','location')
+    list_display = ('event','training','challenge','start_time','end_time','location')
     list_display_links = list_display#makes everything in list display clickable to get to object
-    search_fields = ('event__training__name','event__challenge__name','location__name')
+    search_fields = ('training__name','challenge__name','location__name')
     #fields = [field.name for field in Occurrence._meta.fields if field.name != "id"]
     #i think can't get event in admin because editable=False in models
+    fields = (('start_time','end_time'),'event',('training','challenge'),'location')
     resource_class = OccurrenceResource
 
 

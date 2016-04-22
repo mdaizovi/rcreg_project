@@ -15,7 +15,7 @@ from swingtime.models import *
 from swingtime import utils
 
 from con_event.models import Con
-from scheduler.models import Challenge, Training
+from scheduler.models import Challenge, Training, INTEREST_RATING
 
 FIELDS_REQUIRED = (VERSION[:2] >= (1, 6))
 
@@ -446,16 +446,20 @@ class SingleOccurrenceForm(forms.ModelForm):
         else:
             date = None
         super(SingleOccurrenceForm,self).__init__(*args, **kws)
+
         if date:
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
             self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, required=False,initial=date)
         else:
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
             self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
+        #self.fields["interest"]=forms.DateTimeField(widget=SplitDateTimeWidget)
+        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Timeslot Interest-Rating')
 
 
     #===========================================================================
     class Meta:
         model = Occurrence
-        if FIELDS_REQUIRED:
-            fields = "__all__"
+        fields=["start_time","end_time","training","challenge","location","interest"]
+        # if FIELDS_REQUIRED:
+        #     fields = "__all__"

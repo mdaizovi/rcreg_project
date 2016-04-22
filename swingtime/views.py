@@ -515,7 +515,6 @@ def calendar_home(
 @login_required
 def occurrence_view(
     request,
-    #event_pk,
     pk,
     template='swingtime/occurrence_detail.html',
     form_class=forms.SingleOccurrenceForm,
@@ -566,7 +565,6 @@ def occurrence_view(
 def add_event(
     request,
     template='swingtime/add_event.html',
-    event_form_class=forms.EventForm,
     recurrence_form_class=forms.SingleOccurrenceForm,
 ):
     '''
@@ -595,7 +593,6 @@ def add_event(
     conflict_free=False
     no_list=["",u'',None,"None"]
     recurrence_dict={}
-    event_dict={}
     get_dict={}
     #########fetch all get values as intials##########
     if 'dtstart' in request.GET:
@@ -610,20 +607,18 @@ def add_event(
     if "training" in request.GET and request.GET['training'] not in no_list:
         training=Training.objects.get(pk=request.GET['training'])
         get_dict['training']=training
-        event_dict['training']=training
+        recurrence__dict['training']=training
     if "challenge" in request.GET and request.GET['challenge'] not in no_list:
         challenge=Challenge.objects.get(pk=request.GET['challenge'])
         get_dict['challenge']=challenge
-        event_dict['challenge']=challenge
+        recurrence__dict['challenge']=challenge
     if "location" in request.GET and request.GET['location'] not in no_list:
         location=Location.objects.get(pk=request.GET['location'])
         get_dict['location']=location
         recurrence_dict['location']=location
     #print "get dict",get_dict
     ########done fetching get values#########
-
     #initial offering, might get overwritten w/post
-    event_form = event_form_class(date=dtstart, initial=event_dict)
     recurrence_form = recurrence_form_class(initial=recurrence_dict)
     ##########################
 
@@ -643,19 +638,10 @@ def add_event(
         if "training" in request.POST and request.POST['training'] not in no_list:
             training=Training.objects.get(pk=request.POST['training'])
 
-        event_form = event_form_class(request.POST,date=dtstart)
         recurrence_form = recurrence_form_class(request.POST)
 
-        if event_form.is_valid() and recurrence_form.is_valid():
-            try:#both chal and train could be a thing, or none
-                print "trying t get event with chal/t"
-                event=Event.objects.get(challenge=challenge, training=training)
-            except ObjectDoesNotExist:
-                print "does not exist"
-                event = event_form.save(commit=False)
-
+        if recurrence_form.is_valid():
             occurrence=recurrence_form.save(commit=False)
-            occurrence.event=event
 
             if occurrence.end_time<=occurrence.start_time:
                 occurrence.end_time=occurrence.get_endtime()
@@ -676,34 +662,13 @@ def add_event(
                     conflict_free=True
 
             if ("save" in request.POST):
-                event.save()
-                occurrence.event=event
                 occurrence.save()
                 save_success=True#this doesn't d anyhting, I'm not able to pass it on unless I change the url
-                return redirect('swingtime-occurrence', occurrence.event.id,occurrence.id)#important, otherwise can make new ones forever and think editing same one
-            # elif "recheck" in request.POST:
-            #     dstr_str=request.POST['start_time_0_year']+"-"+request.POST['start_time_0_month']+"-"+request.POST['start_time_0_day']+"T"+request.POST['start_time_1']
-            #     locstr=str(request.GET['location'])
-            #     url_str='?dtstart=%s&location=%s'%(dstr_str,locstr)
-                # if "training" in request.GET and request.GET['training'] not in ["",u'',None,"None"]:
-                #     tpk=str(request.GET['training'])
-                #     url_str+="&training=%s"%(tpk)
-                # elif "training" in request.POST and request.POST['training'] not in ["",u'',None,"None"]:
-                #     tpk=str(request.POST['training'])
-                #     url_str+="&training=%s"%(tpk)
-                #
-                # if "challenge" in request.GET and request.GET['challenge'] not in ["",u'',None,"None"]:
-                #     cpk=str(request.GET['challenge'])
-                #     url_str+="&challenge=%s"%(cpk)
-                # elif "challenge" in request.POST and request.POST['challenge'] not in ["",u'',None,"None"]:
-                #     cpk=str(request.POST['challenge'])
-                #     url_str+="&challenge=%s"%(cpk)
-
-                # return HttpResponseRedirect(url_str)
+                return redirect('swingtime-occurrence',occurrence.id)#important, otherwise can make new ones forever and think editing same one
 
     # #this happens regardless of post or not
     return render(request,template,
-        {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'event_form': event_form, 'single_occurrence_form': recurrence_form})
+        {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'dtstart': dtstart, 'single_occurrence_form': recurrence_form})
 
 
 #-------------------------------------------------------------------------------
