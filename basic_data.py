@@ -22,7 +22,6 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
 
 
 
-
 def get_o():
     o_no_e=[]
 
@@ -45,7 +44,7 @@ def get_o():
         else:
             o_no_e.append(o)
 
-    for e in Events.objects.all():
+    for e in Event.objects.all():
         if e not in events:
             homeless_events.append(e)
 
@@ -64,7 +63,7 @@ def monogamous_event(events):
     misc=[]
 
     for e in events:
-        o_set=list(e.occurrence__set.all())
+        o_set=list(e.occurrence_set.all())
         if len(o_set)>1:
             poly.append(e)
         elif len(o_set)<1:
@@ -80,7 +79,7 @@ def monogamous_event(events):
     print "Misc Events: ",len(misc)
 
     return mono,poly,solo,misc
-
+#from basic_data import*
 #o_no_e,events,two_act,no_act,homeless_events=get_o()
 #mono,poly,solo,misc=monogamous_event(events)
 
