@@ -24,6 +24,7 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
 
 def get_o():
     o_no_e=[]
+    o_1_e=[]
 
     events=[]
     two_act=[]
@@ -33,14 +34,13 @@ def get_o():
 
     for o in Occurrence.objects.all():
         if o.event:
-
             if o.event.challenge and o.event.training:
                 two_act.append(o.event)
             elif not o.event.challenge and not o.event.training:
                 no_act.append(o.event)
             else:
                 events.append(o.event)
-
+                o_1_e.append(o)
         else:
             o_no_e.append(o)
 
@@ -49,12 +49,13 @@ def get_o():
             homeless_events.append(e)
 
     print "Occurrances without events: ",len(o_no_e)
+    print "Occurrances with 1 event/activity: ",len(o_1_e)
     print "Events w/1 Activity: ",len(events)
     print "Events w/2 Activities ",len(two_act)
     print "Events w/no Activities ",len(no_act)
     print "Homeless Events: ",len(homeless_events)
 
-    return o_no_e,events,two_act,no_act,homeless_events
+    return o_no_e,o_1_e,events,two_act,no_act,homeless_events
 
 def monogamous_event(events):
     mono=[]
@@ -80,11 +81,26 @@ def monogamous_event(events):
 
     return mono,poly,solo,misc
 #from basic_data import*
-#o_no_e,events,two_act,no_act,homeless_events=get_o()
+#o_no_e,o_1_e,events,two_act,no_act,homeless_events=get_o()
 #mono,poly,solo,misc=monogamous_event(events)
 
-def replace_events():
-    pass
+#replace_events(o_1_e)
+def replace_events(olist):
+    for o in olist:
+        print "O: ",o
+        e=o.event
+        print "E: ",e
+        a=e.get_activity()
+        print "A: ",a
+        if a and a.is_a_challenge():
+            o.challenge=a
+        elif a and a.is_a_training():
+            o.training=a
+        o.save()
+        print "SAVED ",o
+    print "all done"
+
+
 
 
 
