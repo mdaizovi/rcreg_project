@@ -76,7 +76,7 @@ Scheduled Challenges: {{ key|date:"l M d Y" }}
 
   {%for o in value %}
   <a href="{{o.event.challenge.get_view_url}}" class="list-group-item">
-  <h4 class="list-group-item-heading">{{o.event.challenge.name}}<small> {{o.event.challenge.roster1.captain.sk8name}} & {{o.event.challenge.roster2.captain.sk8name}}</small></h4>
+  <h4 class="list-group-item-heading">{{o.name}}<small> {{o.activity.roster1.captain.sk8name}} & {{o.activity.roster2.captain.sk8name}}</small></h4>
   <p class="list-group-item-text"> <table style="width: 75%;"><tr><td style="width: 50%;">{{o.start_time|date:"P"}} - {{o.end_time|date:"P"}}</td><td style="text-align:left;">{{o.location.name}} </td></tr></table></p>
 </a>{%endfor%}
 

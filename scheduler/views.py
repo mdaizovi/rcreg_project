@@ -18,7 +18,7 @@ import collections
 from django.core.mail import EmailMessage, send_mail
 from django.core.exceptions import ObjectDoesNotExist
 from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
-from swingtime.models import Event, Occurrence
+from swingtime.models import Occurrence
 
 
 #syntx reference:
@@ -145,7 +145,7 @@ def trainings_home(request,con_id=None,):
     else:
         con=Con.objects.get(pk=con_id)
 
-    scheduled=list(Occurrence.objects.filter(event__training__con=con))
+    scheduled=list(Occurrence.objects.filter(training__con=con))
 
     if len(scheduled)>0 and con.sched_visible:
         date_dict=collections.OrderedDict()
@@ -483,7 +483,7 @@ def challenges_home(request,con_id=None,):
     else:
         con=Con.objects.get(pk=con_id)
 
-    scheduled=list(Occurrence.objects.filter(event__challenge__con=con))
+    scheduled=list(Occurrence.objects.filter(challenge__con=con))
 
     if len(scheduled)>0 and con.sched_visible:
         date_dict=collections.OrderedDict()
