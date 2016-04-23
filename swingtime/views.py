@@ -404,7 +404,7 @@ def sched_assist_tr(
         return render(request, template, {})
 
     slots= act.sched_conflict_score()
-    
+
     return render(request, template, {'act':act,'slots':slots})
 
 #-------------------------------------------------------------------------------
@@ -704,6 +704,7 @@ def _datetime_view(
     '''
     timeslot_factory = timeslot_factory or utils.create_timeslot_table
     params = params or {}
+
     # try:
     #     con=Con.objects.get(start__lte=dt, end__gte=dt)
     #     locations=con.get_locations()
@@ -718,6 +719,7 @@ def _datetime_view(
             locations=con.get_locations()
     except ObjectDoesNotExist:
         con=None
+        locations=[]
 
     return render(request, template, {
         'day':       dt,
