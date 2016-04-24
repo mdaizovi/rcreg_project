@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+  <link href="{% static "css/blog.css" %}" rel="stylesheet">
+{% load i18n %}
+
+
+{% block content %}
+<head>
+<title>{% block title %}Know Thyself{% endblock %}</title>
+<!-- necessary for date time widget. Doesn't seem to work if moved-->
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>-->
+</head>
+
+{% if user.is_the_boss %}
+{%if con%}
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3 style="text-align:center;">Know Thyself: {{con}}</h3>
+
+    <div class="dropdown">
+    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      Other Cons
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+      {%for item in con_list%}
+      {% url 'know_thyself' item.pk as kt_url %}
+      <li role="presentation"><a href="{{kt_url}}">{{item}}</a></li>{%endfor%}
+    </ul>
+  </div>
+
+<hr>
+  <h3>Attendees</h3>
+<table class="table table-striped">
+<th></th><th>Total</th><th>MVP</th><th>Skater</th><th>Off Skates</th>
+<tr><td><b>Attendees All</b></td><td>{{attendee.total}}</td><td>{{attendee.mvp}}</td><td>{{attendee.sk8}}</td><td>{{attendee.offsk8}}</td></tr>
+<tr><td><b>First-Time</b></td><td>{{first.total}}</td><td>{{first.mvp}}</td><td>{{first.sk8}}</td><td>{{first.offsk8}}</td></tr>
+<tr><td><b>Returning</b></td><td>{{returning.total}}</td><td>{{returning.mvp}}</td><td>{{returning.sk8}}</td><td>{{returning.offsk8}}</td></tr>
+
+<tr><td><b>Female</b></td><td>{{female.total}}</td><td>{{female.mvp}}</td><td>{{female.sk8}}</td><td>{{female.offsk8}}</td></tr>
+<tr><td><b>Male</b></td><td>{{male.total}}</td><td>{{male.mvp}}</td><td>{{male.sk8}}</td><td>{{male.offsk8}}</td></tr>
+<tr><td><b>NA/Non-Binary</b></td><td>{{nonbinary.total}}</td><td>{{nonbinary.mvp}}</td><td>{{nonbinary.sk8}}</td><td>{{nonbinary.offsk8}}</td></tr>
+
+<tr><td><b>INTL: American</b></td><td>{{usintl.total}}</td><td>{{usintl.mvp}}</td><td>{{usintl.sk8}}</td><td>{{usintl.offsk8}}</td></tr>
+<tr><td><b>INTL: Foreign</b></td><td>{{foreignintl.total}}</td><td>{{foreignintl.mvp}}</td><td>{{foreignintl.sk8}}</td><td>{{foreignintl.offsk8}}</td></tr>
+<tr><td><b>INTL: Unspecified</b></td><td>{{unspecintl.total}}</td><td>{{unspecintl.mvp}}</td><td>{{unspecintl.sk8}}</td><td>{{unspecintl.offsk8}}</td></tr>
+
+</table>
+
+<hr>
+<h4>Countries: <small>{{countries|length}} Non-American countries represented</small></h4>
+<ul>{%for c in countries%}
+  <li>{{c}}</li>{%endfor%}</ul>
+
+  <hr>
+  <h4>US States: <small>{{state_tups|length}} American states represented</small></h4>
+  <table class="table table-striped table-condensed">
+    <th>State</th><th>Attendees Number</th><th>Percent of Total</th>
+    {%for tup in state_tups%}
+    <tr><td>{{tup.1}}</td><td>{{tup.0}}</td><td>{{tup.2}}</td></tr>
+    {%endfor%}
+  </table>
+
+
+
+
+
+<hr>
+<h3>Trainings</h3>
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+{%else%}
+  <div class="alert alert-danger" role="alert">That Con does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
+{%endif%}
+{%else%}
+{% include "no_permission.html" %}
+{%endif%}
+
+{% endblock %}

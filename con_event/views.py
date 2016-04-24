@@ -7,6 +7,223 @@ from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
 
+def know_thyself(request, con_id=None):
+    if con_id:
+        try:
+            con=Con.objects.get(pk=con_id)
+        except:
+            return render_to_response('know_thyself.html', {},context_instance=RequestContext(request))
+    else:
+        #con=Con.objects.most_recent()
+        con=Con.objects.most_upcoming()
+    #print "dbc0:", len(dbconnection.queries)
+    #all_r=list(Registrant.objects.filter(con=con)) #800 db hits
+    #all_r=list(Registrant.objects.filter(con=con).select_related('user')) #400 db hits
+    all_r=list(Registrant.objects.filter(con=con).select_related('country').select_related('state').select_related('user').prefetch_related('user__registrant_set')) #6 db hits!
+
+    mvp_pass=[]
+    first_mvp=[]
+    return_mvp=[]
+    us_intl_mvp=[]
+    foreign_intl_mvp=[]
+    unspec_intl_mvp=[]
+    male_mvp=[]
+    female_mvp=[]
+    nonbinary_mvp=[]
+
+    sk8_pass=[]
+    first_sk8=[]
+    return_sk8=[]
+    us_intl_sk8=[]
+    foreign_intl_sk8=[]
+    unspec_intl_sk8=[]
+    male_sk8=[]
+    female_sk8=[]
+    nonbinary_sk8=[]
+
+    offsk8_pass=[]
+    first_offsk8=[]
+    return_offsk8=[]
+    us_intl_offsk8=[]
+    foreign_intl_offsk8=[]
+    unspec_intl_offsk8=[]
+    male_offsk8=[]
+    female_offsk8=[]
+    nonbinary_offsk8=[]
+
+    americans=[]
+
+    #do all splitting in 1 place so only 1 db hit.
+    for r in all_r:
+        if r.pass_type=="MVP":
+            mvp_pass.append(r)
+            if len(r.user.registrant_set.all())>1:
+                return_mvp.append(r)
+            else:
+                first_mvp.append(r)
+
+            if r.intl:
+                if r.country and r.country.slugname != "US":
+                    foreign_intl_mvp.append(r)
+                elif r.country and r.country.slugname == "US":
+                    us_intl_mvp.append(r)
+                    if r.state:
+                        americans.append(r)
+                else:
+                    unspec_intl_mvp.append(r)
+            elif r.state:
+                americans.append(r)
+
+            if r.gender and r.gender=="Male":
+                male_mvp.append(r)
+            elif r.gender and r.gender=="Female":
+                female_mvp.append(r)
+            else:
+                nonbinary_mvp.append(r)
+
+        elif r.pass_type=="Skater":
+            sk8_pass.append(r)
+            if len(r.user.registrant_set.all())>1:
+                return_sk8.append(r)
+            else:
+                first_sk8.append(r)
+
+            if r.intl:
+                if r.country and r.country.slugname != "US":
+                    foreign_intl_sk8.append(r)
+                elif r.country and r.country.slugname == "US":
+                    us_intl_sk8.append(r)
+                    if r.state:
+                        americans.append(r)
+                else:
+                    unspec_intl_sk8.append(r)
+            elif r.state:
+                americans.append(r)
+
+            if r.gender and r.gender=="Male":
+                male_sk8.append(r)
+            elif r.gender and r.gender=="Female":
+                female_sk8.append(r)
+            else:
+                nonbinary_sk8.append(r)
+
+        elif r.pass_type=="Offskate":
+            offsk8_pass.append(r)
+            if len(r.user.registrant_set.all())>1:
+                return_offsk8.append(r)
+            else:
+                first_offsk8.append(r)
+
+            if r.intl:
+                if r.country and r.country.slugname != "US":
+                    foreign_intl_offsk8.append(r)
+                elif r.country and r.country.slugname == "US":
+                    us_intl_offsk8.append(r)
+                    if r.state:
+                        americans.append(r)
+                else:
+                    unspec_intl_offsk8.append(r)
+            elif r.state:
+                americans.append(r)
+
+            if r.gender and r.gender=="Male":
+                male_offsk8.append(r)
+            elif r.gender and r.gender=="Female":
+                female_offsk8.append(r)
+            else:
+                nonbinary_offsk8.append(r)
+
+    attendee={}
+    for tup in [ ("total",all_r),("mvp",mvp_pass), ("sk8",sk8_pass),("offsk8",offsk8_pass)]:
+        attendee[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    first={}
+    all_first=first_mvp+first_sk8+first_offsk8
+    for tup in [ ("total",all_first),("mvp",first_mvp), ("sk8",first_sk8),("offsk8",first_offsk8)]:
+        first[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    returning={}
+    all_returning=return_mvp+return_sk8+return_offsk8
+    for tup in [ ("total",all_returning),("mvp",return_mvp), ("sk8",return_sk8),("offsk8",return_offsk8)]:
+        returning[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    usintl={}
+    all_usintl=us_intl_mvp+us_intl_sk8+us_intl_offsk8
+    for tup in [ ("total",all_usintl),("mvp",us_intl_mvp), ("sk8",us_intl_sk8),("offsk8",us_intl_offsk8)]:
+        usintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    foreignintl={}
+    all_foreignintl=foreign_intl_mvp+foreign_intl_sk8+foreign_intl_offsk8
+    for tup in [ ("total",all_foreignintl),("mvp",foreign_intl_mvp), ("sk8",foreign_intl_sk8),("offsk8",foreign_intl_offsk8)]:
+        foreignintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    unspecintl={}
+    all_unspecintl=unspec_intl_mvp+unspec_intl_sk8+unspec_intl_offsk8
+    for tup in [ ("total",all_unspecintl),("mvp",unspec_intl_mvp), ("sk8",unspec_intl_sk8),("offsk8",unspec_intl_offsk8)]:
+        unspecintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    female={}
+    all_female=female_mvp+female_sk8+female_offsk8
+    for tup in [ ("total",all_female),("mvp",female_mvp), ("sk8",female_sk8),("offsk8",female_offsk8)]:
+        female[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+    male={}
+    all_male=male_mvp+male_sk8+male_offsk8
+    for tup in [ ("total",all_male),("mvp",male_mvp), ("sk8",male_sk8),("offsk8",male_offsk8)]:
+        male[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+    nonbinary={}
+    all_nonbinary=nonbinary_mvp+nonbinary_sk8+nonbinary_offsk8
+    for tup in [ ("total",all_nonbinary),("mvp",nonbinary_mvp), ("sk8",nonbinary_sk8),("offsk8",nonbinary_offsk8)]:
+        nonbinary[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+
+    country_dict={}
+    for r in all_foreignintl:
+        if r.country not in country_dict:
+            country_dict[r.country]=[r]
+        else:
+            templist=country_dict.get(r.country)
+            templist.append(r)
+            country_dict[r.country]=list(templist)
+
+    countries=[]
+    for k,v in country_dict.iteritems():
+        this_str="%s: %s Attendees" % (k.name, len(v))
+        countries.append(this_str)
+    countries.sort()
+
+    state_dict={}
+    for r in americans:
+        if r.state not in state_dict:
+            state_dict[r.state]=[r]
+        else:
+            templist=state_dict.get(r.state)
+            templist.append(r)
+            state_dict[r.state]=list(templist)
+
+    states=[]
+    state_tups=[]
+    # for k,v in state_dict.iteritems():
+    #     length=len(v)
+    #     percent_str="{0:.2f}".format( (float(len( v ))/(len( all_r ))*100 ) )
+    #     this_str="%s: %s Attendees, (%s percent)" % (k.name, str(length),percent_str)
+    #     tup=(length,this_str)
+    #     state_tups.append(tup)
+
+    for k,v in state_dict.iteritems():
+        length=len(v)
+        percent_str="{0:.2f}".format( (float(len( v ))/(len( all_r ))*100 ) )
+        this_str="%s: %s Attendees, (%s percent)" % (k.name, str(length),percent_str)
+        tup=(length,k.name,percent_str)
+        state_tups.append(tup)
+
+
+    state_tups.sort(reverse=True)
+    for t in state_tups:
+        states.append(t[1])
+
+
+    #print "dbc1:", len(dbconnection.queries)
+    return render_to_response('know_thyself.html', {'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,'foreignintl':foreignintl,'usintl':usintl,'returning':returning,'first':first,'attendee':attendee,'con':con,'con_list':list(Con.objects.all())},context_instance=RequestContext(request))
+
 def CheapAirDynamic(request):
     '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
     i think it's their fault, not mine, though'''

@@ -12,7 +12,8 @@ urlpatterns = patterns('',
     url(r'^profile/', 'con_event.views.registrant_profile',name='registrant_profile'),
     url(r'^announcements/', 'con_event.views.all_announcements',name='all_announcements'),
     url(r'^announcement/(?P<slugname>\w+)/$', 'con_event.views.announcement',name='announcement'),
-#write url for each individual annoucement using slugname
+    #cool regex to say con_id may or may not be present:http://stackoverflow.com/questions/2325433/making-a-regex-django-url-token-optional
+    url(r'^know_thyself(?:/(?P<con_id>\d+))?/$', 'con_event.views.know_thyself',name='know_thyself'),
 
 
     # url(r'^all/$', 'con_event.views.sessions', name='sessions'),
