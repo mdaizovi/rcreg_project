@@ -129,6 +129,7 @@ def view_coach(request, coach_id):
 def view_training(request, activity_id):
     user=request.user
     single=False
+    visible=False
     try:
         training=Training.objects.get(pk=int(activity_id))
         rosters=[training.registered, training.auditing]
