@@ -454,6 +454,55 @@ class Occurrence(models.Model):
         return url_str
 
 #-------------------------------------------------------------------------------
+##Not totally sure I want to do this
+# class TrainingRoster(models.Model):
+#     gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
+#     intl=models.NullBooleanField(default=False)
+#     participants=models.ManyToManyField(Registrant, blank=True)
+#     cap=models.IntegerField(null=True, blank=True)
+#
+#     #Reminder: can have 1 of these but not both.
+#     registered=models.OneToOneField("Occurrence", related_name="registered_O",null=True, blank=True)
+#     auditing=models.OneToOneField("Occurrence", related_name="auditing_O",null=True, blank=True)
+#
+#     def __unicode__(self):
+#         return self.name
+#
+#     # class Meta:
+#     #     ordering=('registered__start_time','auditing__start_time','name')
+#
+#     @property
+#     def name(self):
+#         if self.registered:
+#             return ("REGISTERED: ",self.registered)
+#         elif self.auditing:
+#             return ("AUDITING: ",self.auditing)
+#         else:
+#             return "unnamed Training Roster"
+#     #---------------------------------------------------------------------------
+#     def validate_unique(self, *args, **kwargs):
+#         super(TrainingRoster, self).validate_unique(*args, **kwargs)
+#         if self.registered and self.auditing:
+#             raise ValidationError({
+#                 NON_FIELD_ERRORS: ["Roster cannot be both Registered and Auditing",],})
+#
+#         if not self.registered and not self.auditing:
+#             raise ValidationError({
+#                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # def create_event(
 #     #title,
 #     #event_type,

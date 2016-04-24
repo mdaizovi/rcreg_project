@@ -60,6 +60,8 @@
 
 </div><!-- end well lg-->
 
+{% if training.con.sched_visible %}
+
 {%for roster in rosters %}
 <div class="col-sm-6">
 
@@ -86,7 +88,13 @@
 
 </div><!-- end col-sm-6-->
 
-{%endfor%}
+{%endfor%}<!-- for roster in rosters-->
+
+{%else%} <!-- if training.con.schedule visible-->
+<h3 style="text-align:center;"><i>The scheduling for {{training.con}} is still in process.<h3>
+  <h4 style="text-align:center;">Please check later for Training times and participant rosters.</i></h4>
+{%endif%} <!-- if training.con.schedule visible-->
+
 {%endif%}<!-- If no exist -->
 </div><!-- end row-->
 

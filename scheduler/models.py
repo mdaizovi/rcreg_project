@@ -569,7 +569,7 @@ class Activity(models.Model):
         dummies=[]
         padding=0
         pls=self.possible_locations()
-        print "possible locations: ",pls
+        #print "possible locations: ",pls
         if self.is_a_training():#if this is a training
             challenge=None
             training=self
@@ -603,8 +603,8 @@ class Activity(models.Model):
         #                 dummies.append(o)
         #         slot_start+=TIMESLOT_INTERVAL
         #         slot_end+=TIMESLOT_INTERVAL
-        print "empties: ",empties
-        print "dummies: ",dummies
+        #print "empties: ",empties
+        #print "dummies: ",dummies
 
         return [empties,dummies]
 
