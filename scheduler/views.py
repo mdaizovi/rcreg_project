@@ -143,8 +143,6 @@ def view_training(request, activity_id):
             if len(occurrences)==1:
                 single=occurrences[0]
         else:
-            single=False
-            visible=False
             occurrences=[]
 
         return render_to_response('view_training.html',{'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))

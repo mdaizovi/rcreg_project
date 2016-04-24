@@ -7,6 +7,7 @@ from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
 
+@login_required
 def know_thyself(request, con_id=None):
     if con_id:
         try:
@@ -201,12 +202,6 @@ def know_thyself(request, con_id=None):
 
     states=[]
     state_tups=[]
-    # for k,v in state_dict.iteritems():
-    #     length=len(v)
-    #     percent_str="{0:.2f}".format( (float(len( v ))/(len( all_r ))*100 ) )
-    #     this_str="%s: %s Attendees, (%s percent)" % (k.name, str(length),percent_str)
-    #     tup=(length,this_str)
-    #     state_tups.append(tup)
 
     for k,v in state_dict.iteritems():
         length=len(v)
