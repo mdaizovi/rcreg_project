@@ -642,15 +642,16 @@ class Activity(models.Model):
         """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
         Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest"""
-        print "about to start sched_conflict_score"
+        #print "about to start sched_conflict_score"
         odict_list=[]
 
         #for o in dummy_occurrences:
         for olist in list(self.dummy_occurrences()):
             if len(olist)>0:
-                print "olist: ",olist
+                conflict={}
+                #print "olist: ",olist
                 for o in olist:
-                    conflict={}
+
                     score=0
                     blackout_conflict=o.blackout_conflict()
                     if blackout_conflict:
@@ -679,15 +680,18 @@ class Activity(models.Model):
             else:#if empty list, otherwise uses last conflict and returns wrond occurrence
                 conflict={}
 
+            #print "line 682 conflict",conflict
             score_list=list(conflict.keys())
             score_list.sort()
+            #print "score list",score_list
             odict  = dict(collections.OrderedDict())
             for score in score_list:
                 temp_list=conflict.get(score)
+                #print "temp_list",temp_list
                 odict[score]=temp_list
             odict_list.append(odict)
 
-        print "odict_list: ",odict_list
+        #print "odict_list: ",odict_list
         return odict_list
 
     def get_activity_type(self):
