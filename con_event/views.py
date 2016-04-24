@@ -6,9 +6,11 @@ from con_event.forms import RegistrantProfileForm,AvailabilityForm
 from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
+from swingtime.models import Occurrence
 
 @login_required
 def know_thyself(request, con_id=None):
+    #https://media.giphy.com/media/7WsCPB5iNzDwI/giphy.gif
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -210,14 +212,59 @@ def know_thyself(request, con_id=None):
         tup=(length,k.name,percent_str)
         state_tups.append(tup)
 
-
     state_tups.sort(reverse=True)
     for t in state_tups:
         states.append(t[1])
 
+    occurrences=list(Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end))
+    challenges=[]
+    trainings=[]
+    for o in occurrences:
+        if o.challenge:
+             challenges.append(o)
+        elif o.training:
+            trainings.append(o)
+
+    c_dur=0
+    cr_unique=[]
+    cr_total=[]
+    games=[]
+    for o in challenges:
+        c_dur+=float(o.challenge.duration)
+        for roster in [o.challenge.roster1,o.challenge.roster2]:
+            if roster:
+                for r in roster.participants.all():
+                    cr_total.append(r)
+                    if r not in cr_unique:
+                        cr_unique.append(r)
+        if o.challenge.is_a_game:
+            games.append(o)
+    c_tup=((len(challenges)-len(games)),c_dur, cr_total,cr_unique,len(games))
+
+    t_dur=0
+    tr_unique=[]
+    tr_total=[]
+    t_coaches=[]
+    for o in trainings:
+        print "o: ",o
+        t_dur+=float(o.training.duration)
+        for c in o.training.coach.all():
+            print "coach: ",c
+            if c not in t_coaches:
+                t_coaches.append(c)
+        for roster in [o.training.registered,o.training.auditing]:
+            if roster:
+                for r in roster.participants.all():
+                    tr_total.append(r)
+                    if r not in tr_unique:
+                        tr_unique.append(r)
+    t_tup=(len(trainings),t_dur, tr_total,tr_unique,len(t_coaches))
+    print "t_tup",t_tup
+
+
 
     #print "dbc1:", len(dbconnection.queries)
-    return render_to_response('know_thyself.html', {'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,'foreignintl':foreignintl,'usintl':usintl,'returning':returning,'first':first,'attendee':attendee,'con':con,'con_list':list(Con.objects.all())},context_instance=RequestContext(request))
+    return render_to_response('know_thyself.html', {'t_tup':t_tup,'c_tup':c_tup,'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,'foreignintl':foreignintl,'usintl':usintl,'returning':returning,'first':first,'attendee':attendee,'con':con,'con_list':list(Con.objects.all())},context_instance=RequestContext(request))
 
 def CheapAirDynamic(request):
     '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
