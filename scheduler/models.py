@@ -569,6 +569,7 @@ class Activity(models.Model):
         dummies=[]
         padding=0
         pls=self.possible_locations()
+        print "possible locations: ",pls
         if self.is_a_training():#if this is a training
             challenge=None
             training=self
@@ -602,6 +603,9 @@ class Activity(models.Model):
         #                 dummies.append(o)
         #         slot_start+=TIMESLOT_INTERVAL
         #         slot_end+=TIMESLOT_INTERVAL
+        print "empties: ",empties
+        print "dummies: ",dummies
+
         return [empties,dummies]
 
     # def sched_conflict_split(self):
@@ -683,6 +687,7 @@ class Activity(models.Model):
                 odict[score]=temp_list
             odict_list.append(odict)
 
+        print "odict_list: ",odict_list
         return odict_list
 
     def get_activity_type(self):

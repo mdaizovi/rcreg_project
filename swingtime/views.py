@@ -405,7 +405,7 @@ def sched_assist_tr(
 
     slots= act.sched_conflict_score()
 
-    return render(request, template, {'act':act,'slots':slots})
+    return render(request, template, {'act':act,'slots':slots,"training":act,'challenge':None})
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -419,9 +419,9 @@ def sched_assist_ch(
     except:
         return render(request, template, {})
 
-    possible=act.sched_conflict_score()
+    slots= act.sched_conflict_score()
 
-    return render(request, template, {'act':act,'possible':possible})
+    return render(request, template, {'act':act,'slots':slots,"training":None,'challenge':act})
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -535,6 +535,15 @@ def occurrence_view(
     occurrence = get_object_or_404(Occurrence, pk=pk)
     conflict_free=False
     conflict={}
+    no_list=["",u'',None,"None"]
+    get_dict={}
+    if "training" in request.GET and request.GET['training'] not in no_list:
+        training=Training.objects.get(pk=request.GET['training'])
+        get_dict['training']=training
+        recurrence__dict['training']=training
+    if "challenge" in request.GET and request.GET['challenge'] not in no_list:
+        challenge=Challenge.objects.get(pk=request.GET['challenge'])
+        get_dict['challenge']=challenge
 
     if request.method == 'POST':
         form = form_class(request.POST, instance=occurrence)
@@ -556,7 +565,7 @@ def occurrence_view(
                 if len(conflict)<=0:
                     conflict_free=True
     else:
-        form = form_class(instance=occurrence)
+        form = form_class(instance=occurrence,initial=get_dict)
 
     return render(request, template, {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'occurrence': occurrence, 'form': form})
 

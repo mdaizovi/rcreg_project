@@ -340,6 +340,11 @@ class Occurrence(models.Model):
         dur_delta=int((duration+padding)*60)
         end_time=self.start_time+timedelta(minutes=dur_delta)
         return end_time
+    #---------------------------------------------------------------------------
+    def get_initial_interest(self,start_time):
+        """Figures out intiial interest level based on when event is occurring.
+        Start time is fed so can be calculated for initial before any other data is populated."""
+        pass
 
 
     #---------------------------------------------------------------------------

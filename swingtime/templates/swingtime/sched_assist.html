@@ -19,12 +19,12 @@
 {%for o in v%}
 <tr><td>{{ o.start_time|date:"D d" }}</td><td>{{ o.start_time|date:"f a" }}</td><td>{{ o.end_time|date:"f a" }}</td>
   <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td style="text-align:center;">
-    {% with o.get_add_url as add_url %}
-    <a href="{{add_url}}">{{k}}</a></td></tr>{%endwith%}
+    <a href="{% url 'swingtime-occurrence' o.pk %}?{%if training%}training={{training.pk}}{%elif challenge%}challenge={{challenge.pk}}{%endif%}">{{k}}</a></td></tr>
+
 {%endfor%}
 {%endfor%}
 </table>
-{%cycle "" "I've temporarily disabled this part while I work on it to make faster and better" %}
+{%cycle "" "I've temporarily disabled this part while I work on it to make faster and better. Or maybe you don't need it?" %}
 </div><!-- end col-sm-6 possible timeslots-->
 {%endfor%}
 
