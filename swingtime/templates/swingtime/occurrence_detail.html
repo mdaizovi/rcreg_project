@@ -6,10 +6,11 @@
 
        {% with occurrence.start_time as st  %}
        <a href="{% url 'swingtime-daily-view' st.year st.month st.day %}">
-        <i>Go back to {{ st|date:"l, F jS" }} Day View</i></a>
-      </h4>
-      {% endwith %}
-
+        <i>Go to {{ st|date:"l, F jS" }} All Locations Day View</i></a>
+        {%if location%} |
+        <a href="{% url 'swingtime-daily-location-view' location.pk st.year st.month st.day %}">
+         <i>Go to {{ st|date:"l, F jS" }} Day/{{location.name}} View</i></a>{%endif%}
+    {% endwith %}</h4>
 
   {% include "swingtime/conflict_part.html" %}
 

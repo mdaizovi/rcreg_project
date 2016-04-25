@@ -567,7 +567,14 @@ def occurrence_view(
     else:
         form = form_class(instance=occurrence,initial=get_dict)
 
-    return render(request, template, {'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'occurrence': occurrence, 'form': form})
+    try:
+        location=occurrence.location
+    except:
+        location=None
+
+    print "location",location
+
+    return render(request, template, {'location':location,'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'occurrence': occurrence, 'form': form})
 
 
 #-------------------------------------------------------------------------------
