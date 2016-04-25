@@ -8,6 +8,153 @@ import collections
 import datetime
 from swingtime.models import Occurrence
 
+
+def CheapAirDynamic(request):
+    '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
+    i think it's their fault, not mine, though'''
+    most_upcoming=Con.objects.most_upcoming()
+    return render_to_response('CheapAirDynamic.html', {'most_upcoming':most_upcoming},context_instance=RequestContext(request))
+
+def index(request):
+    most_upcoming=Con.objects.most_upcoming()
+    blog=Blog.objects.latest('date')
+    return render_to_response('index.html', {'most_upcoming':most_upcoming,'blog':blog},context_instance=RequestContext(request))
+
+@login_required
+def WTFAQ(request):
+    user=request.user
+    return render_to_response('WTFAQ.html', {'user':user},context_instance=RequestContext(request))
+
+
+def announcement(request, slugname):
+    blog=Blog.objects.get(slugname=slugname)
+    next_blog,previous_blog=blog.get_next_and_previous()
+    return render_to_response('announcement.html', {'previous_blog':previous_blog,'next_blog':next_blog,'blog':blog},context_instance=RequestContext(request))
+
+def all_announcements(request):
+    return render_to_response('all_announcements.html', {'blogs':Blog.objects.all()},context_instance=RequestContext(request))
+
+@login_required
+def registrant_profile(request):
+    '''Thie view feels dicey. It gets all registrants for user and displays them. Only the first in th list,
+    presumably most recent, is editable--all others are disabled.
+    You can modify and change data and presumable only the most recent Registrant will be saved, but it feels like this
+    is precarious and could massively fuck up someday.
+    form.media relates to the datetime widget. I don't now why it only works on the first tab, but I made all others disbled anyway, so no problem?
+    '''
+    save_attempt=False
+    save_success=False
+    this_reg=None#this is the one that gets selected if you're saving something
+    user=request.user
+    upcoming=Con.objects.upcoming_cons()
+    registrant_dict_list=[]
+    problem_criteria=None
+    potential_conflicts=None
+    captain_conflict=None
+    selection=None
+
+
+    if request.method == 'POST':
+        selection = request.POST.copy()
+        #print "selection", selection
+        #selectiondict=dict(selection.lists())
+        #print "selectiondict: ",selectiondict
+
+        save_attempt=True
+        this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
+        this_con=this_reg.con
+        #for some fucking reason couldn't get the goddamed modelform to act like a real modelform
+        #so i write hack aorund only updating the only 2 fields I want to be able to update, anyway.
+        #which is fine, I guess bc otherwise I had all kinds of shit to make sure pass type and intl didn't get changed.
+        if 'skill' in request.POST:
+            if request.POST['skill'] in [None,"None","",u'']:
+                this_reg.skill=None
+            else:
+                this_reg.skill=request.POST['skill']
+        if 'gender' in request.POST:
+            this_reg.gender=request.POST['gender']
+        if 'sk8number' in request.POST:
+            this_reg.sk8number=request.POST['sk8number']
+        problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
+
+        if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!
+            bo_tup_list=[]
+            available=[]
+            for key, value in request.POST.items():
+                if value==u'on':
+                    available.append(key)
+
+            for date in this_con.get_date_range():
+                ampmlist=[]
+                if str(date)+"-am" not in available:
+                    #If it's not checked that means a Blackout needs to be made.
+                    #If it's checked, that day is available, don't want a blakcout for that day.
+                    bo_tup_list.append((date,"AM"))
+                if str(date)+"-pm" not in available:
+                    bo_tup_list.append((date,"PM"))
+            this_reg.update_blackouts(bo_tup_list)
+
+        if not captain_conflict:
+            if problem_criteria or potential_conflicts:
+                if 'confirm save' in request.POST:
+                    conflict_sweep=this_reg.conflict_sweep()
+                    this_reg.save()
+                    if conflict_sweep:
+                        save_success=True
+                else:
+                    hidden_forms=[RegistrantProfileForm(request.POST or None, instance=this_reg)]
+                    #hidden_form=RegistrantProfileForm(request.POST or None, instance=this_reg)
+                    return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_forms':hidden_forms,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
+
+            else:#if no problem criteria
+                this_reg.save()
+                save_success=True
+
+    registrant_list= list(user.registrant_set.all())
+    for registrant in registrant_list:
+        bo_list=[]
+        bo_form_list=[]
+        datelist=None
+        form = RegistrantProfileForm(instance=registrant)
+
+        #maybe i should only run this is con hasn't happened yet?
+        if (registrant.con.start > datetime.date.today()):
+            if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
+                datelist=registrant.con.get_date_range()
+                for bo in registrant.blackout.all():
+                    bo_list.append((bo.date,bo.ampm))
+
+                for date in datelist:
+                    initial={}
+                    if (date,"AM") in bo_list:
+                        initial["am"]=False
+                    if (date,"PM") in bo_list:
+                        initial["pm"]=False
+                    availabilityform=AvailabilityForm(date=date,initial=initial,prefix=str(date))
+                    bo_form_list.append(availabilityform)
+        else:
+            datelist=None
+            bo_list=None
+
+        registrant_dict={'bo_form_list':bo_form_list,'datelist':datelist,'con':registrant.con, 'registrant':registrant,'form':form}
+        registrant_dict_list.append(registrant_dict)
+
+    upcoming_registrants=user.upcoming_registrants()
+    if save_success:
+        active=this_reg.con
+    elif upcoming_registrants and len(upcoming_registrants)>1:
+        active=Con.objects.most_upcoming()
+    else:
+        try:
+            most_upcoming_reg=registrant_list[0]
+            active=most_upcoming_reg.con
+        except:
+            active=None
+
+
+    return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+
+
 @login_required
 def know_thyself(request, con_id=None):
     #https://media.giphy.com/media/7WsCPB5iNzDwI/giphy.gif
@@ -216,7 +363,8 @@ def know_thyself(request, con_id=None):
     for t in state_tups:
         states.append(t[1])
 
-    occurrences=list(Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end))
+    occurrences=list(Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).select_related('challenge').select_related('challenge__roster1').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2').prefetch_related('challenge__roster2__participants').select_related('training').prefetch_related('training__coach').prefetch_related('training__registered').prefetch_related('training__auditing')) #17 hits
+
     challenges=[]
     trainings=[]
     for o in occurrences:
@@ -226,187 +374,30 @@ def know_thyself(request, con_id=None):
             trainings.append(o)
 
     c_dur=0
-    cr_unique=[]
-    cr_total=[]
+    cr_total=0
     games=[]
     for o in challenges:
         c_dur+=float(o.challenge.duration)
         for roster in [o.challenge.roster1,o.challenge.roster2]:
             if roster:
-                for r in roster.participants.all():
-                    cr_total.append(r)
-                    if r not in cr_unique:
-                        cr_unique.append(r)
+                cr_total+=roster.participants.count()
         if o.challenge.is_a_game:
             games.append(o)
-    c_tup=((len(challenges)-len(games)),c_dur, cr_total,cr_unique,len(games))
+    c_tup=((len(challenges)-len(games)),c_dur, cr_total,len(games))
+
 
     t_dur=0
-    tr_unique=[]
-    tr_total=[]
+    tr_total=0
     t_coaches=[]
     for o in trainings:
-        print "o: ",o
         t_dur+=float(o.training.duration)
         for c in o.training.coach.all():
-            print "coach: ",c
             if c not in t_coaches:
                 t_coaches.append(c)
         for roster in [o.training.registered,o.training.auditing]:
             if roster:
-                for r in roster.participants.all():
-                    tr_total.append(r)
-                    if r not in tr_unique:
-                        tr_unique.append(r)
-    t_tup=(len(trainings),t_dur, tr_total,tr_unique,len(t_coaches))
-    print "t_tup",t_tup
+                tr_total+=roster.participants.count()
+    t_tup=(len(trainings),t_dur, tr_total,len(t_coaches))
 
-
-
-    #print "dbc1:", len(dbconnection.queries)
-    return render_to_response('know_thyself.html', {'t_tup':t_tup,'c_tup':c_tup,'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,'foreignintl':foreignintl,'usintl':usintl,'returning':returning,'first':first,'attendee':attendee,'con':con,'con_list':list(Con.objects.all())},context_instance=RequestContext(request))
-
-def CheapAirDynamic(request):
-    '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
-    i think it's their fault, not mine, though'''
-    most_upcoming=Con.objects.most_upcoming()
-    return render_to_response('CheapAirDynamic.html', {'most_upcoming':most_upcoming},context_instance=RequestContext(request))
-
-def index(request):
-    most_upcoming=Con.objects.most_upcoming()
-    blog=Blog.objects.latest('date')
-    return render_to_response('index.html', {'most_upcoming':most_upcoming,'blog':blog},context_instance=RequestContext(request))
-
-@login_required
-def WTFAQ(request):
-    user=request.user
-    return render_to_response('WTFAQ.html', {'user':user},context_instance=RequestContext(request))
-
-
-def announcement(request, slugname):
-    blog=Blog.objects.get(slugname=slugname)
-    next_blog,previous_blog=blog.get_next_and_previous()
-    return render_to_response('announcement.html', {'previous_blog':previous_blog,'next_blog':next_blog,'blog':blog},context_instance=RequestContext(request))
-
-def all_announcements(request):
-    return render_to_response('all_announcements.html', {'blogs':Blog.objects.all()},context_instance=RequestContext(request))
-
-@login_required
-def registrant_profile(request):
-    '''Thie view feels dicey. It gets all registrants for user and displays them. Only the first in th list,
-    presumably most recent, is editable--all others are disabled.
-    You can modify and change data and presumable only the most recent Registrant will be saved, but it feels like this
-    is precarious and could massively fuck up someday.
-    form.media relates to the datetime widget. I don't now why it only works on the first tab, but I made all others disbled anyway, so no problem?
-    '''
-    save_attempt=False
-    save_success=False
-    this_reg=None#this is the one that gets selected if you're saving something
-    user=request.user
-    upcoming=Con.objects.upcoming_cons()
-    registrant_dict_list=[]
-    problem_criteria=None
-    potential_conflicts=None
-    captain_conflict=None
-    selection=None
-
-
-    if request.method == 'POST':
-        selection = request.POST.copy()
-        #print "selection", selection
-        #selectiondict=dict(selection.lists())
-        #print "selectiondict: ",selectiondict
-
-        save_attempt=True
-        this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
-        this_con=this_reg.con
-        #for some fucking reason couldn't get the goddamed modelform to act like a real modelform
-        #so i write hack aorund only updating the only 2 fields I want to be able to update, anyway.
-        #which is fine, I guess bc otherwise I had all kinds of shit to make sure pass type and intl didn't get changed.
-        if 'skill' in request.POST:
-            if request.POST['skill'] in [None,"None","",u'']:
-                this_reg.skill=None
-            else:
-                this_reg.skill=request.POST['skill']
-        if 'gender' in request.POST:
-            this_reg.gender=request.POST['gender']
-        if 'sk8number' in request.POST:
-            this_reg.sk8number=request.POST['sk8number']
-        problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
-
-        if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!
-            bo_tup_list=[]
-            available=[]
-            for key, value in request.POST.items():
-                if value==u'on':
-                    available.append(key)
-
-            for date in this_con.get_date_range():
-                ampmlist=[]
-                if str(date)+"-am" not in available:
-                    #If it's not checked that means a Blackout needs to be made.
-                    #If it's checked, that day is available, don't want a blakcout for that day.
-                    bo_tup_list.append((date,"AM"))
-                if str(date)+"-pm" not in available:
-                    bo_tup_list.append((date,"PM"))
-            this_reg.update_blackouts(bo_tup_list)
-
-        if not captain_conflict:
-            if problem_criteria or potential_conflicts:
-                if 'confirm save' in request.POST:
-                    conflict_sweep=this_reg.conflict_sweep()
-                    this_reg.save()
-                    if conflict_sweep:
-                        save_success=True
-                else:
-                    hidden_forms=[RegistrantProfileForm(request.POST or None, instance=this_reg)]
-                    #hidden_form=RegistrantProfileForm(request.POST or None, instance=this_reg)
-                    return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_forms':hidden_forms,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
-
-            else:#if no problem criteria
-                this_reg.save()
-                save_success=True
-
-    registrant_list= list(user.registrant_set.all())
-    for registrant in registrant_list:
-        bo_list=[]
-        bo_form_list=[]
-        datelist=None
-        form = RegistrantProfileForm(instance=registrant)
-
-        #maybe i should only run this is con hasn't happened yet?
-        if (registrant.con.start > datetime.date.today()):
-            if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
-                datelist=registrant.con.get_date_range()
-                for bo in registrant.blackout.all():
-                    bo_list.append((bo.date,bo.ampm))
-
-                for date in datelist:
-                    initial={}
-                    if (date,"AM") in bo_list:
-                        initial["am"]=False
-                    if (date,"PM") in bo_list:
-                        initial["pm"]=False
-                    availabilityform=AvailabilityForm(date=date,initial=initial,prefix=str(date))
-                    bo_form_list.append(availabilityform)
-        else:
-            datelist=None
-            bo_list=None
-
-        registrant_dict={'bo_form_list':bo_form_list,'datelist':datelist,'con':registrant.con, 'registrant':registrant,'form':form}
-        registrant_dict_list.append(registrant_dict)
-
-    upcoming_registrants=user.upcoming_registrants()
-    if save_success:
-        active=this_reg.con
-    elif upcoming_registrants and len(upcoming_registrants)>1:
-        active=Con.objects.most_upcoming()
-    else:
-        try:
-            most_upcoming_reg=registrant_list[0]
-            active=most_upcoming_reg.con
-        except:
-            active=None
-
-
-    return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response('know_thyself.html', {'t_tup':t_tup,'c_tup':c_tup,'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,
+        'foreignintl':foreignintl,'usintl':usintl,'returning':returning,'first':first,'attendee':attendee,'con':con,'con_list':list(Con.objects.all())},context_instance=RequestContext(request))
