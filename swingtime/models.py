@@ -295,7 +295,11 @@ class Occurrence(models.Model):
         if activity and activity.name:
             return activity.name
         else:
-            return "Empty"
+            if self.interest:
+                temp_name="Empty (Interest: "+str(self.interest)+")"
+            else:
+                temp_name="Empty"
+            return temp_name
     #---------------------------------------------------------------------------
 
     #reference: http://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
