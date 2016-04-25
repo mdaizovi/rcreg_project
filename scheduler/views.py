@@ -20,6 +20,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
 from swingtime.models import Occurrence
 
+import django_tables2 as tables
+from django_tables2  import RequestConfig
+from scheduler.tables import RosterTable
 
 #syntx reference:
             #selection = request.POST.copy()
@@ -861,6 +864,8 @@ def view_challenge(request, activity_id):
     communication_form=None
     communication_saved=False
     user=request.user
+    #r1data=[]
+    #r2data=[]
     try:
         registrant_list=list(user.registrant_set.all())
     except:
@@ -905,6 +910,22 @@ def view_challenge(request, activity_id):
                 challenge.save()
             else:
                 print "not post or errors: ",score_form.errors
+    #I was toying w/ letting sort name and # in this view, but I don't like the way it treats litte and capital like different letters,
+    #And I can't highlight number dupes
+    # if challenge and challenge.roster1:
+    #     for s in challenge.roster1.participants.all():
+    #         r1data.append({"sk8name":s.sk8name, "sk8number":s.sk8number})
+    # if challenge and challenge.roster2:
+    #     for s in challenge.roster2.participants.all():
+    #         r2data.append({"sk8name":s.sk8name, "sk8number":s.sk8number})
+    # print "r2data",r2data
+    #
+    # r1table = RosterTable(r1data)
+    # RequestConfig(request).configure(r1table)
+    #
+    # r2table = RosterTable(r2data)
+    # RequestConfig(request).configure(r2table)
+    # tables=[r1table,r2table]
 
     return render_to_response('view_challenge.html',{"communication_saved":communication_saved,"can_edit":can_edit,'participating':participating,'communication_form':communication_form,'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
 

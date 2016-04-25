@@ -8,6 +8,28 @@ from scheduler.forms import ChalStatusForm,TrainStatusForm
 from django_tables2.utils import A # alias for Accessor
 from django.core.urlresolvers import reverse
 
+
+class RosterTable(tables.Table):
+    sm_fixed={"style": "width:40px;"}
+    med_minmax={"style": "min-width:50px; max-width:100px;"}
+    lg_minmax={"style": "min-width:75px; max-width:150px;"}
+
+    #sk8name = tables.Column(verbose_name="Name",attrs={"td":med_minmax,"th":med_minmax})
+    #sk8number = tables.Column(verbose_name="Number",attrs={"td": med_minmax,"th": med_minmax})
+    sk8name = tables.Column(verbose_name="Name")
+    sk8number = tables.Column(verbose_name="Number")
+
+    # def render_sk8name(self, value):
+    #     return value.sk8name
+    #
+    # def render_sk8number(self, value):
+    #     return value.sk8number
+
+    class Meta:
+        model = Roster
+        fields=("sk8name","sk8number")
+        attrs = {"class": "table table-striped"}
+
 class ChallengeTable(tables.Table):
     sm_fixed={"style": "width:40px;"}
     med_minmax={"style": "min-width:50px; max-width:100px;"}

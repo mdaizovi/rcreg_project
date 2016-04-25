@@ -285,45 +285,74 @@ def know_thyself(request, con_id=None):
 
     attendee={}
     for tup in [ ("total",all_r),("mvp",mvp_pass), ("sk8",sk8_pass),("offsk8",offsk8_pass)]:
-        attendee[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            attendee[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            attendee[tup[0]]="0"
 
     first={}
     all_first=first_mvp+first_sk8+first_offsk8
     for tup in [ ("total",all_first),("mvp",first_mvp), ("sk8",first_sk8),("offsk8",first_offsk8)]:
-        first[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            first[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            first[tup[0]]="0"
 
     returning={}
     all_returning=return_mvp+return_sk8+return_offsk8
     for tup in [ ("total",all_returning),("mvp",return_mvp), ("sk8",return_sk8),("offsk8",return_offsk8)]:
-        returning[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            returning[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            returning[tup[0]]="0"
 
     usintl={}
     all_usintl=us_intl_mvp+us_intl_sk8+us_intl_offsk8
     for tup in [ ("total",all_usintl),("mvp",us_intl_mvp), ("sk8",us_intl_sk8),("offsk8",us_intl_offsk8)]:
-        usintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            usintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            usintl[tup[0]]="0"
 
     foreignintl={}
     all_foreignintl=foreign_intl_mvp+foreign_intl_sk8+foreign_intl_offsk8
     for tup in [ ("total",all_foreignintl),("mvp",foreign_intl_mvp), ("sk8",foreign_intl_sk8),("offsk8",foreign_intl_offsk8)]:
-        foreignintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            foreignintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            foreignintl[tup[0]]="0"
 
     unspecintl={}
     all_unspecintl=unspec_intl_mvp+unspec_intl_sk8+unspec_intl_offsk8
     for tup in [ ("total",all_unspecintl),("mvp",unspec_intl_mvp), ("sk8",unspec_intl_sk8),("offsk8",unspec_intl_offsk8)]:
-        unspecintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            unspecintl[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            unspecintl[tup[0]]="0"
 
     female={}
     all_female=female_mvp+female_sk8+female_offsk8
     for tup in [ ("total",all_female),("mvp",female_mvp), ("sk8",female_sk8),("offsk8",female_offsk8)]:
-        female[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            female[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            female[tup[0]]="0"
+
     male={}
     all_male=male_mvp+male_sk8+male_offsk8
     for tup in [ ("total",all_male),("mvp",male_mvp), ("sk8",male_sk8),("offsk8",male_offsk8)]:
-        male[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            male[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            male[tup[0]]="0"
+
     nonbinary={}
     all_nonbinary=nonbinary_mvp+nonbinary_sk8+nonbinary_offsk8
     for tup in [ ("total",all_nonbinary),("mvp",nonbinary_mvp), ("sk8",nonbinary_sk8),("offsk8",nonbinary_offsk8)]:
-        nonbinary[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        if len(all_r)>0:
+            nonbinary[tup[0]]="%s (%s percent)" % (str(len( tup[1] )), "{0:.2f}".format( (float(len( tup[1] ))/(len( all_r ))*100 ) ) )
+        else:
+            nonbinary[tup[0]]="0"
 
     country_dict={}
     for r in all_foreignintl:
@@ -354,7 +383,11 @@ def know_thyself(request, con_id=None):
 
     for k,v in state_dict.iteritems():
         length=len(v)
-        percent_str="{0:.2f}".format( (float(len( v ))/(len( all_r ))*100 ) )
+        if len(all_r)>0:
+            percent_str="{0:.2f}".format( (float(len( v ))/(len( all_r ))*100 ) )
+        else:
+            percent_str="0"
+
         this_str="%s: %s Attendees, (%s percent)" % (k.name, str(length),percent_str)
         tup=(length,k.name,percent_str)
         state_tups.append(tup)
