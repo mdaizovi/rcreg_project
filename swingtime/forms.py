@@ -454,7 +454,7 @@ class SingleOccurrenceForm(forms.ModelForm):
             self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
             self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
         #self.fields["interest"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Timeslot Interest-Rating')
+        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
 
 
     #===========================================================================

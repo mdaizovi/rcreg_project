@@ -6,10 +6,10 @@
 
        {% with occurrence.start_time as st  %}
        <a href="{% url 'swingtime-daily-view' st.year st.month st.day %}">
-        <i>Go to {{ st|date:"l, F jS" }} All Locations Day View</i></a>
+        <i>Go to {{ st|date:"l, F jS" }} All Locations View</i></a>
         {%if location%} |
         <a href="{% url 'swingtime-daily-location-view' location.pk st.year st.month st.day %}">
-         <i>Go to {{ st|date:"l, F jS" }} Day/{{location.name}} View</i></a>{%endif%}
+         <i>Go to {{ st|date:"l, F jS" }}/{{location.name}} View</i></a>{%endif%}
     {% endwith %}</h4>
 
   {% include "swingtime/conflict_part.html" %}
@@ -21,15 +21,17 @@
      <form action="" method="post">
          {% csrf_token %}
      <table>
-         <tfoot>
-             <tr>
-                <td><input type="submit" name="check" value="Check Schedule"/></td>
-                 <td><input type="submit" name="update" value="Update" /></td>
-             </tr>
-         </tfoot>
          <tbody>
              {{ form }}
          </tbody>
+       </table>
+
+          <table>
+             <tr>
+                <td><input type="submit" name="check" value="Check Schedule"/></td>
+                 <td><input type="submit" name="update" value="Update" /></td>
+                  <td><input type="submit" name="delete" value="Delete" /></td>
+             </tr>
      </table>
      </form>
 

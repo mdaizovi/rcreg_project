@@ -564,6 +564,13 @@ def occurrence_view(
                     conflict["blackout_conflict"]=blackout_conflict
                 if len(conflict)<=0:
                     conflict_free=True
+            elif "delete" in request.POST:
+                if occurrence and occurrence.location:
+                    lpk=int(occurrence.location.pk)#to keep after occurrence gets deleted
+                    date=datetime.date(occurrence.start_time)
+                    occurrence.delete()
+                    return redirect('swingtime-daily-location-view',lpk,date.year,date.month,date.day)
+
     else:
         form = form_class(instance=occurrence,initial=get_dict)
 
@@ -571,8 +578,6 @@ def occurrence_view(
         location=occurrence.location
     except:
         location=None
-
-    print "location",location
 
     return render(request, template, {'location':location,'conflict_free':conflict_free,'conflict':conflict,'save_success':save_success,'occurrence': occurrence, 'form': form})
 
