@@ -3,11 +3,12 @@ import itertools
 import logging
 import collections
 from datetime import datetime, timedelta, time
+from dateutil.parser import parse
 
 from django import http
 from django.db import models
 from django.template.context import RequestContext
-from django.shortcuts import get_object_or_404, render, redirect,HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render, redirect,HttpResponseRedirect,render_to_response
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
@@ -22,6 +23,7 @@ from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm
+from swingtime.forms import DLCloneForm
 
 from dateutil import parser
 
@@ -726,26 +728,23 @@ def _datetime_view(
     timeslot_factory = timeslot_factory or utils.create_timeslot_table
     params = params or {}
 
-    # try:
-    #     con=Con.objects.get(start__lte=dt, end__gte=dt)
-    #     locations=con.get_locations()
-    # except ObjectDoesNotExist:
-    #     con=None
-    #     locations=[]
     try:
         con=Con.objects.get(start__lte=dt, end__gte=dt)
+        all_locations=con.get_locations()
         if loc_id:
             locations=[Location.objects.get(pk=int(loc_id))]
         else:
             locations=con.get_locations()
     except ObjectDoesNotExist:
         con=None
+        all_locations=[]
         locations=[]
 
     return render(request, template, {
         'day':       dt,
         'con':       con,
         'locations': locations,
+        'loc_id':loc_id,
         'maxwidth': 99/(len(locations)+1),
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
@@ -775,6 +774,49 @@ def day_location_view(request, loc_id, year, month, day, template='swingtime/dai
     return _datetime_view(request, template, dt, loc_id, **params)
 
 #-------------------------------------------------------------------------------
+@login_required
+def day_clone(request, con_id=None,template='swingtime/day_clone.html', **params):
+    """This give soption to clone 1 day's Occurrence settings to another.
+    It will not overwrite anything that already exists, only if time is available.
+    Makes empty occurrences, does not move chal/train over, but does retain interest"""
+    save_attempt=False
+    #save_succes=False
+    save_succes=[]
+
+    if con_id:
+        try:
+            con=Con.objects.get(pk=con_id)
+        except:
+            return render(request,template, {})
+    else:
+        con=Con.objects.most_upcoming()
+
+    form=DLCloneForm(request.POST or None,date_list=con.get_date_range(), loc_list=con.get_locations())
+
+    if request.method == 'POST':#there's only one post option
+        save_attempt=True
+        fromdate=parse(request.POST['fromdate']).date()
+        from_start=fromdate
+        from_end=(fromdate + timedelta(days=+1))
+        fromlocation=Location.objects.get(pk=request.POST['fromlocation'])
+        todate=parse(request.POST['todate']).date()
+        tolocation=Location.objects.get(pk=request.POST['tolocation'])
+
+        sample_slots=Occurrence.objects.filter(start_time__gte=fromdate, end_time__lt=from_end, location=fromlocation)
+
+        for s in sample_slots:
+            if tolocation.is_free(s.start_time,s.end_time):
+                clone=Occurrence(start_time=s.start_time,end_time=s.end_time,interest=s.interest,location=tolocation)
+                save_succes.append(clone)
+                clone.save()
+        return render(request,template,{'todate':todate,'tolocation':tolocation,'save_succes':save_succes,'save_attempt':save_attempt,'form':form})
+
+    #only runs if not post
+    return render(request,template,{'save_succes':save_succes,'save_attempt':save_attempt,'form':form})
+
+
+#-------------------------------------------------------------------------------
+
 @login_required
 def today_view(request, template='swingtime/daily_view.html', **params):
     '''

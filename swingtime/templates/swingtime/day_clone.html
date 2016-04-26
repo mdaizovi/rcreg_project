@@ -1,0 +1,36 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Clone Day{% endblock %}
+
+
+{% block main_content %}
+<div class="row">
+
+    <h3 class="margin-top-10 text-center">Clone Day
+      <small><i>Copy Timeslot configuration from one day/location combo to another.</i></small></h3>
+
+<hr>
+
+{%if save_attempt and save_succes%}
+<div class="alert alert-success" role="alert">Clone successful! {{ save_succes|length }} Timeslots made!
+  <a href="{% url 'swingtime-daily-location-view' tolocation.pk todate.year todate.month todate.day %}" class="alert-link">
+   <i>Go to {{ todate|date:"l, F jS" }}/{{tolocation.name}} View</i></a>
+</div>
+{%elif save_attempt%}
+<div class="alert alert-danger" role="alert">Error Cloning Day</div>
+{%endif%}
+
+<table>
+    <tbody>
+   <form action="" method="post">
+  {% csrf_token %}
+  {%for field in form %}
+    <tr><th>{{ field.label_tag }}</th>
+  {%if field.errors%}<td>{{ field.errors }}{%endif%}
+        <td style="padding: 10px 10px 10px 10px;">{{ field }}</td></tr>
+  {%endfor%}
+   <td><input type="submit" name="clone" value="Clone" /></td>
+ </tbody>
+</table>
+
+</div><!-- end row-->
+{% endblock %}

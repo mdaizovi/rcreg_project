@@ -463,3 +463,28 @@ class SingleOccurrenceForm(forms.ModelForm):
         fields=["start_time","end_time","training","challenge","location","interest"]
         # if FIELDS_REQUIRED:
         #     fields = "__all__"
+
+class DLCloneForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        loc_list = kwargs.pop('loc_list')
+        LOC_OPTIONS=[]
+        for l in loc_list:
+            ltup=(l.pk, l.name)
+            LOC_OPTIONS.append(ltup)
+        date_list = kwargs.pop('date_list')
+        DATE_OPTIONS=[]
+        for d in date_list:
+            dtup=(d.strftime("%m-%d-%Y"),d.strftime("%a %B %d, %Y"))
+            DATE_OPTIONS.append(dtup)
+        super(DLCloneForm, self).__init__(*args, **kwargs)
+
+        self.fields["fromdate"]=forms.CharField(widget=forms.Select(choices=DATE_OPTIONS),required=True, label='From Date')
+        self.fields["fromlocation"]=forms.CharField(widget=forms.Select(choices=LOC_OPTIONS),required=True, label='From Location')
+        self.fields["todate"]=forms.CharField(widget=forms.Select(choices=DATE_OPTIONS),required=True, label='To Date')
+        self.fields["tolocation"]=forms.CharField(widget=forms.Select(choices=LOC_OPTIONS),required=True, label='To Location')
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'style': 'width:100%;',
+                })

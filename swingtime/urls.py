@@ -30,6 +30,8 @@ urlpatterns = [
     url(r'^schedule/assistance/challenge/(?P<act_id>\d+)/$', 'swingtime.views.sched_assist_ch',name='sched_assist_ch'),
 
     url(r'^calendar/location/(?P<loc_id>\d+)/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/$','swingtime.views.day_location_view',name='swingtime-daily-location-view'),
+    url(r'^calendar/day_clone(?:/(?P<con_id>\d+))?/$', 'swingtime.views.day_clone',name='day_clone'),#can take con arguments, but I ahven'y written convenent links for that
+
 
 
 #________________________end my custom URLS____________________________________

@@ -35,6 +35,8 @@
               {%for d in upcoming_days%}
               <li><a href="{% url 'swingtime-daily-view' d.year d.month d.day %}">{{ d|date:"D M d Y" }}</a></li>
               {%endfor%}
+              <li role="separator" class="divider"></li>
+              <li role="presentation"><a href="{% url 'day_clone' %}">Clone Days</a></li>
             </ul>
           </div></td>
 
