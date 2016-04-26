@@ -542,7 +542,7 @@ def occurrence_view(
     if "training" in request.GET and request.GET['training'] not in no_list:
         training=Training.objects.get(pk=request.GET['training'])
         get_dict['training']=training
-        recurrence__dict['training']=training
+        #recurrence__dict['training']=training#fon't need this anymore, right?
     if "challenge" in request.GET and request.GET['challenge'] not in no_list:
         challenge=Challenge.objects.get(pk=request.GET['challenge'])
         get_dict['challenge']=challenge
