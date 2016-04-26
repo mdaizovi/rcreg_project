@@ -805,8 +805,10 @@ def day_clone(request, con_id=None,template='swingtime/day_clone.html', **params
         sample_slots=Occurrence.objects.filter(start_time__gte=fromdate, end_time__lt=from_end, location=fromlocation)
 
         for s in sample_slots:
-            if tolocation.is_free(s.start_time,s.end_time):
-                clone=Occurrence(start_time=s.start_time,end_time=s.end_time,interest=s.interest,location=tolocation)
+            target_start=datetime(year=todate.year, month=todate.month, day=todate.day, hour=s.start_time.hour,minute=s.start_time.minute)
+            target_end=datetime(year=todate.year, month=todate.month, day=todate.day, hour=s.end_time.hour ,minute=s.end_time.minute)
+            if tolocation.is_free(target_start,target_end):
+                clone=Occurrence(start_time=target_start,end_time=target_end,interest=s.interest,location=tolocation)
                 save_succes.append(clone)
                 clone.save()
         return render(request,template,{'todate':todate,'tolocation':tolocation,'save_succes':save_succes,'save_attempt':save_attempt,'form':form})
