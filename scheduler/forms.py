@@ -78,6 +78,7 @@ class TrainingModelForm(ModelForm):
         self.fields["contact"]=forms.CharField(widget=forms.Select(choices=BINARY_HALF_WORDS),initial=BINARY_HALF_WORDS[1][0], label='Contact?')
         self.fields["location_type"]=forms.CharField(widget=forms.Select(choices=LOCATION_TYPE), initial=LOCATION_TYPE[0][0], label='Location Type')
         self.fields["sessions"]=forms.CharField(widget=forms.Select(choices=SESSIONS_TR), initial=SESSIONS_TR[0][0], label='How Many Sessions Would You Like to Offer?')
+        self.fields["communication"]=forms.CharField(widget=forms.Textarea(),label='Scheduling Notes Between Coaches & RC Staff (visible to you and them only)',required=False)
         self.fields["con"].initial=conlist[0]
 
         for field in iter(self.fields):
@@ -89,7 +90,7 @@ class TrainingModelForm(ModelForm):
         model = Training
         #exclude = ('user', 'con','pass_type','email','country','state','intl')
         #fields = fieldlist=['name','con','location_type','onsk8s','contact','description']
-        fields =['name','con','location_type','onsk8s','contact','sessions','description']
+        fields =['name','con','location_type','onsk8s','contact','sessions','description','communication']
         labels = {
             'name': _('Training Name'),
             'description': _('Description'),

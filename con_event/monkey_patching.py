@@ -64,17 +64,21 @@ def trainings_coached(self):
         return None
 
 def all_cons(self):
+    from con_event.models import Con
     conlist=[]
     all_reg= self.registrants()
     if all_reg:
         for reg in all_reg:
             conlist.append(reg.con)
-        if len(conlist)>0:
-            return conlist
+
+    if len(conlist)>0:
+        return conlist
+    else:
+        if self.is_the_boss():#RollerTron has no registrants
+            return list(Con.objects.all())
         else:
             return None
-    else:
-        return None
+
 
 def upcoming_registrants(self):
     #Import Registrant here because otherwise it imports too before apps are declared in settings
