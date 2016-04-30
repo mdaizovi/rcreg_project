@@ -20,6 +20,20 @@ export_path=static_path+'exported/'
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 
+def test_interest_default():
+    con=Con.objects.get(year="2016")
+    for t in Training.objects.filter(con=con, RCaccepted=True):
+        if not t.interest:
+            print t.name, t.get_default_interest()#don'tsave!
+        else:
+            print "%s has an interest, it's %s"%(t.name,str(t.interest))
+    print " "
+    for c in Challenge.objects.filter(con=con, RCaccepted=True):
+        if not c.interest:
+            print c.name, c.get_default_interest()#don'tsave!
+        else:
+            print "%s has an interest, it's %s"%(t.name,str(t.interest))
+
 #con=Con.objects.get(year="2016")
 #qset=list(Training.objects.filter(con=con))
 #loc=show_loc(qset)
