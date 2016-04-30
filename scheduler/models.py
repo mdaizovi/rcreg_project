@@ -601,19 +601,18 @@ class Activity(models.Model):
         dummies=[]
         padding=0
         pls=self.possible_locations()
+        if not self.interest:
+            proxy_interest=self.get_default_interest()
+        else:
+            proxy_interest=self.interest
+        #print("proxy_interest 1",proxy_interest)
         #print "possible locations: ",pls
         if self.is_a_training():#if this is a training
-            if self.interest:
-                proxy_interest=5-self.interest#to make high demand classes in low interest timeslots and vice versa
-                if proxy_interest<=0:
-                    proxy_interest=1
-            else:
-                proxy_interest=None #?
+            proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
             challenge=None
             training=self
             duration=float(self.duration)
         elif self.is_a_challenge():
-            proxy_interest=self.interest
             challenge=self
             training=None
             if self.is_a_game:
@@ -622,7 +621,7 @@ class Activity(models.Model):
                 duration=float(self.duration)
             padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
             padding=round(padding, 2)
-
+        #print("proxy_interest 2",proxy_interest)
         dur_delta=int((duration+padding)*60)
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
