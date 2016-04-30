@@ -414,11 +414,12 @@ class Occurrence(models.Model):
     def blackout_conflict(self):
         """Dahmer custom function. Checks to see if any Event figureheads (coach, captain have blackouts during Occu time.
         If so, returns dict w/  blackout k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
+        #print("running o blackout_conflict")
         activity=self.get_activity()
         figureheads=[]
         conflict_dict={}
         daypart=[]
-
+        #print("activity ",activity)
         if activity:
             figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
         else:
@@ -431,12 +432,14 @@ class Occurrence(models.Model):
             daypart.append("AM")
         if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
             daypart.append("PM")
+        #print("daypart ",daypart)
 
         for f in figureheads:
+            #print("Figurehead ",f)
             potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)
             if len(list(potential_bouts))>0:
                 conflict_dict[f]=list(potential_bouts)
-
+        #print("conflict_dict ",conflict_dict)
         if len(conflict_dict)>0:
             return conflict_dict
         else:

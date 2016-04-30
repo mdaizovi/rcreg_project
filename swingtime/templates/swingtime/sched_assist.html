@@ -8,13 +8,14 @@
   <div class="alert alert-danger" role="alert">This Activity does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
 {%else%}
 <div class="col-sm-12">
-    <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for <b>{{act.name}}</b></small></h3>
+    <h3 class="margin-top-10 text-center">Schedule Assistant: <b>{{act.name}}</b></h3>
 
     <div class="col-sm-6">
       <div class="well well-lg">
       <ul style="font-size: 17px;"><li>Default filter is <b><a href="{{act.get_sched_assist_url}}">Level 1</a></b>, which means that you see only timeslots that have no conflicts and are an exact interest-level match.</li>
-  <li>A <b><a href="{{act.get_sched_assist_url}}?level=2">Level 2</a></b> search will allow non-figurehead conflicts and timeslots that are +/- interest level away.</li>
-      <li>A <b><a href="{{act.get_sched_assist_url}}?level=3">Level 3</a></b> search will allow show all possible timeslots.</li></ul>
+  <li>A <b><a href="{{act.get_sched_assist_url}}?level=2">Level 2</a></b> search will allow non-figurehead conflicts and timeslots that are +/- interest level away. <i>(Please make sure activity has an interest level)</i></li>
+      <li>A <b><a href="{{act.get_sched_assist_url}}?level=3">Level 3</a></b> search will show all possible timeslots.</li></ul>
+      <b>NOTE to self done interest and conflicts but not duration</b>
     </div>
   </div>
       <div class="col-sm-6">
@@ -27,17 +28,20 @@
       </div>
   </div>
 </div>
-<hr>
+
 
 {%for slotdict in slots %}
 <div class="col-sm-6 margin-top-10">
-    <h3 class="text-center">{%cycle "Empty" "Possible" %} Timeslots</h3>
+    <h3 class="text-center">{%cycle "Empty" "Possible" %} Timeslots<br>
+      <small>{%cycle "These Slots have been created but don't have an Activity designated" "These Slots have NOT been created but could be" %}
+</small></h3>
 <table class="table table-striped">
-  <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th style="text-align:center;">Conflict<br>Score</th></tr>
+  <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th>Interest<br>Level</th><th style="text-align:center;">Conflict<br>Score</th></tr>
 {%for k,v  in slotdict.iteritems %}
 {%for o in v%}
 <tr><td>{{ o.start_time|date:"D d" }}</td><td>{{ o.start_time|date:"f a" }}</td><td>{{ o.end_time|date:"f a" }}</td>
-  <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td style="text-align:center;">
+  <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td>{{ o.interest }}</td>
+  <td style="text-align:center;">
     <a href="{% url 'swingtime-occurrence' o.pk %}?{%if training%}training={{training.pk}}{%elif challenge%}challenge={{challenge.pk}}{%endif%}">{{k}}</a></td></tr>
 
 {%endfor%}

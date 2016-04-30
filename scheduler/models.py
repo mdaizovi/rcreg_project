@@ -590,11 +590,13 @@ class Activity(models.Model):
             return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
 
 
-    def dummy_occurrences(self):
+    def dummy_occurrences(self,level):
         """Makes unsaved Occurrence objects for all possible location time combos for activity
         EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
         from swingtime.models import Occurrence
+
+        #print("dummy occurrences, level ",level)
         #empties=[]
         dummies=[]
         padding=0
@@ -617,7 +619,17 @@ class Activity(models.Model):
         dur_delta=int((duration+padding)*60)
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
-        empties=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end))
+        base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
+        if level==1:
+            base_q=base_q.filter(interest=self.interest)
+        elif self.interest and level==2:
+            ilist=[int(self.interest)-1,int(self.interest),int(self.interest)+1]
+            base_q=base_q.filter(interest__in=ilist)
+        #else if is 3 or, no extra filter
+
+        empties=list(base_q)
+
+        #empties=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end))
 
 #works, but is time consuming, pausing for now
         # for d in date_range:
@@ -668,35 +680,61 @@ class Activity(models.Model):
     #     print "finished sched_conflict_split"
     #     return conflict
 
-    def sched_conflict_score(self):
+    def sched_conflict_score(self,level):
         """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
-        Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest"""
+        Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest
+        NEW: may remove Os depending on level"""
         #print "about to start sched_conflict_score"
         odict_list=[]
+        if self.is_a_training():
+            training=self
+        else:
+            training=None
+        if self.is_a_challenge():
+            challenge=self
+        else:
+            challenge=None
+        #print("sched_conflict_score ",training,challenge)
+
+        if int(level)<2:
+            max_score=0
+        elif int(level)==2:
+            max_score=99
+        else:
+            max_score=999999999999999999
+        #print ("max score: ",max_score)
 
         #for o in dummy_occurrences:
-        for olist in list(self.dummy_occurrences()):
+        #print("sched_conflict_score level is ",level)
+        for olist in list(self.dummy_occurrences(level=level)):
+            #print "sched conflict score olist:",olist
             if len(olist)>0:
+                #print "more than 1!"
                 conflict={}
                 #print "olist: ",olist
                 for o in olist:
-
+                    #don't save, this is to make figruehead registrants work
+                    o.training=training
+                    o.challenge=challenge
                     score=0
                     blackout_conflict=o.blackout_conflict()
                     if blackout_conflict:
+                        #print "blackout_conflict: ",len(blackout_conflict),blackout_conflict
                         this_score=len(blackout_conflict)*100
                         #print "blackout score: ",this_score
                         score+=this_score
 
                     figurehead_conflict=o.figurehead_conflict()
                     if figurehead_conflict:
+                        #print "figurehead_conflict: ",len(figurehead_conflict),figurehead_conflict
                         this_score=len(figurehead_conflict)*10
                         #print "figurehead score: ",this_score
                         score+=this_score
 
                     participant_conflict=o.participant_conflict()
                     if participant_conflict:
+                        #print "participant_conflict: ",len(participant_conflict),participant_conflict
                         this_score=len(participant_conflict)*1
                         #print "participant score: ",this_score
                         score+=this_score
@@ -715,10 +753,14 @@ class Activity(models.Model):
             score_list.sort()
             #print "score list",score_list
             odict  = dict(collections.OrderedDict())
+
+            #else if is 3 or, no extra filter
+
             for score in score_list:
-                temp_list=conflict.get(score)
-                #print "temp_list",temp_list
-                odict[score]=temp_list
+                if score<=max_score:
+                    temp_list=conflict.get(score)
+                    #print "temp_list",temp_list
+                    odict[score]=temp_list
             odict_list.append(odict)
 
         #print "odict_list: ",odict_list

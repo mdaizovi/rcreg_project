@@ -406,10 +406,9 @@ def sched_assist_tr(
         return render(request, template, {})
 
     if "level" in request.GET:
-        level=request.GET['level']
+        level=int(request.GET['level'])
     else:
-        level=None
-    print "level is: ",level
+        level=1
 
     if request.method == 'POST' and 'save_activity' in request.POST:
         form=TInterestForm(request.POST,instance=act)
@@ -418,7 +417,7 @@ def sched_assist_tr(
     else:
         form=TInterestForm(instance=act)
 
-    slots= act.sched_conflict_score()
+    slots= act.sched_conflict_score(level=level)
 
     return render(request, template, {'form':form,'act':act,'slots':slots,"training":act,'challenge':None})
 
@@ -435,10 +434,9 @@ def sched_assist_ch(
         return render(request, template, {})
 
     if "level" in request.GET:
-        level=request.GET['level']
+        level=int(request.GET['level'])
     else:
-        level=None
-    print "level is: ",level
+        level=1
 
     if request.method == 'POST' and 'save_activity' in request.POST:
         form=CInterestForm(request.POST,instance=act)
@@ -447,7 +445,7 @@ def sched_assist_ch(
     else:
         form=CInterestForm(instance=act)
 
-    slots=act.sched_conflict_score()#make second so change in actiity changed slots
+    slots=act.sched_conflict_score(level=level)#make second so change in actiity changed slots
 
     return render(request, template, {'form':form,'act':act,'slots':slots,"training":None,'challenge':act})
 
