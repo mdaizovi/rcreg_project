@@ -7,7 +7,26 @@
   {%if not act%}
   <div class="alert alert-danger" role="alert">This Activity does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
 {%else%}
-    <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for {{act.name}}</small></h3>
+<div class="col-sm-12">
+    <h3 class="margin-top-10 text-center">Schedule Assistant<br><small>Assistance with scheduling for <b>{{act.name}}</b></small></h3>
+
+    <div class="col-sm-6">
+      <div class="well well-lg">
+      <ul style="font-size: 17px;"><li>Default filter is <b><a href="{{act.get_sched_assist_url}}">Level 1</a></b>, which means that you see only timeslots that have no conflicts and are an exact interest-level match.</li>
+  <li>A <b><a href="{{act.get_sched_assist_url}}?level=2">Level 2</a></b> search will allow non-figurehead conflicts and timeslots that are +/- interest level away.</li>
+      <li>A <b><a href="{{act.get_sched_assist_url}}?level=3">Level 3</a></b> search will allow show all possible timeslots.</li></ul>
+    </div>
+  </div>
+      <div class="col-sm-6">
+        <div class="well">
+          <form method="POST" class="post-form">
+          {% csrf_token %}
+          {{form}}
+            <button type="submit" name="save_activity" class="btn btn-success margin-top-10 center-block">Save</button>
+          </form>
+      </div>
+  </div>
+</div>
 <hr>
 
 {%for slotdict in slots %}

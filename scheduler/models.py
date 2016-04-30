@@ -36,6 +36,7 @@ DEFAULT_SANCTIONED_DURATION='1.5'
 GAME_CAP = 20
 DEFAULT_REG_CAP=60
 DEFAULT_AUD_CAP=10
+SKILL_INTEREST_DICT={'AO':5, 'AB':4,'BO':3,'BC':2,'CO':1,'ABC':1,'A':5,'B':3,"C":2,"D":1}
 
 
 class Venue(models.Model):
@@ -472,6 +473,35 @@ class Activity(models.Model):
             return True
         else:
             return False
+
+    def get_default_interest(self):
+        """if chal, gets average of teams skill.
+        if training, gerts average of coach skill
+        to estimate interest my skill"""
+        skill_list=[]
+        #print self
+        if self.is_a_challenge():
+            for r in [self.roster1,self.roster2]:
+                if r and r.skill:
+                    #print r , r.skill
+                    thisskill=SKILL_INTEREST_DICT.get(r.skill)
+                    if thisskill:
+                        skill_list.append(thisskill)
+        if self.is_a_training():
+            for c in self.coach.all():
+                #print c
+                r=c.user.get_most_recent_registrant()
+                #print r, r.skill
+                thisskill=SKILL_INTEREST_DICT.get(r.skill)
+                if thisskill:
+                    skill_list.append(thisskill)
+
+        if len(skill_list)>1:
+            def_skill=sum(skill_list) / float(len(skill_list))
+        else:
+            def_skill=3
+        return def_skill
+
 
     def get_figurehead_registrants(self):
         """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""

@@ -324,3 +324,41 @@ class TrainStatusForm(ModelForm):
                 'class': 'form-control',
                 'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
                 })
+
+class CInterestForm(ModelForm):
+    """This is names interest, but actually has gametype and location type.
+    form is meant t help w/ scheduling"""
+    class Meta:
+        model = Challenge
+        fields = ['gametype','location_type','interest']
+        labels = {
+            'interest': _('Interest Level'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CInterestForm, self).__init__(*args, **kwargs)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
+                })
+
+class TInterestForm(ModelForm):
+    """This is names interest, but actually has location type.
+    form is meant t help w/ scheduling"""
+    class Meta:
+        model = Training
+        fields = ['interest','location_type']
+        labels = {
+            'interest': _('Interest Level'),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(TInterestForm, self).__init__(*args, **kwargs)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
+                })

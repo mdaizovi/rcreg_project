@@ -1,7 +1,7 @@
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
 from con_event.models import Country, State, Con, Registrant, Blog
 from django.contrib.auth.models import Group, User
-from swingtime.models import Event, Occurrence
+from swingtime.models import Occurrence
 #from swingtime.models import Occurrence
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
@@ -19,90 +19,6 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
-
-
-
-def get_o():
-    o_no_e=[]
-    o_1_e=[]
-
-    events=[]
-    two_act=[]
-    no_act=[]
-
-    homeless_events=[]
-
-    for o in Occurrence.objects.all():
-        if o.event:
-            if o.event.challenge and o.event.training:
-                two_act.append(o.event)
-            elif not o.event.challenge and not o.event.training:
-                no_act.append(o.event)
-            else:
-                events.append(o.event)
-                o_1_e.append(o)
-        else:
-            o_no_e.append(o)
-
-    for e in Event.objects.all():
-        if e not in events:
-            homeless_events.append(e)
-
-    print "Occurrances without events: ",len(o_no_e)
-    print "Occurrances with 1 event/activity: ",len(o_1_e)
-    print "Events w/1 Activity: ",len(events)
-    print "Events w/2 Activities ",len(two_act)
-    print "Events w/no Activities ",len(no_act)
-    print "Homeless Events: ",len(homeless_events)
-
-    return o_no_e,o_1_e,events,two_act,no_act,homeless_events
-
-def monogamous_event(events):
-    mono=[]
-    poly=[]
-    solo=[]
-    misc=[]
-
-    for e in events:
-        o_set=list(e.occurrence_set.all())
-        if len(o_set)>1:
-            poly.append(e)
-        elif len(o_set)<1:
-            solo.append(e)
-        elif len(o_set)==1:
-            mono.append(e)
-        else:
-            misc.append(e)
-
-    print "Monogamous Events: ",len(mono)
-    print "Poly Events: ",len(poly)
-    print "Solo Events: ",len(solo)
-    print "Misc Events: ",len(misc)
-
-    return mono,poly,solo,misc
-#from basic_data import*
-#o_no_e,o_1_e,events,two_act,no_act,homeless_events=get_o()
-#mono,poly,solo,misc=monogamous_event(events)
-
-#replace_events(o_1_e)
-def replace_events(olist):
-    for o in olist:
-        print "O: ",o
-        e=o.event
-        print "E: ",e
-        a=e.get_activity()
-        print "A: ",a
-        if a and a.is_a_challenge():
-            o.challenge=a
-        elif a and a.is_a_training():
-            o.training=a
-        o.save()
-        print "SAVED ",o
-    print "all done"
-
-
-
-
 
 #con=Con.objects.get(year="2016")
 #qset=list(Training.objects.filter(con=con))
@@ -294,7 +210,7 @@ def sort_BPT_excel(target_file):
     return single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file
 
 #from basic_data import*
-#target_file=(import_path+'RollerTron Attendee 042016.xlsx')
+#target_file=(import_path+'RollerTron Attendee 042716.xlsx')
 #con=Con.objects.get(year="2016")
 #single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 def import_from_excel(complete_entries_file,con):

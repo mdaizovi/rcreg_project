@@ -22,7 +22,7 @@ from swingtime.conf import settings as swingtime_settings
 from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
-from scheduler.forms import ChalStatusForm,TrainStatusForm
+from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm
 from swingtime.forms import DLCloneForm
 
 from dateutil import parser
@@ -405,9 +405,22 @@ def sched_assist_tr(
     except:
         return render(request, template, {})
 
+    if "level" in request.GET:
+        level=request.GET['level']
+    else:
+        level=None
+    print "level is: ",level
+
+    if request.method == 'POST' and 'save_activity' in request.POST:
+        form=TInterestForm(request.POST,instance=act)
+        if form.is_valid():
+            form.save()
+    else:
+        form=TInterestForm(instance=act)
+
     slots= act.sched_conflict_score()
 
-    return render(request, template, {'act':act,'slots':slots,"training":act,'challenge':None})
+    return render(request, template, {'form':form,'act':act,'slots':slots,"training":act,'challenge':None})
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -421,9 +434,22 @@ def sched_assist_ch(
     except:
         return render(request, template, {})
 
-    slots= act.sched_conflict_score()
+    if "level" in request.GET:
+        level=request.GET['level']
+    else:
+        level=None
+    print "level is: ",level
 
-    return render(request, template, {'act':act,'slots':slots,"training":None,'challenge':act})
+    if request.method == 'POST' and 'save_activity' in request.POST:
+        form=CInterestForm(request.POST,instance=act)
+        if form.is_valid():
+            form.save()
+    else:
+        form=CInterestForm(instance=act)
+
+    slots=act.sched_conflict_score()#make second so change in actiity changed slots
+
+    return render(request, template, {'form':form,'act':act,'slots':slots,"training":None,'challenge':act})
 
 #-------------------------------------------------------------------------------
 @login_required

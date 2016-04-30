@@ -4,7 +4,7 @@ import django_tables2 as tables
 import itertools
 from django.utils.safestring import mark_safe
 from django.utils.html import escape
-from scheduler.forms import ChalStatusForm,TrainStatusForm
+from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm
 from django_tables2.utils import A # alias for Accessor
 from django.core.urlresolvers import reverse
 
@@ -40,6 +40,7 @@ class ChallengeTable(tables.Table):
     location_type = tables.Column(verbose_name="Location Type",attrs={"td": med_minmax,"th": med_minmax})
     duration = tables.Column(verbose_name="Duration",attrs={"td": sm_fixed,"tr": sm_fixed})
     submitted_on = tables.Column(verbose_name="Submitted on",attrs={"td": med_minmax,"tr": med_minmax,})
+    interest = tables.Column(verbose_name="Interest",attrs={"td": sm_fixed,"th":sm_fixed})
     status = tables.Column(verbose_name="Status",attrs={"td": {"style": "min-width:85px;"},"th": {"colspan": "4","style":"text-align:center; min-width:85px;"}},orderable=False)
 
     def render_name(self,value):
@@ -48,7 +49,6 @@ class ChallengeTable(tables.Table):
         pk=value.pk
         string="<a href='%s'>%s</a>" % (url,name)
         return mark_safe(string)
-
 
     def render_status(self, value):
         return value
@@ -59,7 +59,7 @@ class ChallengeTable(tables.Table):
 
     class Meta:
         model = Challenge
-        fields=("name","gametype","location_type","duration","submitted_on","status")
+        fields=("name","gametype","location_type","duration","submitted_on","interest","status")
         attrs = {"class": "table table-striped"}
 
 class TrainingTable(tables.Table):
@@ -76,6 +76,7 @@ class TrainingTable(tables.Table):
     location_type = tables.Column(verbose_name="Location Type",attrs={"td": med_minmax,"th": med_minmax})
     duration = tables.Column(verbose_name="Duration",attrs={"td": sm_fixed,"th": sm_fixed})
     created_on = tables.Column(verbose_name="Created on",attrs={"td": med_minmax,"th": med_minmax})
+    interest = tables.Column(verbose_name="Interest",attrs={"td": sm_fixed,"th":sm_fixed})
     status = tables.Column(verbose_name="Status",attrs={"td": {"style": "min-width:75px;"},"th": {"colspan": "4","style":"text-align:center; min-width:75px;"}},orderable=False)
 
     def render_name(self,value):
@@ -94,6 +95,6 @@ class TrainingTable(tables.Table):
 
     class Meta:
         model = Challenge
-        fields=("name","coach","skill","onsk8s","contact","location_type","duration","created_on","status")
+        fields=("name","coach","skill","onsk8s","contact","location_type","duration","created_on","interest","status")
         #fields=("name","coach","skill","onsk8s","contact","location_type","duration","status")
         attrs = {"class": "table table-striped"}

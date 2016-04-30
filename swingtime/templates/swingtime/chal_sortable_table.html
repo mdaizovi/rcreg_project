@@ -30,11 +30,10 @@
             {% for column, cell in row.items %}
                 <td {{ column.attrs.td.as_html }}>
 
-
 {%if cell.RCaccepted or cell.RCrejected %}
-
                   <b>{{ cell.RCaccepted.label }}</b></td><td> {{cell.RCaccepted}}</td>
                   <td><b>{{ cell.RCrejected.label }}</b></td><td>{{cell.RCrejected}}</td>
+
 {%else%}
 
                   {% if column.localize == None %}
