@@ -481,12 +481,15 @@ class Activity(models.Model):
         skill_list=[]
         #print self
         if self.is_a_challenge():
-            for r in [self.roster1,self.roster2]:
-                if r and r.skill:
-                    #print r , r.skill
-                    thisskill=SKILL_INTEREST_DICT.get(r.skill)
-                    if thisskill:
-                        skill_list.append(thisskill)
+            if self.is_a_game:
+                skill_list.append(5)
+            else:
+                for r in [self.roster1,self.roster2]:
+                    if r and r.skill:
+                        #print r , r.skill
+                        thisskill=SKILL_INTEREST_DICT.get(r.skill)
+                        if thisskill:
+                            skill_list.append(thisskill)
         if self.is_a_training():
             for c in self.coach.all():
                 #print c
