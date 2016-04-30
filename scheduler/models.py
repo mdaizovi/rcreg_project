@@ -603,10 +603,17 @@ class Activity(models.Model):
         pls=self.possible_locations()
         #print "possible locations: ",pls
         if self.is_a_training():#if this is a training
+            if self.interest:
+                proxy_interest=5-self.interest#to make high demand classes in low interest timeslots and vice versa
+                if proxy_interest<=0:
+                    proxy_interest=1
+            else:
+                proxy_interest=None #?
             challenge=None
             training=self
             duration=float(self.duration)
         elif self.is_a_challenge():
+            proxy_interest=self.interest
             challenge=self
             training=None
             if self.is_a_game:
@@ -620,10 +627,12 @@ class Activity(models.Model):
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
         base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
+
+
         if level==1:
-            base_q=base_q.filter(interest=self.interest)
-        elif self.interest and level==2:
-            ilist=[int(self.interest)-1,int(self.interest),int(self.interest)+1]
+            base_q=base_q.filter(interest=proxy_interest)
+        elif proxy_interest and level==2:
+            ilist=[int(proxy_interest)-1,int(proxy_interest),int(proxy_interest)+1]
             base_q=base_q.filter(interest__in=ilist)
         #else if is 3 or, no extra filter
 

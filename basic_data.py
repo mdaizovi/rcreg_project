@@ -24,7 +24,7 @@ def test_interest_default():
     con=Con.objects.get(year="2016")
     for t in Training.objects.filter(con=con, RCaccepted=True):
         if not t.interest:
-            print t.name, t.get_default_interest()#don'tsave!
+            print t.name, "Coaches: ",t.display_coach_names(),t.get_default_interest()#don'tsave!
         else:
             print "%s has an interest, it's %s"%(t.name,str(t.interest))
     print " "
