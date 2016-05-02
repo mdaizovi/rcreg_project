@@ -171,7 +171,7 @@ class ChallengeAdmin(ImportExportModelAdmin):#this has its own obvious expost bu
 #class ChallengeAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
     list_display= ('name', 'con')
     search_fields = ('name','roster1__name', 'roster2__name','roster1__captain__sk8name','roster2__captain__sk8name')
-    fields = (('con','RCaccepted','RCrejected'),('location_type','duration','ruleset','gametype','is_a_game'),('created_on','submitted_on'),
+    fields = (('con','RCaccepted','RCrejected'),('location_type','ruleset','gametype'),('created_on','submitted_on'),
         ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'),'internal_notes','communication')
     list_filter = ('con','location_type','is_a_game')
     resource_class = ChallengeResource

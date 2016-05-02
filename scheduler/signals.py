@@ -58,14 +58,16 @@ def challenge_defaults(sender, instance,**kwargs):
     #print "starting chal defaults"
     def set_mc(roster):
         """these are the default matching criteria I want forgames"""
+        #this is dumb. I should have jsut made it not look for matching criteria in game rosters
+        #or maybe not, bc what if someone accidentlal ymakes it a non-game and then people get kicked off the roster?
         roster.skill=SKILL_LEVEL_CHG[0][0]#no skill restricitons
         roster.gender=GENDER[-1][0]#na coed
         roster.intl=False
 
-    if instance.is_a_game:
-        instance.gametype=GAMETYPE[-1][0]
-        if not instance.duration:
-            instance.duration=DEFAULT_SANCTIONED_DURATION
+    if instance.gametype=="6GAME":
+        instance.is_a_game=True
+        instance.duration=DEFAULT_SANCTIONED_DURATION
+
     for r in [instance.roster1,instance.roster2]:
         if r and not r.cap:
             r.cap=GAME_CAP

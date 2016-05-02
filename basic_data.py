@@ -19,6 +19,46 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+#from basic_data import*
+#perfect, imperfect=get_idosyncracies()
+def get_idosyncracies():
+    perfect=[]
+    imperfect=[]
+    con=Con.objects.get(year="2016")
+
+    for c in Challenge.objects.filter(con=con, RCaccepted=True):
+        if c.gametype!="6GAME" or c.is_a_game:
+            print "%s is_a_game or 6GAME, and duration is %s"%(c.name, c.duration)
+            if float(c.duration)<1.0:
+                print  "%s duration is %s"%(c.name, c.duration)
+                if c not in imperfect:
+                    imperfect.append(c)
+
+            if c.is_a_game and c.gametype!="6GAME":
+                print "%s is_a_game, but is not 6GAME"%(c.name)
+                if c not in imperfect:
+                    imperfect.append(c)
+            if c.gametype=="6GAME" and not c.is_a_game:
+                print "%s is 6GAME, but not is_a_game"%(c.name)
+                if c not in imperfect:
+                    imperfect.append(c)
+
+        if c.gametype="6GAME" and c.is_a_game and float(c.duration)>=1.0:
+            if c not in perfect:
+                perfect.append(c)
+        elif c.gametype!="6GAME" and not c.is_a_game and float(c.duration)<=1.0:
+            if c not in perfect:
+                perfect.append(c)
+
+        if c.gametype!="6GAME" and not c.is_a_game and float(c.duration)>=1.0:
+            print "%s is not a game, but duration is %s"%(c.name, c.duration)
+            if c not in imperfect:
+                imperfect.append(c)
+
+    print "Perfect: ",len(perfect)
+    print "Imperfect: ",len(imperfect)
+    return perfect, imperfect
+
 
 def test_interest_default():
     con=Con.objects.get(year="2016")

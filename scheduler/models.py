@@ -713,7 +713,7 @@ class Activity(models.Model):
         elif int(level)==2:
             max_score=99
         else:
-            max_score=999999999999999999
+            max_score=999999999999999999 #arbitrary relaly big number
         #print ("max score: ",max_score)
 
         #for o in dummy_occurrences:
@@ -843,7 +843,6 @@ class Activity(models.Model):
             from swingtime.views import sched_assist_ch
             return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 
-
     class Meta:
         #ordering=('-created_on',)#not sure if abstract can be ordered?
         abstract = True
@@ -877,10 +876,6 @@ class Challenge(Activity):
 
     def save(self, *args, **kwargs):
 
-        # if self.internal_notes:
-        #     cleaned_notes=ascii_only(self.internal_notes)
-        #     self.internal_notes=cleaned_notes
-        #used ot be like above, but adding communicaiton as well so changing to below
         string_fields=['internal_notes','communication']
         for item in string_fields:
             att_unclean=getattr(self, item)
@@ -890,6 +885,7 @@ class Challenge(Activity):
                 cleaned_att=ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
+        #I should ave made the name a property. This is stupid. Maybe change later?
         if self.roster1 and self.roster1.name:
             name1=self.roster1.name
         else:
@@ -900,8 +896,7 @@ class Challenge(Activity):
             name2="?"
         self.name= "%s vs %s" % (name1,name2)
 
-        if not self.duration:
-            self.duration=DEFAULT_CHALLENGE_DURATION
+        #moved duration and gametype to presave challenge_defaults signalF
 
         super(Challenge, self).save()
 

@@ -338,8 +338,11 @@ class Occurrence(models.Model):
         if activity and activity.duration:
             duration=float(activity.duration)
         if activity and activity.is_a_challenge():
-            padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
-            padding=round(padding, 2)
+            if not activity.is_a_game:
+            #shit don't need padding for games, they are already 1.5 hours, this is a big inconsistency on my part
+                padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
+                padding=round(padding, 2)
+            ######stupid not is a game is  a temp fix while I decide what to do for more consistency
 
         dur_delta=int((duration+padding)*60)
         end_time=self.start_time+timedelta(minutes=dur_delta)
