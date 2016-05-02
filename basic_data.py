@@ -43,7 +43,7 @@ def get_idosyncracies():
                 if c not in imperfect:
                     imperfect.append(c)
 
-        if c.gametype="6GAME" and c.is_a_game and float(c.duration)>=1.0:
+        if c.gametype=="6GAME" and c.is_a_game and float(c.duration)>=1.0:
             if c not in perfect:
                 perfect.append(c)
         elif c.gametype!="6GAME" and not c.is_a_game and float(c.duration)<=1.0:
