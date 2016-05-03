@@ -1,11 +1,12 @@
 #scheduler.models
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q,F
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
 #from datetime import datetime, timedelta
 import datetime
+from datetime import timedelta
 import string
 import collections
 #from django.db.models.signals import pre_save, post_save,post_delete
@@ -602,10 +603,10 @@ class Activity(models.Model):
         #empties=[]
         dummies=[]
         pls=self.possible_locations()
-        if not self.interest:
-            proxy_interest=self.get_default_interest()
-        else:
+        if self.interest:
             proxy_interest=self.interest
+        else:
+            proxy_interest=self.get_default_interest()
         #print("proxy_interest 1",proxy_interest)
         #print "possible locations: ",pls
         if self.is_a_training():#if this is a training
@@ -618,16 +619,18 @@ class Activity(models.Model):
         #print("proxy_interest 2",proxy_interest)
         duration=float(self.duration)
         dur_delta=int(duration*60)
+
+        #print "dur_delta= ",dur_delta
+
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
         base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
 
-
         if level==1:
-            base_q=base_q.filter(interest=proxy_interest)
-        elif proxy_interest and level==2:
+            base_q=base_q.filter(interest=proxy_interest).filter(end_time=F('start_time') + timedelta(minutes=dur_delta))
+        elif level==2:
             ilist=[int(proxy_interest)-1,int(proxy_interest),int(proxy_interest)+1]
-            base_q=base_q.filter(interest__in=ilist)
+            base_q=base_q.filter(interest__in=ilist).filter(end_time=F('start_time') + timedelta(minutes=dur_delta))
         #else if is 3 or, no extra filter
 
         empties=list(base_q)

@@ -12,18 +12,19 @@
 
     <div class="col-sm-6">
       <div class="well well-lg">
-      <ul style="font-size: 17px;"><li>Default filter is <b><a href="{{act.get_sched_assist_url}}">Level 1</a></b>, which means that you see only timeslots that have no conflicts and are an exact interest-level match.</li>
-  <li>A <b><a href="{{act.get_sched_assist_url}}?level=2">Level 2</a></b> search will allow non-figurehead conflicts and timeslots that are +/- interest level away. <i>(Please make sure activity has an interest level)</i></li>
-      <li>A <b><a href="{{act.get_sched_assist_url}}?level=3">Level 3</a></b> search will show all possible timeslots.</li></ul>
-      <b>NOTE to self done interest and conflicts but not duration</b>
+      <ul style="font-size: 16px;"><li>Default filter is <b><a href="{{act.get_sched_assist_url}}">Level 1</a></b>, which means that you see only timeslots that have no conflicts and are an exact interest-level and time duration match.
+        <br><small><i>(Note: Trainings have an inverted interest match, so high interest trainings go in low interest timeslots)</small></i></li>
+  <li>A <b><a href="{{act.get_sched_assist_url}}?level=2">Level 2</a></b> search will allow non-figurehead conflicts and timeslots that are +/- interest level match away.
+  <br><small><i>(Note: a conflict score of 0 means no conflicts, under 100 means participant, and over 100 means a conflict for the coach or captain)</small></i></li>
+      <li>A <b><a href="{{act.get_sched_assist_url}}?level=3">Level 3</a></b> search will show all possible timeslots with no matching for interest or duration, only location type.</li></ul>
     </div>
   </div>
       <div class="col-sm-6">
         <div class="well">
-          <form method="POST" class="post-form">
+          <form method="POST" class="post-form margin-top-10">
           {% csrf_token %}
           {{form}}
-            <button type="submit" name="save_activity" class="btn btn-success margin-top-10 center-block">Save</button>
+            <button type="submit" name="save_activity" class="btn btn-success margin-top-15 center-block">Save</button>
           </form>
       </div>
   </div>
