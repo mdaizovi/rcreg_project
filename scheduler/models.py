@@ -30,7 +30,6 @@ SESSIONS_TR=((1,1),(2,2),(3,3),(4,4),(5,5))
 DURATION=(('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
 DEFAULT_ONSK8S_DURATION='2'
 DEFAULT_OFFSK8S_DURATION='1'
-#what is defualt challenge duraiton? longer d/t setup padding? is it 1 hour?
 DEFAULT_CHALLENGE_DURATION='0.75'
 DEFAULT_SANCTIONED_DURATION='1.5'
 GAME_CAP = 20
@@ -602,7 +601,6 @@ class Activity(models.Model):
         #print("dummy occurrences, level ",level)
         #empties=[]
         dummies=[]
-        padding=0
         pls=self.possible_locations()
         if not self.interest:
             proxy_interest=self.get_default_interest()
@@ -614,18 +612,12 @@ class Activity(models.Model):
             proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
             challenge=None
             training=self
-            duration=float(self.duration)
         elif self.is_a_challenge():
             challenge=self
             training=None
-            if self.is_a_game:
-                duration=1
-            else:
-                duration=float(self.duration)
-            padding=.5*duration#to give a 15 min pad for 30 min chals, or 30 min pad to 60 min chals
-            padding=round(padding, 2)
         #print("proxy_interest 2",proxy_interest)
-        dur_delta=int((duration+padding)*60)
+        duration=float(self.duration)
+        dur_delta=int(duration*60)
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
         base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
