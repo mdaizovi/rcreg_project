@@ -78,7 +78,7 @@ def get_duration():
         for item in v:
             print item.pk, item.name, item.duration
     print "\nTraining SUMMARY\n"
-    for k,v in durdict.iteritems():
+    for k,v in durdictTR.iteritems():
         print k, ": ",len(v)
 
 

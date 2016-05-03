@@ -67,7 +67,13 @@ def challenge_defaults(sender, instance,**kwargs):
     if instance.gametype=="6GAME":
         instance.is_a_game=True
         instance.duration=DEFAULT_SANCTIONED_DURATION
-
+    else:
+        instance.is_a_game=False
+        if instance.gametype=="6CHAL":
+            instance.duration=DEFAULT_SANCTIONED_DURATION
+        elif instance.gametype in ["3CHAL","36CHAL"]:
+            instance.duration=DEFAULT_CHALLENGE_DURATION
+        
     for r in [instance.roster1,instance.roster2]:
         if r and not r.cap:
             r.cap=GAME_CAP
