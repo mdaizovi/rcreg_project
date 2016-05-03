@@ -36,6 +36,9 @@
     <h3 class="text-center">{%cycle "Empty" "Possible" %} Timeslots<br>
       <small>{%cycle "These Slots have been created but don't have an Activity designated" "These Slots have NOT been created but could be" %}
 </small></h3>
+
+{%if slotdict %}
+
 <table class="table table-striped">
   <tr><th>Date</th><th>Start</th><th>End</th><th>Location</th><th>Interest<br>Level</th><th style="text-align:center;">Conflict<br>Score</th></tr>
 {%for k,v  in slotdict.iteritems %}
@@ -50,7 +53,18 @@
 {%endfor%}
 {%endfor%}
 </table>
-{%cycle "" "I've temporarily disabled this part while I work on it to make faster and better. Or maybe you don't need it?" %}
+
+{%else%}<hr><p style="text-align:center;"><i>{%if forloop.first%}
+No empty timeslots found. <br>Please either search up a level, or make sure timeslots for the designated location have been created and given an interest level.</i></p>
+{%else%}
+Seeing all possible timeslots may take up to 30 seconds to calculate, so it only happens if you ask for it.</i></p>
+<form method="POST" class="post-form margin-top-10">
+{% csrf_token %}
+<button type="submit" name="makedummies" class="btn btn-lg btn-primary margin-top-15 center-block">See Possible{%if level%} Level {{level}}{%endif%} Timeslots</button>
+</form>
+{%endif%}{%endif%}
+
+
 </div><!-- end col-sm-6 possible timeslots-->
 {%endfor%}
 

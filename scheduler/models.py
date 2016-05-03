@@ -589,7 +589,7 @@ class Activity(models.Model):
             return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
 
 
-    def dummy_occurrences(self,level):
+    def dummy_occurrences(self,level,makedummies):
         """Makes unsaved Occurrence objects for all possible location time combos for activity
         EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
@@ -631,23 +631,22 @@ class Activity(models.Model):
 
         empties=list(base_q)
 
-#works, but is time consuming, pausing for now
-        for d in date_range:
-            day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
-            day_end=day_start+TIMESLOT_END_TIME_DURATION
-            slot_start=day_start
-            slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
+# ##########works, but is time consuming. But don't want to optimize if Ivanna doesn't care and never uses
+        if makedummies:
+            for d in date_range:
+                day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
+                day_end=day_start+TIMESLOT_END_TIME_DURATION
+                slot_start=day_start
+                slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
 
-            while slot_end<day_end:
-                for l in pls:
-                    if l.is_free(slot_start,slot_end):
-                        o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
-                        dummies.append(o)
-                slot_start+=TIMESLOT_INTERVAL
-                slot_end+=TIMESLOT_INTERVAL
-        print "empties: ",empties
-        print "dummies: ",dummies
-
+                while slot_end<day_end:
+                    for l in pls:
+                        if l.is_free(slot_start,slot_end):
+                            o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
+                            dummies.append(o)
+                    slot_start+=TIMESLOT_INTERVAL
+                    slot_end+=TIMESLOT_INTERVAL
+                    ###################
         return [empties,dummies]
 
     # def sched_conflict_split(self):
@@ -680,7 +679,7 @@ class Activity(models.Model):
     #     print "finished sched_conflict_split"
     #     return conflict
 
-    def sched_conflict_score(self,level):
+    def sched_conflict_score(self,level,makedummies):
         """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
         Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest
@@ -703,11 +702,10 @@ class Activity(models.Model):
             max_score=99
         else:
             max_score=999999999999999999 #arbitrary relaly big number
-        #print ("max score: ",max_score)
 
         #for o in dummy_occurrences:
         #print("sched_conflict_score level is ",level)
-        for olist in list(self.dummy_occurrences(level=level)):
+        for olist in list(self.dummy_occurrences(level=level,makedummies=makedummies)):
             #print "sched conflict score olist:",olist
             if len(olist)>0:
                 #print "more than 1!"
@@ -748,22 +746,19 @@ class Activity(models.Model):
             else:#if empty list, otherwise uses last conflict and returns wrond occurrence
                 conflict={}
 
-            #print "line 682 conflict",conflict
             score_list=list(conflict.keys())
             score_list.sort()
-            #print "score list",score_list
-            odict  = dict(collections.OrderedDict())
-
-            #else if is 3 or, no extra filter
+            odict  = collections.OrderedDict()
+            print len(odict)
 
             for score in score_list:
                 if score<=max_score:
                     temp_list=conflict.get(score)
-                    #print "temp_list",temp_list
-                    odict[score]=temp_list
+                    odict[score]=list(temp_list)
+
+            print odict.keys()
             odict_list.append(odict)
 
-        #print "odict_list: ",odict_list
         return odict_list
 
     def get_activity_type(self):

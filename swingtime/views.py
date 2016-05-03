@@ -399,6 +399,7 @@ def sched_assist_tr(
     request,
     act_id,
     template='swingtime/sched_assist.html',
+    makedummies=False
 ):
     try:
         act=Training.objects.get(pk=act_id)
@@ -410,16 +411,20 @@ def sched_assist_tr(
     else:
         level=1
 
-    if request.method == 'POST' and 'save_activity' in request.POST:
-        form=TInterestForm(request.POST,instance=act)
-        if form.is_valid():
-            form.save()
+    if request.method == 'POST':
+        if 'save_activity' in request.POST:
+            form=TInterestForm(request.POST,instance=act)
+            if form.is_valid():
+                form.save()
+        elif "makedummies" in request.POST:
+            form=TInterestForm(instance=act)
+            makedummies=True
     else:
         form=TInterestForm(instance=act)
+    print("makedummies ",makedummies)
+    slots= act.sched_conflict_score(level=level,makedummies=makedummies)
 
-    slots= act.sched_conflict_score(level=level)
-
-    return render(request, template, {'form':form,'act':act,'slots':slots,"training":act,'challenge':None})
+    return render(request, template, {'level':level,'form':form,'act':act,'slots':slots,"training":act,'challenge':None})
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -427,27 +432,31 @@ def sched_assist_ch(
     request,
     act_id,
     template='swingtime/sched_assist.html',
+    makedummies=False
 ):
     try:
         act=Challenge.objects.get(pk=act_id)
     except:
         return render(request, template, {})
-
     if "level" in request.GET:
         level=int(request.GET['level'])
     else:
         level=1
 
-    if request.method == 'POST' and 'save_activity' in request.POST:
-        form=CInterestForm(request.POST,instance=act)
-        if form.is_valid():
-            form.save()
+    if request.method == 'POST':
+        if 'save_activity' in request.POST:
+            form=CInterestForm(request.POST,instance=act)
+            if form.is_valid():
+                form.save()
+        elif "makedummies" in request.POST:
+            makedummies=True
+            form=CInterestForm(instance=act)
     else:
         form=CInterestForm(instance=act)
 
-    slots=act.sched_conflict_score(level=level)#make second so change in actiity changed slots
+    slots=act.sched_conflict_score(level=level,makedummies=makedummies)#make second so change in actiity changed slots
 
-    return render(request, template, {'form':form,'act':act,'slots':slots,"training":None,'challenge':act})
+    return render(request, template, {'level':level,'form':form,'act':act,'slots':slots,"training":None,'challenge':act})
 
 #-------------------------------------------------------------------------------
 @login_required
