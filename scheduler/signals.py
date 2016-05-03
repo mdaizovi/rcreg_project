@@ -73,7 +73,7 @@ def challenge_defaults(sender, instance,**kwargs):
             instance.duration=DEFAULT_SANCTIONED_DURATION
         elif instance.gametype in ["3CHAL","36CHAL"]:
             instance.duration=DEFAULT_CHALLENGE_DURATION
-        
+
     for r in [instance.roster1,instance.roster2]:
         if r and not r.cap:
             r.cap=GAME_CAP
@@ -81,6 +81,3 @@ def challenge_defaults(sender, instance,**kwargs):
                 set_mc(r)
             #print "about to save",r
             r.save()
-    else:
-        if not instance.duration:
-            instance.duration=DEFAULT_CHALLENGE_DURATION
