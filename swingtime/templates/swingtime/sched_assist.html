@@ -57,7 +57,7 @@
 {%else%}<hr><p style="text-align:center;"><i>{%if forloop.first%}
 No empty timeslots found. <br>Please either search up a level, or make sure timeslots for the designated location have been created and given an interest level.</i></p>
 {%else%}
-Seeing all possible timeslots may take up to 30 seconds to calculate, so it only happens if you ask for it.</i></p>
+Seeing all possible timeslots may take up to 15 seconds per location to calculate, so it only happens if you ask for it.</i></p>
 <form method="POST" class="post-form margin-top-10">
 {% csrf_token %}
 <button type="submit" name="makedummies" class="btn btn-lg btn-primary margin-top-15 center-block">See Possible{%if level%} Level {{level}}{%endif%} Timeslots</button>

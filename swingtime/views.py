@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, time
 from dateutil.parser import parse
 from django import http
 from django.db import models
+from django.db import connection as dbconnection
+#print "dbc0:", len(dbconnection.queries)
 from django.template.context import RequestContext
 from django.shortcuts import get_object_or_404, render, redirect,HttpResponseRedirect,render_to_response
 from django.contrib.auth.decorators import login_required

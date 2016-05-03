@@ -6,6 +6,8 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.dateparse import parse_datetime,parse_time
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db import connection as dbconnection
+#print "dbc0:", len(dbconnection.queries)
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
@@ -351,18 +353,16 @@ class Occurrence(models.Model):
     def figurehead_conflict(self):
         """Dahmer custom function. Checks to see if any Event figureheads (coach, captain) are participating in other occurrances at same time.
         If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.get_activity()
+        activity=self.get_activity()#0db hits
         figureheads=[]
         conflict_dict={}
-
         if activity:
             figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
         else:
             figureheads=[]
 
-
-        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-
+        #0 db hits
+        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
         for o in concurrent:
             event_activity=o.get_activity()
             if event_activity: #could be an empty timeslot
@@ -385,10 +385,9 @@ class Occurrence(models.Model):
         conflict_dict={}
 
         if activity:
-            occur_part = activity.participating_in()
+            occur_part = activity.participating_in()#cut down form 7 to 4 db hits
         else:
             occur_part=[]
-
         concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
 
         for o in concurrent:
@@ -399,7 +398,6 @@ class Occurrence(models.Model):
                 if len( inter ) > 0:
                     conflict_dict[event_activity]=list(inter)
                     #conflict_dict[event_activity]=event_part#whoops, this adds all people, not just the intersection!
-
         if len(conflict_dict)>0:
             #print "conflict_dict",conflict_dict
             return conflict_dict
@@ -429,13 +427,13 @@ class Occurrence(models.Model):
         if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
             daypart.append("PM")
         #print("daypart ",daypart)
-
         for f in figureheads:
             #print("Figurehead ",f)
             potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)
             if len(list(potential_bouts))>0:
                 conflict_dict[f]=list(potential_bouts)
         #print("conflict_dict ",conflict_dict)
+
         if len(conflict_dict)>0:
             return conflict_dict
         else:

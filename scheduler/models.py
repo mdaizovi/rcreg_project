@@ -1,6 +1,8 @@
 #scheduler.models
 from django.db import models
 from django.db.models import Q,F
+from django.db import connection as dbconnection
+#print "dbc0:", len(dbconnection.queries)
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
@@ -565,17 +567,17 @@ class Activity(models.Model):
 
     def get_figurehead_registrants(self):
         """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""
+        #select/prefetch brought it form 5 db hits to 3 on trainings
         figureheads=[]
         if self.is_a_training():
-            for c in self.coach.all():
-                for r in c.user.registrant_set.all():
+            for c in self.coach.select_related('user').prefetch_related('user__registrant_set').all():
+                for r in c.user.registrant_set.select_related('con').all():
                     if r.con==self.con:
                         figureheads.append(r)
         elif self.is_a_challenge():
             for r in [self.roster1,self.roster2]:
                 if r and r.captain:
                     figureheads.append(r.captain)
-
         return figureheads
 
     def get_figurehead_blackouts(self):
@@ -601,11 +603,12 @@ class Activity(models.Model):
     def participating_in(self):
         '''returns list of Registrants that are on either skating/participating roster, or are Coach
         For use in Scheduling as well as seeing Communication between NSO/skaters'''
+        #no prefetch/select is 7 db hits for a training, trimmed it down to 4
         participating=[]
-
+        #print "dbcP:", len(dbconnection.queries)
         if self.is_a_training():
-            for c in self.coach.all():
-                for reg in c.user.registrant_set.all():
+            for c in self.coach.select_related('user').all():
+                for reg in c.user.registrant_set.select_related('con').all():
                     if reg.con==self.con:
                         participating.append(reg)
             for ros in [self.registered, self.auditing]:
@@ -620,12 +623,13 @@ class Activity(models.Model):
                         participating.append(sk8)
                     if ros.captain and ros.captain not in participating:
                         participating.append(ros.captain)
+        #print "dbcP6:", len(dbconnection.queries)
         return participating
 
     def possible_locations(self):
         """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
         Will prob need to write anoter further refining, splitting up competition and training tracks"""
-        venues=self.con.venue.all()
+        venues=self.con.venue.prefetch_related('location').all()
 
         if self.location_type =='Flat Track':
             if self.is_a_training():#if this is a training
@@ -651,7 +655,6 @@ class Activity(models.Model):
         EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
         from swingtime.models import Occurrence
-
         #print("dummy occurrences, level ",level)
         #empties=[]
         dummies=[]
@@ -674,7 +677,6 @@ class Activity(models.Model):
         dur_delta=int(duration*60)
 
         #print "dur_delta= ",dur_delta
-
         date_range=self.con.get_date_range()
         #ideas not yet incorporateD: interwt matching, duration matches durdelta
         base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
@@ -687,7 +689,6 @@ class Activity(models.Model):
         #else if is 3 or, no extra filter
 
         empties=list(base_q)
-
 # ##########works, but is time consuming. But don't want to optimize if Ivanna doesn't care and never uses
         if makedummies:
             for d in date_range:
@@ -701,9 +702,18 @@ class Activity(models.Model):
                         if l.is_free(slot_start,slot_end):
                             o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
                             dummies.append(o)
+
                     slot_start+=TIMESLOT_INTERVAL
                     slot_end+=TIMESLOT_INTERVAL
                     ###################
+        # # I thought this would be faster, but actually seems slower. 11 secs tuens to 14, 60 to 80.
+        # if makedummies:
+        #     for l in pls:
+        #         possibles=l.empty_times(date_range,duration)
+        #         for p in possibles:
+        #             o=Occurrence(start_time=p[0],end_time=p[1],location=l,challenge=challenge,training=training)
+        #             dummies.append(o)
+
         return [empties,dummies]
 
     # def sched_conflict_split(self):
@@ -762,6 +772,7 @@ class Activity(models.Model):
 
         #for o in dummy_occurrences:
         #print("sched_conflict_score level is ",level)
+
         for olist in list(self.dummy_occurrences(level=level,makedummies=makedummies)):
             #print "sched conflict score olist:",olist
             if len(olist)>0:
@@ -851,6 +862,12 @@ class Activity(models.Model):
                 level2find.append(o)
             else:
                 level3find.append(o)
+
+
+
+
+
+
 
 
     def get_activity_type(self):
