@@ -27,8 +27,7 @@ GAMETYPE=(('3CHAL','30 minute Challenge'),('6CHAL','60 minute Challenge'),('36CH
 RULESET=(('WFTDA','WFTDA'),('MRDA','MRDA'),('RDCL','RDCL'),('USARS','USARS'),('Other','Other'))
 INTEREST_RATING=((0,'NA'),(1, '1: Very Low Interest'), (2, '2: Somewhat Low Interest'),(3, '3: Medium'), (4,'4: Somewhat High Interest'), (5, '5: Very High Interest'))
 SESSIONS_TR=((1,1),(2,2),(3,3),(4,4),(5,5))
-#DURATION=(('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
-DURATION=(('0.5','Half Hour (30 minutes)'),('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
+DURATION=(('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
 DEFAULT_ONSK8S_DURATION='2'
 DEFAULT_OFFSK8S_DURATION='1'
 #what is defualt challenge duraiton? longer d/t setup padding? is it 1 hour?
