@@ -569,10 +569,6 @@ class Activity(models.Model):
         """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
         Will prob need to write anoter further refining, splitting up competition and training tracks"""
         venues=self.con.venue.all()
-        # if self.location_type == 'EITHER Flat or Banked Track':
-        #     return list(Location.objects.filter(venue__in=venues, location_type__in=['Flat Track','Banked Track']))
-        # else:
-        #     return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
 
         if self.location_type =='Flat Track':
             if self.is_a_training():#if this is a training
@@ -635,24 +631,22 @@ class Activity(models.Model):
 
         empties=list(base_q)
 
-        #empties=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end))
-
 #works, but is time consuming, pausing for now
-        # for d in date_range:
-        #     day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
-        #     day_end=day_start+TIMESLOT_END_TIME_DURATION
-        #     slot_start=day_start
-        #     slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
-        #
-        #     while slot_end<day_end:
-        #         for l in pls:
-        #             if l.is_free(slot_start,slot_end):
-        #                 o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
-        #                 dummies.append(o)
-        #         slot_start+=TIMESLOT_INTERVAL
-        #         slot_end+=TIMESLOT_INTERVAL
-        #print "empties: ",empties
-        #print "dummies: ",dummies
+        for d in date_range:
+            day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
+            day_end=day_start+TIMESLOT_END_TIME_DURATION
+            slot_start=day_start
+            slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
+
+            while slot_end<day_end:
+                for l in pls:
+                    if l.is_free(slot_start,slot_end):
+                        o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
+                        dummies.append(o)
+                slot_start+=TIMESLOT_INTERVAL
+                slot_end+=TIMESLOT_INTERVAL
+        print "empties: ",empties
+        print "dummies: ",dummies
 
         return [empties,dummies]
 

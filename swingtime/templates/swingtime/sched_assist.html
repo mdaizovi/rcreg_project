@@ -43,7 +43,9 @@
 <tr><td>{{ o.start_time|date:"D d" }}</td><td>{{ o.start_time|date:"f a" }}</td><td>{{ o.end_time|date:"f a" }}</td>
   <td>{%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location.name}}{%endif%}</td><td>{{ o.interest }}</td>
   <td style="text-align:center;">
-    <a href="{% url 'swingtime-occurrence' o.pk %}?{%if training%}training={{training.pk}}{%elif challenge%}challenge={{challenge.pk}}{%endif%}">{{k}}</a></td></tr>
+    {%if o.pk%}<a href="{% url 'swingtime-occurrence' o.pk %}?{%if training%}training={{training.pk}}{%elif challenge%}challenge={{challenge.pk}}{%endif%}">
+      {%else%}<a href="{% url 'swingtime-add-event' %}?dtstart={{ o.start_time|date:"c" }}&location={{o.location.pk}}{%if training%}&training={{training.pk}}{%elif challenge%}&challenge={{challenge.pk}}{%endif%}">
+      {%endif%}{{k}}</a></td></tr>
 
 {%endfor%}
 {%endfor%}

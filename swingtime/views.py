@@ -566,7 +566,7 @@ def occurrence_view(
     if "training" in request.GET and request.GET['training'] not in no_list:
         training=Training.objects.get(pk=request.GET['training'])
         get_dict['training']=training
-        #recurrence__dict['training']=training#fon't need this anymore, right?
+        #recurrence_dict['training']=training#fon't need this anymore, right?
     if "challenge" in request.GET and request.GET['challenge'] not in no_list:
         challenge=Challenge.objects.get(pk=request.GET['challenge'])
         get_dict['challenge']=challenge
@@ -652,18 +652,18 @@ def add_event(
         except(TypeError, ValueError) as exc:
             # TODO: A badly formatted date is passed to add_event
             logging.warning(exc)
-    if "training" in request.GET and request.GET['training'] not in no_list:
-        training=Training.objects.get(pk=request.GET['training'])
-        get_dict['training']=training
-        recurrence__dict['training']=training
-    if "challenge" in request.GET and request.GET['challenge'] not in no_list:
-        challenge=Challenge.objects.get(pk=request.GET['challenge'])
-        get_dict['challenge']=challenge
-        recurrence__dict['challenge']=challenge
     if "location" in request.GET and request.GET['location'] not in no_list:
         location=Location.objects.get(pk=request.GET['location'])
         get_dict['location']=location
         recurrence_dict['location']=location
+    if "training" in request.GET and request.GET['training'] not in no_list:
+        training=Training.objects.get(pk=request.GET['training'])
+        get_dict['training']=training
+        recurrence_dict['training']=training
+    if "challenge" in request.GET and request.GET['challenge'] not in no_list:
+        challenge=Challenge.objects.get(pk=request.GET['challenge'])
+        get_dict['challenge']=challenge
+        recurrence_dict['challenge']=challenge
     #print "get dict",get_dict
     ########done fetching get values#########
     #initial offering, might get overwritten w/post
