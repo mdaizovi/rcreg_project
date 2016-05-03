@@ -21,6 +21,71 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 #from basic_data import*
 #perfect, imperfect=get_idosyncracies()
+
+
+def get_gametypes():
+    con=Con.objects.get(year="2016")
+    gametypedict={}
+
+    for c in Challenge.objects.filter(con=con, RCaccepted=True):
+        if c.gametype not in gametypedict:
+            gametypedict[c.gametype]=[c]
+        else:
+            templist=gametypedict.get(c.gametype)
+            templist.append(c)
+            gametypedict[c.gametype]=list(templist)
+
+    for k,v in gametypedict.iteritems():
+        print k
+        for item in v:
+            print item.pk, item.name, item.gametype, item.duration, item.is_a_game
+    print "\nSUMMARY\n"
+    for k,v in gametypedict.iteritems():
+        print k, ": ",len(v)
+
+
+def get_duration():
+    con=Con.objects.get(year="2016")
+    durdict={}
+
+    for c in Challenge.objects.filter(con=con, RCaccepted=True):
+        if c.duration not in durdict:
+            durdict[c.duration]=[c]
+        else:
+            templist=durdict.get(c.duration)
+            templist.append(c)
+            durdict[c.duration]=list(templist)
+    print "\nChallenges\n"
+    for k,v in durdict.iteritems():
+        print k
+        for item in v:
+            print item.pk, item.name, item.gametype, item.duration, item.is_a_game
+    print "\nChallenge SUMMARY\n"
+    for k,v in durdict.iteritems():
+        print k, ": ",len(v)
+
+    durdictTR={}
+    for c in Training.objects.filter(con=con, RCaccepted=True):
+        if c.duration not in durdictTR:
+            durdictTR[c.duration]=[c]
+        else:
+            templist=durdictTR.get(c.duration)
+            templist.append(c)
+            durdictTR[c.duration]=list(templist)
+    print "\nTrainings\n"
+    for k,v in durdictTR.iteritems():
+        print k
+        for item in v:
+            print item.pk, item.name, item.duration
+    print "\nTraining SUMMARY\n"
+    for k,v in durdict.iteritems():
+        print k, ": ",len(v)
+
+
+
+
+
+
 def get_idosyncracies():
     perfect=[]
     imperfect=[]
