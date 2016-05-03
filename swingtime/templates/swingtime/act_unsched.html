@@ -22,28 +22,44 @@
     </div>
 </td></tr></table>
 <hr>
+
+
 <h3 class="text-center">Trainings that want to be cloned (more than 1 session) will probably go here</h3>
 <hr>
+<form method="POST" class="post-form margin-top-10">
+{% csrf_token %}
 
-{%for od in activities %}
+<ol class="breadcrumb">
+  <li><a href="#">Select Unscheduled</a></li>
+  <li><a href="#">Set Interest</a></li>
+  <li class="active">Approve Timeslots</li>
+</ol>
+
+{%if activities%}
+{%for od_list in activities %}
   <div class="col-sm-6 margin-top-10">
-      <h3 class="text-center">
-        {%cycle "Challenges" "Trainings" %}</h3>
+      <h3 class="text-center"><table style="width:100%;"><tr><td style="text-align:center;">
+        {%cycle "Challenges" "Trainings" %} </td><td style="text-align:right;"><button type="submit" name="Auto_{%cycle 'Chal' 'Train' %}" class="btn btn-sm btn-primary">Auto Schedule {%cycle "Challenges" "Trainings" %}</button>
+      </td></tr></table></h3>
 <table class="table table-striped">
-  <tr><th>{%cycle "Challenge" "Training" %}</th><th>Type</th><th style="text-align: center;">Blackouts</th></tr>
-  {%for k, aq in od.iteritems%}
-  {%for a in aq%}
-<tr><td>
-    <a href="{{a.get_view_url}}">{{a.name}}</a></td>
-    <td style="max-width:125px;">{{ a.get_activity_type }}</td>
-  <td style="text-align: center; max-width:75px;"><a href="{{a.get_sched_assist_url}}">{{k}}</a></td>
+  <tr><th style="width:20px;text-align: center;">Auto<br>Schedule</th><th style="vertical-align: middle;">{%cycle "Challenge" "Training" %}</th><th style="vertical-align: middle;">Type</th>
+    <th style="text-align: center; vertical-align: middle;max-width:75px;">Interest</th><th style="text-align: center; vertical-align: middle;">Blackouts</th></tr>
+
+  {%for od in od_list%}
+<tr>
+<td>{{od.check_form.act}}</td>
+  <td>
+    <a href="{{od.act.get_view_url}}">{{od.act.name}}</a></td>
+    <td style="max-width:125px;">{{ od.act.get_activity_type }}</td>
+      <td style="max-width:75px;text-align: center;">{%if od.act.interest %}{{ od.act.interest }}{%else%}?{%endif%}</td>
+  <td style="text-align: center; max-width:75px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>
 </tr>
-{%endfor%}
 {%endfor%}
 </table>
 </div><!-- end col-sm-6-->
 {%endfor%}
-
+{%endif%}<!-- if activities-->
+</form>
 
 </div><!-- end row-->
 {% endblock %}

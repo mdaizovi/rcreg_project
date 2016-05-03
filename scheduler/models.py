@@ -71,6 +71,63 @@ class Location(models.Model):
         else:
             return True
 
+    def empty_times(self,date_list,duration):
+        """Checks to see when during a date range, probably con date range, in which there is nothing going on,
+        not even empty occurrence, for time period.
+        returns list of DateTime tuples: (start time, end time)"""
+        ###this can probably be used to significantly speed up make dumy occurrences
+        from swingtime.models import Occurrence
+        dur_delta=int(float(duration)*60)
+
+        if len(date_list)<=0:
+            return empty_times
+        else:
+            d1=date_list[0]
+            d2=date_list[-1]
+            period_start=datetime.datetime(year=d1.year, month=d1.month, day=d1.day,hour=TIMESLOT_START_TIME.hour)
+            period_end=datetime.datetime(year=d2.year, month=d2.month, day=d2.day,hour=TIMESLOT_START_TIME.hour)+TIMESLOT_END_TIME_DURATION
+            possible_times=[]
+
+            current_start=period_start
+            current_end=period_start+datetime.timedelta(minutes=dur_delta)
+            while current_end<=period_end:
+                potential_slot=(current_start,current_end)
+                #print("potential: ",potential_slot)
+                possible_times.append(potential_slot)
+                current_start+=TIMESLOT_INTERVAL
+                current_end+=TIMESLOT_INTERVAL
+
+            #print("possible_times len",len(possible_times))
+
+            all_os=list(Occurrence.objects.filter(start_time__gte=period_start, end_time__lte=period_end,location=self))
+            all_os.sort(key=lambda x: x.start_time)
+            #print("all_os len",len(all_os))
+            taken_times=[]
+
+            for o in all_os:
+                #print("o: ",o)
+                this_set=[]
+                blockstart=o.start_time+TIMESLOT_INTERVAL-datetime.timedelta(minutes=dur_delta)
+                blockend=o.end_time
+                #print("blockstart",blockstart)
+                cs=blockstart
+                ce=blockstart+datetime.timedelta(minutes=dur_delta)
+
+                while (cs<blockend):
+                    time_tup=(cs,ce)
+                    #print("time_tup: ",time_tup)
+                    this_set.append(time_tup)
+                    ce+=TIMESLOT_INTERVAL
+                    cs+=TIMESLOT_INTERVAL
+                #print("this_set: ",this_set)
+                for t in this_set:
+                    if t in possible_times:
+                        #print("about to remove ",t)
+                        possible_times.remove(t)
+                #print("O Round: possible_times len",len(possible_times))
+
+        #print("possible_times len",len(possible_times))
+        return possible_times
 
     class Meta:
         #ordering=('abbrv','venue','name')
@@ -760,6 +817,41 @@ class Activity(models.Model):
             odict_list.append(odict)
 
         return odict_list
+
+    def find_or_make_timeslots(self):
+        """Experimental function to find or make matching occurrences for auto scheduler.
+        Precedence: 1-try to find Level 1 match, if not, try to make Level1 match, if not, find Level 2, so on..."""
+        from swingtime.models import Occurrence
+        if self.interest:
+            proxy_interest=self.interest
+        else:
+            proxy_interest=self.get_default_interest()
+        if self.is_a_training():#if this is a training
+            proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
+            challenge=None
+            training=self
+        elif self.is_a_challenge():
+            challenge=self
+            training=None
+
+        dur_delta=int(float(self.duration)*60)
+        pls=self.possible_locations()
+        #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
+
+        #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
+        base_q=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,end_time=F('start_time') + timedelta(minutes=dur_delta)))
+        level1find=[]
+        level2find=[]
+        level3find=[]
+
+        for o in base_q:
+            if o.interest and o.interest==proxy_interest:
+                level1find.append(o)
+            elif o.interest and o.interest in [proxy_interest-1,proxy_interest+1]:
+                level2find.append(o)
+            else:
+                level3find.append(o)
+
 
     def get_activity_type(self):
         """Written so can easily see if is snctioned game/chal in templates.

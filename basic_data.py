@@ -19,8 +19,15 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+
+#python manage.py shell
 #from basic_data import*
-#perfect, imperfect=get_idosyncracies()
+
+con=Con.objects.get(year="2016")
+date_list=con.get_date_range()[0:1]
+duration=1
+location=Location.objects.get(pk=7)
+#possible_times=location.empty_times(date_list,duration)
 
 
 def get_gametypes():
@@ -80,9 +87,6 @@ def get_duration():
     print "\nTraining SUMMARY\n"
     for k,v in durdictTR.iteritems():
         print k, ": ",len(v)
-
-
-
 
 
 

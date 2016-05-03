@@ -362,3 +362,14 @@ class TInterestForm(ModelForm):
                 'class': 'form-control',
                 'id': '%s_for_%s'%(str(field),str(self.instance.pk)),
                 })
+
+class ActCheck(forms.Form):
+    def __init__(self, *args, **kwargs):
+        # act_type = kwargs.pop('act_type')
+        # pk = kwargs.pop('pk')
+        super(ActCheck, self).__init__(*args, **kwargs)
+        self.fields["act"]=forms.BooleanField(widget=forms.CheckboxInput(),initial=True,required=False)
+
+        for field in iter(self.fields):
+            #self.fields[field].widget.attrs.update({'style':'width: 15px','class': 'form-control','name': '%s-%s'%(str(act_type),str(pk))})
+            self.fields[field].widget.attrs.update({'style':'width: 15px','class':'form-control'})

@@ -4,7 +4,6 @@ import logging
 import collections
 from datetime import datetime, timedelta, time
 from dateutil.parser import parse
-
 from django import http
 from django.db import models
 from django.template.context import RequestContext
@@ -22,7 +21,7 @@ from swingtime.conf import settings as swingtime_settings
 from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
-from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm
+from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
 from swingtime.forms import DLCloneForm
 
 from dateutil import parser
@@ -322,7 +321,10 @@ def act_unsched(
         con=Con.objects.most_upcoming()
 
     activities=[]
+    act_types=["challenge","training"]
+    cycle=-1
     for q in [Challenge.objects.filter(con=con, RCaccepted=True),Training.objects.filter(con=con, RCaccepted=True)]:
+        cycle+=1
         temp_dict={}
         for obj in q:
             if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
@@ -333,13 +335,41 @@ def act_unsched(
                     this_list=temp_dict.get(score)
                     this_list.append(obj)
                     temp_dict[score]=list(this_list)
+
         score_list=temp_dict.keys()
         score_list.sort(reverse=True)
-        od  = collections.OrderedDict()
+        od_list=[]
         for score in score_list:
             temp_list=temp_dict.get(score)
-            od[score]=temp_list
-        activities.append(od)
+            for act in temp_list:
+                od  = collections.OrderedDict()
+                od["act"]=act
+                od["score"]=score
+                od["check_form"]=ActCheck(prefix=(act_types[cycle]+"-"+str(act.pk)))
+                od_list.append(od)
+        activities.append(od_list)
+
+    if request.method == 'POST':
+        #print request.POST
+        test=dict(request.POST)
+        post_keys=dict(request.POST).keys()
+        pk_list=[]
+
+        if 'Auto_Chal' in request.POST:
+            for k in post_keys:
+                lsplit=k.split("-")
+                if lsplit[0]=='challenge':
+                    pk_list.append(int(lsplit[1]))
+            possibles=Challenge.objects.filter(pk__in=pk_list)
+        elif 'Auto_Train' in request.POST:
+            for k in post_keys:
+                lsplit=k.split("-")
+                if lsplit[0]=='training':
+                    pk_list.append(int(lsplit[1]))
+            possibles=Training.objects.filter(pk__in=pk_list)
+        #you're workong on activity.find_or_make_timeslots()
+        #print "pk list",pk_list
+        activities=[]
 
     new_context={"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
@@ -401,6 +431,7 @@ def sched_assist_tr(
     template='swingtime/sched_assist.html',
     makedummies=False
 ):
+    start=datetime.now()
     try:
         act=Training.objects.get(pk=act_id)
     except:
@@ -421,8 +452,11 @@ def sched_assist_tr(
             makedummies=True
     else:
         form=TInterestForm(instance=act)
-    print("makedummies ",makedummies)
+
+    start=datetime.now()
     slots= act.sched_conflict_score(level=level,makedummies=makedummies)
+    elapsed=datetime.now()-start
+    print "all done!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
 
     return render(request, template, {'level':level,'form':form,'act':act,'slots':slots,"training":act,'challenge':None})
 
@@ -434,6 +468,7 @@ def sched_assist_ch(
     template='swingtime/sched_assist.html',
     makedummies=False
 ):
+
     try:
         act=Challenge.objects.get(pk=act_id)
     except:
@@ -454,8 +489,9 @@ def sched_assist_ch(
     else:
         form=CInterestForm(instance=act)
 
+    start=datetime.now()
     slots=act.sched_conflict_score(level=level,makedummies=makedummies)#make second so change in actiity changed slots
-
+    elapsed=datetime.now()-start
     return render(request, template, {'level':level,'form':form,'act':act,'slots':slots,"training":None,'challenge':act})
 
 #-------------------------------------------------------------------------------
