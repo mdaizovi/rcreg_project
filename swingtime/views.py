@@ -24,7 +24,7 @@ from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
-from swingtime.forms import DLCloneForm,SlotCreate
+from swingtime.forms import DLCloneForm,SlotCreate,L1Check
 
 from dateutil import parser
 
@@ -323,8 +323,118 @@ def act_unsched(
         con=Con.objects.most_upcoming()
 
     activities=[]
+    level1pairs={}
+    save_attempt=False
+    save_success=False
+    added2schedule=[]
     act_types=["challenge","training"]
+    prefix_base=""
     cycle=-1
+    possibles=[]
+
+
+    if request.method == 'POST':
+        post_keys=dict(request.POST).keys()
+        #print request.POST
+
+        if ('Auto_Chal' or 'Auto_Train') in request.POST:
+            pk_list=[]
+            activities=[]
+            possible_dicts={}
+            act_tups=[]
+            o_dicts={}
+            o_tups=[]
+
+            if 'Auto_Chal' in request.POST:
+                for k in post_keys:
+                    lsplit=k.split("-")
+                    prefix_base='challenge'
+                    if lsplit[0]==prefix_base:
+                        pk_list.append(int(lsplit[1]))
+                possibles=Challenge.objects.filter(pk__in=pk_list)
+            elif 'Auto_Train' in request.POST:
+                for k in post_keys:
+                    lsplit=k.split("-")
+                    prefix_base='training'
+                    if lsplit[0]==prefix_base:
+                        pk_list.append(int(lsplit[1]))
+                possibles=Training.objects.filter(pk__in=pk_list)
+
+            for a in possibles:
+                level1find,level2find,level3find=a.find_level_slots()
+                pos_dict={1:level1find,2:level2find,3:level3find}
+                possible_dicts[a]=pos_dict
+                act_tups.append((a,len(level1find),len(level2find),len(level3find)))
+
+                for o in level1find:
+                    if o not in o_dicts:
+                        o_dicts[o]=1
+                    else:
+                        tempi=o_dicts.get(o)
+                        tempi+=1
+                        o_dicts[o]=tempi
+            for k,v in o_dicts.iteritems():
+                o_tups.append((k,v))
+
+            #print"presort act_tups ",act_tups
+            #print"presort o_tups ",o_tups
+            sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
+            sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
+            #print"post sort act_tups ",act_tups
+            #print"post sort o_tups ",o_tups
+
+            for atup in act_tups:
+                activity=atup[0]
+                #print"activity ",activity#to see if the break is working
+                o_dict=possible_dicts.get(activity)#recall, this is the dict of kv pairs 1,2,3 and the level lists linked to the activity
+                l1=o_dict.get(1)
+                for otup in o_tups:
+                    o=otup[0]
+                    #print"o: ",o#to see if the break is working
+                    if o in l1:
+
+                        #level1pairs[activity]=o#make the match
+
+                        prefix_base+="-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                        print"prefix_base: ",prefix_base
+                        level1pairs[(activity,o)]=L1Check(prefix=prefix_base)
+
+                        #remove from everything
+                        o_tups.remove(otup)
+                        #resort
+                        sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
+                        #print"found an o/a kv pair"
+                        break#stop going through os in l1 if you've found a match
+                        #print"test1, hope it never runs"
+                    break#stop going through otups if you've found a match
+                    #print"test2, hope it never runs"
+                if activity not in level1pairs:
+                    print"runningl2"
+                    l2=o_dict.get(2)#if still here bc no l1 found
+                    #this is where I'd like to choose a level2 of there's only 1 option,
+                    #but I'd have to have removed o levels in every dict all this tim for that to work
+                    #so this is on hold.
+            new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
+            extra_context.update(new_context)
+            return render(request, template, extra_context)
+        else:
+            if 'save schedule' in request.POST:
+                save_attempt=True
+                for k in post_keys:
+                    lsplit=k.split("-")
+                    #print "lsplit ",lsplit
+                    if len(lsplit)==5 and lsplit[4]=='add2sched':
+                        o=Occurrence.objects.get(pk=int(lsplit[3]))
+                        if lsplit[0]=="challenge":
+                            a=Challenge.objects.get(pk=int(lsplit[1]))
+                            o.challenge=a
+                        elif lsplit[0]=="training":
+                            a=Training.objects.get(pk=int(lsplit[1]))
+                            o.training=a
+                        o.save() #hold on, both to check if is okay
+                        added2schedule.append(o)
+                        save_success=True
+    #if not post, or just saves
     for q in [Challenge.objects.filter(con=con, RCaccepted=True),Training.objects.filter(con=con, RCaccepted=True)]:
         cycle+=1
         temp_dict={}
@@ -352,47 +462,9 @@ def act_unsched(
                 od_list.append(od)
         activities.append(od_list)
 
-    if request.method == 'POST':
-        print request.POST
-        test=dict(request.POST)
-        post_keys=dict(request.POST).keys()
-        pk_list=[]
 
-        if 'Auto_Chal' in request.POST:
-            for k in post_keys:
-                lsplit=k.split("-")
-                if lsplit[0]=='challenge':
-                    pk_list.append(int(lsplit[1]))
-            possibles=Challenge.objects.filter(pk__in=pk_list)
-        elif 'Auto_Train' in request.POST:
-            for k in post_keys:
-                lsplit=k.split("-")
-                if lsplit[0]=='training':
-                    pk_list.append(int(lsplit[1]))
-            possibles=Training.objects.filter(pk__in=pk_list)
-        else:
-            possibles=[]
-
-        possible_dicts=[]
-        for a in possibles:
-            level1find,level2find,level3find=a.find_level_slots()
-            pos_dict={"activity":a,1:level1find,2:level2find,3:level3find}
-            possible_dicts.append(pos_dict)
-
-
-
-            #something like, see if there are enough level 1s to go around,
-            #try to schedue those automatically, or at least offer for approval.
-            #level 2s can get a dropdown. maybe 3s too.
-            #how does making slots factor in?
-
-
-
-        activities=[]
-
-    new_context={"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
+    new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
-
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------

@@ -462,9 +462,13 @@ class SingleOccurrenceForm(forms.ModelForm):
             for c in cs:
                 if len(c.occurrence_set.all())==0:
                     CnoE.append(c.pk)
+            if self.instance and self.instance.challenge:
+                CnoE.append(self.instance.challenge.pk)
             for t in ts:
                 if len(t.occurrence_set.all())==0 or (t.sessions and t.sessions > len(t.occurrence_set.all())):
                     TnoE.append(t.pk)
+            if self.instance and self.instance.training:
+                TnoE.append(self.instance.training.pk)
             self.fields["challenge"].queryset =Challenge.objects.filter(pk__in=CnoE)
             self.fields["training"].queryset =Training.objects.filter(pk__in=TnoE)
         except:
@@ -511,6 +515,18 @@ class SlotCreate(forms.Form):
     def __init__(self, *args, **kwargs):
         super(SlotCreate, self).__init__(*args, **kwargs)
         self.fields["slot_create"]=forms.BooleanField(widget=forms.CheckboxInput,initial=False,required=False)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})
+
+class L1Check(forms.Form):
+    def __init__(self, *args, **kwargs):
+        # chal = kwargs.pop('chal')
+        # train = kwargs.pop('train')
+        # occurr = kwargs.pop('occurr')
+        super(L1Check, self).__init__(*args, **kwargs)
+
+        self.fields["add2sched"]=forms.BooleanField(widget=forms.CheckboxInput,initial=True,required=False)
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})

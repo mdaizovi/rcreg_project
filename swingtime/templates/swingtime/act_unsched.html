@@ -34,6 +34,14 @@
   <li class="active">Approve Timeslots</li>
 </ol>-->
 
+{%if added2schedule and save_attempt and save_success %}
+<div class="alert alert-success" role="alert">{{added2schedule|length }} Activities/Occurrences successfully saved!</div>
+{%elif save_attempt and not save_success %}
+<div class="alert alert-danger" role="alert">Error saving Activities/Occurrences </div>
+{%endif%}
+
+
+
 {%if activities%}
 {%for od_list in activities %}
 <form method="POST" class="post-form margin-top-10">
@@ -45,10 +53,12 @@
       </td>
       <td style="text-align:center; font-size: 12px;"><b>Create<br>Timeslots:</b><br>{{slotcreateform.slot_create}}</td>
     </tr></table></h3>
+
 <table class="table table-striped">
   <tr><th style="width:20px;text-align: center;">Auto<br>Schedule</th><th style="vertical-align: middle;">{%cycle "Challenge" "Training" %}</th><th style="vertical-align: middle;">Type</th>
     <th style="text-align: center; vertical-align: middle;max-width:75px;">Interest</th><th style="text-align: center; vertical-align: middle;">Blackouts</th></tr>
 
+{%if od_list|length > 0%}
   {%for od in od_list%}
 <tr>
 <td>{{od.check_form.act}}</td>
@@ -59,11 +69,41 @@
   <td style="text-align: center; max-width:75px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>
 </tr>
 {%endfor%}
+
+{%else%}<!-- if od_list len not greater than 0-->
+<tr><td colspan="5" style="text-align:center;"><i>None found</i></td></tr>
+{%endif%}
+
 </table>
+
+
+
 </div><!-- end col-sm-6-->
 </form>
 {%endfor%}
-{%else%}Sorry to get your hopes up, this part isn't done yet.
+
+{%else%}<!-- if not activities, like if not a post-->
+
+
+<form method="POST" class="post-form margin-top-10">
+{% csrf_token %}
+{%if level1pairs%}
+<h4 class="margin-top-10">Level 1 Matches</h4>
+<table class="table table-striped">
+  <tr><th>Activity</th><th>Occurrence</th><th style="text-align: center;">Save?</th></tr>
+{%for tup,form in  level1pairs.iteritems%}
+<tr><td>{{tup.0.name}}</td>
+<td>
+{{ tup.1.start_time|date:"D d" }} : {{ tup.1.start_time|date:"f a" }} - {{ tup.1.end_time|date:"f a" }}
+</td>
+
+<td>{{form.add2sched}}</td></tr>
+{%endfor%}
+</table>
+{%endif%}<!-- if level1pairs-->
+
+<button type="submit" name="save schedule" class="btn btn-lg btn-success center-block">Save Schedule Suggestions</button>
+</form>
 {%endif%}<!-- if activities-->
 
 </div><!-- end row-->
