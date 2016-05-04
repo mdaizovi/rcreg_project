@@ -447,15 +447,33 @@ class SingleOccurrenceForm(forms.ModelForm):
             date = None
         super(SingleOccurrenceForm,self).__init__(*args, **kws)
 
-        if date:
-            self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
-            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, required=False,initial=date)
-        else:
-            self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-            self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
-        #self.fields["interest"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
+        if not date and self.instance and self.instance.start_time:
+            date=self.instance.start_time.date()
 
+        self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
+        self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
+        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
+        try:
+            con=Con.objects.get(start__lte=date, end__gte=date)
+            cs=Challenge.objects.filter(con=con,RCaccepted=True)
+            ts=Training.objects.filter(con=con,RCaccepted=True)
+            CnoE=[]
+            TnoE=[]
+            for c in cs:
+                if len(c.occurrence_set.all())==0:
+                    CnoE.append(c.pk)
+            for t in ts:
+                if len(t.occurrence_set.all())==0 or (t.sessions and t.sessions > len(t.occurrence_set.all())):
+                    TnoE.append(t.pk)
+            self.fields["challenge"].queryset =Challenge.objects.filter(pk__in=CnoE)
+            self.fields["training"].queryset =Training.objects.filter(pk__in=TnoE)
+        except:
+            if date:
+                self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
+                self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, required=False,initial=date)
+            else:
+                self.fields["challenge"].queryset =Challenge.objects.filter(RCaccepted=True)
+                self.fields["training"].queryset =Training.objects.filter(RCaccepted=True)
 
     #===========================================================================
     class Meta:

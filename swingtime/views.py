@@ -329,7 +329,8 @@ def act_unsched(
         cycle+=1
         temp_dict={}
         for obj in q:
-            if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
+            if (obj.is_a_training() and obj.sessions and len(obj.occurrence_set.all())<obj.sessions) or (len(obj.occurrence_set.all())<=0):
+            #if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
                 score=len(obj.get_figurehead_blackouts())
                 if score not in temp_dict:
                     temp_dict[score]=[obj]
@@ -646,7 +647,7 @@ def occurrence_view(
 
     else:
         form = form_class(instance=occurrence,initial=get_dict)
-
+        
     try:
         location=occurrence.location
     except:

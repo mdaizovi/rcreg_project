@@ -663,6 +663,7 @@ class Activity(models.Model):
             proxy_interest=self.interest
         else:
             proxy_interest=self.get_default_interest()
+
         #print("proxy_interest 1",proxy_interest)
         #print "possible locations: ",pls
         if self.is_a_training():#if this is a training
@@ -847,6 +848,7 @@ class Activity(models.Model):
 
         dur_delta=int(float(self.duration)*60)
         pls=self.possible_locations()
+
         #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
 
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
