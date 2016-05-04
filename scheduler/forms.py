@@ -372,4 +372,4 @@ class ActCheck(forms.Form):
 
         for field in iter(self.fields):
             #self.fields[field].widget.attrs.update({'style':'width: 15px','class': 'form-control','name': '%s-%s'%(str(act_type),str(pk))})
-            self.fields[field].widget.attrs.update({'style':'width: 15px','class':'form-control'})
+            self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})

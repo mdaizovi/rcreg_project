@@ -506,3 +506,11 @@ class DLCloneForm(forms.Form):
             self.fields[field].widget.attrs.update({
                 'style': 'width:100%;',
                 })
+
+class SlotCreate(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SlotCreate, self).__init__(*args, **kwargs)
+        self.fields["slot_create"]=forms.BooleanField(widget=forms.CheckboxInput,initial=False,required=False)
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})

@@ -8,7 +8,7 @@
   <div class="alert alert-danger" role="alert">This Activity does not exist. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>if you believe this is the result of an error.</div>
 {%else%}
 <div class="col-sm-12">
-    <h3 class="margin-top-10 text-center">Schedule Assistant: <b>{{act.name}}</b></h3>
+    <h3 class="margin-top-10 text-center">Schedule Assistant: <a href="{{act.get_view_url}}"><b>{{act.name}}</b></a></h3>
 
     <div class="col-sm-6">
       <div class="well well-lg">

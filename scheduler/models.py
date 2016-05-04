@@ -830,9 +830,10 @@ class Activity(models.Model):
 
         return odict_list
 
-    def find_or_make_timeslots(self):
+    def find_level_slots(self):
         """Experimental function to find or make matching occurrences for auto scheduler.
-        Precedence: 1-try to find Level 1 match, if not, try to make Level1 match, if not, find Level 2, so on..."""
+        Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
+        Differs from manual schedule levels slighty in that all levels here require right duration"""
         from swingtime.models import Occurrence
         if self.interest:
             proxy_interest=self.interest
@@ -857,19 +858,65 @@ class Activity(models.Model):
         level2find=[]
         level3find=[]
 
-        for o in base_q:
+        for o in base_q:#sor list rather than multiple queries
+            #print o, o.interest,o.location
             if o.interest and o.interest==proxy_interest:
                 level1find.append(o)
+                #print"putting in level1"
             elif o.interest and o.interest in [proxy_interest-1,proxy_interest+1]:
                 level2find.append(o)
+                #print"putting in level2"
             else:
                 level3find.append(o)
+                #print"putting in level3"
 
+        #still need conflict sort
+        for l in [level1find,level2find]:
+            for o in l:
+                o.challenge=challenge#don't save!
+                o.training=training#DON'T SAVE!
+                score=0
+                blackout_conflict=o.blackout_conflict()
+                if blackout_conflict:
+                    #print "blackout_conflict: ",len(blackout_conflict),blackout_conflict
+                    this_score=len(blackout_conflict)*100
+                    #print "blackout score: ",this_score
+                    score+=this_score
 
+                figurehead_conflict=o.figurehead_conflict()
+                if figurehead_conflict:
+                    #print "figurehead_conflict: ",len(figurehead_conflict),figurehead_conflict
+                    this_score=len(figurehead_conflict)*10
+                    #print "figurehead score: ",this_score
+                    score+=this_score
 
+                participant_conflict=o.participant_conflict()
+                if participant_conflict:
+                    #print "participant_conflict: ",len(participant_conflict),participant_conflict
+                    this_score=len(participant_conflict)*1
+                    #print "participant score: ",this_score
+                    score+=this_score
+                #print score,o
+                if score > 99:
+                    if o in level1find:
+                        #print "removing from level1"
+                        level1find.remove(o)
+                    if o in level2find:
+                        #print "removing from level2"
+                        level2find.remove(o)
+                    level3find.append(o)
+                    #print "put in level3"
+                elif score <= 99 and score > 0:
+                    if o in level1find:
+                        #print "removing from level1"
+                        level1find.remove(o)
+                    if o not in level3find:
+                        #print "putting in level3"
+                        level3find.append(o)
+                o.challenge=None#back to blank
+                o.training=None#backto blank
 
-
-
+        return level1find,level2find,level3find
 
 
     def get_activity_type(self):

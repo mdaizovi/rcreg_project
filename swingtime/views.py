@@ -24,7 +24,7 @@ from con_event.models import Con
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
-from swingtime.forms import DLCloneForm
+from swingtime.forms import DLCloneForm,SlotCreate
 
 from dateutil import parser
 
@@ -353,7 +353,7 @@ def act_unsched(
         activities.append(od_list)
 
     if request.method == 'POST':
-        #print request.POST
+        print request.POST
         test=dict(request.POST)
         post_keys=dict(request.POST).keys()
         pk_list=[]
@@ -370,11 +370,27 @@ def act_unsched(
                 if lsplit[0]=='training':
                     pk_list.append(int(lsplit[1]))
             possibles=Training.objects.filter(pk__in=pk_list)
-        #you're workong on activity.find_or_make_timeslots()
-        #print "pk list",pk_list
+        else:
+            possibles=[]
+
+        possible_dicts=[]
+        for a in possibles:
+            level1find,level2find,level3find=a.find_level_slots()
+            pos_dict={"activity":a,1:level1find,2:level2find,3:level3find}
+            possible_dicts.append(pos_dict)
+
+
+
+            #something like, see if there are enough level 1s to go around,
+            #try to schedue those automatically, or at least offer for approval.
+            #level 2s can get a dropdown. maybe 3s too.
+            #how does making slots factor in?
+
+
+
         activities=[]
 
-    new_context={"activities":activities,"con":con,"con_list":Con.objects.all()}
+    new_context={"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
 
     return render(request, template, extra_context)
@@ -647,7 +663,7 @@ def occurrence_view(
 
     else:
         form = form_class(instance=occurrence,initial=get_dict)
-        
+
     try:
         location=occurrence.location
     except:

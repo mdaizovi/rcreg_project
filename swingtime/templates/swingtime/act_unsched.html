@@ -27,8 +27,7 @@
 <!-- <h3 class="text-center">Trainings that want to be cloned (more than 1 session) will probably go here</h3>
 <hr>-->
 
-<form method="POST" class="post-form margin-top-10">
-{% csrf_token %}
+
 <!-- <ol class="breadcrumb">
   <li><a href="#">Select Unscheduled</a></li>
   <li><a href="#">Set Interest</a></li>
@@ -37,11 +36,15 @@
 
 {%if activities%}
 {%for od_list in activities %}
+<form method="POST" class="post-form margin-top-10">
+{% csrf_token %}
   <div class="col-sm-6 margin-top-10">
       <h3 class="text-center"><table style="width:100%;"><tr><td style="text-align:left;">
-        {%cycle "Challenges" "Trainings" %} </td><td><small><i>{%cycle "" "*Incl multiple session" %}</i></small></td>
+        {%cycle "Challenges" "Trainings" %} </td><td><small style="font-size: 12px;"><i>{%cycle "" "*Incl multiple session" %}</i></small></td>
         <td style="text-align:right;"><button type="submit" name="Auto_{%cycle 'Chal' 'Train' %}" class="btn btn-sm btn-primary">Auto Schedule {%cycle "Challenges" "Trainings" %}</button>
-      </td></tr></table></h3>
+      </td>
+      <td style="text-align:center; font-size: 12px;"><b>Create<br>Timeslots:</b><br>{{slotcreateform.slot_create}}</td>
+    </tr></table></h3>
 <table class="table table-striped">
   <tr><th style="width:20px;text-align: center;">Auto<br>Schedule</th><th style="vertical-align: middle;">{%cycle "Challenge" "Training" %}</th><th style="vertical-align: middle;">Type</th>
     <th style="text-align: center; vertical-align: middle;max-width:75px;">Interest</th><th style="text-align: center; vertical-align: middle;">Blackouts</th></tr>
@@ -58,10 +61,10 @@
 {%endfor%}
 </table>
 </div><!-- end col-sm-6-->
+</form>
 {%endfor%}
 {%else%}Sorry to get your hopes up, this part isn't done yet.
 {%endif%}<!-- if activities-->
-</form>
 
 </div><!-- end row-->
 {% endblock %}
