@@ -431,7 +431,7 @@ def act_unsched(
                         elif lsplit[0]=="training":
                             a=Training.objects.get(pk=int(lsplit[1]))
                             o.training=a
-                        o.save() #hold on, both to check if is okay
+                        #o.save() #hold on, both to check if is okay
                         added2schedule.append(o)
                         save_success=True
     #if not post, or just saves
