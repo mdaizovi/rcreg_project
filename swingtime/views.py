@@ -337,7 +337,7 @@ def act_unsched(
         post_keys=dict(request.POST).keys()
         #print request.POST
 
-        if ('Auto_Chal' or 'Auto_Train') in request.POST:
+        if 'Auto_Chal' in request.POST or 'Auto_Train' in request.POST:
             pk_list=[]
             activities=[]
             possible_dicts={}
@@ -385,30 +385,31 @@ def act_unsched(
 
             for atup in act_tups:
                 activity=atup[0]
-                #print"activity ",activity#to see if the break is working
+                l1selected=False
+                print"activity ",activity#to see if the break is working
                 o_dict=possible_dicts.get(activity)#recall, this is the dict of kv pairs 1,2,3 and the level lists linked to the activity
                 l1=o_dict.get(1)
+                print len(l1)," level 1 os"
                 for otup in o_tups:
                     o=otup[0]
-                    #print"o: ",o#to see if the break is working
+                    print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                     if o in l1:
-
                         #level1pairs[activity]=o#make the match
-
-                        prefix_base+="-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                        print"prefix_base: ",prefix_base
-                        level1pairs[(activity,o)]=L1Check(prefix=prefix_base)
+                        prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                        #print"prefix: ",prefix
+                        level1pairs[(activity,o)]=L1Check(prefix=prefix)
 
                         #remove from everything
                         o_tups.remove(otup)
                         #resort
                         sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-                        #print"found an o/a kv pair"
+                        print"found an o/a kv pair"
+                        l1selected=True
                         break#stop going through os in l1 if you've found a match
-                        #print"test1, hope it never runs"
+                        print"test1, hope it never runs"
                     break#stop going through otups if you've found a match
-                    #print"test2, hope it never runs"
-                if activity not in level1pairs:
+                    print"test2, hope it never runs"
+                if not l1selected:
                     print"runningl2"
                     l2=o_dict.get(2)#if still here bc no l1 found
                     #this is where I'd like to choose a level2 of there's only 1 option,
@@ -431,7 +432,9 @@ def act_unsched(
                         elif lsplit[0]=="training":
                             a=Training.objects.get(pk=int(lsplit[1]))
                             o.training=a
+    #############################
                         #o.save() #hold on, both to check if is okay
+        ###############################
                         added2schedule.append(o)
                         save_success=True
     #if not post, or just saves
