@@ -406,8 +406,11 @@ def act_unsched(
                         l1selected=True
                         print"about to breek in for o in li"
                         break#stop going through os in l1 if you've found a match
-                    print"about to breek in for o tup in o_tups"
-                    break#stop going through otups if you've found a match
+                    if l1selected:
+                        print"about to breek in for o tup in o_tups"
+                        break#stop going through otups if you've found a match
+                    else:
+                        print"hoping this makes me still look for more l1s"
                 if not l1selected:
                     print"runningl2"
                     l2=o_dict.get(2)#if still here bc no l1 found
