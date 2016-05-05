@@ -834,6 +834,7 @@ class Activity(models.Model):
         """Experimental function to find or make matching occurrences for auto scheduler.
         Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
         Differs from manual schedule levels slighty in that all levels here require right duration"""
+        print"running find level slots"
         from swingtime.models import Occurrence
         if self.interest:
             proxy_interest=self.interest
@@ -860,16 +861,16 @@ class Activity(models.Model):
         level3find=[]
 
         for o in base_q:#sor list rather than multiple queries
-            #print o, o.interest,o.location
+            print o.start_time,o.end_time, o.interest,o.location
             if o.interest and o.interest==proxy_interest:
                 level1find.append(o)
-                #print"putting in level1"
+                print"putting in level1"
             elif o.interest and o.interest in [proxy_interest-1,proxy_interest+1]:
                 level2find.append(o)
-                #print"putting in level2"
+                print"putting in level2"
             else:
                 level3find.append(o)
-                #print"putting in level3"
+                print"putting in level3"
 
         #still need conflict sort
         for l in [level1find,level2find]:
@@ -898,27 +899,32 @@ class Activity(models.Model):
                     #print "participant score: ",this_score
                     score+=this_score
 
-                #print score,o
+                print"Score:  ",score,o.start_time,o.end_time, o.interest,o.location
                 if score > 99:
                     if o in level1find:
-                        #print "removing from level1"
+                        print "removing from level1"
                         level1find.remove(o)
                     if o in level2find:
-                        #print "removing from level2"
+                        print "removing from level2"
                         level2find.remove(o)
                     level3find.append(o)
-                    #print "put in level3"
+                    print "put in level3"
                 elif score <= 99 and score > 0:
                     if o in level1find:
-                        #print "removing from level1"
+                        print "removing from level1"
                         level1find.remove(o)
-                    if o not in level3find:
-                        #print "putting in level3"
-                        level3find.append(o)
+
+                    if o not in level2find:
+                        print "putting in level3"
+                        level2find.append(o)
+
                 elif score <=0: #if there's no ocnflict but it's still a +/- 1 interest match
+                    print "no conflict but still a maybe +/- interest match"
                     if o in level2find:
                         level2find.remove(o)
+                        print"remvoed form l2"
                     level1halffind.append(o)
+                    print"put in level half"
 
                 o.challenge=None#back to blank
                 o.training=None#backto blank

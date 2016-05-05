@@ -396,6 +396,8 @@ def act_unsched(
                 l2=o_dict.get(2)
 
                 print len(l1)," level 1 os"
+                print len(l15)," level 15 os"
+                print len(l2)," level 2 os"
         ###########################################
                 # for otup in o_tups:
                 #     o=otup[0]
