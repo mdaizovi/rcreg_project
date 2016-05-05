@@ -362,7 +362,10 @@ class Occurrence(models.Model):
             figureheads=[]
 
         #0 db hits
-        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
+        #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
+        #adding a half hour padding:
+        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training')
+
         for o in concurrent:
             event_activity=o.get_activity()
             if event_activity: #could be an empty timeslot
@@ -388,7 +391,9 @@ class Occurrence(models.Model):
             occur_part = activity.participating_in()#cut down form 7 to 4 db hits
         else:
             occur_part=[]
-        concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
+        #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
+        #adding a half hour padding:
+        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk)
 
         for o in concurrent:
             event_activity=o.get_activity()
@@ -490,68 +495,3 @@ class Occurrence(models.Model):
 #         if not self.registered and not self.auditing:
 #             raise ValidationError({
 #                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def create_event(
-#     #title,
-#     #event_type,
-#     start_time=None,
-#     end_time=None,
-#     **rrule_params
-# ):
-#     '''
-#     Convenience function to create an ``Event``, optionally create an
-#     ``EventType``, and associated ``Occurrence``s. ``Occurrence`` creation
-#     rules match those for ``Event.add_occurrences``.
-#
-#     Returns the newly created ``Event`` instance.
-#
-#     Parameters
-#
-#     ``event_type``
-#         can be either an ``EventType`` object or 2-tuple of ``(abbreviation,label)``,
-#         from which an ``EventType`` is either created or retrieved.
-#
-#     ``start_time``
-#         will default to the current hour if ``None``
-#
-#     ``end_time``
-#         will default to ``start_time`` plus swingtime_settings.DEFAULT_OCCURRENCE_DURATION
-#         hour if ``None``
-#
-#     ``freq``, ``count``, ``rrule_params``
-#         follow the ``dateutils`` API (see http://labix.org/python-dateutil)
-#
-#     '''
-#
-#     # if isinstance(event_type, tuple):
-#     #     event_type, created = EventType.objects.get_or_create(
-#     #         abbr=event_type[0],
-#     #         label=event_type[1]
-#     #     )
-#
-#     event = Event.objects.create(
-#         #event_type=event_type
-#     )
-#
-#     start_time = start_time or datetime.now().replace(
-#         minute=0,
-#         second=0,
-#         microsecond=0
-#     )
-#
-#     end_time = end_time or (start_time + swingtime_settings.DEFAULT_OCCURRENCE_DURATION)
-#     event.add_occurrences(start_time, end_time, **rrule_params)
-#     return event

@@ -874,7 +874,7 @@ def add_event(
     #print "get dict",get_dict
     ########done fetching get values#########
     #initial offering, might get overwritten w/post
-    recurrence_form = recurrence_form_class(initial=recurrence_dict)
+    recurrence_form = recurrence_form_class(initial=recurrence_dict,date=dtstart)
     ##########################
 
     if request.method == 'POST':
