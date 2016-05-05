@@ -834,7 +834,7 @@ class Activity(models.Model):
         """Experimental function to find or make matching occurrences for auto scheduler.
         Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
         Differs from manual schedule levels slighty in that all levels here require right duration"""
-        print"running find level slots"
+        print"running find level slots for ",self
         from swingtime.models import Occurrence
         if self.interest:
             proxy_interest=self.interest
@@ -851,6 +851,9 @@ class Activity(models.Model):
         dur_delta=int(float(self.duration)*60)
         pls=self.possible_locations()
 
+        print "proxy interest is ",proxy_interest
+        print "pls are: ",pls
+
         #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
 
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
@@ -864,13 +867,13 @@ class Activity(models.Model):
             print o.start_time,o.end_time, o.interest,o.location
             if o.interest and o.interest==proxy_interest:
                 level1find.append(o)
-                print"putting in level1"
+                #print"putting in level1"
             elif o.interest and o.interest in [proxy_interest-1,proxy_interest+1]:
                 level2find.append(o)
-                print"putting in level2"
+                #print"putting in level2"
             else:
                 level3find.append(o)
-                print"putting in level3"
+                #print"putting in level3"
 
         #still need conflict sort
         for l in [level1find,level2find]:
