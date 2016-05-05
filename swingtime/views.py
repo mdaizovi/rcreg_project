@@ -373,15 +373,14 @@ def act_unsched(
                         tempi=o_dicts.get(o)
                         tempi+=1
                         o_dicts[o]=tempi
+
             for k,v in o_dicts.iteritems():
                 o_tups.append((k,v))
 
-            #print"presort act_tups ",act_tups
-            #print"presort o_tups ",o_tups
             sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
             sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-            #print"post sort act_tups ",act_tups
-            #print"post sort o_tups ",o_tups
+            print"post sort act_tups ",act_tups
+            print"post sort o_tups ",o_tups
 
             for atup in act_tups:
                 activity=atup[0]
@@ -405,10 +404,10 @@ def act_unsched(
                         sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
                         print"found an o/a kv pair"
                         l1selected=True
+                        print"about to breek in for o in li"
                         break#stop going through os in l1 if you've found a match
-                        print"test1, hope it never runs"
+                    print"about to breek in for o tup in o_tups"
                     break#stop going through otups if you've found a match
-                    print"test2, hope it never runs"
                 if not l1selected:
                     print"runningl2"
                     l2=o_dict.get(2)#if still here bc no l1 found
