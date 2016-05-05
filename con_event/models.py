@@ -453,6 +453,8 @@ class Registrant(Matching_Criteria):
         unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
         return unsubmitted
 
+
+
     def pending_challenges(self):
         '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
         #####AH! people weren't getting notified of challenges they were invited to, becuse weren't on the roster yet. What a dummy!!!
@@ -483,6 +485,8 @@ class Registrant(Matching_Criteria):
         #unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
         unconfirmed=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
         return unconfirmed
+
+
 
     def scheduled_trainings(self):
         '''Returns a list of all trainings in which Registrant is on roster'''
@@ -567,7 +571,7 @@ class Registrant(Matching_Criteria):
                 try:
                     Blackout.objects.get(registrant=self,date=date,ampm=ampmitem).delete()
                 except:
-                    print "error deleting blackout: ",self, date, ampmitem 
+                    print "error deleting blackout: ",self, date, ampmitem
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names

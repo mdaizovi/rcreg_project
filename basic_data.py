@@ -324,7 +324,7 @@ def sort_BPT_excel(target_file):
     return single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file
 
 #from basic_data import*
-#target_file=(import_path+'RollerTron Attendee 050316.xlsx')
+#target_file=(import_path+'RollerTron Attendee 050416.xlsx')
 #con=Con.objects.get(year="2016")
 #single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 def import_from_excel(complete_entries_file,con):

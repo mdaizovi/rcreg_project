@@ -945,9 +945,17 @@ def my_challenges(request):
     registrant_dict_list=[]
 
     for registrant in registrant_list:
-        pending=list(registrant.pending_challenges())
-        scheduled=registrant.scheduled_challenges()
-        unconfirmed=registrant.unconfirmed_challenges()
+
+        # pending=list(registrant.pending_challenges())
+        # scheduled=registrant.scheduled_challenges()
+        # unconfirmed=registrant.unconfirmed_challenges()
+        pending=None
+        scheduled=None
+        unconfirmed=None
+
+        my_rosters=list(registrant.roster_set.all())
+        my_chals=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)|Q(roster1__captain=registrant)|Q(roster2__captain=registrant)))
+
         can_sub_date=registrant.con.can_submit_chlg_by_date()
         sub_full=Challenge.objects.submission_full(registrant.con)
         #see how many times captaining a challenge, games are excluded
@@ -957,7 +965,8 @@ def my_challenges(request):
         else:
             cap_exceeded=False
         chals_submitted=[c for c in chals_cap if c.submitted_on]
-        registrant_dict={'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
+
+        registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()

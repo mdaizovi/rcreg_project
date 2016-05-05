@@ -936,6 +936,10 @@ class Activity(models.Model):
 
         return level1find,level1halffind,level2find,level3find
 
+    def scheduled(self):
+        os=list(self.occurrence_set.all())
+        return os
+
 
     def get_activity_type(self):
         """Written so can easily see if is snctioned game/chal in templates.
