@@ -855,6 +855,7 @@ class Activity(models.Model):
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
         base_q=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,end_time=F('start_time') + timedelta(minutes=dur_delta)))
         level1find=[]
+        level1halffind=[]#this is for if the interest doesn't quite match but still no conflicts
         level2find=[]
         level3find=[]
 
@@ -896,6 +897,7 @@ class Activity(models.Model):
                     this_score=len(participant_conflict)*1
                     #print "participant score: ",this_score
                     score+=this_score
+
                 #print score,o
                 if score > 99:
                     if o in level1find:
@@ -913,10 +915,15 @@ class Activity(models.Model):
                     if o not in level3find:
                         #print "putting in level3"
                         level3find.append(o)
+                elif score <=0: #if there's no ocnflict but it's still a +/- 1 interest match
+                    if o in level2find:
+                        level2find.remove(o)
+                    level1halffind.append(o)
+
                 o.challenge=None#back to blank
                 o.training=None#backto blank
 
-        return level1find,level2find,level3find
+        return level1find,level1halffind,level2find,level3find
 
 
     def get_activity_type(self):

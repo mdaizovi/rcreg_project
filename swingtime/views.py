@@ -2,6 +2,7 @@ import calendar
 import itertools
 import logging
 import collections
+from random import randint, choice
 from datetime import datetime, timedelta, time
 from dateutil.parser import parse
 from django import http
@@ -345,6 +346,8 @@ def act_unsched(
             o_dicts={}
             o_tups=[]
 
+            taken_os=[] #only necessary if i make it choose randomly
+
             if 'Auto_Chal' in request.POST:
                 for k in post_keys:
                     lsplit=k.split("-")
@@ -361,26 +364,27 @@ def act_unsched(
                 possibles=Training.objects.filter(pk__in=pk_list)
 
             for a in possibles:
-                level1find,level2find,level3find=a.find_level_slots()
-                pos_dict={1:level1find,2:level2find,3:level3find}
+                level1find,level1halffind, level2find,level3find=a.find_level_slots()
+                pos_dict={1:level1find,1.5:level1halffind,2:level2find,3:level3find}
                 possible_dicts[a]=pos_dict
-                act_tups.append((a,len(level1find),len(level2find),len(level3find)))
+                act_tups.append((a,len(level1find),len(level1halffind),len(level2find),len(level3find)))
 
-                for o in level1find:
-                    if o not in o_dicts:
-                        o_dicts[o]=1
-                    else:
-                        tempi=o_dicts.get(o)
-                        tempi+=1
-                        o_dicts[o]=tempi
-
-            for k,v in o_dicts.iteritems():
-                o_tups.append((k,v))
-
+#########temporarily making o choice randon#######
+            #     for o in level1find:
+            #         if o not in o_dicts:
+            #             o_dicts[o]=1
+            #         else:
+            #             tempi=o_dicts.get(o)
+            #             tempi+=1
+            #             o_dicts[o]=tempi
+            #
+            # for k,v in o_dicts.iteritems():
+            #     o_tups.append((k,v))
+            #
+            # sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
+            # sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
+################################
             sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
-            sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-            print"post sort act_tups ",act_tups
-            print"post sort o_tups ",o_tups
 
             for atup in act_tups:
                 activity=atup[0]
@@ -388,35 +392,95 @@ def act_unsched(
                 print"activity ",activity#to see if the break is working
                 o_dict=possible_dicts.get(activity)#recall, this is the dict of kv pairs 1,2,3 and the level lists linked to the activity
                 l1=o_dict.get(1)
-                print len(l1)," level 1 os"
-                for otup in o_tups:
-                    o=otup[0]
-                    print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
-                    if o in l1:
-                        #level1pairs[activity]=o#make the match
-                        prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                        #print"prefix: ",prefix
-                        level1pairs[(activity,o)]=L1Check(prefix=prefix)
+                l15=o_dict.get(1.5)
+                l2=o_dict.get(2)
 
-                        #remove from everything
-                        o_tups.remove(otup)
-                        #resort
-                        sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-                        print"found an o/a kv pair"
-                        l1selected=True
-                        print"about to breek in for o in li"
-                        break#stop going through os in l1 if you've found a match
-                    if l1selected:
-                        print"about to breek in for o tup in o_tups"
-                        break#stop going through otups if you've found a match
-                    else:
-                        print"hoping this makes me still look for more l1s"
-                if not l1selected:
-                    print"runningl2"
-                    l2=o_dict.get(2)#if still here bc no l1 found
-                    #this is where I'd like to choose a level2 of there's only 1 option,
-                    #but I'd have to have removed o levels in every dict all this tim for that to work
-                    #so this is on hold.
+                print len(l1)," level 1 os"
+        ###########################################
+                # for otup in o_tups:
+                #     o=otup[0]
+                #     print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                #     if o in l1:
+                #         #level1pairs[activity]=o#make the match
+                #         prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                #         #print"prefix: ",prefix
+                #         level1pairs[(activity,o)]=L1Check(prefix=prefix)
+                #         #remove from everything
+                #         o_tups.remove(otup)
+                #         #resort
+                #         sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
+                #         print"found an o/a kv pair"
+                #         l1selected=True
+                #         #print"about to breek in for o in li"
+                #         break#stop going through os in l1 if you've found a match
+                #     if l1selected:
+                #         #print"about to breek in for o tup in o_tups"
+                #         break#stop going through otups if you've found a match
+                # if not l1selected:
+                #     print"runningl2"
+                #     l2=o_dict.get(2)#if still here bc no l1 found
+                #     #this is where I'd like to choose a level2 of there's only 1 option,
+                #     #but I'd have to have removed o levels in every dict all this tim for that to work
+                #     #so this is on hold.
+        # ############################
+
+#######new try, making the o choice random #########
+                if len(l1)>0:
+                    print "len l1: ",len(l1)
+                    while len(l1)>0 and not l1selected:
+                        o=choice(l1)
+                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            print"not in taken"
+                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                            print"prefix: ",prefix
+                            level1pairs[(activity,o,"Perfect Match")]=L1Check(prefix=prefix)
+                            taken_os.append(o)
+                            l1.remove(o)
+                            l1selected=True
+                            break
+                        else:
+                            print "o taken, keep going"
+                            l1.remove(o)
+
+                elif len(l15)>0:
+                    print "len l15: ",len(l15)
+                    while len(l15)>0 and not l1selected:
+                        o=choice(l15)
+                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            print"not in taken"
+                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                            print"prefix: ",prefix
+                            level1pairs[(activity,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
+                            taken_os.append(o)
+                            l15.remove(o)
+                            l1selected=True
+                            break
+                        else:
+                            print "o taken, keep going"
+                            l15.remove(o)
+
+                elif len(l2)>0:
+                    print "len l2: ",len(l2)
+                    while len(l2)>0 and not l1selected:
+                        o=choice(l2)
+                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            print"not in taken"
+                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
+                            print"prefix: ",prefix
+                            level1pairs[(activity,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
+                            taken_os.append(o)
+                            l2.remove(o)
+                            l1selected=True
+                            break
+                        else:
+                            print "o taken, keep going"
+                            l2.remove(o)
+
+###############end random experiment
+
             new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
             extra_context.update(new_context)
             return render(request, template, extra_context)
