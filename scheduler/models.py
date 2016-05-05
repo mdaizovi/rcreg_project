@@ -852,8 +852,6 @@ class Activity(models.Model):
         pls=self.possible_locations()
 
         print "proxy interest is ",proxy_interest
-        print "pls are: ",pls
-
         #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
 
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
@@ -865,15 +863,19 @@ class Activity(models.Model):
 
         for o in base_q:#sor list rather than multiple queries
             print o.start_time,o.end_time, o.interest,o.location
-            if o.interest and o.interest==proxy_interest:
+
+            if o.interest and (abs( float(o.interest)-float(proxy_interest) )<1):
+            #if o.interest and float(o.interest)==float(proxy_interest): #i think this causes problems w/ apprxiamted decimal nterest
                 level1find.append(o)
-                #print"putting in level1"
-            elif o.interest and o.interest in [proxy_interest-1,proxy_interest+1]:
+                print"putting in level1"
+            elif o.interest and (abs( float(o.interest)-float(proxy_interest) )<2):
                 level2find.append(o)
-                #print"putting in level2"
+                print"putting in level2"
             else:
                 level3find.append(o)
-                #print"putting in level3"
+                print"putting in level3"
+
+        print self, "level1find len ",len(level1find),"level2find len ",len(level2find),"level3find len ",len(level3find)
 
         #still need conflict sort
         for l in [level1find,level2find]:
