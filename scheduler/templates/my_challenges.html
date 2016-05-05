@@ -55,11 +55,6 @@
       {% endif %}
 {% endif %}
 
-
-
-
-
-
 {%if dict.cap_exceeded%}<div class="alert alert-danger" role="alert">You can only be captain of {{MAX_CAPTAIN_LIMIT}} submitted Challenge{{ MAX_CAPTAIN_LIMIT|pluralize }}.
   {%if dict.chals_submitted|length < MAX_CAPTAIN_LIMIT %}After you submit {{MAX_CAPTAIN_LIMIT}}, you will no longer be able to submit the rest, and can
   {%else%}You have already submitted the maximum amount. Please{%endif%}

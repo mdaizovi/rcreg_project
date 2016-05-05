@@ -294,13 +294,12 @@ def my_trainings(request):
 
     for registrant in registrant_list:
 
-        scheduled=registrant.scheduled_trainings()
         if coach:
-            unconfirmed=coach.training_set.filter(con=registrant.con)
+            my_trains=coach.training_set.filter(con=registrant.con)
         else:
-            unconfirmed=None
+            my_trains=None
         #later I'll need to write logic/liks for giving feedback if you're not the coach.
-        registrant_dict={'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'unconfirmed':unconfirmed}
+        registrant_dict={'con':registrant.con, 'registrant':registrant, 'my_trains':my_trains}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()
@@ -945,7 +944,6 @@ def my_challenges(request):
     registrant_dict_list=[]
 
     for registrant in registrant_list:
-
         # pending=list(registrant.pending_challenges())
         # scheduled=registrant.scheduled_challenges()
         # unconfirmed=registrant.unconfirmed_challenges()

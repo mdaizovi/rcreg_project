@@ -487,27 +487,25 @@ class Registrant(Matching_Criteria):
         return unconfirmed
 
 
+#######I think i can just get rid of this
+    # def unconfirmed_trainings(self):
+    #     '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
+    #     matched by self.user to coach.user
+    #     This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''
+    #     from scheduler.models import Training,Coach #put here to avoid import error with Matching_Criteria
+    #     try:
+    #         coach_me=Coach.objects.get(user=user)
+    #     except:
+    #         coach_me=None
+    #     if coach_me:
+    #         #unconfirmed=list(coach_me.training_set.filter(RCaccepted=False, con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
+    #         unconfirmed=list(coach_me.training_set.filter(con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
+    #         return unconfirmed
+    #     else:
+    #         return None
 
-    def scheduled_trainings(self):
-        '''Returns a list of all trainings in which Registrant is on roster'''
-        #not written yet, currently no such thing as a scheduled training
-        return None
 
-    def unconfirmed_trainings(self):
-        '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
-        matched by self.user to coach.user
-        This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''
-        from scheduler.models import Training,Coach #put here to avoid import error with Matching_Criteria
-        try:
-            coach_me=Coach.objects.get(user=user)
-        except:
-            coach_me=None
-        if coach_me:
-            #unconfirmed=list(coach_me.training_set.filter(RCaccepted=False, con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
-            unconfirmed=list(coach_me.training_set.filter(con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
-            return unconfirmed
-        else:
-            return None
+
 
     def criteria_conflict(self):
         problem_criteria=[]
