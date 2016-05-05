@@ -389,15 +389,15 @@ def act_unsched(
             for atup in act_tups:
                 activity=atup[0]
                 l1selected=False
-                print"activity ",activity#to see if the break is working
+                #print"activity ",activity#to see if the break is working
                 o_dict=possible_dicts.get(activity)#recall, this is the dict of kv pairs 1,2,3 and the level lists linked to the activity
                 l1=o_dict.get(1)
                 l15=o_dict.get(1.5)
                 l2=o_dict.get(2)
-
-                print len(l1)," level 1 os"
-                print len(l15)," level 15 os"
-                print len(l2)," level 2 os"
+                #
+                # print len(l1)," level 1 os"
+                # print len(l15)," level 15 os"
+                # print len(l2)," level 2 os"
         ###########################################
                 # for otup in o_tups:
                 #     o=otup[0]
@@ -428,57 +428,57 @@ def act_unsched(
 
 #######new try, making the o choice random #########
                 if len(l1)>0:
-                    print "len l1: ",len(l1)
+                    #print "len l1: ",len(l1)
                     while len(l1)>0 and not l1selected:
                         o=choice(l1)
-                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            print"not in taken"
+                            #print"not in taken"
                             prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            print"prefix: ",prefix
+                            #print"prefix: ",prefix
                             level1pairs[(activity,o,"Perfect Match")]=L1Check(prefix=prefix)
                             taken_os.append(o)
                             l1.remove(o)
                             l1selected=True
                             break
                         else:
-                            print "o taken, keep going"
+                            #print "o taken, keep going"
                             l1.remove(o)
 
                 elif len(l15)>0:
-                    print "len l15: ",len(l15)
+                    #print "len l15: ",len(l15)
                     while len(l15)>0 and not l1selected:
                         o=choice(l15)
-                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            print"not in taken"
+                            #print"not in taken"
                             prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            print"prefix: ",prefix
+                            #print"prefix: ",prefix
                             level1pairs[(activity,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
                             taken_os.append(o)
                             l15.remove(o)
                             l1selected=True
                             break
                         else:
-                            print "o taken, keep going"
+                            #print "o taken, keep going"
                             l15.remove(o)
 
                 elif len(l2)>0:
-                    print "len l2: ",len(l2)
+                    #print "len l2: ",len(l2)
                     while len(l2)>0 and not l1selected:
                         o=choice(l2)
-                        print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            print"not in taken"
+                            #print"not in taken"
                             prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            print"prefix: ",prefix
+                            #print"prefix: ",prefix
                             level1pairs[(activity,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
                             taken_os.append(o)
                             l2.remove(o)
                             l1selected=True
                             break
                         else:
-                            print "o taken, keep going"
+                            #print "o taken, keep going"
                             l2.remove(o)
 
 ###############end random experiment
@@ -501,7 +501,7 @@ def act_unsched(
                             a=Training.objects.get(pk=int(lsplit[1]))
                             o.training=a
     #############################
-                        #o.save() #hold on, both to check if is okay
+                        o.save() #hold on, both to check if is okay
         ###############################
                         added2schedule.append(o)
                         save_success=True

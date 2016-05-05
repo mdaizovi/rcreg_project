@@ -818,14 +818,14 @@ class Activity(models.Model):
             score_list=list(conflict.keys())
             score_list.sort()
             odict  = collections.OrderedDict()
-            print len(odict)
+            #print len(odict)
 
             for score in score_list:
                 if score<=max_score:
                     temp_list=conflict.get(score)
                     odict[score]=list(temp_list)
 
-            print odict.keys()
+            #print odict.keys()
             odict_list.append(odict)
 
         return odict_list
@@ -834,7 +834,7 @@ class Activity(models.Model):
         """Experimental function to find or make matching occurrences for auto scheduler.
         Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
         Differs from manual schedule levels slighty in that all levels here require right duration"""
-        print"running find level slots for ",self
+        #print"running find level slots for ",self
         from swingtime.models import Occurrence
         if self.interest:
             proxy_interest=self.interest
@@ -851,7 +851,7 @@ class Activity(models.Model):
         dur_delta=int(float(self.duration)*60)
         pls=self.possible_locations()
 
-        print "proxy interest is ",proxy_interest
+        #print "proxy interest is ",proxy_interest
         #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
 
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
@@ -862,20 +862,20 @@ class Activity(models.Model):
         level3find=[]
 
         for o in base_q:#sor list rather than multiple queries
-            print o.start_time,o.end_time, o.interest,o.location
+            #print o.start_time,o.end_time, o.interest,o.location
 
             if o.interest and (abs( float(o.interest)-float(proxy_interest) )<1):
             #if o.interest and float(o.interest)==float(proxy_interest): #i think this causes problems w/ apprxiamted decimal nterest
                 level1find.append(o)
-                print"putting in level1"
+                #print"putting in level1"
             elif o.interest and (abs( float(o.interest)-float(proxy_interest) )<2):
                 level2find.append(o)
-                print"putting in level2"
+                #print"putting in level2"
             else:
                 level3find.append(o)
-                print"putting in level3"
+                #print"putting in level3"
 
-        print self, "level1find len ",len(level1find),"level2find len ",len(level2find),"level3find len ",len(level3find)
+        #print self, "level1find len ",len(level1find),"level2find len ",len(level2find),"level3find len ",len(level3find)
 
         #still need conflict sort
         for l in [level1find,level2find]:
@@ -904,32 +904,32 @@ class Activity(models.Model):
                     #print "participant score: ",this_score
                     score+=this_score
 
-                print"Score:  ",score,o.start_time,o.end_time, o.interest,o.location
+                #print"Score:  ",score,o.start_time,o.end_time, o.interest,o.location
                 if score > 99:
                     if o in level1find:
-                        print "removing from level1"
+                        #print "removing from level1"
                         level1find.remove(o)
                     if o in level2find:
-                        print "removing from level2"
+                        #print "removing from level2"
                         level2find.remove(o)
                     level3find.append(o)
-                    print "put in level3"
+                    #print "put in level3"
                 elif score <= 99 and score > 0:
                     if o in level1find:
-                        print "removing from level1"
+                        #print "removing from level1"
                         level1find.remove(o)
 
                     if o not in level2find:
-                        print "putting in level3"
+                        #print "putting in level3"
                         level2find.append(o)
 
                 elif score <=0: #if there's no ocnflict but it's still a +/- 1 interest match
-                    print "no conflict but still a maybe +/- interest match"
+                    #print "no conflict but still a maybe +/- interest match"
                     if o in level2find:
                         level2find.remove(o)
-                        print"remvoed form l2"
+                        #print"remvoed form l2"
                     level1halffind.append(o)
-                    print"put in level half"
+                    #print"put in level half"
 
                 o.challenge=None#back to blank
                 o.training=None#backto blank
