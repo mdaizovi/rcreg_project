@@ -283,10 +283,8 @@ class Occurrence(models.Model):
     @property
     def activity(self):
     #def event(self): #change to this somedaty?
-        if self.event:
-            return self.get_activity()
-        else:
-            return None
+        return self.get_activity()
+
 
     #---------------------------------------------------------------------------
 ########eventually I want this to replace title######################
