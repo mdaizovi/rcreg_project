@@ -554,9 +554,14 @@ def edit_roster(request, roster_id):
         skater_search_form=SearchForm(request.POST or None)
         skater_search_form.fields['search_q'].label = "Skater Name"
         entry_query = skater_search_form.get_query(['sk8name','last_name','first_name'])
-        found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query)
-        eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
-        eligible_participants.fields['eligible_registrant'].label = "Found Eligible Skaters"
+        if entry_query:
+            found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query)
+            eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
+            eligible_participants.fields['eligible_registrant'].label = "Found Eligible Skaters"
+        else:
+            found_entries = Registrant.objects.eligible_sk8ers(roster).order_by('sk8name','last_name','first_name')
+            eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
+            eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
     else:
         skater_search_form=SearchForm()
         skater_search_form.fields['search_q'].label = "Skater Name"
