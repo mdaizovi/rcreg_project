@@ -30,7 +30,9 @@ urlpatterns = patterns('',
     url(r'^my_trainings/', 'scheduler.views.my_trainings',name='my_trainings'),
     url(r'^propose_new_training/', 'scheduler.views.propose_new_training',name='propose_new_training'),
     #add this later with logic about if near training time or not, can see reg/audit rosters.
-    url(r'^training/view/(?P<activity_id>\d+)/$', 'scheduler.views.view_training', name='view_training'),
+    #url(r'^training/view/(?P<activity_id>\d+)/$', 'scheduler.views.view_training', name='view_training'),
+    url(r'^training/view/(?P<activity_id>\d+)(?:/(?P<o_id>\d+))?/$', 'scheduler.views.view_training', name='view_training'),#may or may not include occurrence id
+
     url(r'^training/edit/(?P<activity_id>\d+)/$', 'scheduler.views.edit_training', name='edit_training'),
     url(r'^training/register/(?P<activity_id>\d+)/$', 'scheduler.views.register_training', name='register_training'),
 

@@ -17,20 +17,37 @@
 
     <h2 class="text-center">{{training.name}}<small>
 {%for coach in training.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
-{{coach.user.first_name}}</a>{%endfor%}</small></h2>
+{{coach.user.first_name}}</a>{%endfor%}</small>
+{%if user in training.editable_by%}<a href="{{training.get_edit_url}}"><button type="button" class="btn btn-success">Edit Training</button></a>{%endif%}
+</h2>
     <hr>
-  <h5 class="text-center"><table class="table-condensed" style="width:100%;">
-      <!-- <tr><td>date</td><td>time</td><td>{{training.get_duration_display}}</td><td>location</td></tr>-->
-      <tr><td>{{training.get_duration_display}}</td></tr>
-    </table></h5>
+  <h5 class="text-center">{{training.get_duration_display}}</h5>
 
-  <p class="text-center">{%if user in training.editable_by%}
-  <a href="{{training.get_edit_url}}"><button type="button" class="btn btn-success">Edit Training</button></a>
-  {%endif%}
-  {% if user in training.registered.editable_by %}
-  {% url 'register_training' training.pk as register_url%}
-  <a href="{{register_url}}"><button type="button" class="btn btn-success">Register MVPs</button></a>
-  {%endif%}</p>
+
+{% if training.con.sched_visible %}
+  {%if Tos%}
+  <h4>Scheduled Session{{Tos|pluralize}}: {{Tos|length}}</h4>
+  <table class="table"><tr>
+    {%for o in Tos%}
+    <td><div class="dropdown" >
+    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+      {{ o.start_time|date:"D d f a" }}
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+      <li><a href="{% url 'view_training' training.pk o.pk %}">See Session Roster</a></li>
+      {% if user in training.registered.editable_by %}
+      {% url 'register_training' training.pk as register_url%}
+      <li role="separator" class="divider"></li>
+      <li role="presentation"><a href="{{register_url}}">Register MVPs</a></li>
+      {%endif%}
+    </ul>
+      {%endfor%}
+  </div></td>
+</tr></table>
+  {%endif%}  {%endif%}
+
+
 
 <div class="well well-lg" style="background:white;">
 <div class="well well-sm">

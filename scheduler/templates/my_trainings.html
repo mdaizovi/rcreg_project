@@ -53,16 +53,16 @@
       <tr><th>Training</th><th>Status</th><th class="text-left" colspan="2">Actions</th></tr>
 {%for item in dict.my_trains %}
 <tr><td>{{item.name}}</td>
-  <td><b>{%if item.scheduled%}Scheduled:</b><ul>{%for o in item.scheduled%}<li>
+  <td style="vertical-align: middle;"><b>{%if item.scheduled%}Scheduled:</b><ul>{%for o in item.scheduled%}<li>
   {{ o.start_time|date:"D d" }} {{ o.start_time|date:"f a" }}-{{ o.end_time|date:"f a" }},
   {%if o.location.abbrv%}{{o.location.abbrv}}{%else%}{{o.location}}{%endif%}</li>{%endfor%}
   {%else%}Unconfirmed{%endif%}</td>
 
   {%if user in item.editable_by %}
-            <td><a class="btn btn-success btn-block" href="{{item.get_edit_url}}" role="button">Edit Training</a></td>
-            <td>
+            <td class="text-center" style="vertical-align: middle;"><a class="btn btn-success btn-block" href="{{item.get_edit_url}}" role="button">Edit Training</a></td>
+            <td class="text-center" style="vertical-align: middle;">
             {%else%}
-            <td class="text-right" colspan="2">{%endif%}
+            <td class="text-right" colspan="2" style="vertical-align: middle;">{%endif%}
               <a class="btn btn-primary btn-block" href="{{item.get_view_url}}" role="button">See Training</a></td></tr>
       {%endfor%}
       </table>

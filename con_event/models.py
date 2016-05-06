@@ -206,11 +206,12 @@ class Con(models.Model):
         if self.start:#split up because I always mess up conditionals w/ too many conditions
             if not self.challenge_submission_start or not self.training_submission_end:
                 month=self.start.month-4
+                #If Con is at end of July, this will make chal submission start 3/1 and training submisison end 5/15
                 if not self.challenge_submission_start:
                     dt=datetime.date(self.start.year, month, 1)
                     self.challenge_submission_start=dt
                 if not self.training_submission_end:
-                    dt2=datetime.date(self.start.year, month, 15)
+                    dt2=datetime.date(self.start.year, month+2, 15)
                     self.training_submission_end=dt2
 
         if not self.country:

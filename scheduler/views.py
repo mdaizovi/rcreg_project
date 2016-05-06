@@ -129,16 +129,22 @@ def view_coach(request, coach_id):
         return render_to_response('view_coach.html',{},context_instance=RequestContext(request))
 
 
-def view_training(request, activity_id):
+def view_training(request, activity_id,o_id=None):
     user=request.user
     single=False
     visible=False
+    occur=None
     try:
         training=Training.objects.get(pk=int(activity_id))
-        rosters=[training.registered, training.auditing]
-
-        #I ahve loose plans of showing the rosers, or maybe using frames to show, if single occurrence.
-        #if mroe than one, link to their own, or use jscript to hide and show?
+        #rosters=[training.registered, training.auditing]
+        rosters=[]#hard coding for not until I make new training rosters
+        if o_id:
+            #print "oid is ",o_id
+            try:
+                occur=Occurrence.objects.get(training=training, pk=int(o_id))
+            except:
+                pass
+        Tos=list(Occurrence.objects.filter(training=training))
 
         if training.con.sched_visible:
             visible=True
@@ -148,7 +154,7 @@ def view_training(request, activity_id):
         else:
             occurrences=[]
 
-        return render_to_response('view_training.html',{'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+        return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))
 
@@ -186,6 +192,7 @@ def trainings_home(request,con_id=None,):
 def register_training(request, activity_id):
     #to do:
     #if volunteer, check time before allowing register. Right now only checks editable by
+    #this needs to be changed completely, as i change trianing/registered structure
     user=request.user
     add_fail=None
     skater_added=None

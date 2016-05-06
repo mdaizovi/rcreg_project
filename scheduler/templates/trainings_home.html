@@ -61,15 +61,14 @@
             <div class="col-md-12 pull-left">
 
 
-
 <div class="list-group">
   <h3><a href="#" class="list-group-item active">
     Scheduled Trainings: {{ key|date:"l M d Y" }}
   </a></h3>
 
 
-{%for  o in value %}
-  <a href="{{o.activity.get_view_url}}" class="list-group-item">
+{%for o in value %}
+  <a href="{% url 'view_training' o.training.pk o.pk %}" class="list-group-item">
   <h4 class="list-group-item-heading">{{o.name}}<small> {{ o.training.display_coach_names }}</small></h4>
   <p class="list-group-item-text">
     <table class="table-condensed" style="margin: 0px 0px -15px 0px; width:100%;"><tr>

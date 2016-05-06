@@ -349,7 +349,7 @@ class TInterestForm(ModelForm):
     form is meant t help w/ scheduling"""
     class Meta:
         model = Training
-        fields = ['interest','location_type','sessions']
+        fields = ['interest','location_type','duration','sessions']
         labels = {
             'interest': _('Interest Level'),
         }
