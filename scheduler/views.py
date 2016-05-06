@@ -189,7 +189,8 @@ def trainings_home(request,con_id=None,):
 
 
 @login_required
-def register_training(request, activity_id):
+#def register_training(request, activity_id,o_id=None):
+def register_training(request,o_id):
     #to do:
     #if volunteer, check time before allowing register. Right now only checks editable by
     #this needs to be changed completely, as i change trianing/registered structure
@@ -199,9 +200,12 @@ def register_training(request, activity_id):
     remove_fail=None
     skater_remove=None
     roster=None
+    occur=None
     try:
-        training=Training.objects.get(pk=int(activity_id))
+        occur=Occurrence.objects.get(pk=int(o_id))
+        training=occur.training
         auditing, created=Roster.objects.get_or_create(con=training.con, auditing=training)
+        Tos=list(Occurrence.objects.filter(training=training))
     except ObjectDoesNotExist:
         return render_to_response('register_training.html',{},context_instance=RequestContext(request))
 
@@ -287,7 +291,7 @@ def register_training(request, activity_id):
         register_forms=[]
         audit_forms=[]
 
-    return render_to_response('register_training.html', {'roster':roster,'skater_remove':skater_remove,'remove_fail':remove_fail,'skater_added':skater_added,'add_fail':add_fail,'audit_forms':audit_forms,'register_forms':register_forms,'training':training,'user':user},context_instance=RequestContext(request))
+    return render_to_response('register_training.html', {'occur':occur,'roster':roster,'skater_remove':skater_remove,'remove_fail':remove_fail,'skater_added':skater_added,'add_fail':add_fail,'audit_forms':audit_forms,'register_forms':register_forms,'training':training,'user':user},context_instance=RequestContext(request))
 
 
 @login_required

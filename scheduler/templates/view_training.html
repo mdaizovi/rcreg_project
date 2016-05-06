@@ -37,7 +37,7 @@
     <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
       <li><a href="{% url 'view_training' training.pk o.pk %}">See Session Roster</a></li>
       {% if user in training.registered.editable_by %}
-      {% url 'register_training' training.pk as register_url%}
+      {% url 'register_training' o.pk as register_url%}
       <li role="separator" class="divider"></li>
       <li role="presentation"><a href="{{register_url}}">Register MVPs</a></li>
       {%endif%}
