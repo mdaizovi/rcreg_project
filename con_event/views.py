@@ -2,11 +2,28 @@ from django.shortcuts import render,render_to_response, redirect
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
-from con_event.forms import RegistrantProfileForm,AvailabilityForm
+from con_event.forms import RegistrantProfileForm,AvailabilityForm,BPTUploadForm
 from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
 from swingtime.models import Occurrence
+
+
+def upload_reg(request):
+    save_attempt=False
+    save_success=False
+    reg_added=[]
+    form=BPTUploadForm(request.POST or None)
+    if request.method == 'POST':
+        print request.POST
+        save_attempt=True
+        #save_success=True
+
+
+
+
+
+    return render_to_response('upload_reg.html', {'save_attempt':save_attempt,'save_success':save_success,'reg_added':reg_added,'form':form},context_instance=RequestContext(request))
 
 
 def CheapAirDynamic(request):

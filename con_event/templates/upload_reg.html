@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}Upload Registrants{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Upload Registrants*<br>
+      <small>*Excel file must be identical to 2016 BPT format</small></h3>
+
+{%if save_attempt%}
+{%if save_success%}<div class="alert alert-success" role="alert">{{reg_added|length}} Registrants Successfully Updated!
+{%else%}<div class="alert alert-danger" role="alert">Error uploading registrants
+{%endif%}</div>{%endif%}
+
+
+
+      <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="submit" />
+</form>
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+ <!--I don't think I need this script-->
+<!--<script src="{% static "js/offcanvas.js" %}" ></script> -->
+{% endblock %}

@@ -156,3 +156,14 @@ class AvailabilityForm(forms.Form):
         #self.fields['date'].widget.attrs['readonly'] = True
         self.fields['am'].required = False
         self.fields['pm'].required = False
+
+class BPTUploadForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(BPTUploadForm, self).__init__(*args, **kwargs)
+
+        self.fields["xlfile"] = forms.FileField(label='Select File to Upload')
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                #'class': 'form-control',
+                })
