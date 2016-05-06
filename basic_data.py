@@ -276,18 +276,6 @@ def email_dupes(xlfile):
         except:
             print "error with ",od
 
-            #thought i had error, don't think this is necessary
-    # for od in all_data:
-    #     email2=od.get("AB")
-    #     if not email2:
-    #         email2=od.get("Q")
-    #     email_list.append(email2)
-    #     if len(email)>=30:
-    #         print "long email ",email
-    #         long_emails.append(od)
-
-
-
     for od in all_data:
         email2=od.get("AB")
         if int(email_list.count(email2))>1:

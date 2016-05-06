@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 import string
 import re
+from openpyxl import Workbook
 
 class SearchForm(forms.Form):
     def __init__(self, *args, **kwargs):
@@ -160,10 +161,40 @@ class AvailabilityForm(forms.Form):
 class BPTUploadForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(BPTUploadForm, self).__init__(*args, **kwargs)
+        CONS=[]
+        for con in Con.objects.all():
+            CONS.append((con.pk,con))
 
+        self.fields["con"]=forms.CharField(widget=forms.Select(choices=CONS), label='Select Con', required=True, initial=Con.objects.most_upcoming().pk)
         self.fields["xlfile"] = forms.FileField(label='Select File to Upload')
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                #'class': 'form-control',
+                'class': 'form-control',
                 })
+
+    def make_registrants(self):
+        print "I'm making registrants!"
+        #http://www.dangtrinh.com/2016/01/generate-excel-file-with-openpyxl-in.html
+        excel_data1 = [['header1', 'header2', 'header3', 'header4', 'header5'],[1,4,5,6,7],[5,6,2,4,8]]
+        excel_data2 = [['header1', 'header2', 'header3', 'header4', 'header5'],[9,10,11,12,13],[14,15,16,17,18]]
+
+        if excel_data1 and excel_data2:
+            wb = Workbook(write_only=True)
+            ws1 = wb.create_sheet()
+            ws1.title = "Registrants Made"
+            ws2 = wb.create_sheet()
+            ws2.title = "Errors"
+            ws3 = wb.create_sheet()
+            ws3.title = "Email Dupes"
+            
+            for line in excel_data1:
+                ws1.append(line)
+            for line in excel_data2:
+                ws2.append(line)
+            for line in excel_data2:
+                ws3.append(line)
+
+            return wb
+        else:
+            return None

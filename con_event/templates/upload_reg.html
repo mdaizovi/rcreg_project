@@ -7,29 +7,34 @@
 <head>
 <title>{% block title %}Upload Registrants{% endblock %}</title>
 </head>
-
+{% if user.is_the_boss %}
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
     <h3>Upload Registrants*<br>
       <small>*Excel file must be identical to 2016 BPT format</small></h3>
 
+<div class="alert alert-danger" role="alert">Hey Guys this doesn't work yet don't bother trying to use it.</div>
+
+
 {%if save_attempt%}
 {%if save_success%}<div class="alert alert-success" role="alert">{{reg_added|length}} Registrants Successfully Updated!
 {%else%}<div class="alert alert-danger" role="alert">Error uploading registrants
 {%endif%}</div>{%endif%}
 
-
-
+  <div class="col-sm-4">
       <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="submit" />
 </form>
-
+  </div><!-- end col-sm-4 -->
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
 
+{%else%}
+{% include "no_permission.html" %}
+{%endif%}<!-- if is a boss-->
 
  <!--I don't think I need this script-->
 <!--<script src="{% static "js/offcanvas.js" %}" ></script> -->
