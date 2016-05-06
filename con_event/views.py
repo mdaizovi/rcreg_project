@@ -3,7 +3,8 @@ from django.http import HttpResponse
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
-from con_event.forms import RegistrantProfileForm,AvailabilityForm,BPTUploadForm
+from con_event.forms import RegistrantProfileForm,AvailabilityForm
+from con_event.BPTExcel import BPTUploadForm
 from con_event.models import Blog, Con, Registrant,Blackout
 import collections
 import datetime
@@ -17,11 +18,11 @@ def upload_reg(request):
     reg_added=[]
     if request.method == 'POST':
         form=BPTUploadForm(request.POST, request.FILES)
-        print request.POST
+        #print request.POST
         save_attempt=True
-        if form.is_valid():
-            try:
-            #if 2==2:
+        if form.my_valid():
+            if form.is_valid():
+                #don't touch the my valid/is valid, it has to be that way
                 wb=form.make_registrants()
                 save_success=True
                 filename='RollerTron Upload %s.xlsx'%(datetime.date.today().strftime("%B %d %Y"))
@@ -29,10 +30,8 @@ def upload_reg(request):
                 response['Content-Disposition'] = 'attachment; filename=%s'%(filename)
                 wb.save(response)
                 return response
-            except:
-                save_success=False
         else:
-            form=BPTUploadForm(request.POST or None)
+            form=BPTUploadForm(request.POST)
     else:
         form=BPTUploadForm()
 

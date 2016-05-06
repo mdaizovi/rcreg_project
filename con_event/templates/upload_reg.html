@@ -16,7 +16,6 @@
 
 <div class="alert alert-danger" role="alert">Hey Guys this doesn't work yet don't bother trying to use it.</div>
 
-
 {%if save_attempt%}
 {%if save_success%}<div class="alert alert-success" role="alert">{{reg_added|length}} Registrants Successfully Updated!
 {%else%}<div class="alert alert-danger" role="alert">Error uploading registrants
@@ -25,8 +24,16 @@
   <div class="col-sm-4">
       <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="submit" />
+
+    {%for field in form %}
+      <p class="margin-top-10">{{ field.label_tag }}<br>
+    {%if field.errors%}<ul>{%for e in field.errors%}<li><b>{{ e }}</b></li>{%endfor%}</ul>{%endif%}
+    {{ form.non_field_errors }}
+    {{ field }}</p>
+    {%endfor%}
+
+
+    <input type="submit" class="margin-top-15" value="submit" />
 </form>
   </div><!-- end col-sm-4 -->
   </div><!-- end col-sm-12 -->
