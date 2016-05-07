@@ -39,11 +39,11 @@ class BPTUploadForm(forms.Form):
         wb = openpyxl.load_workbook(header_file)
         sheet = wb.get_active_sheet()
         header=collections.OrderedDict()
-        for row in range(1, sheet.get_highest_row() + 1):
-            for  c in data_columns:#global vairable, look at top of file
-                location=c+str(row)
-                data=sheet[location].value
-                header[c]=data
+        for  c in data_columns:#global vairable, look at top of file
+            location=c+"1"
+            data=str(sheet[location].value).strip().capitalize()
+            #print "data",data
+            header[c]=data
         return header
 
     def my_valid(self):
@@ -52,11 +52,14 @@ class BPTUploadForm(forms.Form):
         if self.is_valid():
             data = self.cleaned_data
             xlfile = data['xlfile']
+            base_header=self.get_header(base_header_file)
+            this_header=self.get_header(xlfile)
+
             try:
                 if xlfile and xlfile.content_type and xlfile.content_type not in IMPORT_FILE_TYPES:
                     print"not excel"
                     self._errors["xlfile"] = self.error_class(['Please provide an Excel sheet'])
-                elif xlfile and self.get_header(base_header_file) != self.get_header(xlfile):
+                elif xlfile and base_header != this_header:
                     print"doesn't match"
                     self._errors["xlfile"] = self.error_class(['The format of the uploaded file, including the Header, must be idential to 2016 BPT reports'])
                 elif not xlfile:
@@ -72,15 +75,10 @@ class BPTUploadForm(forms.Form):
 
     def make_excel_odict_list(self,xlfile):
         """Takes in excel file of BPT registrant data, turns each row into an ordered dict, returns list of all ordered dicts"""
-        if xlfile and isinstance(xlfile , basestring):
-            #if a string of file name is entered
-            wb = openpyxl.load_workbook(xlfile)
-        else:
-            # if a wb object is entered
-            wb = xlfile
-
-        sheet = wb.get_active_sheet()
-        #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
+        print "starting make excel odic list"
+        wb = openpyxl.load_workbook(xlfile)
+        #sheet = wb.get_active_sheet()
+        sheet =wb.active
         all_data=[]
         highest_row=sheet.get_highest_row()
         for row in range(2, sheet.get_highest_row() + 1):
@@ -117,7 +115,7 @@ class BPTUploadForm(forms.Form):
 
         return no_sk8_or_real_name,bad_emails,complete_entries
 
-    def import_from_od(complete_entries,con):
+    def import_from_od(self,complete_entries,con):
         """This assumes that I've already checked for duplicate emails and lack of name, sk8name.
         This is data that could be ready for import via Django import/export, but I think this will be faster.
         This is coming from BPT format, not mine"""
@@ -227,16 +225,23 @@ class BPTUploadForm(forms.Form):
 
         return success_list, error_list,repeat_email_list
 
-    def make_registrants(self,con):
+    def make_registrants(self):
         print "I'm making registrants!"
         #http://www.dangtrinh.com/2016/01/generate-excel-file-with-openpyxl-in.html
 
+        cdata=self.cleaned_data
+        print "cdata",cdata
+        con=Con.objects.get(pk=int(cdata['con']))
+        xlfile = cdata['xlfile']
+
         #sort through the data
         header=self.get_header(base_header_file)
+        print "header",header
         all_data=self.make_excel_odict_list(xlfile)
+        print "got all data"
         no_sk8_or_real_name,bad_emails,complete_entries=self.find_incompletes(all_data)
 
-        reg_made, errors_list, email_dupe=import_from_od(complete_entries,con)
+        reg_made, errors_list, email_dupe=self.import_from_od(complete_entries,con)
 
         bad_emails+=email_dupe
         data_dict=collections.OrderedDict()
@@ -264,11 +269,10 @@ class BPTUploadForm(forms.Form):
                     sheet[location].value = v
 ########this might be a huge fucking mess. try it out.##########
                 for od in dv:
+                    r+=1
                     for k,v in od.iteritems():
-                        r+=1
                         location=str(k)+str(r)
                         sheet[location].value = v
-
             return wb
     # except:
     #     return None
