@@ -49,23 +49,24 @@ class BPTUploadForm(forms.Form):
     def my_valid(self):
         """Don't touch this it has to be this way to return any of all erorr messages w/out just losing the file and thinking that's the problem"""
         IMPORT_FILE_TYPES=[".xls",".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-excel"]
+        print"starting my valid"
         if self.is_valid():
             data = self.cleaned_data
             xlfile = data['xlfile']
-            base_header=self.get_header(base_header_file)
-            this_header=self.get_header(xlfile)
+            print"is valid"
 
             try:
                 if xlfile and xlfile.content_type and xlfile.content_type not in IMPORT_FILE_TYPES:
                     print"not excel"
                     self._errors["xlfile"] = self.error_class(['Please provide an Excel sheet'])
-                elif xlfile and base_header != this_header:
+                elif xlfile and self.get_header(base_header_file) != self.get_header(xlfile):
                     print"doesn't match"
-                    self._errors["xlfile"] = self.error_class(['The format of the uploaded file, including the Header, must be idential to 2016 BPT reports'])
+                    self._errors["xlfile"] = self.error_class(['The format of the uploaded file, including the Header, must be identical to 2016 BPT reports'])
                 elif not xlfile:
                     print"nofile"
                     self._errors["xlfile"] = self.error_class(['Field Cannot be blank. Please provide an Excel sheet.'])
             except:
+                print"excepting in my valid"
                 self._errors["xlfile"] = self.error_class(["Unspecified error. Please try another file."])
             return data
 

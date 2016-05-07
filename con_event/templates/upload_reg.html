@@ -16,10 +16,7 @@
 
 <div class="alert alert-danger" role="alert">This may or may not work, I want to try it for real before telling you guys to do it.</div>
 
-{%if save_attempt%}
-{%if save_success%}<div class="alert alert-success" role="alert">{{reg_added|length}} Registrants Successfully Updated!
-{%else%}<div class="alert alert-danger" role="alert">Error uploading registrants
-{%endif%}</div>{%endif%}
+{%if save_attempt and not save_success%}<div class="alert alert-danger" role="alert">Error uploading registrants</div>{%endif%}
 
   <div class="col-sm-4">
       <form method="post" enctype="multipart/form-data">
@@ -35,7 +32,21 @@
 
     <input type="submit" class="margin-top-15" value="submit" />
 </form>
-  </div><!-- end col-sm-4 -->
+  </div><!-- end col-sm-6 -->
+
+  <div class="col-sm-8">
+    <div class="well well-sm">
+      <h4>Directions</h4>
+<p>Please choose your <b>XLSX</b> data file to upload. Must be xlsx, xls won't work.
+  <br>If it is successful, this page will not change, but a report entitled "RollerTron Upload [today's date]" will be in your Downloads folder.
+  <br>It will include 4 sheets:<ul><li>Registrants Made</li><li>Errors</li><li>Email Dupes</li><li>Incomplete Data</li></ul>
+  <br>Please check all 4 sheets to make sure everyone got uploaded, and fix errors for anyone put in anywhere other than "Registrants Made".
+  <br>If you are uploading hundreds or thousands of Registrants, this might take up to a minute or two. Please be patient and do not close or stop this page,
+  or you will have no report of which people got added to the DB and which did not.</p>
+</div>
+</div>
+
+
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
 

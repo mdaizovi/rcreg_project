@@ -21,11 +21,11 @@ def upload_reg(request):
         #print request.POST
         save_attempt=True
         if form.my_valid():
+            print"view my valid"
             if form.is_valid():
                 #don't touch the my valid/is valid, it has to be that way
-
+                print"view is valid"
                 wb=form.make_registrants()
-
                 save_success=True
                 filename='RollerTron Upload %s.xlsx'%(datetime.date.today().strftime("%B %d %Y"))
                 response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
