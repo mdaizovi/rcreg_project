@@ -399,7 +399,15 @@ class Registrant(Matching_Criteria):
 
 
     def __unicode__(self):
-       return "%s %s %s" % (self.sk8name, self.sk8number, self.con)
+        if self.sk8name and self.sk8number:
+            return "%s %s %s" % (self.sk8name, self.sk8number, self.con)
+        elif self.sk8name:
+            return "%s %s" % (self.sk8name, self.con)
+        elif self.first_name and self.last_name:
+            return "%s %s %s" % (self.first_name, self.last_name, self.con)
+        else:
+            return "Incomplete Name record: %s" % (self.con)
+
 
     def is_intl(self,con):
         '''Returns True if  is considered INTL for supplied Con. Else, False'''

@@ -11,7 +11,7 @@
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
-    <h3>My Trainings</h3>
+    <h3>My Trainings, Off-Skates Athletics, & Seminars</h3>
 
     {%if not registrant_dict_list%}
     <div class="alert alert-danger" role="alert">
@@ -50,7 +50,7 @@
 
 {%if dict.my_trains %}
       <table class="table table-hover">
-      <tr><th>Training</th><th>Status</th><th class="text-left" colspan="2">Actions</th></tr>
+      <tr><th>Training/Off-Skates Athletics/Seminar</th><th>Status</th><th class="text-left" colspan="2">Actions</th></tr>
 {%for item in dict.my_trains %}
 <tr><td>{{item.name}}</td>
   <td style="vertical-align: middle;"><b>{%if item.scheduled%}Scheduled:</b><ul>{%for o in item.scheduled%}<li>

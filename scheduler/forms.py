@@ -92,7 +92,7 @@ class TrainingModelForm(ModelForm):
         #fields = fieldlist=['name','con','location_type','onsk8s','contact','description']
         fields =['name','con','location_type','onsk8s','contact','sessions','description','communication']
         labels = {
-            'name': _('Training Name'),
+            'name': _('Name'),
             'description': _('Description'),
         }
 

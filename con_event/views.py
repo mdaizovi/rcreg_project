@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
+#print "dbc0:", len(dbconnection.queries)
 from con_event.forms import RegistrantProfileForm,AvailabilityForm
 from con_event.BPTExcel import BPTUploadForm
 from con_event.models import Blog, Con, Registrant,Blackout

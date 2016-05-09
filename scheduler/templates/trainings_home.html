@@ -11,7 +11,7 @@
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
-    <h3>Scheduled Trainings: {{con}} <small> Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
+    <h3>Scheduled Trainings, Off-Skates Athletics, & Seminars: {{con}} <small> Schedule {%if con.schedule_final%}final{%else%}tentative{%endif%}</small></h3>
 
   <table class="table condensed" style="margin: 0px 0px 0px 0px; width:50%;">
   <tr><td style="border:none; text-align: left;">
@@ -62,9 +62,7 @@
 
 
 <div class="list-group">
-  <h3><a href="#" class="list-group-item active">
-    Scheduled Trainings: {{ key|date:"l M d Y" }}
-  </a></h3>
+  <h3><a href="#" class="list-group-item active">{{ key|date:"l M d Y" }}</a></h3>
 
 
 {%for o in value %}

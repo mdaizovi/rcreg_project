@@ -24,11 +24,13 @@
 <ul>
 <li><a href="#whocansee">Who can see this page?</a></li>
 <li><a href="#whatedit">What can I edit and what should I never touch?</a></li>
+<li><a href="#exportexcel">How do I download excel sheets of DB data? What's with the Import and Export buttons on the Admin?</a></li>
 <li><a href="#HowIaddChal">Is there a way for me to enter Challenges or Rosters without the hassle of captains and accepting and stuff?</a></li>
 <li><a href="#howchangeemail">How do I change someone's email address?</a></li>
 <li><a href="#howchangename">What do I need to know about changing someone's name?</a></li>
 <li><a href="#howINTL">How do I make a Registrant INTL?</a></li>
 <li><a href="#hownewattendee">How do I input new Registrants (Attendees)?</a></li>
+<li><a href="#futurebreak">Is there anything about RollerTron that you expect to break in the future?</a></li>
 <li><a href="#howcontactyou">I'm still confused. How can I contact you?</a></li>
 </ul>
 <h3>&nbsp;</h3>
@@ -55,17 +57,31 @@ It would be possible to manually connect registrants with different email addres
 </p>
 <p>&nbsp;</p>
 
+<span class="anchor" id="exportexcel"></span>
+<p><b>How do I download excel sheets of DB data? What's with the Import and Export buttons on the Admin?</b></p>
+<ul>
+<li>Go to the Admin section of the thing you'd like a report of, for example <a href="/admin/scheduler/challenge/">Challenges</a>.</li>
+<li>Ignore the grey <b>Import</b> button; I wish I could make them go away but I can't include the Export function without them.</li>
+<li>Click the grey <b>Export</b> button.
+  <li>On the next page, choose a format from the dropdown and click Submit (right side, blue button).<b> XLSX</b> is the best. XLS doesn't always work and CSV might just give you 1 column separated by commas.</li>
+  <li>A file with the name of the thing you exported, plus the date (ex: Challenge-2016-05-09), will get downloaded to your My Downloads folder. That's it!</li></ul>
+<p>&nbsp;</p>
+
+
 <span class="anchor" id="HowIaddChal"></span>
 <p><b>Is there a way for me to enter Challenges or Rosters without the hassle of captains and accepting and stuff?</b>
 <p>Yes.
-  <ol><li>Assuming the target captains already exist as a Registrants, <a href="/admin/scheduler/roster/">make the Rosters in the Admin</a> (little grey "add roster +" oval in the right hand corner), and choose that Registrants as Captains.
+  <ol><li>Make sure the target captains already exist as a Registrants, or <a href="/admin/con_event/registrant/">make the Registrants in the Admin</a>.
     <br><b>IMPORTANT:</b> Make sure you are choosing the Registrant for the right year. As you know, many captains come every year and weird things could happen if Dahmer 2015 is captaining a 2016 team.</li>
-    <li><a href="/admin/scheduler/challenge/">Make a Challenge in the Admin</a> (little grey "add challenge +" oval in the right hand corner),
-      selecting the two teams you just made. Or one new team you just made and one existing team they made, whatever.</li>
+    <li><a href="/admin/scheduler/challenge/">Make a Challenge in the Admin</a> (little grey "add challenge +" oval in the right hand corner).</li>
+      <li>Where it says <b>Roster1</b> and <b>Roster2</b>, click on the little green + sign to make a new roster. Do this even if you're making a new Challenge for an existing team, because DB-wise, every new Challenge gets a Roster (that way they can have different skaters, wear different colors, etc, per challenge)
     <li>Check both acceptance boxes (<b>Captain1accepted</b> and <b>Captain2accepted</b>)</li>
-    <li>You don't need to touch <b>Created on</b>, that is automaticaly generated the first time it's saved,
+    <li>You don't need to touch <b>Created on</b>, that is automatically generated the first time it's saved,
       but you do need to give it a <b>Submitted on</b> time and date in order for it to count as submitted. Just click Now and Today, and then edit later if you want it to be set at a different time/date. That way you know the time/date will be in the right format.</li>
-        <li>Save. The next time the users log in to RollerTron they'll see the same thing everyone else sees when they've completed the whole acceptance/submission process.</li></ol>
+      <li>Choose a <b>Gametype</b>. If you choose "30 or 60 minute Challenge" RollerTron's scheduling arm will assume you want it to be 30 minutes long. If you know you want it to be 60 minutes long, choose "60 minute Challenge." If you choose 60 minute Regulation/Sanctioned game, the captain won't be subjec tot the same maximum roster limit as funzies challengea are.</li>
+        <li>Save. The next time the captains log in to RollerTron they'll see the same thing everyone else sees when they've completed the whole acceptance/submission process.</li>
+      <li><i><b>TIP: </b>You can also do this as to make placeholder-challenges, if you want to scheudle but aren't sure who the team is going to be. Just make a Challenge with yourself or some other trusted RC staff as captains,
+        and when you know the correct captian/color/name data, <a href="/admin/scheduler/roster/">edit the Rosters you made through the Admin</a>.</i></li></ol>
   <p>&nbsp;</p>
 
 
@@ -104,34 +120,22 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
 
 <span class="anchor" id="hownewattendee"></span>
 <p><b>How do I input new Registrants (Attendees)?</b></p>
-<p>You can input new attendees through the Admin. On the top right of the screen, under the blue bar you should see two little grey buttons: <b>Import</b>, and <b>Add registrant</b>.<br>
-  Use <b>Add registrant</b> if you just want to manually add a person or two. Please note that You have to input email, first_name, and last_name. Sk8name and Sk8number are optional,
-  but if they do have a sk8number please enter it because that becomes their User display name forever. If they don't have one, like if they are a vendor, their first name will be the display name.<br>
-  If you need to add a lot of people, use <b>Import</b>. You don't need to massage the data-- as long as it always looks like it did in 2016 it will translate how BPT says it how I want it-- but you need to make
-  the excel sheet present the date <i>in the order</i> the computer expects it to be in.<br>
-  To get an example of what it wants, export some existing registrants, because the order/format is the same for import and export.<br>
-  Depending on what we decide re: ease of accidentally deleting everyone :-) the import button will either be by the import/add registrant buttons, or on the left from an Action dropdown, in the same place you can delete registrants.<br>
-  Either way, export the registrant and it'll show you the order it wants. I tried to make it mirror the BPT reports as closely as possible.<br>
-  <b>To format the BPT Excel sheet:</b><br>
-  <ol><li>Take your BPT report, delete the first few rows down to and including "Will Call Tickets" so row 1 is the columns names, row 2 starts the data.</li>
-    <li>Insert a column so that Column A is blank and Column B is the BPT Ticket ID.</li>
-    <li>Delete Columns C-M (order date/event start date/event end date/attendee l name/attendee f name/etc) but keep Shipping State.</li>
-      <li>Keep Shipping State and Shipping County, I use those for INTL. Delete Shipping Zip, Phone, Email, Card Number, Barcode, Box Office User, Order Notes.</li>
-      <li>Keep Admission Level. Delete Price, Admitted, Question 1, Question 6, Question 16.</li>
-      <li>So now your order should be:blank column, BPT Ticket ID, State, Country, Admission Level, Last Name, First Name, email, skate name, skate number,
-        skill, gender, league affiliation, insurance carrier, insurance number, age group, willing to volunteer, favorite part.</li>
-        <li>Last step: columns S,T,U, and V. Leave S blank, but then for T,U, and V use the example of the exported Registrants.
-          T is the primary key of the Con this person is registering for, probably 2 for 2016 or 3 for 2017. Just copy and paste the values for con, con__city and con__year (example, "Las Vegas", "2016").</li>
-          <li>Copy and paste the header (row 1) from the exported Registrant file, so that it's my header and not the BPT header on the excel sheet.</li>
-          <li>Save file as an XLS somewhere. (XLSX doesn't work right, I don't know why it's an option)</li>
-          <li>Go back to Admin on site, click <b>Import</b>, choose XLS (XLSX doesn't work right), and import. It'll show you what it's about to import before importing.</li>
-          <li>Either be stoked you just imported 1,000 records in a few minutes, or, if there's a problem, take a screenshot and call me.</li></ol>
-            <p>&nbsp;</p>
+<p>If you're the Khaleesi you can <a href="{% url 'upload_reg' %}">import the BPT report</a> as is.
+  Please note that this importer is written based on exactly how the BPT reports looked in 2016, so if that ever changes you need to move the columns around, use the same header, and format the data so that it looks just like it did in 2016.</p>
+<p>Otherwise, you can <a href="/admin/con_event/registrant/">add new Registrants through the Admin</a>. On the top right of the screen, under the blue bar you should see a little grey <b>Add registrant</b> button.<br>Please note that you have to input email, first_name, and last_name. Sk8name and Sk8number are optional,
+  but if they do have a sk8number please enter it because that becomes their User display name forever. If they don't have one, like if they are a vendor, their first name will be the display name.</p>
+<p>&nbsp;</p>
+
+<span class="anchor" id="futurebreak"></span>
+<p><b>Is there anything about RollerTron that you expect to break in the future?</b></p>
+<p>RollerTron was built with the expectation that it will be used for many years, and it can even handle more than 1 upcoming Con, or Cons in different locaitons, like one in Colombia in November to shortly follow the usual July in Vegas.<br>
+HOWEVER the time zone is hard-coded to Las Vegas time. RollerTron will need to have some parts rewritten in the future by someone who knows what they're doing if you have a Con in a different time zone.</p>
+<p>&nbsp;</p>
 
 <span class="anchor" id="howcontactyou"></span>
 <p><b>I'm still confused. How can I contact you?</b></p>
-<p>You can either email<a href="mailto:rcregsite@gmail.com"> the Secret, REAL RCregsite email </a> or <a href="mailto:mdaizovi@gmail.com"> my personal email address.</a>
-<br>My Google Voice number will probably never change and that's <a href="tel://1-262-477-9684"> 262-477-9684</a>.
+<p>You can either email<a href="mailto:rcregsite@gmail.com"> the Secret, REAL RCregsite email</a>, but I don't check it that often. Better to use <a href="mailto:mdaizovi@gmail.com"> my personal email address.</a>
+<br>My Google Voice number will probably never change and that's <a href="tel://1-262-477-9684"> 262-477-9684 (262 4ss zovi, like my name with ass in it)</a>.
 </p>
 <p>&nbsp;</p>
 

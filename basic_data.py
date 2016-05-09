@@ -1,8 +1,8 @@
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
 from con_event.models import Country, State, Con, Registrant, Blog
 from django.contrib.auth.models import Group, User
+#from swingtime.models import Occurrence,TrainingRoster
 from swingtime.models import Occurrence
-#from swingtime.models import Occurrence
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 import csv
@@ -19,6 +19,58 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+
+
+#reg,aud,reg_and_aud,chal,both,neither,rall=rosterswap()
+def rostercheck():
+    reg=[]
+    aud=[]
+    reg_and_aud=[]
+    chal=[]
+
+    both=[]
+    neither=[]
+    rall=[]
+
+    for r in Roster.objects.all():
+        if r.registered and r.auditing and (r.challenge_set.all()>=1):
+            rall.append(r)
+        elif not r.registered and not r.auditing and (r.challenge_set.all()<1):
+            neither.append(r)
+        elif (r.registered or r.auditing) and (r.challenge_set.all()>=1):
+            both.append(r)
+        elif not (r.registered or r.auditing) and (r.challenge_set.all()>=1):
+            chal.append(r)
+        elif r.registered and r.auditing:
+            reg_and_aud.append(r)
+        elif not r.registered and r.auditing:
+            reg.append(r)
+        elif r.registered and not r.auditing:
+            aud.append(r)
+
+    print "reg: ",len(reg)
+    print "aud: ",len(aud)
+    print "reg_and_aud: ",len(reg_and_aud)
+    print "chal: ",len(chal)
+    print "both: ",len(both)
+    print "neither: ",len(neither)
+    print "rall: ",len(rall)
+
+    return reg,aud,reg_and_aud,chal,both,neither,rall
+
+def getskill():
+    success=[]
+    errors=[]
+    for t in Training.objects.all():
+        try:
+            t.skill=t.registered.skill
+            print "%s skill is %s"%(t, t.registered.skill)
+            #t.save()
+            success.append(t)
+        except:
+            print "error w/ training %s"%(str(t.pk))
+            errors.append(t)
+    return success, errors 
 
 
 def get_gametypes():

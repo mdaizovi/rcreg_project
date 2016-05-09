@@ -1,7 +1,7 @@
 from django.contrib import admin
 from con_event.models import Con,Registrant,Blackout, Country, State, State,Blog,SKILL_LEVEL, SKILL_LEVEL_SK8R
 from import_export import resources
-from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
+from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin,ExportMixin
 from django.contrib.auth.models import User
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models import Q
@@ -63,11 +63,13 @@ class BlackoutResource(resources.ModelResource):
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         #I'm not sure how this works
-        import_id_fields = ('registrant')
+        #import_id_fields = ('registrant')
         skip_unchanged = True
         report_skipped = True
 
 class BlackoutAdmin(ImportExportModelAdmin):
+#class BlackoutAdmin(ExportMixin): #don't do this it doesn't work
+
     list_display = ('registrant','date','ampm')
     fields = ('registrant','date','ampm')
 
