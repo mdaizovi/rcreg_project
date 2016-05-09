@@ -64,7 +64,7 @@
 <td>{{od.check_form.act}}</td>
   <td>
     <a href="{{od.act.get_view_url}}">{{od.act.name}}</a></td>
-    <td style="max-width:125px;">{{ od.act.get_activity_type }}</td>
+    <td style="max-width:125px;">{{ od.act.get_activity_type }}{%if od.act.is_a_challenge %}, {{od.act.skill_display}}, {{od.act.gender_display}}{%endif%}</td>
       <td style="max-width:75px;text-align: center;">{%if od.act.interest %}{{ od.act.interest }}{%else%}?{%endif%}</td>
   <td style="text-align: center; max-width:75px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>
 </tr>
@@ -90,9 +90,9 @@
 {%if level1pairs%}
 <h4 class="margin-top-10">Suggested Matches</h4>
 <table class="table table-striped">
-  <tr><th>Activity</th><th>Occurrence</th><th>Location</th><th>Match Level</th><th style="text-align: center;">Save?</th></tr>
+  <tr><th>Activity</th><th>type</th><th>Occurrence</th><th>Location</th><th>Match Level</th><th style="text-align: center;">Save?</th></tr>
 {%for tup,form in  level1pairs.iteritems%}
-<tr><td>{{tup.0.name}}</td>
+<tr><td>{{tup.0.name}}</td><td>{{ tup.0.get_activity_type }}{%if tup.0.is_a_challenge %}, {{tup.0.skill_display}}, {{tup.0.gender_display}}{%endif%}</td>
 <td>{{ tup.1.start_time|date:"D d" }} : {{ tup.1.start_time|date:"f a" }} - {{ tup.1.end_time|date:"f a" }}</td>
 <td>{%if tup.1.location.abbrv%}{{ tup.1.location.abbrv}}{%else%}{{ tup.1.location}}{%endif%}</td>
 <td>{{tup.2}}</td>
