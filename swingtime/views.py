@@ -35,6 +35,7 @@ from django_tables2  import RequestConfig
 
 if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
+no_list=["",u'',None,"None"]
 
 
 #-------------------------------------------------------------------------------
@@ -188,7 +189,7 @@ def train_submit(
     q_od  = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
             "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
         form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
@@ -234,7 +235,7 @@ def train_accept(
     q_od = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
             "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
         form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
@@ -281,7 +282,7 @@ def train_reject(
     q_od = collections.OrderedDict()
     data=[]
     for c in q:
-        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.registered.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
+        thisdict={"name":c,"coach":c.display_coach_names(),"skill":c.skill_display(),"onsk8s":c.onsk8s,"contact":c.contact,
             "location_type":c.location_type,"duration":c.get_duration_display(),"created_on":c.created_on}
         form=TrainStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"]=form
@@ -768,7 +769,6 @@ def occurrence_view(
     occurrence = get_object_or_404(Occurrence, pk=pk)
     conflict_free=False
     conflict={}
-    no_list=["",u'',None,"None"]
     get_dict={}
     if "training" in request.GET and request.GET['training'] not in no_list:
         training=Training.objects.get(pk=request.GET['training'])
@@ -846,7 +846,6 @@ def add_event(
     location=None
     conflict={}
     conflict_free=False
-    no_list=["",u'',None,"None"]
     recurrence_dict={}
     get_dict={}
     #########fetch all get values as intials##########

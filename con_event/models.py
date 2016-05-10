@@ -257,12 +257,14 @@ class Matching_Criteria(models.Model):
 
     def skills_allowed(self):
         #this is only necessary for rosters, not registrants, but moved it here anyway.
+        print "running skills_allowed, ",self
         if self.skill:
             allowed=list(self.skill)
             if "O" in allowed:
                 allowed.remove("O")
         else:
             allowed=["A","B","C","D"]
+        print "allowed ",allowed
         return allowed
 
     def skill_display(self):
@@ -355,18 +357,28 @@ class RegistrantManager(models.Manager):
     def eligible_sk8ers(self, roster):
         '''roster relates to training or challenge roster, this returns list of eligible registrants
         only checks gender, intll, skill and con.'''
-        already_registered=list(roster.participants.all())
+        already_registered=list(roster.participants.all())#this works regardless of Roste or TrainingRoster
         from scheduler.models import Challenge
         #this challenge doesn't matter if is training, will just turn up empty
-        challenge_set=list(Challenge.objects.filter(Q(roster1=roster)|Q(roster2=roster)))
-        opposing_skaters=[]
-        for c in challenge_set:
-            for r in [c.roster1, c.roster2]:
-                if r and r != roster and r.participants:
-                    for skater in r.participants.all():
-                        opposing_skaters.append(skater)
-        already_registered+=opposing_skaters
-        eligibles=Registrant.objects.filter(pass_type__in=roster.passes_allowed(),con=roster.con, gender__in=roster.genders_allowed(),intl__in=roster.intls_allowed(),skill__in=roster.skills_allowed()).exclude(id__in=[o.id for o in already_registered])
+        if hasattr(roster, 'captain'):
+            challenge_set=list(Challenge.objects.filter(Q(roster1=roster)|Q(roster2=roster)))
+            opposing_skaters=[]
+            for c in challenge_set:
+                for r in [c.roster1, c.roster2]:
+                    if r and r != roster and r.participants:
+                        for skater in r.participants.all():
+                            opposing_skaters.append(skater)
+            already_registered+=opposing_skaters
+
+        if hasattr(roster, 'captain'):#if is Roster
+            eligibles=Registrant.objects.filter(pass_type__in=roster.passes_allowed(),con=roster.con, gender__in=roster.genders_allowed(),intl__in=roster.intls_allowed(),skill__in=roster.skills_allowed()).exclude(id__in=[o.id for o in already_registered])
+        else:#if is TrainingRoster:
+            if roster.registered:
+                training=roster.registered.training
+                eligibles=Registrant.objects.filter(pass_type__in=training.passes_allowed(),con=training.con,intl__in=roster.intls_allowed(),skill__in=training.skills_allowed()).exclude(id__in=[o.id for o in already_registered])
+            elif roster.auditing:
+                training=roster.auditing.training
+                eligibles=Registrant.objects.filter(con=training.con).exclude(id__in=[o.id for o in already_registered])
         return eligibles
 
 class Registrant(Matching_Criteria):
@@ -397,17 +409,20 @@ class Registrant(Matching_Criteria):
 
     internal_notes= models.TextField(null=True,blank=True)
 
+    @property
+    def name(self):
+        if self.sk8name and self.sk8number:
+            return "%s %s" % (self.sk8name, self.sk8number)
+        elif self.sk8name:
+            return "%s" % (self.sk8name)
+        elif self.first_name and self.last_name:
+            return "%s %s" % (self.first_name, self.last_name)
+        else:
+            return "Incomplete Name record"
+
 
     def __unicode__(self):
-        if self.sk8name and self.sk8number:
-            return "%s %s %s" % (self.sk8name, self.sk8number, self.con)
-        elif self.sk8name:
-            return "%s %s" % (self.sk8name, self.con)
-        elif self.first_name and self.last_name:
-            return "%s %s %s" % (self.first_name, self.last_name, self.con)
-        else:
-            return "Incomplete Name record: %s" % (self.con)
-
+        return self.name+": "+str(self.con)
 
     def is_intl(self,con):
         '''Returns True if  is considered INTL for supplied Con. Else, False'''

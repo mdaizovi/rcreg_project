@@ -29,39 +29,39 @@
 </h4>
 
 
-  <p class="text-center"><a class="btn btn-primary" href="{{training.get_view_url}}" role="button">See Training Details</a>
+  <p class="text-center"><a class="btn btn-primary" href="{% url 'view_training' training.pk occur.pk %}" role="button">See Training Details</a>
   {%if user in training.editable_by %}
   <a class="btn btn-success" href="{{training.get_edit_url}}" role="button">Edit Training Details</a>{%endif%}
 </p>
 
 {%if add_fail %}
-<div class="alert alert-danger text-center" role="alert">{{add_fail.sk8name}} NOT added to {{roster.name}}</div>
+<div class="alert alert-danger text-center" role="alert">{%if add_fail.sk8name%}{{add_fail.sk8name}}{%else%}Skater{%endif%}{{add_fail.sk8name}} NOT added to {{roster}}</div>
 {%elif skater_added %}
-<div class="alert alert-success text-center" role="alert">{{skater_added.sk8name}} added to {{roster.name}}</div>
+<div class="alert alert-success text-center" role="alert">{{skater_added}} added to {{roster.name}}</div>
 {%endif%}
 
 {% if remove_fail %}
-<div class="alert alert-danger text-center" role="alert">{{remove_fail.sk8name}} NOT removed from {{roster.name}}</div>
+<div class="alert alert-danger text-center" role="alert">{%if remove_fail.sk8name%}{{remove_fail.sk8name}}{%else%}Skater{%endif%} NOT removed from {{roster}}</div>
 {% elif skater_remove %}
-<div class="alert alert-success text-center" role="alert">{{skater_remove.sk8name}} removed from {{roster.name}}</div>
+<div class="alert alert-success text-center" role="alert">{{skater_remove}} removed from {{roster.name}}</div>
 {%endif%}
 
 
       <div class="col-sm-6">
       <div class="well well-lg">
         <h3 class="text-center">Registered</h3>
-        <p class="text-center" {% if training.registered.spacea %}
-        >Available spaces: {{ training.registered.spacea }}
+        <p class="text-center" {% if occur.registered.spacea %}
+        >Available spaces: {{ occur.registered.spacea }}
       {%else%} style="color:red"> ROSTER FULL {%endif%}
     </p>
 
 <div class="well well-sm">
       <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
-        <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
-        {%if training.registered.skill %}{{ training.registered.skill_display }}
-        {%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
-        <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
-        {%if training.registered.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.registered.intl_icon}}"></i></span></td>{%endif%}
+        <td class="text-left container-fluid tooltip-bottom" title="{{training.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
+        {%if training.skill %}{{ training.skill_display }}
+        {%else%}<i class="{{training.skill_icon}}"></i>{%endif%}
+        <td class="text-left container-fluid tooltip-bottom" title="{{occur.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="{{training.onsk8s_icon}}"></i></span></td>
+        {%if occur.registered.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{occur.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{occur.registered.intl_icon}}"></i></span></td>{%endif%}
         <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{training.contact_icon}}"></i></span></td>
         </tr></table>
     </div>
@@ -78,7 +78,7 @@
                 <td style="border:none;">{{ field }}</td>
                   <td style="border:none; text-align: center;">
                     <input
-                    {%if not training.registered.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
+                    {%if not occur.registered.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
                     class="btn btn-{% cycle 'primary' 'success' 'danger' %} btn-block" type="submit" method="post"
                     name="{% cycle 'search register' 'add register' 'remove register' %}" value="{% cycle 'Find' '+ Register' '- Register' %}"></td>
                 </tr>{%endfor%}
@@ -94,24 +94,24 @@
   <div class="col-sm-6">
     <div class="well well-lg">
     <h3 class="text-center">Auditing</h3>
-    <p class="text-center" {% if training.auditing.spacea %}
-    >Available spaces: {{ training.auditing.spacea }}
+    <p class="text-center" {% if occur.auditing.spacea %}
+    >Available spaces: {{ occur.auditing.spacea }}
     {%else%} style="color:red"> ROSTER FULL {%endif%}
     </p>
 
 <div class="well well-sm">
   <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
-    <td class="text-left container-fluid tooltip-bottom" title="{{training.auditing.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
-      {%if training.auditing.skill %}{{ training.auditing.skill_display }}
-      {%else%}<i class="{{training.auditing.skill_icon}}"></i>{%endif%}
+    <td class="text-left container-fluid tooltip-bottom" title="{{occur.auditing.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:<br>
+      {%if occur.auditing.skill %}{{ occur.auditing.skill_display }}
+      {%else%}<i class="{{occur.auditing.skill_icon}}"></i>{%endif%}
     <td class="text-left container-fluid tooltip-bottom"
 {%if training.onskates%}
     title="This is an On-Skates Training. Auditor will not skate, but must have an MVP pass to Audit."
 {%else%}
- title="{{training.registered.passes_tooltip_title}}"
+ title="{{occur.auditing.passes_tooltip_title}}"
  {%endif%}
     style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass:<br><i class="glyphicon icon-shoes"></i></span></td>
-    {%if training.auditing.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{training.auditing.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{training.auditing.intl_icon}}"></i></span></td>{%endif%}
+    {%if occur.auditing.intl %}<td class="text-center container-fluid tooltip-bottom" title="{{occur.auditing.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{occur.auditing.intl_icon}}"></i></span></td>{%endif%}
     <td class="text-left container-fluid tooltip-bottom" title="Auditing a training does not include Contact" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="glyphicon icon-nocontact"></i></span></td>
     </tr></table>
       </div>
@@ -128,7 +128,7 @@
   <td style="border:none;">{{ field }}</td>
     <td style="border:none; text-align: center;">
       <input
-      {%if not training.auditing.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
+      {%if not occur.auditing.spacea%} {% cycle 'disabled' 'disabled' '' %} {%endif%}
       class="btn btn-{% cycle 'primary' 'success' 'danger' %} btn-block" type="submit" method="post"
       name="{% cycle 'search audit' 'add audit' 'remove audit' %}" value="{% cycle 'Find' '+ Audit' '- Audit' %}"></td>
   </tr>{%endfor%}

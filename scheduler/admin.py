@@ -104,27 +104,27 @@ class RosterAdmin(ImportExportModelAdmin):#this has its own obvious expost butto
     list_filter = ('con','skill','gender','intl')
     resource_class = RosterResource
 
-#these 2 don't work for making a new roster, I'm just going to comment out for now so I can move on
-#figure it out later
-    # def formfield_for_foreignkey(self, db_field, request,**kwargs):
-    #     try:#So will still work when making a new one
-    #         object_id = resolve(request.path).args[0]
-    #         roster=Roster.objects.get(pk=object_id)
-    #         if db_field.name == "captain":
-    #             kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-    #         return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
-    #     except:
-    #         pass
-    #
-    # def formfield_for_manytomany(self, db_field, request, **kwargs):
-    #     try:#So will still work when making a new one
-    #         object_id = resolve(request.path).args[0]
-    #         roster=Roster.objects.get(pk=object_id)
-    #         if db_field.name == "participants":
-    #             kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
-    #         return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
-    #     except:
-    #         pass
+# these 2 don't work for making a new roster, I'm just going to comment out for now so I can move on
+# figure it out later
+    def formfield_for_foreignkey(self, db_field, request,**kwargs):
+        try:#So will still work when making a new one
+            object_id = resolve(request.path).args[0]
+            roster=Roster.objects.get(pk=object_id)
+            if db_field.name == "captain":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+        except:
+            pass
+        return super(RosterAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        try:#So will still work when making a new one
+            object_id = resolve(request.path).args[0]
+            roster=Roster.objects.get(pk=object_id)
+            if db_field.name == "participants":
+                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=roster.con)
+        except:
+            pass
+        return super(RosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django

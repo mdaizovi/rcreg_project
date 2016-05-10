@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 from dateutil import rrule
-
+from django.contrib.auth.models import User,Group
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.dateparse import parse_datetime,parse_time
@@ -12,8 +12,10 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 #from con_event.models import Con
-from scheduler.models import Location, Challenge, Training,INTEREST_RATING
+from scheduler.models import Location, Challenge, Training,INTEREST_RATING,DEFAULT_REG_CAP,DEFAULT_AUD_CAP
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
+from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
+import datetime
 
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -458,9 +460,21 @@ class Occurrence(models.Model):
         return url_str
 
 #-------------------------------------------------------------------------------
+    def can_add_sk8ers(self):
+        '''returns list of Users that can edit Roster
+        this is for adding/removing roster participants,
+        they are only true in activity.editable_by. This is Bosses and Volunteers.'''
+        allowed_editors=list(User.objects.filter(groups__name__in=['Volunteer',BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        return allowed_editors
+
+#-------------------------------------------------------------------------------
 class TrainingRoster(models.Model):
+    """Used for Registration and Auditing roster for training Occurrences.
+    Can be made in the Admin if made INTL, or made using get_or_create in register_training view.
+    Otherwise, not necessary yet."""
+
     #gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
-    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
+    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)#make this so that it cn be same as training or not, or maube just get rid of it
     intl=models.NullBooleanField(default=False)
     participants=models.ManyToManyField(Registrant, blank=True)
     cap=models.IntegerField(null=True, blank=True)
@@ -477,14 +491,14 @@ class TrainingRoster(models.Model):
         return self.name
 
     class Meta:
-        ordering=('registered__start_time','auditing__start_time','registered__name','auditing__name')
+        ordering=('registered__start_time','auditing__start_time','registered__training__name','auditing__training__name')
 
     @property
     def name(self):
         if self.registered:
-            return ("%s (REGISTERED)"%(self.registered))
+            return ("%s %s (REGISTERED)"%(self.registered.name,self.registered.start_time.strftime("%a %B %d %I:%-M %p")))
         elif self.auditing:
-            return ("%s (AUDITING)"%(self.auditing))
+            return ("%s %s (AUDITING)"%(self.auditing.name, self.auditing.start_time.strftime("%a %B %d %I:%-M %p")))
         else:
             return "Training Roster sans Training"
     #---------------------------------------------------------------------------
@@ -497,3 +511,103 @@ class TrainingRoster(models.Model):
         if not self.registered and not self.auditing:
             raise ValidationError({
                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
+
+    def intl_icon(self):
+        if self.intl:
+            #return "glyphicon icon-passportbig"
+            #return "glyphicon icon-plane-outline"
+            return "glyphicon icon-globe-alt"
+        else:
+            return "glyphicon icon-universal-access"
+
+    def intl_text(self):
+        if self.intl:
+            return "International"
+        else:
+            return None
+
+    def intl_tooltip_title(self):
+        if self.intl:
+            return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
+        else:
+            return "No location restrictions for registration"
+
+    def intls_allowed(self):
+        if self.intl is True:
+            allowed=[True]
+        else:
+            allowed=[True,False,None]
+        return allowed
+
+    def can_register(self):
+        """Returns true if registration window is open, False if not.
+        Will be determined by 2 hour window before class starts, but for now is always False bc avent written scheduler yet"""
+        return False
+
+    def get_maxcap(self):
+        '''checks is roster has a cap cap. If not, supplies defaults listed at top of file
+        If this is the auditing roster of an INTL training, it allows the audit cap to be
+        general training defaults-number of people registered. Tht is so coaches can have a larger audit roster in empty INTL classes.
+        LOOPHOLE: people w/out an MVP pass can sign up to audit an INTL class and then be allowed in to participate.
+        I think it'll take people a long time to figure tha tout, if they ever do.'''
+
+        if self.cap:
+            maxcap=self.cap
+        else:
+            if self.registered and self.registered.training:
+                print "self.registered and self.registered.training"
+                if self.registered.training.regcap:
+                    maxcap=registered.training.regcap
+                else:
+                    maxcap=DEFAULT_REG_CAP
+
+            elif self.auditing and self.auditing.training:
+                print "self.auditing and self.auditing.training:"
+                if self.auditing.training.regcap:
+                    regcap=self.auditing.training.regcap
+                else:
+                    regcap=DEFAULT_REG_CAP
+                if self.auditing.registered:
+                    regsk8=self.auditing.registered.participants.count()
+                else:
+                    regsk8=0
+
+                if self.auditing.training.audcap:
+                    audcap=self.auditing.training.audcap
+                else:
+                    audcap=DEFAULT_AUD_CAP
+
+                if self.auditing.registered.intl:
+                    maxcap=((regcap-regsk8)+audcap)
+                else:
+                    maxcap=audcap
+            else:
+                maxcap=None
+
+        return maxcap
+
+    def spacea(self):
+        '''gets maxcap (see above), checks is participants are fewer'''
+        maxcap=self.get_maxcap()
+        spacea=maxcap-self.participants.count()
+
+        if spacea>0:
+            return spacea
+        else:
+            return False
+
+    def editable_by(self):
+        '''returns list of Users that can edit Roster
+        this is for adding/removing roster participants, so coaches actually don't have this permission,
+        they are only true in activity.editable_by. This is Bosses and Volunteers.'''
+        allowed_editors=list(User.objects.filter(groups__name__in=['Volunteer',BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        return allowed_editors
+
+    # def save(self, *args, **kwargs):
+    #     if self.registered and self.registered.training:
+    #         if self.registered.training.regcap:# I think this might conflict with get_maxcap
+    #             self.cap=self.registered.training.regcap#but maybe it almost never runs, since you'd have to add a regcap/audcap
+    #     elif self.auditing and self.auditing.training:
+    #         if self.auditing.training.audcap:# I think this might conflict with get_maxcap
+    #             self.cap=self.auditing.training.audcap
+    #     super(TrainingRoster, self).save()

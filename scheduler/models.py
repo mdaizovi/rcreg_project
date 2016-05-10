@@ -177,15 +177,6 @@ class Roster(Matching_Criteria):
                     self.participants.add(self.captain)
             except:
                 pass
-
-        if self.registered:
-            self.name="REGISTERED: "+self.registered.name
-            if self.registered.regcap:# I think this might conflict with get_maxcap
-                self.cap=self.registered.regcap#but maybe it almost never runs, since you'd have to add a regcap/audcap
-        elif self.auditing:
-            self.name="AUDITING: "+self.auditing.name
-            if self.auditing.audcap:# I think this might conflict with get_maxcap
-                self.cap=self.auditing.audcap
         super(Roster, self).save()
 
     def criteria_conflict(self):
@@ -272,21 +263,12 @@ class Roster(Matching_Criteria):
         return number_dupes
 
     def get_maxcap(self):
-        '''checks is roster has a cap cap. If not, supplies defaults listed at top of file
-        If this is the auditing roster of an INTL training, it allows the audit cap to be
-        general training defaults-number of people registered. Tht is so coaches can have a larger audit roster in empty INTL classes.'''
+        '''checks is roster has a cap cap. If not, supplies defaults listed at top of file'''
         if self.cap:
             maxcap=self.cap
         else:
-            if self.captain:
-                maxcap = GAME_CAP
-            elif self.registered:
-                maxcap=DEFAULT_REG_CAP
-            elif self.auditing:
-                if self.auditing.registered.intl:
-                    maxcap=(DEFAULT_REG_CAP+DEFAULT_AUD_CAP-self.auditing.registered.participants.count())
-                else:
-                    maxcap=DEFAULT_AUD_CAP
+            maxcap = GAME_CAP
+
         return maxcap
 
     def spacea(self):
@@ -401,9 +383,6 @@ class Roster(Matching_Criteria):
         if self.captain:#this is so NSOs can't edit training rosters. COULD BE PROBLEM is captain freaks out and leaves challenge? unlikely, and boss ladies will still be able to fix
             allowed_editors.append(self.captain.user)
             allowed_editors+=list(User.objects.filter(groups__name__in=['NSO']))
-
-        if self.registered or self.auditing:
-            allowed_editors+=list(User.objects.filter(groups__name__in=['Volunteer']))
 
         return allowed_editors
 
@@ -550,6 +529,10 @@ class Activity(models.Model):
                         if thisskill:
                             skill_list.append(thisskill)
         if self.is_a_training():
+            if self.skill:
+                thisskill=SKILL_INTEREST_DICT.get(self.skill)
+                if thisskill:
+                    skill_list.append(thisskill)
             for c in self.coach.all():
                 #print c
                 r=c.user.get_most_recent_registrant()
@@ -586,7 +569,6 @@ class Activity(models.Model):
         figureheads=self.get_figurehead_registrants()
         b_outs=list(Blackout.objects.filter(registrant__in=figureheads))
         return b_outs
-
 
     def editable_by(self):
         '''returns list of Users that can edit Activity
@@ -1222,11 +1204,6 @@ class Training(Activity):
     def __unicode__(self):
        return "%s  (%s)" %(self.name, self.con)
 
-    def can_register(self):
-        """Returns true if registration window is open, False if not.
-        Will be determined by 2 hour window before class starts, but for now is always False bc avent written scheduler yet"""
-        return False
-
 
     def display_coach_names(self):
       #this seems to create an infinite loop somewhere
@@ -1249,6 +1226,67 @@ class Training(Activity):
                 pass
         return registrants
 
+    def skills_allowed(self):
+        if self.skill:
+            allowed=list(self.skill)
+            if "O" in allowed:
+                allowed.remove("O")
+        else:
+            allowed=["A","B","C","D"]
+        return allowed
+
+    def skill_display(self):
+        """This makes it so I don't see A0, just A, or AB, or something more understandable"""
+
+        prettify=''.join(self.skills_allowed())
+        return prettify
+
+    def skill_tooltip_title(self):
+        if self.skill:
+            allowed=self.skills_allowed()
+            allowed.sort(reverse=True)
+            skill_dict=dict(SKILL_LEVEL)
+            str_base="Registrant must identify skill as"
+            str_end= " in Profile in order to register"
+            str_mid=""
+            for item in allowed:
+                if item:
+                    displayable=skill_dict.get(item)
+                    if item==allowed[-1]:
+                        item_str=" or "+displayable
+                    else:
+                        item_str=" "+displayable+","
+
+                str_mid+=item_str
+            return str_base+str_mid+str_end
+        else:
+            return "No skill restrictions for registration"
+
+    def skill_icon(self):
+        if not self.skill:
+            return "glyphicon icon-universal-access"
+
+    def intl_icon(self):
+        if self.intl:
+            #return "glyphicon icon-passportbig"
+            #return "glyphicon icon-plane-outline"
+            return "glyphicon icon-globe-alt"
+        else:
+            return "glyphicon icon-universal-access"
+
+    def intl_text(self):
+        if self.intl:
+            return "International"
+        else:
+            return None
+
+    def intl_tooltip_title(self):
+        if self.intl:
+            return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
+        else:
+            return "No location restrictions for registration"
+
+
     def onsk8s_icon(self):
         if self.onsk8s:
             return "glyphicon icon-onskates"
@@ -1260,6 +1298,32 @@ class Training(Activity):
             return "This is an On-Skates Training."
         else:
             return "This is an Off-Skates Training."
+
+    def passes_allowed(self):
+        if self.onsk8s:
+            allowed=['MVP']
+        else:
+            allowed=['MVP','Skater','Offskate']
+
+        return allowed
+
+    def passes_tooltip_title(self):
+        pass_list=self.passes_allowed()
+        pass_string=""
+        if len(pass_list)>1:
+            if len(pass_list)>2:
+                for item in pass_list[:-1]:
+                    pass_string+=item+", "
+            else:
+                pass_string+=pass_list[0]
+            pass_string+=" or "+pass_list[-1]
+        else:
+            pass_string=pass_list[0]
+
+        base_str=self.onsk8s_tooltip_title()
+
+        tooltip_title = base_str+(" Registrant must have %s pass in order to register"%(pass_string))
+        return tooltip_title
 
     def contact_icon(self):
         if self.contact:

@@ -44,22 +44,6 @@ def USER_UPCOMING_CONS(user):
         return None
 
 
-class TrainingRegisteredModelForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(TrainingRegisteredModelForm, self).__init__(*args, **kwargs)
-        #the stuff up here takes precedence over stuff in meta, apparently
-        self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_TNG),initial=SKILL_LEVEL_TNG[1][0], required=False, label='Skill Level')
-
-        for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                })
-
-    class Meta:
-        model = Roster
-        fields = ['skill']
-
-
 class TrainingModelForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
@@ -88,9 +72,7 @@ class TrainingModelForm(ModelForm):
 
     class Meta:
         model = Training
-        #exclude = ('user', 'con','pass_type','email','country','state','intl')
-        #fields = fieldlist=['name','con','location_type','onsk8s','contact','description']
-        fields =['name','con','location_type','onsk8s','contact','sessions','description','communication']
+        fields =['name','con','location_type','onsk8s','contact','skill','sessions','description','communication']
         labels = {
             'name': _('Name'),
             'description': _('Description'),

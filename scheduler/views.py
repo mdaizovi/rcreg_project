@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingRegisteredModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
 from scheduler.models import Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
@@ -18,12 +18,12 @@ import collections
 from django.core.mail import EmailMessage, send_mail
 from django.core.exceptions import ObjectDoesNotExist
 from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
-from swingtime.models import Occurrence
+from swingtime.models import Occurrence,TrainingRoster
 
 import django_tables2 as tables
 from django_tables2  import RequestConfig
 from scheduler.tables import RosterTable
-
+no_list=["",u'',None,"None"]
 #syntx reference:
             #selection = request.POST.copy()
             #print "selection", selection
@@ -134,14 +134,21 @@ def view_training(request, activity_id,o_id=None):
     single=False
     visible=False
     occur=None
+    rosters=[]
     try:
         training=Training.objects.get(pk=int(activity_id))
-        #rosters=[training.registered, training.auditing]
-        rosters=[]#hard coding for not until I make new training rosters
         if o_id:
-            #print "oid is ",o_id
             try:
                 occur=Occurrence.objects.get(training=training, pk=int(o_id))
+                if hasattr(occur, 'registered'):
+                    rosters.append(occur.registered)
+                else:
+                    rosters.append(True)#so that the Registered/Auditing order in template will still work
+
+                if hasattr(occur, 'auditing'):
+                    rosters.append(occur.auditing)
+                else:
+                    rosters.append(True)#so that the Registered/Auditing order in template will still work
             except:
                 pass
         Tos=list(Occurrence.objects.filter(training=training))
@@ -153,7 +160,6 @@ def view_training(request, activity_id,o_id=None):
                 single=occurrences[0]
         else:
             occurrences=[]
-
         return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))
@@ -204,36 +210,46 @@ def register_training(request,o_id):
     try:
         occur=Occurrence.objects.get(pk=int(o_id))
         training=occur.training
-        auditing, created=Roster.objects.get_or_create(con=training.con, auditing=training)
         Tos=list(Occurrence.objects.filter(training=training))
     except ObjectDoesNotExist:
         return render_to_response('register_training.html',{},context_instance=RequestContext(request))
 
-    if user in training.registered.editable_by():
+
+    if occur and user in occur.can_add_sk8ers():
         #TODO: check if volunteer, if so, check time of class. if boss, let do this any time.
+
+        registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
+        auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
+
         reg_search_form=SearchForm()
-        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(training.registered))
-        reg_remove_form=EligibleRegistrantForm(my_arg=training.registered.participants.all())
+        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
+        reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
         aud_search_form=SearchForm()
-        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
-        aud_remove_form=EligibleRegistrantForm(my_arg=training.auditing.participants.all())
+        #aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
+        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
+        aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
 
         if request.method == "POST":
+            selection = request.POST.copy()
+            print "selection", selection
             if 'search register' in request.POST:
                 reg_search_form=SearchForm(request.POST)
-                entry_query = reg_search_form.get_query(['sk8name','last_name','first_name'])
-                found_entries = Registrant.objects.filter(entry_query).filter(con=training.con, gender__in=training.registered.genders_allowed(),skill__in=training.registered.skills_allowed(),intl__in=training.registered.intls_allowed()).order_by('sk8name','last_name','first_name')
+                if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
+                    entry_query = reg_search_form.get_query(['sk8name','last_name','first_name'])
+                    found_entries = Registrant.objects.filter(entry_query).filter(con=training.con, skill__in=training.skills_allowed(),intl__in=registered.intls_allowed()).order_by('sk8name','last_name','first_name')
+                else:
+                    found_entries=Registrant.objects.eligible_sk8ers(registered)
                 reg_add_form=EligibleRegistrantForm(my_arg=found_entries)
 
             elif 'add register' in request.POST:
                 try:
-                    roster=training.registered
-                    if training.registered.spacea():
+                    roster=registered
+                    if registered.spacea():
                         skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        training.registered.participants.add(skater_added)
-                        training.registered.save()
-                        reg_remove_form=EligibleRegistrantForm(my_arg=training.registered.participants.all())
-                        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(training.registered))
+                        registered.participants.add(skater_added)
+                        registered.save()
+                        reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
+                        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
                     else:
                         add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
                 except:
@@ -241,50 +257,59 @@ def register_training(request,o_id):
 
             elif 'remove register' in request.POST:
                 try:
-                    roster=training.registered
-                    skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                    training.registered.participants.remove(skater_remove)
-                    training.registered.save()
-                    reg_remove_form=EligibleRegistrantForm(my_arg=training.registered.participants.all())
-                    reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(training.registered))
+                    roster=registered
+                    if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
+                        skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                        registered.participants.remove(skater_remove)
+                        registered.save()
+                    else:
+                        remove_fail=True
+                    reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
+                    reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
                 except:
                     remove_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
             elif 'search audit' in request.POST:
                 aud_search_form=SearchForm(request.POST)
-                entry_query = aud_search_form.get_query(['sk8name','last_name','first_name'])
-                found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).order_by('sk8name','last_name','first_name')
+                if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
+                    entry_query = aud_search_form.get_query(['sk8name','last_name','first_name'])
+                    found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).order_by('sk8name','last_name','first_name')
+                else:
+                    found_entries=Registrant.objects.eligible_sk8ers(auditing)
                 aud_add_form=EligibleRegistrantForm(my_arg=found_entries)
             elif 'add audit' in request.POST:
                 try:
-                    roster=training.auditing
-                    if training.auditing.cap and training.auditing.spacea():
+                    roster=auditing
+                    if auditing.spacea():
                         skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        training.auditing.participants.add(skater_added)
-                        training.auditing.save()
-                        aud_remove_form=EligibleRegistrantForm(my_arg=training.auditing.participants.all())
-                        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
+                        auditing.participants.add(skater_added)
+                        auditing.save()
+                        aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
+                        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
                     else:
                         add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
                 except:
                     add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
             elif 'remove audit' in request.POST:
                 try:
-                    roster=training.auditing
-                    skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                    training.auditing.participants.remove(skater_remove)
-                    training.auditing.save()
-                    aud_remove_form=EligibleRegistrantForm(my_arg=training.auditing.participants.all())
-                    aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
+                    roster=auditing
+                    if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
+                        skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                        auditing.participants.remove(skater_remove)
+                        auditing.save()
+                    else:
+                        remove_fail=True
+                    aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
+                    aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
                 except:
                     remove_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
 
         register_forms=[reg_search_form,reg_add_form,reg_remove_form]
         audit_forms=[aud_search_form,aud_add_form,aud_remove_form]
 
-        if not training.registered.spacea():
+        if not registered.spacea():
             reg_add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
             reg_search_form.fields['search_q'].widget.attrs['disabled'] = True
-        if not training.auditing.spacea():
+        if not auditing.spacea():
             aud_add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
             aud_search_form.fields['search_q'].widget.attrs['disabled'] = True
     else:
@@ -383,9 +408,9 @@ def edit_training(request, activity_id):
             if 'duration' in request.POST:#if off skates, can choose duratio
                 training.duration=request.POST['duration']
                 training.save()
-            formlist=[TrainingRegisteredModelForm(request.POST, instance=training.registered),TrainingModelForm(request.POST, instance=training,user=user)]
+            formlist=[TrainingModelForm(request.POST, instance=training,user=user)]
 
-            for form in formlist:
+            for form in formlist:#formlist used to have 2, when i separated skill and had it in the roster.
                 if form.is_valid():#this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
                     form.save()
                     save_success=True
@@ -394,7 +419,7 @@ def edit_training(request, activity_id):
                     print "ERRORS: ",form.errors
 
     if user in editable_by:
-        formlist=[TrainingRegisteredModelForm(instance=training.registered),TrainingModelForm(instance=training,user=user)]
+        formlist=[TrainingModelForm(instance=training,user=user)]
     else:
         formlist=None
 
@@ -450,29 +475,29 @@ def propose_new_training(request):
                 'onsk8s':cloned.onsk8s,
                 'contact':cloned.contact,
                 'description':cloned.description,
+                'skill':cloned.skill
                 }
-            initial_registered={'skill':cloned.registered.skill,'gender':cloned.registered.gender}
-            formlist=[TrainingRegisteredModelForm(initial=initial_registered),TrainingModelForm(initial=initial_training,user=user)]
+            formlist=[TrainingModelForm(initial=initial_training,user=user)]
             return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 
         else: #if training_id not in post, ie if training is just being made
             trainingmodelform=TrainingModelForm(request.POST,user=user)
-            trainingregisteredmodelform=TrainingRegisteredModelForm(request.POST)
-            if trainingmodelform.is_valid() and trainingregisteredmodelform.is_valid():
+            if trainingmodelform.is_valid():
                 #NOTE TO SELF:
                 #order: make training first so it can be connected to.
                 #you need to commit false on registered because a roster with no connections,captain, or name will be deleted in a post save signal
                 #then connect training to registered/auditing. then save all.
                 training_made=trainingmodelform.save()
-                registered_made=trainingregisteredmodelform.save(commit=False)#so delete homeless roster signal won't get called
-                registered_made.con=training_made.con
-                registered_made.gender='NA/Coed'
-                auditing_made=Roster(gender='NA/Coed',skill=None,intl=False,con=training_made.con)
-                registered_made.registered=training_made
-                auditing_made.auditing=training_made
-                auditing_made.save()
-                registered_made.save()#then save to the relationship is kept.
-                auditing_made.save()
+                ###########redo, or delete, or whatever###############
+                # registered_made.con=training_made.con
+                # registered_made.gender='NA/Coed'
+                # auditing_made=Roster(gender='NA/Coed',skill=None,intl=False,con=training_made.con)
+                # registered_made.registered=training_made
+                # auditing_made.auditing=training_made
+                # auditing_made.save()
+                # registered_made.save()#then save to the relationship is kept.
+                # auditing_made.save()
+                #################redo, or delete, or whatever#########
                 coach, c_create=Coach.objects.get_or_create(user=user)
                 if c_create:
                     coach.save()
@@ -488,15 +513,12 @@ def propose_new_training(request):
                 # if not trainingmodelform.is_valid():
                 #     print "trainingmodelform.errors"
                 #     print trainingmodelform.errors
-                # if not trainingregisteredmodelform.is_valid():
-                #     print "trainingregisteredmodelform.errors"
-                #     print trainingregisteredmodelform.errors
 
         return render_to_response('new_training_made.html', {'add_fail':add_fail,'training_made':training_made},context_instance=RequestContext(request))
 
     else:
         if conlist:
-            formlist=[TrainingRegisteredModelForm(),TrainingModelForm(user=user)]
+            formlist=[TrainingModelForm(user=user)]
 
     return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'formlist':formlist,'trainings_coached':trainings_coached,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 

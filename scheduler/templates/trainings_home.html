@@ -73,11 +73,11 @@
     <!--<td style="width:400px;"><br></td>-->
 <td class="text-left container-fluid" style="width:400px;">{{o.start_time|date:"P"}} - {{o.end_time|date:"P"}}<br>{{o.location.name}} </td>
 
-    <td class="text-left container-fluid tooltip-bottom" title="{{o.event.training.registered.skill_tooltip_title}}" style="border:none; text-align: center; width:100px;">
+    <td class="text-left container-fluid tooltip-bottom" title="{{o.event.training.skill_tooltip_title}}" style="border:none; text-align: center; width:100px;">
       <span class="glyphicon" aria-hidden="true"> Skill:<br>
-{%if o.training.registered.skill %}{{ o.training.registered.skill_display }}
-{%else%}<i class="{{o.training.registered.skill_icon}}"></i>{%endif%}
-    <td class="text-left container-fluid tooltip-bottom" title="{{o.training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{o.training.onsk8s_icon}}"></i></span></td>
+{%if o.training.skill %}{{ o.training.skill_display }}
+{%else%}<i class="{{o.training.skill_icon}}"></i>{%endif%}
+    <td class="text-left container-fluid tooltip-bottom" title="{{o.training.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{o.training.onsk8s_icon}}"></i></span></td>
     {%if o.training.registered.intl %}
     <td class="text-center container-fluid tooltip-bottom" title="{{o.training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{o.training.registered.intl_icon}}"></i></span></td>
     {%endif%}

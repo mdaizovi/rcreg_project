@@ -54,11 +54,11 @@
   <table class="table" style="margin: 0px 0px 0px 0px; width:100%;">
   <tr>
   <!--border:none necessary in every td in order to get rid of ugly border on top, no other place to put it :-(-->
-  <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true"> Skill:
-{%if training.registered.skill %}{{ training.registered.skill_display }}
-{%else%}<i class="{{training.registered.skill_icon}}"></i>{%endif%}
+  <td class="text-left container-fluid tooltip-bottom" title="{{training.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true"> Skill:
+{%if training.skill %}{{ training.skill_display }}
+{%else%}<i class="{{training.skill_icon}}"></i>{%endif%}
 
-  <td class="text-left container-fluid tooltip-bottom" title="{{training.registered.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass: <i class="{{training.onsk8s_icon}}"></i></span></td>
+  <td class="text-left container-fluid tooltip-bottom" title="{{training.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass: <i class="{{training.onsk8s_icon}}"></i></span></td>
   {%if training.registered.intl%}
   <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL: <i class="{{training.registered.intl_icon}}"></i></span></td>
   {%else%}
@@ -87,19 +87,16 @@
     <div class="panel-heading"><h2 class="text-center">{% cycle 'Registered' 'Auditing' %}</h2></div>
     <div class="panel-body"><h2 class="text-center">
       <small>
-        {%if training.can_register%}
-        {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}
-        {%else%}<i>Registration has not started yet, please check back 2 hours prior to class start.</i>
+        {%if roster.can_register%}
+        {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}</small></h2>
+        <table class="table table-striped">
+        <tr><th> </th><th>Name </th></tr>
+          {%for skater in roster.participants.all%}
+          <tr><td>{{ forloop.counter }}.</td><td>{{skater.name}}</td></tr>{%endfor%}
+        </table>
+        {%else%}<i>Signup has not started yet; please check back later.</i></small></h2>
         {%endif%}
-      </small></h2>
     </div>
-
-    <table class="table table-striped">
-    <tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>
-      {%for skater in roster.participants.all%}
-      <tr><td>{{ forloop.counter }}.</td><td>{{skater.sk8name}}</td>
-      <td class="text-right">{% if skater.sk8number %}{{skater.sk8number}}{% endif %}</td></tr>{%endfor%}
-    </table>
   </div>
 
 

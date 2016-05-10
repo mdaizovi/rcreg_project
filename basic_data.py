@@ -58,26 +58,6 @@ def rostercheck():
 
     return reg,aud,reg_and_aud,chal,both,neither,rall
 
-# success, errors=getskill()
-def getskill():
-    success=[]
-    errors=[]
-    for t in Training.objects.all():
-        try:
-            if t.registered:
-                t.skill=t.registered.skill
-                print "%s (%s) skill is %s"%(t, str(t.pk), t.registered.skill)
-                #t.save()
-                success.append(t)
-            else:
-                print "training %s (%s) has no registered"%(t,str(t.pk))
-                errors.append(t)
-        except:
-            print "error w/ training %s (%s)"%(t,str(t.pk))
-            errors.append(t)
-
-    return success, errors
-
 
 def get_gametypes():
     con=Con.objects.get(year="2016")

@@ -4,9 +4,11 @@ except ImportError:
     from django.contrib.contenttypes.generic import GenericTabularInline
 
 from django.contrib import admin
+from django.core.urlresolvers import reverse, resolve
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
-from swingtime.models import *
+#from swingtime.models import *
+from swingtime.models import Occurrence,TrainingRoster
 
 class OccurrenceInline(admin.TabularInline):
     model = Occurrence
@@ -15,13 +17,13 @@ class OccurrenceInline(admin.TabularInline):
     view_on_site = False
 
 #===============================================================================
-class EventAdmin(admin.ModelAdmin):#No import/export
-    list_display = ('training','challenge')
-    list_display_links = list_display#makes everything in list display clickable to get to object
-    search_fields = ('training__name','challenge__name')
-    fields = ['training','challenge']
-    inlines = [OccurrenceInline]
-    view_on_site = False
+# class EventAdmin(admin.ModelAdmin):#No import/export
+#     list_display = ('training','challenge')
+#     list_display_links = list_display#makes everything in list display clickable to get to object
+#     search_fields = ('training__name','challenge__name')
+#     fields = ['training','challenge']
+#     inlines = [OccurrenceInline]
+#     view_on_site = False
 
 #===============================================================================
 class OccurrenceResource(resources.ModelResource):
@@ -45,7 +47,32 @@ class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost b
     fields = (('start_time','end_time'),('training','challenge'),'location')
     resource_class = OccurrenceResource
 
+#===============================================================================
+class TrainingRosterAdmin(admin.ModelAdmin):#No import/export
+#I might have to jut give ivanna an easy way to make it INTL. This feels like it's going to be messy.
+    list_display = ('__str__','cap','intl')
+    list_display_links = list_display#makes everything in list display clickable to get to object
+    search_fields = ('registered__training__name','auditing__training__name')
+    fields = (('intl','cap'),'participants',('registered','auditing'))
+    view_on_site = False
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        try:#So will still work when making a new one
+            object_id = resolve(request.path).args[0]
+            if object_id:
+                troster=TrainingRoster.objects.get(pk=object_id)
+                if troster.registered and troster.registered.training and troster.registered.training.con:
+                    con=troster.registered.training.con
+                elif troster.auditing and troster.auditing.training and troster.auditing.training.con:
+                    con=troster.auditing.training.con
+
+                if con and db_field.name == "participants":
+                    kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=con)
+        except:
+            pass
+        return super(TrainingRosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
 #admin.site.register(Event, EventAdmin)
 admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.
+admin.site.register(TrainingRoster, TrainingRosterAdmin)
