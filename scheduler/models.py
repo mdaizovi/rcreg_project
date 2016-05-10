@@ -1209,7 +1209,7 @@ class Training(Activity):
     #activity has fields: name,con,location_type,RCaccepted, created_on,duration
     coach = models.ManyToManyField('Coach', blank=True)#can't be ForeignKey bc can be multiple coaches
 
-    #skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
+    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
     onsk8s=models.BooleanField(default=True)
     contact=models.BooleanField(default=True)
     description = models.TextField(null=True, blank=True)

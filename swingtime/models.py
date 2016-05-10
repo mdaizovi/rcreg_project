@@ -458,42 +458,42 @@ class Occurrence(models.Model):
         return url_str
 
 #-------------------------------------------------------------------------------
-# class TrainingRoster(models.Model):
-#     #gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
-#     skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
-#     intl=models.NullBooleanField(default=False)
-#     participants=models.ManyToManyField(Registrant, blank=True)
-#     cap=models.IntegerField(null=True, blank=True)
-#
-#     #Reminder: can have 1 of these but not both.
-#       #why did i decide to do it this way, instead of occurrence linking to TrainingRoster?
-#       #maybe so i don't bog down every nn-training occurrence w/2 empty fields.
-#       #i hope i can make this, then delete all training/auditings, then change the related name w/out o so I don't have to change any code.
-#       #oh wait the change is that now occurrence has a registered or auditing, not training
-#     registered=models.OneToOneField("Occurrence", related_name="registered")
-#     auditing=models.OneToOneField("Occurrence", related_name="auditing")
-#
-#     def __unicode__(self):
-#         return self.name
-#
-#     class Meta:
-#         ordering=('registered__start_time','auditing__start_time','name')
-#
-#     @property
-#     def name(self):
-#         if self.registered:
-#             return ("%s (REGISTERED)"%(self.registered))
-#         elif self.auditing:
-#             return ("%s (AUDITING)"%(self.auditing))
-#         else:
-#             return "Training Roster sans Training"
-#     #---------------------------------------------------------------------------
-#     def validate_unique(self, *args, **kwargs):
-#         super(TrainingRoster, self).validate_unique(*args, **kwargs)
-#         if self.registered and self.auditing:
-#             raise ValidationError({
-#                 NON_FIELD_ERRORS: ["Roster cannot be both Registered and Auditing",],})
-#
-#         if not self.registered and not self.auditing:
-#             raise ValidationError({
-#                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
+class TrainingRoster(models.Model):
+    #gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
+    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
+    intl=models.NullBooleanField(default=False)
+    participants=models.ManyToManyField(Registrant, blank=True)
+    cap=models.IntegerField(null=True, blank=True)
+
+    #Reminder: can have 1 of these but not both.
+      #why did i decide to do it this way, instead of occurrence linking to TrainingRoster?
+      #maybe so i don't bog down every nn-training occurrence w/2 empty fields.
+      #i hope i can make this, then delete all training/auditings, then change the related name w/out o so I don't have to change any code.
+      #oh wait the change is that now occurrence has a registered or auditing, not training
+    registered=models.OneToOneField("Occurrence", null=True,blank=True,related_name="registered")
+    auditing=models.OneToOneField("Occurrence", null=True,blank=True,related_name="auditing")
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering=('registered__start_time','auditing__start_time','registered__name','auditing__name')
+
+    @property
+    def name(self):
+        if self.registered:
+            return ("%s (REGISTERED)"%(self.registered))
+        elif self.auditing:
+            return ("%s (AUDITING)"%(self.auditing))
+        else:
+            return "Training Roster sans Training"
+    #---------------------------------------------------------------------------
+    def validate_unique(self, *args, **kwargs):
+        super(TrainingRoster, self).validate_unique(*args, **kwargs)
+        if self.registered and self.auditing:
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Roster cannot be both Registered and Auditing",],})
+
+        if not self.registered and not self.auditing:
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
