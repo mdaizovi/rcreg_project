@@ -228,10 +228,10 @@ class TrainingAdmin(ImportExportModelAdmin):#this has its own obvious expost but
     filter_horizontal = ('coach',)
     list_filter = ('con','onsk8s','registered__skill','registered__intl','registered__gender','location_type','contact')
     resource_class = TrainingResource
-    fields = (('name','con','location_type'),('RCaccepted','RCrejected','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes','communication')
-    inlines = [
-        RegisteredInline, AuditingInline
-    ]
+    fields = (('name','con','location_type'),('RCaccepted','RCrejected'),('skill','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes','communication')
+    # inlines = [
+    #     RegisteredInline, AuditingInline
+    # ]
 
     def view_on_site(self, training):
         from scheduler.views import view_training
