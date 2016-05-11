@@ -475,7 +475,8 @@ def propose_new_training(request):
                 'onsk8s':cloned.onsk8s,
                 'contact':cloned.contact,
                 'description':cloned.description,
-                'skill':cloned.skill
+                'skill':cloned.skill,
+                'sessions':cloned.sessions
                 }
             formlist=[TrainingModelForm(initial=initial_training,user=user)]
             return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))

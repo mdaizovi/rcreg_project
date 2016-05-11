@@ -2,7 +2,7 @@
 from django import forms
 from django.forms import ModelForm,modelformset_factory
 from scheduler.models import Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster
-from con_event.models import LOCATION_TYPE, GENDER, Con,Registrant,SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL_ACT
+from con_event.models import LOCATION_TYPE, GENDER, Con,Registrant,SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL_ACT,SKILL_LEVEL_GAME
 from django.utils.translation import ugettext_lazy as _
 from django.forms.models import model_to_dict
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
@@ -91,8 +91,21 @@ class ChallengeRosterModelForm(ModelForm):
             initial_gender=GENDER[0][0]
 
         super(ChallengeRosterModelForm, self).__init__(*args, **kwargs)
+
+        if self.instance:
+            clist= list(self.instance.roster1.all())+list(self.instance.roster2.all())
+            if len(clist)>0:
+                c=clist[0]
+                if c.is_a_game:
+                    choices=SKILL_LEVEL_GAME
+                else:
+                    choices=SKILL_LEVEL_CHG[1:]
+        else:
+            choices=SKILL_LEVEL_CHG[1:]
         #the stuff up here takes precedence over stuff in meta, apparently
-        self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_CHG[1:]),initial=initial_skill, label='Skill Level')
+        #self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_CHG),initial=initial_skill, label='Skill Level')
+        self.fields["skill"]=forms.CharField(widget=forms.Select(choices=choices),initial=initial_skill, label='Skill Level')
+
         self.fields["gender"].initial=initial_gender
         self.fields["name"].initial=""
         self.fields["color"]=forms.CharField(widget=forms.Select(choices=COLORS),initial=COLORS[0][0], label='Team Color')
@@ -131,7 +144,7 @@ class ChallengeModelForm(ModelForm):
         self.fields["con"].initial=conlist[-1]
         self.fields["location_type"]=forms.CharField(widget=forms.Select(choices=LOCATION_TYPE[:3]), initial=LOCATION_TYPE[0][0], label='Location Type')
         self.fields["ruleset"]=forms.CharField(widget=forms.Select(choices=RULESET), initial=RULESET[0][0], label='Rules')
-        self.fields["gametype"]=forms.CharField(widget=forms.Select(choices=GAMETYPE[:-1]), initial=GAMETYPE[0][0], label='Type')
+        self.fields["gametype"]=forms.CharField(widget=forms.Select(choices=GAMETYPE), initial=GAMETYPE[0][0], label='Type')
         self.fields["communication"]=forms.CharField(widget=forms.Textarea(),label='Notes Between Captains & Officials (visible to skaters on both teams; can be left blank)',required=False)
 
         for field in iter(self.fields):

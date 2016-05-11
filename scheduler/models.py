@@ -13,7 +13,7 @@ import string
 import collections
 #from django.db.models.signals import pre_save, post_save,post_delete
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,LOCATION_CATEGORY,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL
+from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,LOCATION_CATEGORY,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL,SKILL_LEVEL_GAME
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
@@ -333,22 +333,24 @@ class Roster(Matching_Criteria):
 
     def passes_allowed(self):
 
-        if self.registered or self.auditing:#this is a training
-            if self.registered:
-                training=self.registered
-            elif self.auditing:
-                training=self.auditing
+        #this shouldn't be here anymore, w' new trainingroster strucutre
+        # if self.registered or self.auditing:#this is a training
+        #     if self.registered:
+        #         training=self.registered
+        #     elif self.auditing:
+        #         training=self.auditing
+        #
+        #     if training.onsk8s:
+        #         allowed=['MVP']
+        #     else:
+        #         allowed=['MVP','Skater','Offskate']
+        #
+        # #elif self.captain or self.color:#this is a challenge
+        # else:#this is a challenge
+        #     allowed=['MVP','Skater']
 
-            if training.onsk8s:
-                allowed=['MVP']
-            else:
-                allowed=['MVP','Skater','Offskate']
-
-        #elif self.captain or self.color:#this is a challenge
-        else:#this is a challenge
-            allowed=['MVP','Skater']
-
-        return allowed
+        #return allowed
+        return ['MVP','Skater']
 
     def passes_tooltip_title(self):
         pass_list=self.passes_allowed()
@@ -363,12 +365,12 @@ class Roster(Matching_Criteria):
         else:
             pass_string=pass_list[0]
 
-        if self.registered:
-            base_str=self.registered.onsk8s_tooltip_title()
-        elif self.auditing:
-            base_str=self.auditing.onsk8s_tooltip_title()
-        else:
-            base_str=""
+        # if self.registered:
+        #     base_str=self.registered.onsk8s_tooltip_title()
+        # elif self.auditing:
+        #     base_str=self.auditing.onsk8s_tooltip_title()
+        # else:
+        #     base_str=""
 
         tooltip_title = base_str+(" Registrant must have %s pass in order to register"%(pass_string))
         return tooltip_title
@@ -593,10 +595,12 @@ class Activity(models.Model):
                 for reg in c.user.registrant_set.select_related('con').all():
                     if reg.con==self.con:
                         participating.append(reg)
-            for ros in [self.registered, self.auditing]:
-                if ros:
-                    for sk8 in ros.participants.all():
-                        participating.append(sk8)
+
+            #doesn't work anymore, not sure if can reconfigure w/ new trainingroster structure
+            # for ros in [self.registered, self.auditing]:
+            #     if ros:
+            #         for sk8 in ros.participants.all():
+            #             participating.append(sk8)
 
         elif self.is_a_challenge():
             for ros in [self.roster1,self.roster2]:

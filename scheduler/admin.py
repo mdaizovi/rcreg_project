@@ -32,53 +32,53 @@ class LocationAdmin(admin.ModelAdmin):
     list_display_links = list_display
 
 
-class RegisteredInline(admin.StackedInline):
-    model = Roster
-    fk_name = "registered"
-    fields=(('intl','gender','skill'),'participants')
-    filter_horizontal = ('participants',)
-
-    def formfield_for_choice_field(self, db_field, request, **kwargs):
-        #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django
-        if db_field.name == "skill":
-            kwargs['choices'] =  SKILL_LEVEL_TNG
-        return super(RegisteredInline, self).formfield_for_choice_field(db_field, request, **kwargs)
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        try:#So will still work when making a new one
-            training_id = resolve(request.path).args[0]
-            training=Training.objects.get(pk=training_id)
-            if db_field.name == "participants":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=training.con)
-            return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
-        except:
-            if db_field.name == "participants":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
-            return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
-
-class AuditingInline(admin.StackedInline):
-    model = Roster
-    fk_name = "auditing"
-    fields=(('intl','gender','skill'),'participants')
-    filter_horizontal = ('participants',)
-
-    def formfield_for_choice_field(self, db_field, request, **kwargs):
-        #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django
-        if db_field.name == "skill":
-            kwargs['choices'] =  SKILL_LEVEL_TNG
-        return super(AuditingInline, self).formfield_for_choice_field(db_field, request, **kwargs)
-
-    def formfield_for_manytomany(self, db_field, request, **kwargs):
-        try:#So will still work when making a new one
-            training_id = resolve(request.path).args[0]
-            training=Training.objects.get(pk=training_id)
-            if db_field.name == "participants":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'],con=training.con)
-            return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
-        except:
-            if db_field.name == "participants":
-                kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
-            return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+# class RegisteredInline(admin.StackedInline):
+#     model = Roster
+#     fk_name = "registered"
+#     fields=(('intl','gender','skill'),'participants')
+#     filter_horizontal = ('participants',)
+#
+#     def formfield_for_choice_field(self, db_field, request, **kwargs):
+#         #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django
+#         if db_field.name == "skill":
+#             kwargs['choices'] =  SKILL_LEVEL_TNG
+#         return super(RegisteredInline, self).formfield_for_choice_field(db_field, request, **kwargs)
+#
+#     def formfield_for_manytomany(self, db_field, request, **kwargs):
+#         try:#So will still work when making a new one
+#             training_id = resolve(request.path).args[0]
+#             training=Training.objects.get(pk=training_id)
+#             if db_field.name == "participants":
+#                 kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater'],con=training.con)
+#             return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+#         except:
+#             if db_field.name == "participants":
+#                 kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
+#             return super(RegisteredInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+#
+# class AuditingInline(admin.StackedInline):
+#     model = Roster
+#     fk_name = "auditing"
+#     fields=(('intl','gender','skill'),'participants')
+#     filter_horizontal = ('participants',)
+#
+#     def formfield_for_choice_field(self, db_field, request, **kwargs):
+#         #http://stackoverflow.com/questions/864433/how-to-modify-choices-on-admin-pages-django
+#         if db_field.name == "skill":
+#             kwargs['choices'] =  SKILL_LEVEL_TNG
+#         return super(AuditingInline, self).formfield_for_choice_field(db_field, request, **kwargs)
+#
+#     def formfield_for_manytomany(self, db_field, request, **kwargs):
+#         try:#So will still work when making a new one
+#             training_id = resolve(request.path).args[0]
+#             training=Training.objects.get(pk=training_id)
+#             if db_field.name == "participants":
+#                 kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'],con=training.con)
+#             return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
+#         except:
+#             if db_field.name == "participants":
+#                 kwargs["queryset"] = Registrant.objects.filter(pass_type__in=['MVP', 'Skater','Offskates'])
+#             return super(AuditingInline, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 class RosterResource(resources.ModelResource):
     class Meta:

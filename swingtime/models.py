@@ -15,7 +15,7 @@ from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from scheduler.models import Location, Challenge, Training,INTEREST_RATING,DEFAULT_REG_CAP,DEFAULT_AUD_CAP
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
-import datetime
+#import datetime #why did I dd this? it broke the calendar daily view
 
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -528,8 +528,10 @@ class TrainingRoster(models.Model):
 
     def intl_tooltip_title(self):
         if self.intl:
+            print "intl_tooltip_title intl"
             return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
         else:
+            print "intl_tooltip_title NOT intl"
             return "No location restrictions for registration"
 
     def intls_allowed(self):

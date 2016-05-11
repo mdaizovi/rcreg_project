@@ -78,9 +78,10 @@
 {%if o.training.skill %}{{ o.training.skill_display }}
 {%else%}<i class="{{o.training.skill_icon}}"></i>{%endif%}
     <td class="text-left container-fluid tooltip-bottom" title="{{o.training.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Skate:<br><i class="{{o.training.onsk8s_icon}}"></i></span></td>
-    {%if o.training.registered.intl %}
-    <td class="text-center container-fluid tooltip-bottom" title="{{o.training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{o.training.registered.intl_icon}}"></i></span></td>
-    {%endif%}
+    {%if o.registered.intl %}
+    <td class="text-center container-fluid tooltip-bottom" title="{{o.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL:<br><i class="{{o.registered.intl_icon}}">
+    {%else%}<td><span><i> &nbsp;{%endif%}</i></span></td>
+
     <td class="text-left container-fluid tooltip-bottom" title="{{o.training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact:<br><i class="{{o.training.contact_icon}}"></i></span></td>
     </tr></table></p>
 </a>{%endfor%}
