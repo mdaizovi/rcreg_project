@@ -11,14 +11,10 @@
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
-    <h3>Propose a New
-    {%if is_a_game%} Game<br>
-      <small>For official teams of existing leagues. Example: San Diego Derby Dolls Wildfires.
-        <br>To propose Challenge between unofficial, unaffiliated teams, <a href="{%url 'propose_new_challenge' %}">
-    {%else%}Challenge<br>
-      <small>For unaffiliated, non-chartered teams. Example: Vagine Regime, Team SeXY, Yellow Fever, etc.
-        <br>To propose a sanctioned/regulation Game between official, league-affiliated teams, <a href="{%url 'propose_new_game' %}">
-          {%endif%}click here</a></small></h3>
+    <h3>Propose a New Challenge or Game<br>
+      <small>Choose "Challenge" for unaffiliated, non-chartered teams <i>(Example: Vagine Regime, Team SeXY, Yellow Fever, etc.)</i>
+        <br>Choose "Game" for official teams of existing leagues <i>(Example: San Diego Derby Dolls Wildfires)</i></small></h3>
+
 
           {% if captain_conflict %}
             <div class="alert alert-danger" role="alert">Selecting this criteria for

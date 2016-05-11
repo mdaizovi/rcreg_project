@@ -92,16 +92,14 @@ class ChallengeRosterModelForm(ModelForm):
 
         super(ChallengeRosterModelForm, self).__init__(*args, **kwargs)
 
+        choices=SKILL_LEVEL_CHG[1:]
         if self.instance:
             clist= list(self.instance.roster1.all())+list(self.instance.roster2.all())
             if len(clist)>0:
                 c=clist[0]
                 if c.is_a_game:
                     choices=SKILL_LEVEL_GAME
-                else:
-                    choices=SKILL_LEVEL_CHG[1:]
-        else:
-            choices=SKILL_LEVEL_CHG[1:]
+
         #the stuff up here takes precedence over stuff in meta, apparently
         #self.fields["skill"]=forms.CharField(widget=forms.Select(choices=SKILL_LEVEL_CHG),initial=initial_skill, label='Skill Level')
         self.fields["skill"]=forms.CharField(widget=forms.Select(choices=choices),initial=initial_skill, label='Skill Level')

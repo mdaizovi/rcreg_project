@@ -557,14 +557,12 @@ class TrainingRoster(models.Model):
             maxcap=self.cap
         else:
             if self.registered and self.registered.training:
-                print "self.registered and self.registered.training"
                 if self.registered.training.regcap:
                     maxcap=registered.training.regcap
                 else:
                     maxcap=DEFAULT_REG_CAP
 
             elif self.auditing and self.auditing.training:
-                print "self.auditing and self.auditing.training:"
                 if self.auditing.training.regcap:
                     regcap=self.auditing.training.regcap
                 else:

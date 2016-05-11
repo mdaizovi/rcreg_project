@@ -33,11 +33,6 @@
 {%else%}<i class="{{training.skill_icon}}"></i>{%endif%}
 
   <td class="text-left container-fluid tooltip-bottom" title="{{training.passes_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true" >Pass: <i class="{{training.onsk8s_icon}}"></i></span></td>
-  {%if training.registered.intl%}
-  <td class="text-center container-fluid tooltip-bottom" title="{{training.registered.intl_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">INTL: <i class="{{training.registered.intl_icon}}"></i></span></td>
-  {%else%}
-  <td class="text-center container-fluid tooltip-bottom" style="border:none; text-align: center;"> </td>
-  {%endif%}
   <td class="text-left container-fluid tooltip-bottom" title="{{training.contact_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Contact: <i class="{{training.contact_icon}}"></i></span></td>
   </tr>
   </table>
