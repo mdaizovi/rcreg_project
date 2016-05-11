@@ -92,20 +92,22 @@ class RosterResource(resources.ModelResource):
 
 #class RosterAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
 class RosterAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
-    fields = ('name','captain','color','skill','gender','intl','internal_notes','con')
-    #fields = [field.name for field in Roster._meta.fields if field.name != "id"]#shows all but m2m fields
-    #exclude=('con',)
-
-    fields = (('con','name','color'),('captain','can_email'),('skill','gender','intl'),'participants','registered','auditing','internal_notes')
-
-    list_display= ('name', 'captain','cap')
+    fields = (('con','name','color'),('captain','can_email'),('skill','gender','intl'),'participants','internal_notes')
+    list_display= ('name', 'captain','Challenge_Name','con','cap')
+    list_display_links = list_display#makes everything in list display clickable to get to object
     search_fields = ('name', 'captain__sk8name', 'captain__first_name','captain__last_name')
     filter_horizontal = ('participants',)
     list_filter = ('con','skill','gender','intl')
     resource_class = RosterResource
 
-# these 2 don't work for making a new roster, I'm just going to comment out for now so I can move on
-# figure it out later
+    def Challenge_Name(self, obj):
+        if obj:
+            chals=list(obj.roster1.all())+list(obj.roster2.all())
+        names=""
+        for c in chals:
+            names+=str(c.name)+" "
+        return names
+
     def formfield_for_foreignkey(self, db_field, request,**kwargs):
         try:#So will still work when making a new one
             object_id = resolve(request.path).args[0]
@@ -169,12 +171,25 @@ class ChallengeResource(resources.ModelResource):
 
 class ChallengeAdmin(ImportExportModelAdmin):#this has its own obvious expost button, but then you need to export all instances
 #class ChallengeAdmin(ImportExportActionModelAdmin):#This puts the export button with the Action thing, where you delete. DANGER easy to almost delete
-    list_display= ('name', 'con')
+    list_display= ('name', 'Captains','con','gametype','location_type','submitted_on','RCaccepted')
+    list_display_links = list_display#makes everything in list display clickable to get to object
     search_fields = ('name','roster1__name', 'roster2__name','roster1__captain__sk8name','roster2__captain__sk8name')
     fields = (('con','RCaccepted','RCrejected'),('location_type','ruleset','gametype'),('created_on','submitted_on'),
         ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'),'internal_notes','communication')
     list_filter = ('con','location_type','is_a_game')
     resource_class = ChallengeResource
+
+    def Captains(self, obj):
+        cstr=""
+        if obj:
+            cno=0
+            for r in [obj.roster1,obj.roster2]:
+                if r and r.captain:
+                    cno+=1
+                    if cno>1:
+                        cstr+=" & "
+                    cstr+=r.captain.name
+        return cstr
 
     def formfield_for_foreignkey(self, db_field, request,**kwargs):
         try:#So will still work when making a new one

@@ -1241,7 +1241,6 @@ class Training(Activity):
 
     def skill_display(self):
         """This makes it so I don't see A0, just A, or AB, or something more understandable"""
-
         prettify=''.join(self.skills_allowed())
         return prettify
 
