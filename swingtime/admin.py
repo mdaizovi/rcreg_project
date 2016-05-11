@@ -10,20 +10,29 @@ from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAd
 #from swingtime.models import *
 from swingtime.models import Occurrence,TrainingRoster
 
+class TrainingRosterREGInline(admin.TabularInline):
+    model = TrainingRoster
+    fk_name = "registered"
+    extra = 0
+    max_num=0#gets rid of + Another button
+    view_on_site = False
+    fields=(('intl','skill','cap'),'participants')
+    filter_horizontal = ('participants',)
+
+class TrainingRosterAUDInline(admin.TabularInline):
+    model = TrainingRoster
+    fk_name = "auditing"
+    extra = 0
+    max_num=0#gets rid of + Another button
+    view_on_site = False
+    fields=(('intl','skill','cap'),'participants')
+    filter_horizontal = ('participants',)
+
 class OccurrenceInline(admin.TabularInline):
     model = Occurrence
     extra = 0
     max_num=0#gets rid of + Another button
     view_on_site = False
-
-#===============================================================================
-# class EventAdmin(admin.ModelAdmin):#No import/export
-#     list_display = ('training','challenge')
-#     list_display_links = list_display#makes everything in list display clickable to get to object
-#     search_fields = ('training__name','challenge__name')
-#     fields = ['training','challenge']
-#     inlines = [OccurrenceInline]
-#     view_on_site = False
 
 #===============================================================================
 class OccurrenceResource(resources.ModelResource):
@@ -46,6 +55,16 @@ class OccurrenceAdmin(ImportExportModelAdmin):#this has its own obvious expost b
     #i think can't get event in admin because editable=False in models
     fields = (('start_time','end_time'),('training','challenge'),'location')
     resource_class = OccurrenceResource
+    inlines = [TrainingRosterREGInline,TrainingRosterAUDInline]
+
+    def get_formsets(self, request, obj=None):
+        #This makes is to it only gets reg/aud inline if it's a training occurrence
+        for inline in self.get_inline_instances(request, obj):
+            if obj and not obj.training:
+                continue
+            else:
+                pass
+            yield inline.get_formset(request, obj)
 
 #===============================================================================
 class TrainingRosterAdmin(admin.ModelAdmin):#No import/export
@@ -73,6 +92,5 @@ class TrainingRosterAdmin(admin.ModelAdmin):#No import/export
         return super(TrainingRosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
-#admin.site.register(Event, EventAdmin)
 admin.site.register(Occurrence, OccurrenceAdmin)#Everything I need from this is accomplished in Occurrance inline through the Event.
 admin.site.register(TrainingRoster, TrainingRosterAdmin)

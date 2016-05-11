@@ -1181,7 +1181,6 @@ class Challenge(Activity):
 
         return display
 
-
     class Meta:
         #insted should i make a save method that makes roster1 name v roster2 name as the name?
         ordering=('-con__start','name')
