@@ -55,18 +55,22 @@
     </tr></table></h3>
 
 <table class="table table-striped">
-  <tr><th style="width:20px;text-align: center;">Auto<br>Schedule</th><th style="vertical-align: middle;">{%cycle "Challenge" "Training" %}</th><th style="vertical-align: middle;">Type</th>
-    <th style="text-align: center; vertical-align: middle;max-width:75px;">Interest</th><th style="text-align: center; vertical-align: middle;">Blackouts</th></tr>
+  <tr><th style="min-width:15px;text-align: center;">Auto<br>Schedule</th>
+    <th style="vertical-align: middle; min-width:75px;">{%cycle "Challenge" "Training" %}</th>
+    <th style="vertical-align: middle; min-width:75px;">{%cycle "Captains" "Coaches" %}</th>
+    <th style="vertical-align: middle;min-width:45px;">Type</th>
+    <th style="text-align: center; vertical-align: middle;min-width:15px;">Interest</th>
+    <th style="text-align: center; vertical-align: middle;min-width:15px;">Blackouts</th></tr>
 
 {%if od_list|length > 0%}
   {%for od in od_list%}
 <tr>
-<td>{{od.check_form.act}}</td>
-  <td>
-    <a href="{{od.act.get_view_url}}">{{od.act.name}}</a></td>
-    <td style="max-width:125px;">{{ od.act.get_activity_type }}{%if od.act.is_a_challenge %}, {{od.act.skill_display}}, {{od.act.gender_display}}{%endif%}</td>
-      <td style="max-width:75px;text-align: center;">{%if od.act.interest %}{{ od.act.interest }}{%else%}?{%endif%}</td>
-  <td style="text-align: center; max-width:75px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>
+<td style="min-width:15px;">{{od.check_form.act}}</td>
+  <td style="min-width:75px;"><a href="{{od.act.get_view_url}}">{{od.act.name}}</a></td>
+    <td style="min-width:75px;">{{ od.act.get_figurehead_display }}</td>
+    <td style="min-width:45px;">{{ od.act.get_activity_type }}{%if od.act.is_a_challenge %}, {{od.act.skill_display}}, {{od.act.gender_display}}{%endif%}</td>
+      <td style="min-width:15px;text-align: center;">{%if od.act.interest %}{{ od.act.interest }}{%else%}?{%endif%}</td>
+  <td style="text-align: center; min-width:15px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>
 </tr>
 {%endfor%}
 

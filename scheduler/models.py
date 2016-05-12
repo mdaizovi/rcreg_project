@@ -565,6 +565,20 @@ class Activity(models.Model):
                     figureheads.append(r.captain)
         return figureheads
 
+    def get_figurehead_display(self):
+        fs=self.get_figurehead_registrants()
+        fstr=""
+        index=1
+        for f in fs:
+            if index>1:
+                fstr+=" & "
+            if f.sk8name:
+                fstr+=f.sk8name
+            else:
+                fstr+=f.name
+            index+=1
+        return fstr
+
     def get_figurehead_blackouts(self):
         """Gets Blackouts for activity, from all coaches or captains, but not participants."""
         from con_event.models import Blackout
