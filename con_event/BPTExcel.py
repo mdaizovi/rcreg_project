@@ -215,8 +215,9 @@ class BPTUploadForm(forms.Form):
                         #     print this_reg,"already has a ",k,": ",value
                             #NEW NOTE this was making everyone have default MVP Female setting
     ########temporarily suspending save just to see printout###########
-                    #this_reg.save()
-                    #this_reg.save()#think I have to do twice tomake user? I forgot.
+                    this_reg.save()
+                    this_reg.save()#think I have to do twice tomake user? I forgot.
+    # ##################################
                     success_list.append(od)
                     print this_reg," Succesfully made"
             except:
@@ -252,8 +253,8 @@ class BPTUploadForm(forms.Form):
         data_dict["Incomplete Data"]=no_sk8_or_real_name
 
         #output the data
-        #try:
-        if 2==2:
+        try:
+        #if 2==2:
             first=True
             wb = Workbook()
             for dk,dv in data_dict.iteritems():
@@ -275,5 +276,5 @@ class BPTUploadForm(forms.Form):
                         location=str(k)+str(r)
                         sheet[location].value = v
             return wb
-    # except:
-    #     return None
+        except:
+            return None
