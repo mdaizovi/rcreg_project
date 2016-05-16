@@ -459,9 +459,12 @@ def know_thyself(request, con_id=None):
         for c in o.training.coach.all():
             if c not in t_coaches:
                 t_coaches.append(c)
-        for roster in [o.training.registered,o.training.auditing]:
-            if roster:
-                tr_total+=roster.participants.count()
+
+        if hasattr(o, 'registered'):
+            tr_total+=o.registered.participants.count()
+        elif hasattr(o, 'auditing'):
+            tr_total+=o.registered.participants.count()
+
     t_tup=(len(trainings),t_dur, tr_total,len(t_coaches))
 
     return render_to_response('know_thyself.html', {'t_tup':t_tup,'c_tup':c_tup,'state_tups':state_tups,'states':states,'countries':countries,'female':female,'male':male,'nonbinary':nonbinary,'unspecintl':unspecintl,
