@@ -38,7 +38,7 @@ class OccurrenceInline(admin.TabularInline):
 class OccurrenceResource(resources.ModelResource):
     class Meta:
         model = Occurrence
-        fields = ('start_time','end_time','training','challenge','location__abbrv')
+        fields = ('start_time','end_time','training__name','challenge__name','location__abbrv')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
