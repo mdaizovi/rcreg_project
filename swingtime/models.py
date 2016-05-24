@@ -246,20 +246,6 @@ class Occurrence(models.Model):
     def __lt__(self, other):
         return self.start_time < other.start_time
 
-    #---------------------------------------------------------------------------
-    # @property
-    # def title(self):
-    #     activity=self.event.get_activity()
-    #     if activity:
-    #         return activity.name
-    #     else:
-    #         return "no challenge or training chosen"
-    #---------------------------------------------------------------------------
-
-#############practicing before deleting
-    # @property
-    # def event_type(self):
-    #     return self.event.event_type
 
     #---------------------------------------------------------------------------
     def get_activity(self):

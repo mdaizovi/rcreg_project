@@ -44,6 +44,8 @@ class OccurrenceResource(resources.ModelResource):
     end=fields.Field()
     skill_display=fields.Field()
     con_display=fields.Field()
+    figureheads=fields.Field()
+    description=fields.Field()
 
 
     def dehydrate_skill_display(self,occurrence):
@@ -71,10 +73,24 @@ class OccurrenceResource(resources.ModelResource):
         d=occurrence.end_time
         return d.strftime("%I:%M %p")
 
+    def dehydrate_figureheads(self,occurrence):
+        activity=occurrence.activity
+        if activity:
+            return activity.get_figurehead_display()
+        else:
+            return ""
+
+    def dehydrate_description(self,occurrence):
+        activity=occurrence.activity
+        if activity and hasattr(activity, 'description'):
+            return activity.description
+        else:
+            return ""
+
 
     class Meta:
         model = Occurrence
-        fields = ('day','start','end','training__name','challenge__name','skill_display','location__abbrv','con_display')
+        fields = ('day','start','end','training__name','challenge__name','figureheads','skill_display','location__abbrv','con_display','description')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
