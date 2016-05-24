@@ -34,6 +34,8 @@ def roster_skills_check():
     print "all approved: ",len(approved)
     print "mismatches: ",len(mismatch)
     for c in mismatch:
+        print "\n"
+        print "MISMATCH: ",c
         r1skills=[]
         r2skills=[]
         print c.roster1.pk, c.roster1, c.roster1.skill_display()

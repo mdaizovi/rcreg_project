@@ -321,7 +321,7 @@ class Roster(Matching_Criteria):
         allowed=[]
         skillphabet=["A","AB","B","BC","C"]
         if self.skill:
-            print self, self.skill
+            #print self, self.skill
             skill_index=skillphabet.index(self.skill_display())
             for i in range(skill_index-1,skill_index+2):
                 if i>=0 and i<len(skillphabet):
