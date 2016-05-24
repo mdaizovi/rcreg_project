@@ -9,6 +9,9 @@ from import_export import resources,fields
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 #from swingtime.models import *
 from swingtime.models import Occurrence,TrainingRoster
+import datetime
+#import time
+
 
 class TrainingRosterREGInline(admin.TabularInline):
     model = TrainingRoster
@@ -36,6 +39,9 @@ class OccurrenceInline(admin.TabularInline):
 
 #===============================================================================
 class OccurrenceResource(resources.ModelResource):
+    day=fields.Field()
+    start=fields.Field()
+    end=fields.Field()
     skill_display=fields.Field()
     con_display=fields.Field()
 
@@ -45,18 +51,30 @@ class OccurrenceResource(resources.ModelResource):
         if activity:
             return activity.skill_display()
         else:
-            return None
+            return ""
 
     def dehydrate_con_display(self,occurrence):
         activity=occurrence.activity
         if activity:
-            return "(%s %s)"%(activity.con.year,activity.con.city)
+            return "%s %s"%(activity.con.year,activity.con.city)
         else:
-            return None
+            return ""
+
+    def dehydrate_day(self,occurrence):
+        return occurrence.start_time.date()
+
+    def dehydrate_start(self,occurrence):
+        d=occurrence.start_time
+        return d.strftime("%I:%M %p")
+
+    def dehydrate_end(self,occurrence):
+        d=occurrence.end_time
+        return d.strftime("%I:%M %p")
+
 
     class Meta:
         model = Occurrence
-        fields = ('start_time','end_time','training__name','challenge__name','skill_display','location__abbrv','con_display')
+        fields = ('day','start','end','training__name','challenge__name','skill_display','location__abbrv','con_display')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
