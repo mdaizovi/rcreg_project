@@ -1386,7 +1386,7 @@ class Training(Activity):
             des+=self.description
         for c in self.coach.all():
             if c.description:
-                des+="\n"+c.description
+                des+="\n\n"+c.description
         return des
 
     def save(self, *args, **kwargs):
