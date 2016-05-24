@@ -1325,7 +1325,6 @@ class Training(Activity):
         else:
             return "No location restrictions for registration"
 
-
     def onsk8s_icon(self):
         if self.onsk8s:
             return "glyphicon icon-onskates"
@@ -1378,6 +1377,17 @@ class Training(Activity):
             return "This training includes Contact"
         else:
             return "This training does not include Contact"
+
+
+    def full_description(self):
+        """returns training description, than coach description for each coach. or empty quotes"""
+        des=""
+        if self.description:
+            des+=self.description
+        for c in self.coach.all():
+            if c.description:
+                des+="\n"+c.description
+        return des
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names, colors'''

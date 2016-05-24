@@ -82,8 +82,10 @@ class OccurrenceResource(resources.ModelResource):
 
     def dehydrate_description(self,occurrence):
         activity=occurrence.activity
-        if activity and hasattr(activity, 'description'):
-            return activity.description
+        # if activity and hasattr(activity, 'description'):
+        #     return activity.description
+        if activity and activity.is_a_training():
+            return activity.full_description()
         else:
             return ""
 
