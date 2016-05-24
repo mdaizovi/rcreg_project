@@ -5,7 +5,7 @@ except ImportError:
 
 from django.contrib import admin
 from django.core.urlresolvers import reverse, resolve
-from import_export import resources
+from import_export import resources,fields
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 #from swingtime.models import *
 from swingtime.models import Occurrence,TrainingRoster
@@ -36,9 +36,27 @@ class OccurrenceInline(admin.TabularInline):
 
 #===============================================================================
 class OccurrenceResource(resources.ModelResource):
+    skill_display=fields.Field()
+    con_display=fields.Field()
+
+
+    def dehydrate_skill_display(self,occurrence):
+        activity=occurrence.get_activity()
+        if activity:
+            return activity.skill_display()
+        else:
+            return None
+
+    def dehydrate_con_display(self,occurrence):
+        activity=occurrence.activity
+        if activity:
+            return "(%s %s)"%(activity.con.year,activity.con.city)
+        else:
+            return None
+
     class Meta:
         model = Occurrence
-        fields = ('start_time','end_time','training__name','challenge__name','location__abbrv')
+        fields = ('start_time','end_time','training__name','challenge__name','skill_display','location__abbrv','con_display')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
