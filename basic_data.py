@@ -17,9 +17,41 @@ import_path=static_path+'unformatted/'
 export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
-    'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']            
+    'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 
 # reg,aud,reg_and_aud,chal,both,neither,rall=rostercheck()
+
+def roster_skills_check():
+    con=Con.objects.get(year="2016")
+    mismatch=[]
+    approved=Challenge.objects.filter(RCaccepted=True, con=con)
+    for c in approved:
+        r1=c.roster1.opponent_skills_allowed()
+        r2=c.roster2.opponent_skills_allowed()
+        if (c.roster1.skill_display() not in r2) or  (c.roster2.skill_display() not in r1):
+            mismatch.append(c)
+
+    print "all approved: ",len(approved)
+    print "mismatches: ",len(mismatch)
+    for c in mismatch:
+        r1skills=[]
+        r2skills=[]
+        print c.roster1.pk, c.roster1, c.roster1.skill_display()
+        for s in c.roster1.participants.all():
+            print s, s.skill
+            if s.skill not in r1skills:
+                r1skills.append(s.skill)
+        print "skills list: ",r1skills
+        print "\n"
+        print c.roster2.pk, c.roster2, c.roster2.skill_display()
+        for s in c.roster2.participants.all():
+            print s, s.skill
+            if s.skill not in r2skills:
+                r2skills.append(s.skill)
+        print "skills list: ",r2skills
+        print "\n"
+
+
 def rostercheck():
     reg=[]
     aud=[]

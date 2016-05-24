@@ -317,6 +317,19 @@ class Roster(Matching_Criteria):
 
         return skater_remove,remove_fail
 
+    def opponent_skills_allowed(self):
+        allowed=[]
+        skillphabet=["A","AB","B","BC","C"]
+        if self.skill:
+            skill_index=skillphabet.index(self.skill_display())
+            for i in range(skill_index-1,skill_index+2):
+                if i>=0 and i<=len(skillphabet):
+                    allowed.append(skillphabet[i])
+        else:
+            allowed.append( self.skill_display() )
+        print self, allowed
+        return allowed
+
     def genders_allowed(self):
         if self.gender=='NA/Coed':
             allowed=["Female","Male","NA/Coed"]
@@ -978,6 +991,7 @@ class Activity(models.Model):
 
         return loc_str
 
+
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
         if self.is_a_training():#if this is a training
@@ -1173,6 +1187,14 @@ class Challenge(Activity):
             display=r2skill
 
         return display
+
+    def skills_match(self):
+        match=False
+        if self.roster1 and self.roster2:
+            pass
+
+        return match
+
 
     def gender_display(self):
         """Like skill display above but w/ gender."""
