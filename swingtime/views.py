@@ -37,6 +37,51 @@ if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
 no_list=["",u'',None,"None"]
 
+@login_required
+def location_view(
+    request,
+    template='swingtime/location_view.html',
+    con_id=None,
+    loc_id=None,
+    **extra_context
+):
+    con=None
+    location=None
+    date_range=None
+
+    print "starting locaiton view"
+    if loc_id:
+        try:
+            location=Location.objects.get(pk=int(loc_id))
+            if con_id:
+                con=Con.objects.get(pk=con_id)
+            else:
+                con=Con.objects.most_upcoming()
+            con_locs=con.get_locations()
+            con_i=con_locs.index(location)
+            try:
+                next_loc=con_locs[con_i+1]
+            except:
+                next_loc=con_locs[0]
+            try:
+                prev_loc=con_locs[con_i-1]
+            except:
+                prev_loc=con_locs[-1]
+            date_range=con.get_date_range()
+        except ObjectDoesNotExist:
+            pass
+
+    by_location=Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end,location=location)
+
+    return render(request, template, {
+        'con':con,
+        'location':location,
+        'by_location': by_location,
+        'next_loc': next_loc,
+        'prev_loc': prev_loc,
+
+    })
+
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -960,6 +1005,7 @@ def _datetime_view(
 
     try:
         con=Con.objects.get(start__lte=dt, end__gte=dt)
+        con_id=con.pk
         all_locations=con.get_locations()
         if loc_id:
             locations=[Location.objects.get(pk=int(loc_id))]
@@ -967,12 +1013,14 @@ def _datetime_view(
             locations=con.get_locations()
     except ObjectDoesNotExist:
         con=None
+        con_id=None
         all_locations=[]
         locations=[]
 
     return render(request, template, {
         'day':       dt,
         'con':       con,
+        'con_id':  con_id,
         'locations': locations,
         'loc_id':loc_id,
         'maxwidth': 99/(len(locations)+1),

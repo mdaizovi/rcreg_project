@@ -31,7 +31,8 @@ urlpatterns = [
 
     url(r'^calendar/location/(?P<loc_id>\d+)/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/$','swingtime.views.day_location_view',name='swingtime-daily-location-view'),
     url(r'^calendar/day_clone(?:/(?P<con_id>\d+))?/$', 'swingtime.views.day_clone',name='day_clone'),#can take con arguments, but I ahven'y written convenent links for that
-
+    #cool regex to say con_id may or may not be present:http://stackoverflow.com/questions/2325433/making-a-regex-django-url-token-optional
+    url(r'^calendar/location/(?P<loc_id>\d+)(?:/con/(?P<con_id>\d+))?/$',views.location_view,name='swingtime-location-view'),
 
 
 #________________________end my custom URLS____________________________________

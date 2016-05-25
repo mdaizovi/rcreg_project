@@ -1,7 +1,8 @@
 {% extends "swingtime/swingtime_base.html" %}
 {% block title %}Daily View{% endblock %}
 {% block main_content %}
-    <h3 class="margin-top-10">Daily View</h3>
+    <h3 class="margin-top-10">Daily View{%if locations|length = 1 %}: {%for l in locations%}
+      <a href="{% url 'swingtime-location-view' loc_id con_id%}">{{l.name}}</a>{%endfor%}{%endif%}</h3>
 
 {%if con%}
 
