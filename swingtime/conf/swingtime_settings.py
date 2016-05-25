@@ -31,3 +31,8 @@ DEFAULT_OCCURRENCE_DURATION = datetime.timedelta(hours=+1)
 
 # If not None, passed to the calendar module's setfirstweekday function.
 CALENDAR_FIRST_WEEKDAY = 6
+
+# #----------Dahmer custom settings
+#Note as of May 25 I haven't done anyhting w/ this yet, decided to work on Lupo project
+HOURS_B4_SIGNUP=2
+EARLY_EXCEPTION_HOUR=9

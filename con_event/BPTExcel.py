@@ -184,7 +184,9 @@ class BPTUploadForm(forms.Form):
                         this_reg=reg_q[0]
                         print "found %s, second try"%(this_reg)
                     else:#allow for same person, different email
-                        reg_q=Registrant.objects.filter(con=con).filter(Q(first_name__iexact=first_name,last_name__iexact=last_name)|Q(sk8name__iexact=sk8name,sk8number__iexact=sk8number))
+                        #reg_q=Registrant.objects.filter(con=con).filter(Q(first_name__iexact=first_name,last_name__iexact=last_name)|Q(sk8name__iexact=sk8name,sk8number__iexact=sk8number))
+                        #the above allowed skaters w/ same name to be merged as same person, if email wasn't found.
+                        reg_q=Registrant.objects.filter(con=con,first_name__iexact=first_name,last_name__iexact=last_name, sk8name__iexact=sk8name)
                         if reg_q.count()==1:
                             this_reg=reg_q[0]
                             print "found %s, third try w/ diff email"%(this_reg)
