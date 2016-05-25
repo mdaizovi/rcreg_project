@@ -241,7 +241,7 @@ class TrainingAdmin(ImportExportModelAdmin):#this has its own obvious expost but
     list_display= ('name','con')
     search_fields = ('name', 'con__year')
     filter_horizontal = ('coach',)
-    list_filter = ('con','onsk8s','registered__skill','registered__intl','registered__gender','location_type','contact')
+    list_filter = ('con','RCaccepted','onsk8s','registered__skill','registered__intl','registered__gender','location_type','contact')
     resource_class = TrainingResource
     fields = (('name','con','location_type'),('RCaccepted','RCrejected'),('skill','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes','communication')
     # inlines = [
