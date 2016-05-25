@@ -1,0 +1,39 @@
+{% extends "swingtime/swingtime_base.html" %}
+{% block title %}Yearly View {{ year }}{% endblock %}
+{% block main_content %}
+    <h3 class="margin-top-10">
+        <b>Location View</b>
+        <br>
+        <a class="plain" href="{% url 'swingtime-location-view' next_loc.pk con.pk%}">&larr;</a>
+        {{location.name}}<small> {{con}}</small>
+        <a class="plain" href="{% url 'swingtime-location-view' prev_loc.pk con.pk%}">&rarr;</a>
+    </h3>
+
+    {% if by_location %}
+    <table class="swingtime-table table-striped" style="width:100%;">
+        <thead class="swingtime-th">
+            <tr class="swingtime-tr">
+                <th class="swingtime-th" style="min-width:250px;">Title</th>
+                <th class="swingtime-th">Day</th>
+                <th class="swingtime-th">Start</th>
+                <th class="swingtime-th">End</th>
+            </tr>
+        </thead>
+        <tbody>
+          <tr class="swingtime-tr month-divider">
+        {% for o in by_location  %}
+            <td class="swingtime-td" style="min-width:250px;"><a href="{{ o.get_absolute_url }}">{{ o.name }}</a></td>
+            <td class="swingtime-td">{{ o.start_time|date:"M jS - l" }}</td>
+            <td class="swingtime-td">{{ o.start_time|date:"P" }}</td>
+            <td class="swingtime-td">{{ o.end_time|date:"P" }}</td>
+        </tr>
+            {% if not forloop.last %}
+        <tr>
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No events occurring in {{ con }}</p>
+    {% endif %}
+{% endblock %}
