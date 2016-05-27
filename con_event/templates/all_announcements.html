@@ -6,9 +6,7 @@
 
   {% block blogcontent %}
 
-
 {%for blog in blogs%}
-
         <div class="blog-post">
           <h1 class="blog-post-title">{{blog.headline}}</h1>
           <p class="blog-post-meta">{{blog.date}} by {{blog.user.first_name}}</p>
@@ -16,7 +14,5 @@
           <p><a href="{{ blog.get_absolute_url }}">Continue Reading &raquo; </a>{% endautoescape %}</p>
         </div><!-- /.blog-post -->
 {%endfor%}
-
-
 
 {% endblock %}
