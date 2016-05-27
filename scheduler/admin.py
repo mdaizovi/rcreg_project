@@ -174,7 +174,7 @@ class ChallengeAdmin(ImportExportModelAdmin):#this has its own obvious expost bu
     list_display= ('name', 'Captains','con','gametype','location_type','submitted_on','RCaccepted')
     list_display_links = list_display#makes everything in list display clickable to get to object
     search_fields = ('name','roster1__name', 'roster2__name','roster1__captain__sk8name','roster2__captain__sk8name')
-    fields = (('con','RCaccepted','RCrejected'),('location_type','ruleset','gametype'),('created_on','submitted_on'),
+    fields = (('con','RCaccepted','RCrejected','interest'),('location_type','ruleset','gametype'),('created_on','submitted_on'),
         ('roster1','captain1accepted','roster1score'),('roster2','captain2accepted','roster2score'),'internal_notes','communication')
     list_filter = ('con','location_type','is_a_game')
     resource_class = ChallengeResource
@@ -243,14 +243,15 @@ class TrainingAdmin(ImportExportModelAdmin):#this has its own obvious expost but
     filter_horizontal = ('coach',)
     list_filter = ('con','RCaccepted','onsk8s','registered__skill','registered__intl','registered__gender','location_type','contact')
     resource_class = TrainingResource
-    fields = (('name','con','location_type'),('RCaccepted','RCrejected'),('skill','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes','communication')
+    fields = (('name','con','location_type'),('RCaccepted','RCrejected','interest'),('skill','onsk8s','contact','regcap','audcap','duration'),'coach','description','internal_notes','communication')
     # inlines = [
     #     RegisteredInline, AuditingInline
     # ]
 
     def view_on_site(self, training):
         from scheduler.views import view_training
-        return 'localhost:8000' + reverse('scheduler.views.view_training',
+        return 'http://www.rollertron.com' + reverse('scheduler.views.view_training',
+        #return 'localhost:8000' + reverse('scheduler.views.view_training',
                                               kwargs={'activity_id': training.pk})
 
 class CoachResource(resources.ModelResource):
