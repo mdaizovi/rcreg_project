@@ -22,6 +22,9 @@
   <div class="panel panel-default margin-top-15">
     <!-- Default panel contents -->
     <div class="panel-heading"><h2 class="text-center">{{coach.user.first_name}}
+      {%if user.is_the_boss%}<a href="{{coach.get_my_schedule_url}}">
+      <span class="glyphicon glyphicon-calendar" aria-hidden="true" ></span>
+      </a>{%endif%}
       {%if coach.can_email%}
       {% url 'email_coach'  coach.id as email_url %}
       <br><small><a href="{{email_url}}">email coach</a></small></h2>{%endif%}

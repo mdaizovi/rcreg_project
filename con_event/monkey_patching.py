@@ -1,5 +1,6 @@
 #reference: http://stackoverflow.com/questions/2939941/django-user-model-adding-function
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models import Q
 
@@ -131,6 +132,12 @@ def get_registrant_for_most_upcoming_con(self):
         relevant_user=None
     return relevant_user
 
+def get_my_schedule_url(self):
+    """Used for bosses to check coach's schedule"""
+    from scheduler.views import my_schedule
+    url = "%s?user=%s" % (reverse('scheduler.views.my_schedule'),self.pk)
+    return url
+
 User.add_to_class("is_a_boss",is_a_boss)
 User.add_to_class("is_the_boss",is_the_boss)
 User.add_to_class("is_a_coach",is_a_coach)
@@ -143,3 +150,4 @@ User.add_to_class("trainings_coached",trainings_coached)
 User.add_to_class("upcoming_registrants",upcoming_registrants)
 User.add_to_class("get_most_recent_registrant",get_most_recent_registrant)
 User.add_to_class("get_registrant_for_most_upcoming_con",get_registrant_for_most_upcoming_con)
+User.add_to_class("get_my_schedule_url",get_my_schedule_url)

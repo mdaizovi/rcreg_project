@@ -88,33 +88,34 @@ def my_schedule(request):
         reg_coach=user.is_a_coach()
 
     #happens whether is reg checking thier own scheudle or Boss spoofing it
-    for registrant in registrant_list:
-        reg_os=[]
+    if not spoof_error:
+        for registrant in registrant_list:
+            reg_os=[]
 
-        if reg_coach:
-            coach_trains=reg_coach.training_set.filter(con=registrant.con)
-            for t in coach_trains:
-                reg_os+=list(t.occurrence_set.all())
+            if reg_coach:
+                coach_trains=reg_coach.training_set.filter(con=registrant.con)
+                for t in coach_trains:
+                    reg_os+=list(t.occurrence_set.all())
 
-        reg_trains=list(registrant.trainingroster_set.all())
-        for tr in reg_trains:
-            if tr.registered:
-                reg_os+=tr.registered
-            elif tr.auditing:
-                reg_os+=tr.auditing
+            reg_trains=list(registrant.trainingroster_set.all())
+            for tr in reg_trains:
+                if tr.registered:
+                    reg_os+=tr.registered
+                elif tr.auditing:
+                    reg_os+=tr.auditing
 
-        reg_ros=list(registrant.roster_set.all())
-        chal=[]
-        for ros in reg_ros:
-            chal+=list(ros.roster1.all())
-            chal+=list(ros.roster2.all())
-            for c in chal:
-                for o in c.occurrence_set.all(): #othersise it gets added 2x
-                    if o not in reg_os:
-                        reg_os.append(o)
-        reg_os.sort(key=lambda o: o.start_time)
-        registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':reg_os}
-        registrant_dict_list.append(registrant_dict)
+            reg_ros=list(registrant.roster_set.all())
+            chal=[]
+            for ros in reg_ros:
+                chal+=list(ros.roster1.all())
+                chal+=list(ros.roster2.all())
+                for c in chal:
+                    for o in c.occurrence_set.all(): #othersise it gets added 2x
+                        if o not in reg_os:
+                            reg_os.append(o)
+            reg_os.sort(key=lambda o: o.start_time)
+            registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':reg_os}
+            registrant_dict_list.append(registrant_dict)
 
     if upcoming_registrants and len(upcoming_registrants)>1:
         active=Con.objects.most_upcoming()

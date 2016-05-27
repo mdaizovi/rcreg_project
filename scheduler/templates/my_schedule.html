@@ -16,7 +16,7 @@
     {%if spoof_error%}
     <div class="alert alert-danger" role="alert">
     Error finding User or Registrant</div>
-    {%endif%}
+    {%else%}
 
     {%if not registrant_dict_list%}
     <div class="alert alert-danger" role="alert">
@@ -86,7 +86,7 @@
       </div><!-- end tab-content -->
     </div><!-- end tabbable -->
 {%endif%}<!-- if registrant_dict_list, ie if they have registered for at least one con -->
-
+{%endif%}<!-- if spoof error -->
   </div><!-- end col-sm-12 -->
 </div><!-- end row-->
 

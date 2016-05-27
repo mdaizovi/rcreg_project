@@ -594,6 +594,13 @@ class Registrant(Matching_Criteria):
                 except:
                     print "error deleting blackout: ",self, date, ampmitem
 
+    def get_my_schedule_url(self):
+        """Used for bosses to check someone's schedule
+        at point of writing i dont know where to link ot this, just thought i might as well add it"""
+        from scheduler.views import my_schedule
+        url = "%s?registrant=%s" % (reverse('scheduler.views.my_schedule'),self.pk)
+        return url
+
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names
         makes most_upcoming con the con, if none supplied

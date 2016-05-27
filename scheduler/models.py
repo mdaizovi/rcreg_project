@@ -1447,9 +1447,8 @@ class Coach(models.Model):
 
     def get_my_schedule_url(self):
         """Used for bosses to check coach's schedule"""
-        from scheduler.views import my_schedule
-        url = "%s?user=%s" % (reverse('scheduler.views.my_schedule'),self.user.pk)
-        return url
+        from con_event.monkey_patching import get_my_schedule_url
+        return self.user.get_my_schedule_url()
 
     def unconfirmed_trainings(self):
         '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
