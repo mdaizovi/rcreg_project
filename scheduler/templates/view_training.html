@@ -17,7 +17,13 @@
 
     <h2 class="text-center">{{training.name}}<small>
 {%for coach in training.coach.all%}{%if not forloop.first%}, {%endif%}<a href="{{ coach.get_absolute_url}}">
-{{coach.user.first_name}}</a>{%endfor%}</small>
+{{coach.user.first_name}}</a>
+{%if user.is_the_boss%}<a href="{{coach.get_my_schedule_url}}">
+<span class="glyphicon glyphicon-calendar" aria-hidden="true" ></span>
+</a>{%endif%}
+
+
+{%endfor%}</small>
 {%if user in training.editable_by%}<a href="{{training.get_edit_url}}"><button type="button" class="btn btn-success">Edit Training</button></a>{%endif%}
 </h2>
     <hr>

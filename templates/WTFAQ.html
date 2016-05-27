@@ -37,7 +37,7 @@
 <li><a href="#futurebreak">Is there anything about RollerTron that you expect to break in the future?</a></li>
 <li><a href="#howcontactyou">I'm still confused. How can I contact you?</a></li>
 </ul>
-<h3>&nbsp;</h3>
+<h3>&nbsp;</h3><hr>
 
 
 <p><img class="img-responsive" style="padding: 10px 10px 10px 10px;" src="{% static "images/khaleesibloodridercrop.png" %}" width="462" height="330" align="right" /></p>
@@ -46,7 +46,7 @@
 <p>In order to see this page you need to be either the Khaleesi herself or one of her trusted <a href="http://m.westeros.org/index.php/Bloodrider">Bloodriders</a>.
   <small style="font-size: 11px;">Yes I know Missandei is not a bloodrider, but doesn't Bacon look lovely in her dress?</small>
 </p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="whatedit"></span>
 <p><b>What can I edit and what should I never touch?</b></p>
@@ -59,7 +59,7 @@ every time you add a new Registrant (ie Dahmer's MVP pass in 2015, Dahmer's Skat
 Coaches are also connected to their Registrants through the User, which is how I had to do it do they wouldn't have to update their bio every year, and so their page would show all of their classes, not just one year's worth.<br>
 It would be possible to manually connect registrants with different email addresses, like if someone changes their email address, but lets pretend it's impossible and encourage them to use the same email address always.
 </p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="whatnewcon"></span>
 <p><b>What happens when I add a new Con? Which fields are automatic and which do I need to populate?</b></p>
@@ -86,10 +86,9 @@ Just remember to look at the Con after you save it to see if you agree with thes
         <li><b>sched_visible</b> (Will make the Schedule visible on main Challenge/Training pages</li>
         <li><b>sched_final</b> (Scheduled Challenges/Trainings can't be unsubmitted)</li>
       </ul>
-You can never touch the BPT_event_id. That was meant to direct people directly to the BPT ticket buying page.
-
+It's okay to never touch the BPT_event_id. That was meant to direct people directly to the BPT ticket buying page, but now it does nothing.
 </p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="exportexcel"></span>
 <p><b>How do I download excel sheets of DB data? What's with the Import and Export buttons on the Admin?</b></p>
@@ -99,7 +98,7 @@ You can never touch the BPT_event_id. That was meant to direct people directly t
 <li>Click the grey <b>Export</b> button.
   <li>On the next page, choose a format from the dropdown and click Submit (right side, blue button).<b> XLSX</b> is the best. XLS doesn't always work and CSV might just give you 1 column separated by commas.</li>
   <li>A file with the name of the thing you exported, plus the date (ex: Challenge-2016-05-09), will get downloaded to your My Downloads folder. That's it!</li></ul>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 
 <span class="anchor" id="HowIaddChal"></span>
@@ -116,7 +115,7 @@ You can never touch the BPT_event_id. That was meant to direct people directly t
         <li>Save. The next time the captains log in to RollerTron they'll see the same thing everyone else sees when they've completed the whole acceptance/submission process.</li>
       <li><i><b>TIP: </b>You can also do this as to make placeholder-challenges, if you want to scheudle but aren't sure who the team is going to be. Just make a Challenge with yourself or some other trusted RC staff as captains,
         and when you know the correct captian/color/name data, <a href="/admin/scheduler/roster/">edit the Rosters you made through the Admin</a>.</i></li></ol>
-  <p>&nbsp;</p>
+  <p>&nbsp;</p><hr>
 
 
 <span class="anchor" id="howchangeemail"></span>
@@ -129,7 +128,7 @@ You can never touch the BPT_event_id. That was meant to direct people directly t
 <p>The reason why I want you to do it this way is because if you only change the Registrant email address and remove the old User, a new User will be created,
   and it will be confusing for them when they forget they changed their email address and log in with their old one, and can't find any of their pass data.
   <br>The homeless User could also be confusing for an Admin someday.</p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="howchangename"></span>
 <p><b>What do I need to know about changing someone's name?</b></p>
@@ -139,7 +138,7 @@ You can never touch the BPT_event_id. That was meant to direct people directly t
   Or there can be to Leggs n Bacons, but they can't both be named Angela Parrill.
   And if there is a doppelganger Leggs n Bacon who is also named Angela Parrill, she can't come to the same Con as the one we all know and love.<br>
 Also, I strip out non-ascii characters like accents and umlauts, as well as punctuation. So no point putting those in.</p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 
 <span class="anchor" id="howINTLREG"></span>
@@ -150,7 +149,7 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
     <br><i>Note: This will not work properly if you ever hold a RollerCon in Hawaii, Alaska, or on a military base.</i>
     <li><b>Or</b> an admin like you can make them INTL and it'll trust your judgement. In that case we don't need to know their county/state</li>
       <li>Save.</li></ol>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="howINTLTR"></span>
 <p><b>How do I make a Training INTL?</b></p>
@@ -161,7 +160,7 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
   <li> Click the first green + "Add another Training roster" button.</li>
     <li> A bunch of shit will pop up. Find the part on the left that says, "Intl", find the little dropdown under that, and choose "Yes"</li>
   <li>Save.</li></ol>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="INTLCAP"></span>
 <p><b>What's the deal with signing people up for INTL classes? The numbers are weird</b></p>
@@ -169,8 +168,7 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
   You still need to be INTL to be signed up for the INTL Registration TrainingRoster, but anyone can sign up for the Auditing TrainingRoster, and that's the roster of people that may or may not be allowed to skate during the training, if the Coach allows.<br>
   So that's why the numbers are weird, because the Auditing Capacity is actually:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
 </p>
-
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 
 <span class="anchor" id="hownewattendee"></span>
@@ -179,7 +177,7 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
   Please note that this importer is written based on exactly how the BPT reports looked in 2016, so if that ever changes you need to move the columns around, use the same header, and format the data so that it looks just like it did in 2016.</p>
 <p>Otherwise, you can <a href="/admin/con_event/registrant/">add new Registrants through the Admin</a>. On the top right of the screen, under the blue bar you should see a little grey <b>Add registrant</b> button.<br>Please note that you have to input email, first_name, and last_name. Sk8name and Sk8number are optional,
   but if they do have a sk8number please enter it because that becomes their User display name forever. If they don't have one, like if they are a vendor, their first name will be the display name.</p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="howdloccur"></span>
 <p><b>Is there a way to get an excel version of the schedule now with details like the one we used to download from Google?</b></p>
@@ -187,21 +185,21 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
 Go to the upper right, where there are 3 grey ovals, and click the one that says "Export".<br>
 The bad news is the only way for me to make it let you choose which ones to download ahead of time is to put the "export selected occurrences" in the same dropdown as "delete selected occurrences", which to me feels like sleeping with a loaded gun under your pillow, so you have to download all of them, find where the relelvant Con starts, and delete everything (on the excel sheet) that's for the wrong con.
 </p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 
 <span class="anchor" id="futurebreak"></span>
 <p><b>Is there anything about RollerTron that you expect to break in the future?</b></p>
 <p>RollerTron was built with the expectation that it will be used for many years, and it can even handle more than 1 upcoming Con, or Cons in different locaitons, like one in Colombia in November to shortly follow the usual July in Vegas.<br>
 HOWEVER the time zone is hard-coded to Las Vegas time. RollerTron will need to have some parts rewritten in the future by someone who knows what they're doing if you have a Con in a different time zone.</p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="howcontactyou"></span>
 <p><b>I'm still confused. How can I contact you?</b></p>
 <p>You can either email<a href="mailto:rcregsite@gmail.com"> the Secret, REAL RCregsite email</a>, but I don't check it that often. Better to use <a href="mailto:mdaizovi@gmail.com"> my personal email address.</a>
 <br>My Google Voice number will probably never change and that's <a href="tel://1-262-477-9684"> 262-477-9684 (262 4ss zovi, like my name with ass in it)</a>.
 </p>
-<p>&nbsp;</p>
+<p>&nbsp;</p><hr>
 
 
   </div><!-- row-->

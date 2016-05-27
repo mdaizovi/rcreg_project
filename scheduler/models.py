@@ -1445,6 +1445,12 @@ class Coach(models.Model):
         from scheduler.views import view_coach
         return reverse('scheduler.views.view_coach', args=[str(self.pk)])
 
+    def get_my_schedule_url(self):
+        """Used for bosses to check coach's schedule"""
+        from scheduler.views import my_schedule
+        url = "%s?user=%s" % (reverse('scheduler.views.my_schedule'),self.user.pk)
+        return url
+
     def unconfirmed_trainings(self):
         '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
         This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''

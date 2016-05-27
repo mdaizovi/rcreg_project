@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import connection as dbconnection
 from django.db.models import Q
 from django.utils import timezone
+from django.contrib.auth.models import User
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
@@ -31,6 +32,105 @@ no_list=["",u'',None,"None"]
             #mvp_id_list= selection.getlist('mvpid')
             #print "selectiondict: ",selectiondict
             #selectiondict=dict(selection.lists())
+@login_required
+def my_schedule(request):
+    """Used for Registrants to see My Schedule. If reg_id is provided and User is a boss, can also be hijacked ot see other people's schedules"""
+    user=request.user
+    most_upcoming=Con.objects.most_upcoming()
+    registrant_dict_list=[]
+    me_coach=None
+    spoof_reg=None
+    spoof_user=None
+    spoof_error=False
+
+    # if reg_id:
+    #     print "REG ID is: ",reg_id
+    #     try:
+    #         reg=Registrant.objects.get(pk=reg_id)
+    #         registrant_list=[reg]
+    #         upcoming_registrants=[reg]
+    #         reg_coach=reg.user.is_a_coach()
+    #     except ObjectDoesNotExist:
+    #         return render_to_response('my_schedule.html',{},context_instance=RequestContext(request))
+        #ll the stuff that happens if this is a Boss spoofing, not perosn checking their own schedule
+    if user.is_the_boss() and ("registrant" in request.GET or "user" in request.GET): #and is a boss
+
+        if "user" in request.GET: #and is a boss
+            try:
+                spoof_user=User.objects.get(pk=request.GET['user'])
+                registrant_list=list(spoof_user.registrant_set.all())
+                upcoming_registrants=spoof_user.upcoming_registrants()
+                reg_coach=spoof_user.is_a_coach()
+            except ObjectDoesNotExist:
+                spoof_error=True
+                registrant_list= list(user.registrant_set.all())
+                upcoming_registrants=user.upcoming_registrants()
+                reg_coach=user.is_a_coach()
+                #return render_to_response('my_schedule.html',{'spoof_error':True},context_instance=RequestContext(request))
+
+        elif "registrant" in request.GET: #and is a boss
+            try:
+                spoof_reg=Registrant.objects.get(pk=request.GET['registrant'])
+                registrant_list=[spoof_reg]
+                upcoming_registrants=[spoof_reg]
+                reg_coach=spoof_reg.user.is_a_coach()
+            except ObjectDoesNotExist:
+                spoof_error=True
+                registrant_list= list(user.registrant_set.all())
+                upcoming_registrants=user.upcoming_registrants()
+                reg_coach=user.is_a_coach()
+                #return render_to_response('my_schedule.html',{'spoof_error':True},context_instance=RequestContext(request))
+
+    else:
+        #if not a boss, will always return own my schedule
+        registrant_list= list(user.registrant_set.all())
+        upcoming_registrants=user.upcoming_registrants()
+        reg_coach=user.is_a_coach()
+
+    #happens whether is reg checking thier own scheudle or Boss spoofing it
+    for registrant in registrant_list:
+        reg_os=[]
+
+        if reg_coach:
+            coach_trains=reg_coach.training_set.filter(con=registrant.con)
+            for t in coach_trains:
+                reg_os+=list(t.occurrence_set.all())
+
+        reg_trains=list(registrant.trainingroster_set.all())
+        for tr in reg_trains:
+            if tr.registered:
+                reg_os+=tr.registered
+            elif tr.auditing:
+                reg_os+=tr.auditing
+
+        reg_ros=list(registrant.roster_set.all())
+        chal=[]
+        for ros in reg_ros:
+            chal+=list(ros.roster1.all())
+            chal+=list(ros.roster2.all())
+            for c in chal:
+                for o in c.occurrence_set.all(): #othersise it gets added 2x
+                    if o not in reg_os:
+                        reg_os.append(o)
+        reg_os.sort(key=lambda o: o.start_time)
+        registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':reg_os}
+        registrant_dict_list.append(registrant_dict)
+
+    if upcoming_registrants and len(upcoming_registrants)>1:
+        active=Con.objects.most_upcoming()
+    else:
+        try:
+            most_upcoming_reg=registrant_list[0]
+            active=most_upcoming_reg.con
+        except:
+            active=None
+
+
+    return render_to_response('my_schedule.html',{'spoof_error':spoof_error,'spoof_user':spoof_user,'spoof_reg':spoof_reg,'active':active,'registrant_dict_list':registrant_dict_list,'registrant_list':registrant_list}, context_instance=RequestContext(request))
+
+
+###############
+
 
 @login_required
 def email_captain(request, roster_id):

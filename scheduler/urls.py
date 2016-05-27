@@ -42,4 +42,6 @@ urlpatterns = patterns('',
     url(r'^coach/email/(?P<coach_id>\d+)/$', 'scheduler.views.email_coach', name='email_coach'),
     url(r'^coach/profile/', 'scheduler.views.coach_profile',name='coach_profile'),
 
+    #url(r'^my_schedule(?:/(?P<reg_id>\d+))?/$', 'scheduler.views.my_schedule',name='my_schedule'),
+    url(r'^my_schedule/', 'scheduler.views.my_schedule',name='my_schedule'),
 )
