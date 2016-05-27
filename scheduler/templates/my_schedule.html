@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}My Schedule{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>{%if spoof_reg %}{{spoof_reg.name}}'s{%elif spoof_user%}{{spoof_user.get_most_recent_registrant.name}}'s{%else%}My{%endif%} Schedule</h3>
+
+    {%if spoof_error%}
+    <div class="alert alert-danger" role="alert">
+    Error finding User or Registrant</div>
+    {%endif%}
+
+    {%if not registrant_dict_list%}
+    <div class="alert alert-danger" role="alert">
+    You have not have any RollerCon passes on file. Please contact the site administrator if you believe this to be in error.</div>
+    {%else%}
+
+    <div class="tabbable">
+      <ul class="nav nav-tabs">
+
+{%for dict in registrant_dict_list%}
+
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with '#tab'|add:con_number as tab_number %}
+
+<li {%if dict.con == active %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{dict.con}}</a></li>
+
+{%endwith%}{%endwith%}
+{%endfor%}
+</ul>
+
+<div class="tab-content margin-top-10">
+{%for dict in registrant_dict_list%}
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with 'tab'|add:con_number as tab_number %}
+
+
+<div class="tab-pane {%if dict.con == active %}active{%endif%}" id="{{tab_number}}">
+
+
+  <div class="row">
+    <div class="col-md-12 pull-left">
+
+    <div class="panel panel-default">
+    <!-- <div class="panel-heading"><b>My Challenges</b></div>-->
+    <div class="panel-body">
+
+{%if dict.reg_os %}
+      <table class="table table-hover">
+      <tr><th>Activity</th><th>Date</th><th>Time</th><th class="text-left" colspan="2">Location</th></tr>
+{%for o in dict.reg_os %}
+<tr><td><a href="{{o.activity.get_view_url}}">{{o.name}}</a></td>
+
+  <td style="vertical-align: middle;">
+  {{ o.start_time|date:"D d" }}</td>
+
+  <td style="vertical-align: middle;">
+    {{ o.start_time|date:"f a" }} - {{ o.end_time|date:"f a" }}</td>
+
+  <td style="vertical-align: middle;">{{o.location.name}}</td>
+      {%endfor%}
+      </table>
+
+      {%else%}<!-- if no trainings -->
+      <p>No Scheduled Activities found.</p>
+      {%endif%}
+    </div>
+
+    </div>
+
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+        </div><!-- end tab-pane -->
+        {%endwith%}{%endwith%}
+        {%endfor%}<!-- dict in registrant_dict_list% -->
+
+      </div><!-- end tab-content -->
+    </div><!-- end tabbable -->
+{%endif%}<!-- if registrant_dict_list, ie if they have registered for at least one con -->
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}
