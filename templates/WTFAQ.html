@@ -24,6 +24,7 @@
 <ul>
 <li><a href="#whocansee">Who can see this page?</a></li>
 <li><a href="#whatedit">What can I edit and what should I never touch?</a></li>
+<li><a href="#whatnewcon">What happens when I add a new Con? Which fields are automatic and which do I need to populate?</a></li>
 <li><a href="#exportexcel">How do I download excel sheets of DB data? What's with the Import and Export buttons on the Admin?</a></li>
 <li><a href="#HowIaddChal">Is there a way for me to enter Challenges or Rosters without the hassle of captains and accepting and stuff?</a></li>
 <li><a href="#howchangeemail">How do I change someone's email address?</a></li>
@@ -57,6 +58,36 @@ Basically every real human being gets one User, which can hold several Registran
 every time you add a new Registrant (ie Dahmer's MVP pass in 2015, Dahmer's Skater pass in 2016, etc) with the same email address as one before (mdaizovi@gmail.com), it gets added to the User associated with that email address.<br>
 Coaches are also connected to their Registrants through the User, which is how I had to do it do they wouldn't have to update their bio every year, and so their page would show all of their classes, not just one year's worth.<br>
 It would be possible to manually connect registrants with different email addresses, like if someone changes their email address, but lets pretend it's impossible and encourage them to use the same email address always.
+</p>
+<p>&nbsp;</p>
+
+<span class="anchor" id="whatnewcon"></span>
+<p><b>What happens when I add a new Con? Which fields are automatic and which do I need to populate?</b></p>
+<p>The following fields will auto-populate after the first time you save a Con:
+  <ul>
+    <li><b>city</b> (Las Vegas, unless you specify otherwise)</li>
+    <li><b>state</b> (Nevada, unless you specify otherwise)</li>
+    <li><b>country</b> (USA, unless you specify otherwise)</li>
+    <li><b>year</b> (Year of Con. It takes this from the start date)</li>
+    <li><b>challenge_submission_start</b> (1st day of month, 4 months prior to Con. A Con that starts in July will always have a Challenge Submission Date of March 1)</li>
+    <li><b>training_submission_end</b> (15th day of month, 2 months prior to Con. A Con that starts in July will always have a Training Submission End Date of May 15)</li>
+    <li><b>hotel_book_link</b> For the home landing page. Always <a href="http://rollercon.com/register/hotel-reservations/">http://rollercon.com/register/hotel-reservations/</a> unless otherwise specified </li>
+    <li><b>ticket_link</b> For the home landing page. Always <a href="http://rollercon.com/register/rollercon-pass/">http://rollercon.com/register/rollercon-pass/</a> unless otherwise specified </li>
+</ul>
+Just remember to look at the Con after you save it to see if you agree with these things, and change them if you don't.
+<br>Things that you need to remember to fill out yourself:
+<ul>
+    <li><b>start</b> (Start Date of Con)</li>
+    <li><b>end</b> (End Date of Con)</li>
+    <li><b>venue</b> (Venue where it's held. Might need to make a new one by clicking on little green + button near Venue field when making Con in the Admin)</li>
+  </ul>
+  Things that you will change when ready:
+  <ul>
+        <li><b>sched_visible</b> (Will make the Schedule visible on main Challenge/Training pages</li>
+        <li><b>sched_final</b> (Scheduled Challenges/Trainings can't be unsubmitted)</li>
+      </ul>
+You can never touch the BPT_event_id. That was meant to direct people directly to the BPT ticket buying page.
+
 </p>
 <p>&nbsp;</p>
 
