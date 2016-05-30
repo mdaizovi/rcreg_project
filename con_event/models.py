@@ -624,6 +624,35 @@ class Registrant(Matching_Criteria):
 
         return reg_os
 
+    def check_conflicts(self):
+        """Gets occurrences, checks to see if any are at conflicting times """
+        from swingtime.models import Occurrence #need here in case of import error?
+        from scheduler.models import Challenge, Training,Coach
+        reg_os=self.get_occurrences()
+        conflict=[]
+        free=[]
+
+        sk8er_ros=self.roster_set.all()
+        sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
+
+        sk8er_coach_list=list(Coach.objects.filter(user=self.user))
+        if hasattr(self.user, 'coach'):
+            sk8er_train=self.user.coach.training_set.filter(con=self.con)
+        else:
+            sk8er_train=[]
+
+        for o in reg_os:
+            concurrent=Occurrence.objects.filter(start_time__lt=(o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(o.start_time - datetime.timedelta(minutes=30))).filter(Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)).exclude(pk=o.pk)
+
+            if len(concurrent)<1:
+                free.append(o)
+            else:
+                if o not in conflict:
+                    conflict.append(o)
+
+        return conflict,free
+
+
     def get_my_schedule_url(self):
         """Used for bosses to check someone's schedule
         at point of writing i dont know where to link ot this, just thought i might as well add it"""

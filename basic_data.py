@@ -86,7 +86,7 @@ def check_chal_conflicts(con):
                 rostered_sk8ers.append(s)
     print "%s scheduled skaters for %s"%(str(len(rostered_sk8ers)), str(con))
     #######here's where i'd do sk8er.get_occurrences, but haven't tested it yet.
-    
+
 
 
 
@@ -109,9 +109,6 @@ def check_sk8er_schedule_conflict(sk8er):
 
     sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
 
-    #print "%s is in %s accepted challenges" %(sk8er,str(len(sk8er_chal)) )
-    #print "%s is coaching %s accepted trainings" %(sk8er,str(len(sk8er_train)) )
-
     sk8ero=list(Occurrence.objects.filter( Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)))
     print "%s is in %s scheduled occurrences" %(sk8er,str(len(sk8ero)) )
 
@@ -124,20 +121,11 @@ def check_sk8er_schedule_conflict(sk8er):
         else:
             conflict.append(o)
 
-
     print "%s conflicting and %s free scheduled occurrences for %s" %( str(len(conflict)) , str(len(free)), str(sk8er.name))
     print"Conflicts: "
     for c in conflict:
         print "%s %s - %s"%(str(c.name), c.start_time.strftime("%a %B %d %I:%-M %p"), c.end_time.strftime("%I:%-M %p") )
     return conflict,free
-
-
-
-
-
-
-
-
 
 
 def roster_skills_check():

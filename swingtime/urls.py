@@ -34,6 +34,8 @@ urlpatterns = [
     #cool regex to say con_id may or may not be present:http://stackoverflow.com/questions/2325433/making-a-regex-django-url-token-optional
     url(r'^calendar/location/(?P<loc_id>\d+)(?:/con/(?P<con_id>\d+))?/$',views.location_view,name='swingtime-location-view'),
 
+    url(r'^calendar/conflicts(?:/(?P<con_id>\d+))?/$',views.conflict_check,name='conflict_check'),
+
 
 #________________________end my custom URLS____________________________________
     url(

@@ -37,6 +37,56 @@ if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
     calendar.setfirstweekday(swingtime_settings.CALENDAR_FIRST_WEEKDAY)
 no_list=["",u'',None,"None"]
 
+
+@login_required
+def conflict_check(
+    request,
+    template='swingtime/conflict_check.html',
+    con_id=None,
+    **extra_context
+):
+    if con_id:
+        try:
+            con=Con.objects.get(pk=con_id)
+        except ObjectDoesNotExist:
+            #con=None
+            con=Con.objects.most_upcoming()
+    else:
+        con=Con.objects.most_upcoming()
+    print "con is",con
+    active=False
+    coach_conflicts=[]
+    captain_conflicts=[]
+    registrant_conflicts=[]
+
+    if request.method == 'POST':
+        selection = request.POST.copy()
+        print "selection", selection
+        if 'coach' in request.POST:
+            active="coach"
+            #get all coaches, make list of dicts w/ k,v being coach, conflicts, 
+
+
+        elif 'captain' in request.POST:
+            active="captain"
+        elif 'registrant' in request.POST:
+            active="registrant"
+
+
+    return render(request, template, {
+        'con':con,
+        'active':active,
+        'coach_conflicts':coach_conflicts,
+        'captain_conflicts':captain_conflicts,
+        'registrant_conflicts':registrant_conflicts,
+
+    })
+
+#-------------------------------------------------------------------------------
+
+
+
+
 @login_required
 def location_view(
     request,
@@ -81,7 +131,6 @@ def location_view(
         'prev_loc': prev_loc,
 
     })
-
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -792,6 +841,7 @@ def calendar_home(
 
 
 #-------------------------------------------------------------------------------
+
 @login_required
 def occurrence_view(
     request,

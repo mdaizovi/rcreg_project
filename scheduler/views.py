@@ -89,9 +89,7 @@ def my_schedule(request):
 
     #happens whether is reg checking thier own scheudle or Boss spoofing it
     if not spoof_error:
-        #i wrote registrat.get_occurrences, but haven't tested it yet. when it works, replace
         for registrant in registrant_list:
-
             ###############temporarily commenting out jsut ot be sure registrant model method get_occurrences() works
             # reg_os=[]
             #
@@ -118,7 +116,6 @@ def my_schedule(request):
             #                 reg_os.append(o)
             # reg_os.sort(key=lambda o: o.start_time)
             ###############temporarily commenting out jsut ot be sure registrant model method get_occurrences() works
-
 
             registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':registrant.get_occurrences()}
             registrant_dict_list.append(registrant_dict)
