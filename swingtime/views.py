@@ -53,7 +53,6 @@ def conflict_check(
             con=Con.objects.most_upcoming()
     else:
         con=Con.objects.most_upcoming()
-    print "con is",con
     active=False
     coach_conflicts=[]
     captain_conflicts=[]
@@ -61,10 +60,28 @@ def conflict_check(
 
     if request.method == 'POST':
         selection = request.POST.copy()
-        print "selection", selection
+        #print "selection", selection
         if 'coach' in request.POST:
             active="coach"
-            #get all coaches, make list of dicts w/ k,v being coach, conflicts, 
+            trainos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None)
+
+            training=[]
+            for o in trainos:
+                if o.training not in training:
+                    training.append(o.training)
+
+            coaches=[]
+            coach_reg=[]
+            for t in training:
+                for c in t.coach.all():
+                    if c not in coaches:
+                        coaches.append(c)
+                        coach_reg+=list(c.user.registrant_set.filter(con=con))
+
+            for r in coach_reg:
+                conflict,free=r.check_conflicts()
+                if len(conflict)>0:
+                    coach_conflicts.append({r:conflict})
 
 
         elif 'captain' in request.POST:

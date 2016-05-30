@@ -80,7 +80,6 @@ def my_schedule(request):
                 upcoming_registrants=user.upcoming_registrants()
                 reg_coach=user.is_a_coach()
                 #return render_to_response('my_schedule.html',{'spoof_error':True},context_instance=RequestContext(request))
-
     else:
         #if not a boss, will always return own my schedule
         registrant_list= list(user.registrant_set.all())

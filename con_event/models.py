@@ -635,7 +635,6 @@ class Registrant(Matching_Criteria):
         sk8er_ros=self.roster_set.all()
         sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
 
-        sk8er_coach_list=list(Coach.objects.filter(user=self.user))
         if hasattr(self.user, 'coach'):
             sk8er_train=self.user.coach.training_set.filter(con=self.con)
         else:
