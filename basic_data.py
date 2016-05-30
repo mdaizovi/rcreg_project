@@ -21,6 +21,100 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
 
 # reg,aud,reg_and_aud,chal,both,neither,rall=rostercheck()
 
+
+
+
+#concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training')
+
+
+
+
+#con=Con.objects.get(year="2016")
+#t2016,c2016,candt =get_year_os(con)
+def get_year_os(con):
+    print"test to make sure all occurrences are being counted"
+    allo=list(Occurrence.objects.all())
+    print"all occurrences: ",len(allo)
+    o2016=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end)
+    print"2016 con occurrences: ",len(o2016)
+    candt=[]
+    c2016=[]
+    t2016=[]
+    for o in o2016:
+        if o.training:
+            t2016.append(o)
+        if o.challenge:
+            c2016.append(o)
+        if o.training and o.challenge:
+            candt.append(o)
+    print len(t2016)," training occurrences"
+    print len(c2016)," challenge occurrences"
+    print len(candt)," training and challenge occurrences, this should be 0"
+
+    return t2016,c2016,candt
+
+#coach_regs=get_coach_reg(con)
+def get_coach_reg(con):
+    coach_u=[]
+
+    for t in Training.objects.filter(con=con,RCaccepted=True):
+        for c in t.coach.all():
+            coach_u.append(c.user)
+
+    coach_regs=list(Registrant.objects.filter(user__in=coach_u, con=con))
+    print "%s coaches for %s"%(str(len(coach_regs)), str(con))
+
+    return coach_regs
+
+#sk8er=Registrant.objects.get(pk=72)
+#conflict,free =check_sk8er_schedule_conflict(sk8er)
+def check_sk8er_schedule_conflict(sk8er):
+    conflict=[]
+    free=[]
+    print "\n\nchecking schedule for ",sk8er, "pk ",sk8er.pk
+
+    sk8er_ros=sk8er.roster_set.all()
+    sk8er_coach_list=list(Coach.objects.filter(user=sk8er.user))
+    if len(sk8er_coach_list)>0:
+        #print "found ",len(sk8er_coach_list)," coach"
+        sk8er_coach=sk8er_coach_list[0]
+        sk8er_train=sk8er_coach.training_set.filter(con=sk8er.con)
+    else:
+        sk8er_train=[]
+
+    sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
+
+    #print "%s is in %s accepted challenges" %(sk8er,str(len(sk8er_chal)) )
+    #print "%s is coaching %s accepted trainings" %(sk8er,str(len(sk8er_train)) )
+
+    sk8ero=list(Occurrence.objects.filter( Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)))
+    print "%s is in %s scheduled occurrences" %(sk8er,str(len(sk8ero)) )
+
+    for o in sk8ero:
+
+        concurrent=Occurrence.objects.filter(start_time__lt=(o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(o.start_time - datetime.timedelta(minutes=30))).filter(Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)).exclude(pk=o.pk)
+
+        if len(concurrent)<1:
+            free.append(o)
+        else:
+            conflict.append(o)
+
+
+    print "%s conflicting and %s free scheduled occurrences for %s" %( str(len(conflict)) , str(len(free)), str(sk8er.name))
+    print"Conflicts: "
+    for c in conflict:
+        print "%s %s - %s"%(str(c.name), c.start_time.strftime("%a %B %d %I:%-M %p"), c.end_time.strftime("%I:%-M %p") )
+    return conflict,free
+
+
+
+
+
+
+
+
+
+
 def roster_skills_check():
     con=Con.objects.get(year="2016")
     mismatch=[]

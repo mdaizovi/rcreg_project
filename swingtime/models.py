@@ -334,7 +334,6 @@ class Occurrence(models.Model):
         Start time is fed so can be calculated for initial before any other data is populated."""
         pass
 
-
     #---------------------------------------------------------------------------
     def figurehead_conflict(self):
         """Dahmer custom function. Checks to see if any Event figureheads (coach, captain) are participating in other occurrances at same time.
