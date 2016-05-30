@@ -66,6 +66,31 @@ def get_coach_reg(con):
 
     return coach_regs
 
+
+def check_chal_conflicts(con):
+    chal2016=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
+    rosters=[]
+    rostered_sk8ers=[]
+
+    conflict=[]
+    free=[]
+
+    for c in chal2016:
+        for r in [c.roster1,c.roster2]:
+            if r and r not in rosters:
+                rosters.append(r)
+    print "%s scheduled rosters for %s"%(str(len(rosters)), str(con))
+    for r in rosters:
+        for s in r.participants.all():
+            if s not in rostered_sk8ers:
+                rostered_sk8ers.append(s)
+    print "%s scheduled skaters for %s"%(str(len(rostered_sk8ers)), str(con))
+    #######here's where i'd do sk8er.get_occurrences, but haven't tested it yet.
+    
+
+
+
+
 #sk8er=Registrant.objects.get(pk=72)
 #conflict,free =check_sk8er_schedule_conflict(sk8er)
 def check_sk8er_schedule_conflict(sk8er):
