@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+{% extends "swingtime/swingtime_base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block main_content %}
+<head>
+<title>{% block title %}Conflict Check{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>Schedule Conflict Check
+    </h3>
+
+
+    <div class="tabbable margin-top-15">
+      <ul class="nav nav-tabs">
+<li {%if not active or active = 'coach'%}class="active"{%endif%}><a href="#coach" data-toggle="tab">Coach</a></li>
+<li {%if active = 'captain'%}class="active"{%endif%}><a href="#captain" data-toggle="tab">Captain</a></li>
+<li {%if active = 'registrant'%}class="active"{%endif%}><a href="#registrant" data-toggle="tab">Registrant</a></li>
+      </ul>
+
+      <div class="tab-content margin-top-10">
+
+        <div class="tab-pane {%if not active or active = 'coach'%}active{%endif%}" id="coach">
+          <form method="POST" class="post-form">
+                {% csrf_token %}
+          <input type="hidden" name="coach" value="coach" />
+          <button type="submit" class="btn btn-success margin-top-10">Check Coach Conflicts</button>
+      </form>
+
+      {%if coach_conflicts%}
+      <p class="margin-top-10">{{coach_conflicts|length}} conflicts found.</p>
+      {%for cdict in coach_conflicts%}
+      {%for k,v in cdict.iteritems%}
+        <p><b>{{k.name}}</b></p>
+        <ul>
+        {%for c in v %}
+        <li>{{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+        {%endfor%}<!-- for c in v -->
+      </ul>
+        {%endfor%}<!-- for k,v in cdict.iteritems -->
+      {%endfor%}<!-- for cdict in coach_conflicts-->
+      {%endif%}<!-- if coach_conflicts-->
+        </div><!-- end tab-pane -->
+
+          <div class="tab-pane {%if active = 'captain'%}active{%endif%}" id="captain">
+            <form method="POST" class="post-form">
+                  {% csrf_token %}
+            <input type="hidden" name="captain" value="captain" />
+            <button type="submit" class="btn btn-success margin-top-10">Check Captain Conflicts</button>
+        </form>
+        {%if captain_conflicts%}
+        <p class="margin-top-10">{{captain_conflicts|length}} conflicts found.</p>
+        {%for cdict in captain_conflicts%}
+        {%for k,v in cdict.iteritems%}
+          <p><b>{{k.name}}</b></p>
+          <ul>
+          {%for c in v %}
+          <li>{{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+          {%endfor%}<!-- for c in v -->
+        </ul>
+          {%endfor%}<!-- for k,v in cdict.iteritems -->
+        {%endfor%}<!-- for cdict in coach_conflicts-->
+        {%endif%}<!-- if coach_conflicts-->
+          </div><!-- end tab-pane -->
+
+
+            <div class="tab-pane {%if active = 'registrant'%}active{%endif%}" id="registrant">
+              <form method="POST" class="post-form">
+                    {% csrf_token %}
+              <input type="hidden" name="registrant" value="registrant" />
+              <button type="submit" class="btn btn-success margin-top-10">Check Registrant Conflicts</button>
+          </form>
+          {%if registrant_conflicts%}
+          <p class="margin-top-10">This is going to have to come later, is less important than coaches and captains</p>
+          {%endif%}
+
+
+            </div><!-- end tab-pane -->
+
+
+          </div><!-- end tab-content -->
+
+
+    </div><!-- end tabbable -->
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+{% endblock %}
