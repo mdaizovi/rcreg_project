@@ -45,6 +45,7 @@ def conflict_check(
     con_id=None,
     **extra_context
 ):
+    """optimize later, this is going to be about a million db hits"""
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -57,13 +58,14 @@ def conflict_check(
     coach_conflicts=[]
     captain_conflicts=[]
     registrant_conflicts=[]
+    #print "dbc0:", len(dbconnection.queries)
 
     if request.method == 'POST':
         selection = request.POST.copy()
         #print "selection", selection
         if 'coach' in request.POST:
             active="coach"
-            trainos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None)
+            trainos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None).select_related('training').prefetch_related('training__coach').prefetch_related('training__coach__user__registrant_set')
 
             training=[]
             for o in trainos:
@@ -86,10 +88,30 @@ def conflict_check(
 
         elif 'captain' in request.POST:
             active="captain"
+            chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
+
+            challenge=[]
+            for o in chalos:
+                if o.challenge not in challenge:
+                    challenge.append(o.challenge)
+
+            captains=[]
+            for c in challenge:
+                for r in [c.roster1,c.roster2]:
+                    if r and r.captain:
+                        if r.captain not in captains:
+                            captains.append(r.captain)
+
+            for r in captains:
+                conflict,free=r.check_conflicts()
+                if len(conflict)>0:
+                    captain_conflicts.append({r:conflict})
+
         elif 'registrant' in request.POST:
             active="registrant"
+            registrant_conflicts=[1,2,3]#just to have a list
 
-
+    #print "dbc1:", len(dbconnection.queries)
     return render(request, template, {
         'con':con,
         'active':active,
