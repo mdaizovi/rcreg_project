@@ -38,7 +38,7 @@
         <p><b>{{k.name}}</b></p>
         <ul>
         {%for c in v %}
-        <li>{{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+        <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
         {%endfor%}<!-- for c in v -->
       </ul>
         {%endfor%}<!-- for k,v in cdict.iteritems -->
@@ -59,7 +59,7 @@
           <p><b>{{k.name}}</b></p>
           <ul>
           {%for c in v %}
-          <li>{{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+          <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
           {%endfor%}<!-- for c in v -->
         </ul>
           {%endfor%}<!-- for k,v in cdict.iteritems -->
