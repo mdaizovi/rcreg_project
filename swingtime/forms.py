@@ -11,7 +11,8 @@ from django.forms.extras.widgets import SelectDateWidget
 
 from dateutil import rrule
 from swingtime.conf import settings as swingtime_settings
-from swingtime.models import *
+#from swingtime.models import *
+from swingtime.models import Occurrence, Event
 from swingtime import utils
 
 from con_event.models import Con

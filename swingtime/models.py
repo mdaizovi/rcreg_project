@@ -6,6 +6,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.dateparse import parse_datetime,parse_time
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q,F
 from django.db import connection as dbconnection
 #print "dbc0:", len(dbconnection.queries)
 from django.conf import settings
@@ -16,13 +17,14 @@ from scheduler.models import Location, Challenge, Training,INTEREST_RATING,DEFAU
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 #import datetime #why did I dd this? it broke the calendar daily view
-
+from random import choice
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 except ImportError:
     from django.contrib.contenttypes.generic import GenericForeignKey, GenericRelation
 
 from swingtime.conf import settings as swingtime_settings
+
 
 #####NOTE to self (Dahmer):
 #temporarily got rid of Note, description field.
@@ -60,7 +62,6 @@ class EventType(models.Model):
 
 
 #===============================================================================
-
 @python_2_unicode_compatible
 class Event(models.Model):
     '''
@@ -98,73 +99,6 @@ class Event(models.Model):
             return activity.name
         else:
             return "no challenge or training yet"
-
-    #---------------------------------------------------------------------------
-    # @models.permalink
-    # def get_absolute_url(self):
-    #     return ('swingtime-event', [str(self.id)])
-
-    #---------------------------------------------------------------------------
-    # def add_occurrences(self, start_time, end_time, **rrule_params):
-    #     '''
-    #     Add one or more occurences to the event using a comparable API to
-    #     ``dateutil.rrule``.
-    #
-    #     If ``rrule_params`` does not contain a ``freq``, one will be defaulted
-    #     to ``rrule.DAILY``.
-    #
-    #     Because ``rrule.rrule`` returns an iterator that can essentially be
-    #     unbounded, we need to slightly alter the expected behavior here in order
-    #     to enforce a finite number of occurrence creation.
-    #
-    #     If both ``count`` and ``until`` entries are missing from ``rrule_params``,
-    #     only a single ``Occurrence`` instance will be created using the exact
-    #     ``start_time`` and ``end_time`` values.
-    #     '''
-    #     count = rrule_params.get('count')
-    #     until = rrule_params.get('until')
-    #     if not (count or until):
-    #         self.occurrence_set.create(start_time=start_time, end_time=end_time)
-    #     else:
-    #         rrule_params.setdefault('freq', rrule.DAILY)
-    #         delta = end_time - start_time
-    #         occurrences = []
-    #         for ev in rrule.rrule(dtstart=start_time, **rrule_params):
-    #             occurrences.append(Occurrence(start_time=ev, end_time=ev + delta, event=self))
-    #         self.occurrence_set.bulk_create(occurrences)
-
-    #---------------------------------------------------------------------------
-    # def upcoming_occurrences(self):
-    #     '''
-    #     Return all occurrences that are set to start on or after the current
-    #     time.
-    #     '''
-    #     return self.occurrence_set.filter(start_time__gte=datetime.now())
-
-    #---------------------------------------------------------------------------
-    # def next_occurrence(self):
-    #     '''
-    #     Return the single occurrence set to start on or after the current time
-    #     if available, otherwise ``None``.
-    #     '''
-    #     upcoming = self.upcoming_occurrences()
-    #     return upcoming[0] if upcoming else None
-
-    #---------------------------------------------------------------------------
-    # def daily_occurrences(self, dt=None):
-    #     '''
-    #     Convenience method wrapping ``Occurrence.objects.daily_occurrences``.
-    #     '''
-    #     return Occurrence.objects.daily_occurrences(dt=dt, event=self)
-    #
-    # def validate_unique(self, *args, **kwargs):#this probably shouldn't be validate unique, some other validate
-    #     if self.training and self.challenge:
-    #         raise ValidationError({
-    #             NON_FIELD_ERRORS: ["Event cannot be BOTH a Challenge and a Training",],})
-    #
-    #     if not self.training and not self.challenge:
-    #         raise ValidationError({
-    #             NON_FIELD_ERRORS: ["Please choose either a Challenge or Training",],})
 
 
 #===============================================================================
@@ -204,6 +138,333 @@ class OccurrenceManager(models.Manager):
 
         #return qs.filter(event=event) if event else qs
         return qs
+
+    #---------------------------------------------------------------------------
+    def gather_possibles(self, con,all_act_data):
+        """Meant to make Otto run faster by moving all db queries to 1 place.
+        Takes in activity list, either list of approved but unscheduled challenges or trainings
+        gets all possible Occurrences for entire group, divides up by which would suit each activity
+        doesbn't sort by conflict yet"""
+        #0 db hits?!? wtf?
+        print "gather possibles experiment"
+        print "dbc1:", len(dbconnection.queries)
+        venues=con.venue.all()
+        all_locations=Location.objects.filter(venue__in=venues) #this works. should i select/prefetch anything?
+        #date_range=con.get_date_range()
+
+        #base_q=Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end)
+        base_q=list(Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end).select_related('location'))
+
+        print "dbc2:", len(dbconnection.queries)
+
+        possibles=all_act_data.keys()
+
+        for act in possibles:
+            this_act_data={}
+
+
+
+
+
+            ############ start gathering locaiton per activity###############
+            ########this is where it's beng evaluated, i bet. If I oculd sort ahead of time I'd massively cut down on db trips.
+            if act.location_type =='Flat Track':
+                if act.is_a_training():#if this is a training
+                    act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Training")
+
+                elif act.is_a_challenge():
+                    if act.is_a_game or float(act.duration)>=1:#has to be in C1
+                        act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length")
+                    else:#can be n C1 or C2
+                        act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"])
+
+            elif act.location_type == 'EITHER Flat or Banked Track':
+                if act.is_a_training():#if this is a training
+                    act_locations=all_locations.filter(location_category__in=["Training","Training or Competition"], venue__in=venues, location_type__in=['Flat Track','Banked Track'])
+                elif act.is_a_challenge():
+                    act_locations=all_locations.filter(location_category__in=["Training or Competition","Competition Half Length Only","Competition Any Length"],venue__in=venues, location_type__in=['Flat Track','Banked Track'])
+            else:
+                act_locations=all_locations.filter(venue__in=venues, location_type=act.location_type)
+
+            this_act_data["locations"]=act_locations
+            ############ end gathering locaiton per activity###############
+
+            ############ start interest, activity type, per activity###############
+            if act.interest:
+                proxy_interest=act.interest
+            else:
+                proxy_interest=act.get_default_interest()
+
+            if act.is_a_training():#if this is a training
+                proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
+            elif act.is_a_challenge():
+                this_act_data["proxy_interest"]=proxy_interest
+            duration=float(act.duration)
+            dur_delta=int(duration*60)
+            this_act_data["dur_delta"]=dur_delta
+            ############ end interest, activity type, per activity###############
+            print "dbc2.5:", len(dbconnection.queries)
+
+            #act_os=base_q.filter(interest__in=[proxy_interest-1,proxy_interest,proxy_interest+1], location__in=act_locations,end_time=F('start_time') + timedelta(minutes=dur_delta))
+            act_os=[]
+            for o in base_q:
+                if (o.interest in [proxy_interest-1,proxy_interest,proxy_interest+1]) and (o.location in act_locations) and (o.end_time==(o.start_time + timedelta(minutes=dur_delta)) ) :
+                    act_os.append(o)
+
+
+            this_act_data["act_os"]=act_os
+            print "dbc2.6:", len(dbconnection.queries)
+            interestexact=[]
+            interestremoved=[]
+
+            for o in act_os:#this is where it gets evaluated, 1 for every acot
+                if o.interest==proxy_interest:
+                    interestexact.append(o)
+                else:
+                    interestremoved.append(o)
+            this_act_data["interestexact"]=interestexact
+            this_act_data["interestremoved"]=interestremoved
+            print "dbc2.7:", len(dbconnection.queries)
+            #update dict w/ new data
+            old_act_data=all_act_data.get(act)
+            old_act_data.update(this_act_data)
+
+        print "dbc3:", len(dbconnection.queries)
+        return all_act_data
+
+    #---------------------------------------------------------------------------
+    def sort_possibles(self, con, all_act_data,level1pairs,prefix_base):
+        """Meant to make Otto run faster by moving all db queries.
+        Takes in dict w/k of activity, v list of criteria, including possible occurrences
+        now need to sort by interest match, conflicts, among self and each other, without too maky db hits"""
+        print "starting sort possibilities"
+        print "dbc1:", len(dbconnection.queries)
+        from swingtime.forms import L1Check
+        #date_range=con.get_date_range()
+        figureheads=[]
+        participants=[]
+        fpks=[]
+        ppks=[]
+        busy={}
+
+        print "dbc2:", len(dbconnection.queries)
+        for attr_dict in all_act_data.values():
+            figureheads+=attr_dict.get('figureheads')
+            participants+=attr_dict.get('participants')
+        print "dbc2.5:", len(dbconnection.queries)
+
+        for f in figureheads:
+            if f.pk not in fpks:
+                fpks.append(f.pk)
+            if f not in busy:
+                busy[f]=[]
+
+        for p in participants:
+            if p.pk not in ppks:
+                ppks.append(p.pk)
+            if p not in busy:
+                busy[p]=[]
+
+        print "dbc3 models:", len(dbconnection.queries)
+        scheduled_os=Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').prefetch_related('challenge__roster1__participants').prefetch_related('challenge__roster2__participants')
+        print "dbc4:", len(dbconnection.queries)
+        #1 chal=8 db hits above. too many? 2 trains=7 hits maybe doesn't matter how many acts?
+        for o in scheduled_os:
+            if o.challenge:
+                for roster in [o.challenge.roster1, o.challenge.roster2]:
+                    for r in roster.participants.all():
+                        if r in busy:
+                            r_busy=busy.get(r)
+                            r_busy.append(o)
+                            busy[r]=r_busy
+                        else:
+                            busy[r]=[o]
+
+
+            elif o.training:
+                for c in o.training.coach.all():
+                    for r in c.user.registrant_set.filter(con=con):
+                        if r in busy:
+                            r_busy=busy.get(r)
+                            r_busy.append(o)
+                            busy[r]=r_busy
+                        else:
+                            busy[r]=[o]
+        # print "bust test1"
+        # for k,v in busy.iteritems():
+        #     print k
+        #     print v
+
+        print "dbc5:", len(dbconnection.queries)
+        related_blackouts=Blackout.objects.filter(registrant__in=figureheads).prefetch_related('registrant')
+        print "dbc6:", len(dbconnection.queries)
+        for b in related_blackouts:
+            r_busy=busy.get(r)
+            if b.ampm=="AM":
+                start_time=datetime(b.date.year, b.date.month, b.date.day, 0, 0)
+                end_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
+            elif b.ampm=="PM":
+                start_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
+                end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
+            tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
+            r_busy.append(tempo)
+            busy[r]=r_busy
+        print "dbc7:", len(dbconnection.queries)
+
+        # print "bust test2"
+        # for k,v in busy.iteritems():
+        #     print k
+        #     print v
+
+        avail_score_dict={}
+        for act,this_act_dict in all_act_data.iteritems():
+
+            level1=[]
+            level15=[]
+            level2=[]
+            interestexact=this_act_dict.get("interestexact")
+            interestremoved=this_act_dict.get("interestremoved")
+
+            for o in interestexact:
+                figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
+                participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+
+                if not figurehead_intersect and not participant_intersect:
+                    level1.append(o)
+                elif not figurehead_intersect and participant_intersect:
+                    level2.append(o)
+
+            for o in interestremoved:
+                figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
+                participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+
+                if not figurehead_intersect and not participant_intersect:
+                    level15.append(o)
+                elif not figurehead_intersect and participant_intersect:
+                    level2.append(o)
+
+            avail_score=( (len(level1)*100) + (len(level15)*10) + (len(level2)*1) )
+            if avail_score in avail_score_dict:
+                tmp=avail_score_dict.get(avail_score)
+                tmp.append(act)
+            else:
+                avail_score_dict[avail_score]=[act]
+
+            this_act_dict.update({"level1":level1,"level15":level15,"level2":level2,"avail_score":avail_score})
+
+        #print "all_act_data test",all_act_data
+
+        taken_os=[]
+        #print "avail_score_dict",avail_score_dict
+        ask=avail_score_dict.keys()
+        ask.sort()#sorting less available to more available
+        #print "ask",ask
+        for score in ask:
+            #print "score",score
+            act_list=avail_score_dict.get(score)
+            #print "act_list",act_list
+            for act in act_list:
+                #print "act: ",act
+                oselected=False
+                this_act_dict=all_act_data.get(act)
+                l1=this_act_dict.get('level1')
+                #print "len l1: ",len(l1)
+                l15=this_act_dict.get('level15')
+                #print "len l15: ",len(l15)
+                l2=this_act_dict.get('level2')
+                #print "len l2: ",len(l2)
+
+                if len(l1)>0:
+                    #print "len l1: ",len(l1)
+                    while len(l1)>0 and not oselected:
+                        o=choice(l1)
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
+                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                            if not figurehead_intersect and not participant_intersect:
+                                #print"not in taken"
+                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
+                                #print"prefix: ",prefix
+                                level1pairs[(act,o,"Perfect Match")]=L1Check(prefix=prefix)
+                                taken_os.append(o)
+                                l1.remove(o)
+                                oselected=True
+                                for l in [this_act_dict.get('figureheads'),this_act_dict.get('participants')]:
+                                    for r in l:
+                                        r_busy=busy.get(r)
+                                        r_busy.append(o)
+                                break
+                            else:
+                                #print "o taken, keep going"
+                                #print "len l1: ",len(l1)
+                                l1.remove(o)
+                        else:
+                            #print "o taken, keep going"
+                            #print "len l1: ",len(l1)
+                            l1.remove(o)
+
+                if len(l15)>0 and not oselected:
+                    #print "len l15: ",len(l15)
+                    while len(l15)>0 and not oselected:
+                        o=choice(l15)
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
+                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                            if not figurehead_intersect and not participant_intersect:
+
+                                #print"not in taken"
+                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
+                                #print"prefix: ",prefix
+                                level1pairs[(act,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
+                                taken_os.append(o)
+                                l15.remove(o)
+                                oselected=True
+                                for l in [this_act_dict.get('figureheads'),this_act_dict.get('participants')]:
+                                    for r in l:
+                                        r_busy=busy.get(r)
+                                        r_busy.append(o)
+                                break
+                            else:
+                                #print "o taken, keep going"
+                                #print "len l15: ",len(l15)
+                                l15.remove(o)
+                        else:
+                            #print "o taken, keep going"
+                            #print "len l15: ",len(l15)
+                            l15.remove(o)
+
+                elif len(l2)>0 and not oselected:
+                    #print "len l2: ",len(l2)
+                    while len(l2)>0 and not oselected:
+                        o=choice(l2)
+                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                        if o not in taken_os:
+                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
+                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                            if not participant_intersect:
+
+                                #print"not in taken"
+                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
+                                #print"prefix: ",prefix
+                                level1pairs[(act,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
+                                taken_os.append(o)
+                                l2.remove(o)
+                                oselected=True
+                                break
+                            else:
+                                #print "o taken, keep going"
+                                #print "len l2: ",len(l2)
+                                l2.remove(o)
+                        else:
+                            #print "o taken, keep going"
+                            #print "len l2: ",len(l2)
+                            l2.remove(o)
+
+        return level1pairs
+
+
 
 
 #===============================================================================
@@ -349,7 +610,7 @@ class Occurrence(models.Model):
         #0 db hits
         #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
         #adding a half hour padding:
-        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training')
+        concurrent=list(Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training'))
 
         for o in concurrent:
             event_activity=o.get_activity()
@@ -363,6 +624,35 @@ class Occurrence(models.Model):
             return conflict_dict
         else:
             return None
+    #---------------------------------------------------------------------------
+    def os_soft_intersect(self,o2):
+        if (o2.start_time<(self.end_time + timedelta(minutes=30))) and (o2.end_time>(self.start_time - timedelta(minutes=30) ) ):
+            return True
+        else:
+            return False
+    #---------------------------------------------------------------------------
+    def os_hard_intersect(self,o2):
+        if (o2.start_time<self.end_time) and (o2.end_time>self.start_time):
+            return True
+        else:
+            return False
+    #-------------------------------------------------------------------------------
+    def busy_soft(self,participant_list,busy_dict):
+        """takes in list of relevant registrant, dict w/ registrant as key, list of occurrences reg is in as v,
+        checks to see if reg is busy/ w/ soft intersection"""
+        #print "starting  busy_soft for ",self.challenge,self.training,self.start_time,self.end_time
+        #print "participants: "
+        intersection=False
+        for f in participant_list:
+            #print f
+            busy_list=busy_dict.get(f)
+            #print "busy_list",busy_list
+            for o2 in busy_list:
+                #print o2.start_time,o2.end_time
+                if self.os_soft_intersect(o2):
+                    intersection=True
+        #print "intersection",intersection
+        return intersection
 
     #-------------------------------------------------------------------------------
     def participant_conflict(self):

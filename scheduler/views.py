@@ -1050,7 +1050,8 @@ def view_challenge(request, activity_id):
                     challenge.roster2score=request.POST['roster2_score']
                 challenge.save()
             else:
-                print "not post or errors: ",score_form.errors
+                pass
+                #print "not post or errors: ",score_form.errors
     #I was toying w/ letting sort name and # in this view, but I don't like the way it treats litte and capital like different letters,
     #And I can't highlight number dupes
     # if challenge and challenge.roster1:

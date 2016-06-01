@@ -40,7 +40,6 @@ DEFAULT_REG_CAP=60
 DEFAULT_AUD_CAP=10
 SKILL_INTEREST_DICT={'AO':5, 'AB':4,'BO':3,'BC':2,'CO':1,'ABC':1,'A':5,'B':3,"C":2,"D":1}
 
-
 class Venue(models.Model):
     name=models.CharField(max_length=50, unique=True)
 
@@ -643,6 +642,7 @@ class Activity(models.Model):
     def possible_locations(self):
         """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
         Will prob need to write anoter further refining, splitting up competition and training tracks"""
+
         venues=self.con.venue.prefetch_related('location').all()
 
         if self.location_type =='Flat Track':
@@ -669,7 +669,7 @@ class Activity(models.Model):
         EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
         from swingtime.models import Occurrence
-        #print("dummy occurrences, level ",level)
+        print("dummy occurrences, level ",level)
         #empties=[]
         dummies=[]
         pls=self.possible_locations()
@@ -691,9 +691,10 @@ class Activity(models.Model):
         duration=float(self.duration)
         dur_delta=int(duration*60)
 
-        #print "dur_delta= ",dur_delta
+        #print "duration",duration
+        #print "dur_delta",dur_delta
+
         date_range=self.con.get_date_range()
-        #ideas not yet incorporateD: interwt matching, duration matches durdelta
         base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
 
         if level==1:
@@ -766,7 +767,7 @@ class Activity(models.Model):
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
         Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest
         NEW: may remove Os depending on level"""
-        #print "about to start sched_conflict_score"
+        print "about to start sched_conflict_score"
         odict_list=[]
         if self.is_a_training():
             training=self
@@ -789,7 +790,6 @@ class Activity(models.Model):
         #print("sched_conflict_score level is ",level)
 
         for olist in list(self.dummy_occurrences(level=level,makedummies=makedummies)):
-            #print "sched conflict score olist:",olist
             if len(olist)>0:
                 #print "more than 1!"
                 conflict={}
@@ -799,6 +799,7 @@ class Activity(models.Model):
                     o.training=training
                     o.challenge=challenge
                     score=0
+
                     blackout_conflict=o.blackout_conflict()
                     if blackout_conflict:
                         #print "blackout_conflict: ",len(blackout_conflict),blackout_conflict
@@ -832,14 +833,12 @@ class Activity(models.Model):
             score_list=list(conflict.keys())
             score_list.sort()
             odict  = collections.OrderedDict()
-            #print len(odict)
 
             for score in score_list:
                 if score<=max_score:
                     temp_list=conflict.get(score)
                     odict[score]=list(temp_list)
 
-            #print odict.keys()
             odict_list.append(odict)
 
         return odict_list
@@ -848,7 +847,8 @@ class Activity(models.Model):
         """Experimental function to find or make matching occurrences for auto scheduler.
         Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
         Differs from manual schedule levels slighty in that all levels here require right duration"""
-        #print"running find level slots for ",self
+        print "running find_level_slots"
+
         from swingtime.models import Occurrence
         if self.interest:
             proxy_interest=self.interest
@@ -947,6 +947,12 @@ class Activity(models.Model):
 
                 o.challenge=None#back to blank
                 o.training=None#backto blank
+
+        # print self
+        # print len(level1find)
+        # print len(level1halffind)
+        # print len(level2find)
+        # print len(level3find)
 
         return level1find,level1halffind,level2find,level3find
 

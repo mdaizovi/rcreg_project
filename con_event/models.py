@@ -3,13 +3,14 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db import connection as dbconnection
+#print "dbc0:", len(dbconnection.queries)
 import datetime
 from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
 #from datetime import datetime, timedelta
 #from . import signals #this file exists but it's blank bc I decided to put the signals under the models
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT
-from django.db import connection as dbconnection
 from django.forms.models import model_to_dict
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT_Affiliate_ID
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete,post_init,pre_init
@@ -598,30 +599,36 @@ class Registrant(Matching_Criteria):
         from swingtime.models import Occurrence, TrainingRoster #need here in case of import error?
         reg_coach=self.user.is_a_coach()
         reg_os=[]
+        #print "dbc0:", len(dbconnection.queries)
 
         if reg_coach:
-            coach_trains=reg_coach.training_set.filter(con=self.con)
+            coach_trains=reg_coach.training_set.filter(con=self.con).prefetch_related('occurrence_set')
             for t in coach_trains:
                 reg_os+=list(t.occurrence_set.all())
 
-        reg_trains=list(self.trainingroster_set.all())
-        for tr in reg_trains:
-            if tr.registered:
-                reg_os+=tr.registered
-            elif tr.auditing:
-                reg_os+=tr.auditing
+        #print "dbca:", len(dbconnection.queries)
+        #why did i do this? training roster should be irrelevant at time of scheduling
+        #it doesnt even make any sense, adding the roster to the occurrence list
+        # reg_trains=list(self.trainingroster_set.all())
+        # for tr in reg_trains:
+        #     if tr.registered:
+        #         reg_os.append(tr.registered)
+        #     elif tr.auditing:
+        #         reg_os.append(tr.auditing)
 
+        #print "dbcb:", len(dbconnection.queries)
         reg_ros=list(self.roster_set.all())
         chal=[]
         for ros in reg_ros:
             chal+=list(ros.roster1.all())
             chal+=list(ros.roster2.all())
+            #print "dbcc:", len(dbconnection.queries)
             for c in chal:
                 for o in c.occurrence_set.all(): #othersise it gets added 2x
                     if o not in reg_os:
                         reg_os.append(o)
         reg_os.sort(key=lambda o: o.start_time)
-
+        #print "dbc1:", len(dbconnection.queries)
         return reg_os
 
     def check_conflicts(self):

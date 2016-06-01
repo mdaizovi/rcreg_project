@@ -1,9 +1,10 @@
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
-from con_event.models import Country, State, Con, Registrant, Blog
+from con_event.models import Country, State, Con, Registrant, Blackout, Blog,LOCATION_TYPE
 from django.contrib.auth.models import Group, User
 from swingtime.models import Occurrence,TrainingRoster
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.utils import timezone
 import csv
 import os
 import datetime
@@ -11,6 +12,8 @@ from rcreg_project.settings import BASE_DIR
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 import openpyxl
 import collections
+from random import choice
+import random, string
 
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'
@@ -21,10 +24,87 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
 
 # reg,aud,reg_and_aud,chal,both,neither,rall=rostercheck()
 
+#con=Con.objects.get(year="2016")
+#captains=get_captains(con)
+def get_captains(con):
+    challenges=list(Challenge.objects.filter(con=con, RCaccepted=True))
+    captains=[]
+    for c in challenges:
+        for r in [c.roster1,c.roster2]:
+            if r and r.captain and r.captain not in captains:
+                captains.append(r.captain)
+    return captains
+
+#all_bouts=make_random_bo(con,captains)
+def make_random_bo(con,captains):
+    date_range=con.get_date_range()
+    ampm=["AM","PM"]
+    all_bouts=[]
+
+    for c in captains:
+        bouts=[]
+        while len(bouts)<5:
+            ap=choice(ampm)
+            day=choice(date_range)
+            b,created=Blackout.objects.get_or_create(registrant=c,date=day,ampm=ap)
+            bouts.append(b)
+            all_bouts.append(b)
+            b.save()
+    return all_bouts
 
 
 
-#concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training')
+
+def randomword(length):
+   return ''.join(random.choice(string.lowercase) for i in range(length))
+
+
+def make_random_acts():
+    con=Con.objects.get(year="2016")
+    all_reg=list(Registrant.objects.filter(con=con))
+    print "len all_reg",len(all_reg)
+    coaches=[]
+    while len(coaches)<20:
+        coaches.append(choice(all_reg))
+    #print "coaches",coaches
+    print "len coaches",len(coaches)
+    captains=coaches[:5]
+    while len(captains)<100:
+        captains.append(choice(all_reg))
+    #print "captains",captains
+    print "len captains",len(captains)
+
+    # trainings=[]
+    # while len(trainings)<40:
+    #     c=choice(coaches)
+    #     print c
+    #     coach, created=Coach.objects.get_or_create(user=c.user)
+    #     print "coach",coach
+    #     location_type=choice(LOCATION_TYPE)[0]
+    #     t=Training(name=randomword(10),con=con,RCaccepted=True, duration="2",interest=3,location_type=location_type)
+    #     trainings.append(t)
+    #     t.save()
+    #     print t," saved!"
+    #     t.coach.add(coach)
+    #     t.save()
+
+    challenges=[]
+    while len(challenges)<100:
+        location_type=choice(LOCATION_TYPE[:3])[0]
+        r1=Roster(name=randomword(10),con=con,captain=choice(all_reg))
+        r2=Roster(name=randomword(10),con=con,captain=choice(all_reg))
+        for r in [r1,r2]:
+            r.save()
+            while r.participants.count()<20:
+                r.participants.add(choice(all_reg))
+            r.save()
+        c=Challenge(con=con,RCaccepted=True, submitted_on=timezone.now(), interest=3,location_type=location_type,roster1=r1,roster2=r2,captain1accepted=True,captain2accepted=True)
+        challenges.append(c)
+        c.save()
+
+    #print "challenges",challenges
+
+
 
 
 

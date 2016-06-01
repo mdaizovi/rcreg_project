@@ -58,12 +58,18 @@ def conflict_check(
     coach_conflicts=[]
     captain_conflicts=[]
     registrant_conflicts=[]
+    coach_search=False
+    captain_search=False
+    registrant_search=False
+
+
     #print "dbc0:", len(dbconnection.queries)
 
     if request.method == 'POST':
         selection = request.POST.copy()
         #print "selection", selection
         if 'coach' in request.POST:
+            coach_search=True
             active="coach"
             trainos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None).select_related('training').prefetch_related('training__coach').prefetch_related('training__coach__user__registrant_set')
 
@@ -88,6 +94,7 @@ def conflict_check(
 
         elif 'captain' in request.POST:
             active="captain"
+            captain_search=True
             chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
 
             challenge=[]
@@ -108,6 +115,7 @@ def conflict_check(
                     captain_conflicts.append({r:conflict})
 
         elif 'registrant' in request.POST:
+            registrant_search=True
             active="registrant"
             registrant_conflicts=[1,2,3]#just to have a list
 
@@ -118,6 +126,9 @@ def conflict_check(
         'coach_conflicts':coach_conflicts,
         'captain_conflicts':captain_conflicts,
         'registrant_conflicts':registrant_conflicts,
+        'coach_search':coach_search,
+        'captain_search':captain_search,
+        'registrant_search':registrant_search
 
     })
 
@@ -138,7 +149,6 @@ def location_view(
     location=None
     date_range=None
 
-    print "starting locaiton view"
     if loc_id:
         try:
             location=Location.objects.get(pk=int(loc_id))
@@ -452,6 +462,11 @@ def act_unsched(
     con_id=None,
     **extra_context
 ):
+    start=datetime.now()
+    print "starting act unsched"
+    print "dbc0:", len(dbconnection.queries)
+
+
     if con_id:
         con=Con.objects.get(pk=con_id)
     else:
@@ -467,20 +482,22 @@ def act_unsched(
     cycle=-1
     possibles=[]
 
-
+    print "dbc1:", len(dbconnection.queries)
     if request.method == 'POST':
         post_keys=dict(request.POST).keys()
         #print request.POST
 
         if 'Auto_Chal' in request.POST or 'Auto_Train' in request.POST:
             pk_list=[]
-            activities=[]
-            possible_dicts={}
-            act_tups=[]
-            o_dicts={}
-            o_tups=[]
+            #taken_os=[] #only necessary if i make it choose randomly
 
-            taken_os=[] #only necessary if i make it choose randomly
+
+            #activities=[]
+            #possible_dicts={}
+            #act_tups=[]
+            #o_dicts={}
+            #o_tups=[]
+
 
             if 'Auto_Chal' in request.POST:
                 for k in post_keys:
@@ -488,134 +505,47 @@ def act_unsched(
                     prefix_base='challenge'
                     if lsplit[0]==prefix_base:
                         pk_list.append(int(lsplit[1]))
-                possibles=Challenge.objects.filter(pk__in=pk_list)
+                print "dbc pre possibles chal:", len(dbconnection.queries)
+                possibles=Challenge.objects.filter(pk__in=pk_list).select_related('roster1').select_related('roster2').select_related('roster1__captain').prefetch_related('roster1__participants').select_related('roster2__captain').prefetch_related('roster2__participants')#1 db hit, evaluated later
             elif 'Auto_Train' in request.POST:
                 for k in post_keys:
                     lsplit=k.split("-")
                     prefix_base='training'
                     if lsplit[0]==prefix_base:
                         pk_list.append(int(lsplit[1]))
-                possibles=Training.objects.filter(pk__in=pk_list)
+                print "dbc pre possibles train:", len(dbconnection.queries)
+                possibles=Training.objects.filter(pk__in=pk_list).prefetch_related('coach').prefetch_related('coach__user').prefetch_related('coach__user__registrant_set')#2 hits pet training, evaluated later
 
-            for a in possibles:
-                level1find,level1halffind, level2find,level3find=a.find_level_slots()
-                pos_dict={1:level1find,1.5:level1halffind,2:level2find,3:level3find}
-                possible_dicts[a]=pos_dict
-                act_tups.append((a,len(level1find),len(level1halffind),len(level2find),len(level3find)))
+            print "dbc2:", len(dbconnection.queries)
+            #######if i want to rewrite otto, start here with getting possibles,
+            all_act_data={}
+            for act in possibles:
+                if act.is_a_challenge():
+                    print "dbc2.1:", len(dbconnection.queries)
+                    figureheads=[act.roster1.captain,act.roster2.captain]#0 hits!
+                    participants=list(act.roster1.participants.all())+list(act.roster2.participants.all())#2 hits
+                    print "dbc2.2:", len(dbconnection.queries)
+                    all_act_data[act]={'figureheads':figureheads,'participants':participants}
+                elif act.is_a_training():
+                    participants=[]
+                    print "dbc2.3:", len(dbconnection.queries)
+                    for c in act.coach.all():
+                        print "dbc2.4:", len(dbconnection.queries)
+                        participants+=list(c.user.registrant_set.filter(con=con))#1 hit
+                        print "dbc2.5:", len(dbconnection.queries)
+                    all_act_data[act]={'figureheads':participants,'participants':participants}
 
-#########temporarily making o choice randon#######
-            #     for o in level1find:
-            #         if o not in o_dicts:
-            #             o_dicts[o]=1
-            #         else:
-            #             tempi=o_dicts.get(o)
-            #             tempi+=1
-            #             o_dicts[o]=tempi
-            #
-            # for k,v in o_dicts.iteritems():
-            #     o_tups.append((k,v))
-            #
-            # sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
-            # sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-################################
-            sorted(act_tups, key=lambda x: x[1])#sorts by second paramter, level1finds
+            print "dbc3 views:", len(dbconnection.queries)
+            all_act_data=Occurrence.objects.gather_possibles(con,all_act_data)
+            print "dbc4:", len(dbconnection.queries)
+            level1pairs= Occurrence.objects.sort_possibles(con, all_act_data,level1pairs,prefix_base)
 
-            for atup in act_tups:
-                activity=atup[0]
-                l1selected=False
-                #print"activity ",activity#to see if the break is working
-                o_dict=possible_dicts.get(activity)#recall, this is the dict of kv pairs 1,2,3 and the level lists linked to the activity
-                l1=o_dict.get(1)
-                l15=o_dict.get(1.5)
-                l2=o_dict.get(2)
-                #
-                # print len(l1)," level 1 os"
-                # print len(l15)," level 15 os"
-                # print len(l2)," level 2 os"
-        ###########################################
-                # for otup in o_tups:
-                #     o=otup[0]
-                #     print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
-                #     if o in l1:
-                #         #level1pairs[activity]=o#make the match
-                #         prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                #         #print"prefix: ",prefix
-                #         level1pairs[(activity,o)]=L1Check(prefix=prefix)
-                #         #remove from everything
-                #         o_tups.remove(otup)
-                #         #resort
-                #         sorted(o_tups, key=lambda x: x[1],reverse=True)#sorts by second paramter, times it's in a level1
-                #         print"found an o/a kv pair"
-                #         l1selected=True
-                #         #print"about to breek in for o in li"
-                #         break#stop going through os in l1 if you've found a match
-                #     if l1selected:
-                #         #print"about to breek in for o tup in o_tups"
-                #         break#stop going through otups if you've found a match
-                # if not l1selected:
-                #     print"runningl2"
-                #     l2=o_dict.get(2)#if still here bc no l1 found
-                #     #this is where I'd like to choose a level2 of there's only 1 option,
-                #     #but I'd have to have removed o levels in every dict all this tim for that to work
-                #     #so this is on hold.
-        # ############################
 
-#######new try, making the o choice random #########
-                if len(l1)>0:
-                    #print "len l1: ",len(l1)
-                    while len(l1)>0 and not l1selected:
-                        o=choice(l1)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
-                        if o not in taken_os:
-                            #print"not in taken"
-                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            #print"prefix: ",prefix
-                            level1pairs[(activity,o,"Perfect Match")]=L1Check(prefix=prefix)
-                            taken_os.append(o)
-                            l1.remove(o)
-                            l1selected=True
-                            break
-                        else:
-                            #print "o taken, keep going"
-                            l1.remove(o)
 
-                elif len(l15)>0:
-                    #print "len l15: ",len(l15)
-                    while len(l15)>0 and not l1selected:
-                        o=choice(l15)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
-                        if o not in taken_os:
-                            #print"not in taken"
-                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            #print"prefix: ",prefix
-                            level1pairs[(activity,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
-                            taken_os.append(o)
-                            l15.remove(o)
-                            l1selected=True
-                            break
-                        else:
-                            #print "o taken, keep going"
-                            l15.remove(o)
 
-                elif len(l2)>0:
-                    #print "len l2: ",len(l2)
-                    while len(l2)>0 and not l1selected:
-                        o=choice(l2)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
-                        if o not in taken_os:
-                            #print"not in taken"
-                            prefix=prefix_base+"-%s-occurr-%s"%(str(activity.pk),str(o.pk))
-                            #print"prefix: ",prefix
-                            level1pairs[(activity,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
-                            taken_os.append(o)
-                            l2.remove(o)
-                            l1selected=True
-                            break
-                        else:
-                            #print "o taken, keep going"
-                            l2.remove(o)
-
-###############end random experiment
+            elapsed=datetime.now()-start
+            print "all done act unsched!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
+            print "dbcend:", len(dbconnection.queries)
 
             new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
             extra_context.update(new_context)
@@ -640,20 +570,25 @@ def act_unsched(
                         added2schedule.append(o)
                         save_success=True
     #if not post, or just saves
-    for q in [Challenge.objects.filter(con=con, RCaccepted=True),Training.objects.filter(con=con, RCaccepted=True)]:
+    print "d5:", len(dbconnection.queries)
+    cfilter=list(Challenge.objects.filter(con=con, RCaccepted=True).select_related('roster1__captain').select_related('roster2__captain').prefetch_related('occurrence_set'))
+    tfilter=list(Training.objects.filter(con=con, RCaccepted=True).prefetch_related('coach__user__registrant_set').prefetch_related('occurrence_set'))
+    for q in [cfilter,tfilter]:
+        print "d6:", len(dbconnection.queries)
         cycle+=1
         temp_dict={}
-        for obj in q:
-            if (obj.is_a_training() and obj.sessions and len(obj.occurrence_set.all())<obj.sessions) or (len(obj.occurrence_set.all())<=0):
+        for obj in q:#why dies this evaulat every time?
+            print "d7:", len(dbconnection.queries)
+            if (obj.is_a_training() and obj.sessions and len(obj.occurrence_set.all())<obj.sessions) or (len(obj.occurrence_set.all())<=0):#0 db hits
             #if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
-                score=len(obj.get_figurehead_blackouts())
+                score=len(obj.get_figurehead_blackouts())#this is 4 db hits
                 if score not in temp_dict:
                     temp_dict[score]=[obj]
                 else:
                     this_list=temp_dict.get(score)
                     this_list.append(obj)
                     temp_dict[score]=list(this_list)
-
+        print "d8:", len(dbconnection.queries)
         score_list=temp_dict.keys()
         score_list.sort(reverse=True)
         od_list=[]
@@ -667,7 +602,7 @@ def act_unsched(
                 od_list.append(od)
         activities.append(od_list)
 
-
+    print "dbcnonpostend:", len(dbconnection.queries)
     new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)

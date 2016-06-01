@@ -30,8 +30,7 @@
           <input type="hidden" name="coach" value="coach" />
           <button type="submit" class="btn btn-success margin-top-10">Check Coach Conflicts</button>
       </form>
-
-      {%if coach_conflicts%}
+      {%if coach_search%}
       <p class="margin-top-10">{{coach_conflicts|length}} conflicts found.</p>
       {%for cdict in coach_conflicts%}
       {%for k,v in cdict.iteritems%}
@@ -46,13 +45,15 @@
       {%endif%}<!-- if coach_conflicts-->
         </div><!-- end tab-pane -->
 
+
+
           <div class="tab-pane {%if active = 'captain'%}active{%endif%}" id="captain">
             <form method="POST" class="post-form">
                   {% csrf_token %}
             <input type="hidden" name="captain" value="captain" />
             <button type="submit" class="btn btn-success margin-top-10">Check Captain Conflicts</button>
         </form>
-        {%if captain_conflicts%}
+        {%if captain_search%}
         <p class="margin-top-10">{{captain_conflicts|length}} conflicts found.</p>
         {%for cdict in captain_conflicts%}
         {%for k,v in cdict.iteritems%}
@@ -74,7 +75,7 @@
               <input type="hidden" name="registrant" value="registrant" />
               <button type="submit" class="btn btn-success margin-top-10">Check Registrant Conflicts</button>
           </form>
-          {%if registrant_conflicts%}
+          {%if registrant_search%}
           <p class="margin-top-10">This is going to have to come later, is less important than coaches and captains</p>
           {%endif%}
 
