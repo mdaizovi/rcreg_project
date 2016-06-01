@@ -75,11 +75,11 @@ def conflict_check(
             active="coach"
             scheduled_os=list(Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').select_related('challenge__roster1__captain').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2__captain').prefetch_related('challenge__roster2__participants'))
             trainings=[]
-            coaches=[]
             reg_pk=[]
             challenges=[]
             act_dict={}
             busy={}
+            all_coach_reg=[]
 
             for o in scheduled_os:
                 if o.training:
@@ -87,9 +87,14 @@ def conflict_check(
                     if o.training not in trainings:
                         trainings.append(o.training)
                         for c in o.training.coach.all():
-                            if c not in coaches:
-                                coaches.append(c)
-                                coach_reg+=list(c.user.registrant_set.filter(con=con))
+                            print c
+                            for cr in c.user.registrant_set.all():
+                                print cr
+                                if cr.con==con:
+                                    coach_reg.append(cr)
+                                    if cr not in all_coach_reg:
+                                        all_coach_reg.append(cr)
+
                     if o.training not in act_dict:
                         act_dict[o.training]={"os":[o],"figureheads":coach_reg,"participants":coach_reg}
                     else:
@@ -104,6 +109,7 @@ def conflict_check(
                         else:
                             temporary=busy.get(c)
                             temporary.append(o)
+
 
                 elif o.challenge:
                     if o.challenge not in challenges:
@@ -131,27 +137,33 @@ def conflict_check(
                         act_dict[o.challenge]={"os":[o],"figureheads":figureheads,"participants":participants}
                     else:
                         print "error, challenge has 2 occurrences?"
+
             coach_conflicts=[]
-            for r in coach_reg:
+            for r in all_coach_reg:
                 conflict=[]
                 free=[]
                 occur_list=busy.get(r)
                 for o in occur_list:
                     for o2 in occur_list:
                         if o!=o2:
+                            # if o.os_hard_intersect(o2):
+                            #     print "hard intersect"
+                            #     # print o.pk, o.activity, o.start_time,o.end_time
+                            #     print o2.pk, o2.activity, o2.start_time, o2.end_time
+                            #     if o2 not in conflict:
+                            #         conflict.append(o2)
+                            # #someday separate by hard and soft?
+                            #elif o.os_soft_intersect(o2):
                             if o.os_soft_intersect(o2):
                                 if o2 not in conflict:
                                     conflict.append(o2)
-                            #someday separate by hard and soft?
-                            # elif o.os_hard_intersect(o2):
-                            #     if o2 not in conflict:
-                            #         conflict.append(o2)
                             else:
                                 if o2 not in free:
                                     free.append(o2)
 
-                            if len(conflict)>0:
-                                coach_conflicts.append({r:conflict})
+                if len(conflict)>0:
+                    conflict.sort(key=lambda o:(o.start_time, o.end_time))
+                    coach_conflicts.append({r:conflict})
 
         elif 'captain' in request.POST:
             active="captain"
