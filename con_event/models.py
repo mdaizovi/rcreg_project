@@ -660,7 +660,7 @@ class Registrant(Matching_Criteria):
         if hasattr(self.user, 'coach'):
             sk8er_train=self.user.coach.training_set.filter(con=self.con)
 
-            concurrent=list(Occurrence.objects.filter(start_time__lt=(pending_o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(pending_o.start_time - datetime.timedelta(minutes=30))).filter(Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)).exclude(pk=pending_o.pk))
+            concurrent=list(Occurrence.objects.filter(training__in=sk8er_train).filter(start_time__lt=(pending_o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(pending_o.start_time - datetime.timedelta(minutes=30))).exclude(pk=pending_o.pk))
 
             if len(concurrent)>0:
                 return concurrent
