@@ -62,6 +62,8 @@ def conflict_check(
     coach_search=False
     captain_search=False
     registrant_search=False
+    relevant_hard_conflicts=[]
+    relevant_soft_conflicts=[]
 
     if request.method == 'POST':
         scheduled_os=list(Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').select_related('challenge__roster1__captain').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2__captain').prefetch_related('challenge__roster2__participants'))
@@ -141,24 +143,32 @@ def conflict_check(
             active="registrant"
             relevant_reg=[]
 
-        relevant_conflicts=[]
+        #relevant_conflicts=[]
         for r in relevant_reg:
-            conflict=[]
-            free=[]
+            hard_conflict=[]
+            soft_conflict=[]
+            #conflict=[]
+            #free=[]
             occur_list=busy.get(r)
             for o in occur_list:
                 for o2 in occur_list:
                     if o!=o2:
-                        if o.os_soft_intersect(o2):
-                            if o2 not in conflict:
-                                conflict.append(o2)
-                        else:
-                            if o2 not in free:
-                                free.append(o2)
+                        if o.os_hard_intersect(o2):
+                            if o2 not in hard_conflict:
+                                hard_conflict.append(o2)
+                        elif o.os_soft_intersect(o2):
+                            if (o2 not in soft_conflict) and (o2 not in hard_conflict):
+                                soft_conflict.append(o2)
+                        # else:
+                        #     if o2 not in free:
+                        #         free.append(o2)
 
-            if len(conflict)>0:
-                conflict.sort(key=lambda o:(o.start_time, o.end_time))
-                relevant_conflicts.append({r:conflict})
+            if len(hard_conflict)>0:
+                hard_conflict.sort(key=lambda o:(o.start_time, o.end_time))
+                relevant_hard_conflicts.append({r:hard_conflict})
+            if len(soft_conflict)>0:
+                soft_conflict.sort(key=lambda o:(o.start_time, o.end_time))
+                relevant_soft_conflicts.append({r:soft_conflict})
 
     print "dbcend:", len(dbconnection.queries)
     elapsed=datetime.now()-start
@@ -166,7 +176,9 @@ def conflict_check(
     return render(request, template, {
         'con':con,
         'active':active,
-        'relevant_conflicts':relevant_conflicts,
+        'relevant_conflicts':[relevant_hard_conflicts,relevant_soft_conflicts],
+        # 'relevant_hard_conflicts':relevant_hard_conflicts,
+        # 'relevant_soft_conflicts':relevant_soft_conflicts,
         'coach_search':coach_search,
         'captain_search':captain_search,
         'registrant_search':registrant_search

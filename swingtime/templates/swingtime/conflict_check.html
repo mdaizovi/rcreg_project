@@ -31,10 +31,12 @@
           <button type="submit" class="btn btn-success margin-top-10">Check Coach Conflicts</button>
       </form>
       {%if coach_search%}
-      <p class="margin-top-10">{{relevant_conflicts|length}} conflicts found.</p>
-      {%for cdict in relevant_conflicts%}
+      {%for l in relevant_conflicts %}
+      <div class="col-sm-6 margin-top-10">
+          <h3 class="text-center">{{l|length}} {%cycle "hard" "soft" %} conflicts found.</h3>
+      {%for cdict in l%}
       {%for k,v in cdict.iteritems%}
-        <p><b>{{k.name}}</b></p>
+        <p class="margin-top-25"><b>{{k.name}}</b></p>
         <ul>
         {%for c in v %}
         <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
@@ -42,7 +44,9 @@
       </ul>
         {%endfor%}<!-- for k,v in cdict.iteritems -->
       {%endfor%}<!-- for cdict in coach_conflicts-->
-      {%endif%}<!-- if coach_conflicts-->
+    </div>
+{%endfor%}
+      {%endif%}<!-- if coach_search-->
         </div><!-- end tab-pane -->
 
 
@@ -54,18 +58,22 @@
             <button type="submit" class="btn btn-success margin-top-10">Check Captain Conflicts</button>
         </form>
         {%if captain_search%}
-        <p class="margin-top-10">{{relevant_conflicts|length}} conflicts found.</p>
-        {%for cdict in relevant_conflicts%}
+        {%for l in relevant_conflicts %}
+        <div class="col-sm-6 margin-top-10">
+            <h3 class="text-center">{{l|length}} {%cycle "hard" "soft" %} conflicts found.</h3>
+        {%for cdict in l%}
         {%for k,v in cdict.iteritems%}
-          <p><b>{{k.name}}</b></p>
+          <p class="margin-top-25"><b>{{k.name}}</b></p>
           <ul>
           {%for c in v %}
           <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
           {%endfor%}<!-- for c in v -->
         </ul>
           {%endfor%}<!-- for k,v in cdict.iteritems -->
-        {%endfor%}<!-- for cdict in coach_conflicts-->
-        {%endif%}<!-- if coach_conflicts-->
+        {%endfor%}<!-- for cdict in captain_conflicts-->
+      </div>
+      {%endfor%}
+        {%endif%}<!-- if captain_search-->
           </div><!-- end tab-pane -->
 
 
