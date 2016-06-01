@@ -31,8 +31,8 @@
           <button type="submit" class="btn btn-success margin-top-10">Check Coach Conflicts</button>
       </form>
       {%if coach_search%}
-      <p class="margin-top-10">{{coach_conflicts|length}} conflicts found.</p>
-      {%for cdict in coach_conflicts%}
+      <p class="margin-top-10">{{relevant_conflicts|length}} conflicts found.</p>
+      {%for cdict in relevant_conflicts%}
       {%for k,v in cdict.iteritems%}
         <p><b>{{k.name}}</b></p>
         <ul>
@@ -54,8 +54,8 @@
             <button type="submit" class="btn btn-success margin-top-10">Check Captain Conflicts</button>
         </form>
         {%if captain_search%}
-        <p class="margin-top-10">{{captain_conflicts|length}} conflicts found.</p>
-        {%for cdict in captain_conflicts%}
+        <p class="margin-top-10">{{relevant_conflicts|length}} conflicts found.</p>
+        {%for cdict in relevant_conflicts%}
         {%for k,v in cdict.iteritems%}
           <p><b>{{k.name}}</b></p>
           <ul>
