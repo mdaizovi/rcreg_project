@@ -679,7 +679,7 @@ def edit_roster(request, roster_id):
 
     if request.method == "POST":
         if 'add skater' in request.POST:
-            skater_added,add_fail=roster.add_sk8er_challenge(request.POST['eligible_registrant'])
+            skater_added,add_fail,add_fail_reason=roster.add_sk8er_challenge(request.POST['eligible_registrant'])
 
         elif 'remove skater' in request.POST:
             skater_remove,remove_fail=roster.remove_sk8er_challenge(request.POST['eligible_registrant'])
@@ -705,7 +705,7 @@ def edit_roster(request, roster_id):
         eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
 
 
-    return render_to_response('edit_roster.html',{'challenge':challenge,'skater_search_form':skater_search_form,'participants':participants,'eligible_participants':eligible_participants,'add_fail':add_fail,'skater_added':skater_added,'user':user,
+    return render_to_response('edit_roster.html',{'challenge':challenge,'skater_search_form':skater_search_form,'participants':participants,'eligible_participants':eligible_participants,'add_fail_reason':add_fail_reason,'add_fail':add_fail,'skater_added':skater_added,'user':user,
         'skater_remove':skater_remove,'remove_fail':remove_fail,'roster':roster}, context_instance=RequestContext(request))
 
 
@@ -728,6 +728,7 @@ def edit_challenge(request, activity_id):
     roster_form=None
     challenge_form=None
     add_fail=False
+    add_fail_reason=False
     skater_added=False
     skater_remove=False
     remove_fail=False
@@ -795,7 +796,7 @@ def edit_challenge(request, activity_id):
                     my_team.skill=pre_save_skill
 
         elif 'add skater' in request.POST:
-            skater_added,add_fail=my_team.add_sk8er_challenge(request.POST['eligible_registrant'])
+            skater_added,add_fail,add_fail_reason=my_team.add_sk8er_challenge(request.POST['eligible_registrant'])
 
         elif 'remove skater' in request.POST:
             skater_remove,remove_fail=my_team.remove_sk8er_challenge(request.POST['eligible_registrant'])
@@ -926,7 +927,7 @@ def edit_challenge(request, activity_id):
             formlist=[roster_form,challenge_form]
 
     big_dict={'problem_criteria':problem_criteria,'save_attempt':save_attempt,'save_success':save_success,'captain_conflict':captain_conflict,'coed_beginner':coed_beginner,'skater_search_form':skater_search_form,'invited_captain':invited_captain,'formlist':formlist,'eligible_participants':eligible_participants,'participants':participants,'captain_replacements':captain_replacements,'opponent_form_list':opponent_form_list,'my_team':my_team,'opponent':opponent,'challenge':challenge,
-        'add_fail':add_fail,'skater_added':skater_added,'skater_remove':skater_remove,'remove_fail':remove_fail,'opponent_acceptance':opponent_acceptance,'my_acceptance':my_acceptance}
+        'add_fail_reason':add_fail_reason,'add_fail':add_fail,'skater_added':skater_added,'skater_remove':skater_remove,'remove_fail':remove_fail,'opponent_acceptance':opponent_acceptance,'my_acceptance':my_acceptance}
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
 

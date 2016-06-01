@@ -631,6 +631,45 @@ class Registrant(Matching_Criteria):
         #print "dbc1:", len(dbconnection.queries)
         return reg_os
 
+    def is_occupied(self,pending_o):
+        """Takes in pending occurrence, checks to see if it ocnflicts w/ anything skater is doing at moment"""
+        from swingtime.models import Occurrence #need here in case of import error?
+        from scheduler.models import Challenge, Training,Coach
+        sk8er_ros=self.roster_set.all()
+        sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
+
+        if hasattr(self.user, 'coach'):
+            sk8er_train=self.user.coach.training_set.filter(con=self.con)
+        else:
+            sk8er_train=[]
+
+        concurrent=list(Occurrence.objects.filter(start_time__lt=(pending_o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(pending_o.start_time - datetime.timedelta(minutes=30))).filter(Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)).exclude(pk=pending_o.pk))
+
+        if len(concurrent)>0:
+            return concurrent
+        else:
+            return False
+
+    def is_occupied_coaching(self,pending_o):
+        """Takes in pending occurrence, checks to see if it ocnflicts w/ anything skater is doing at moment"""
+        from swingtime.models import Occurrence #need here in case of import error?
+        from scheduler.models import Challenge, Training,Coach
+        sk8er_ros=self.roster_set.all()
+        sk8er_chal=list(Challenge.objects.filter(RCaccepted=True).filter(Q(roster1__in=sk8er_ros)|Q(roster2__in=sk8er_ros)))
+
+        if hasattr(self.user, 'coach'):
+            sk8er_train=self.user.coach.training_set.filter(con=self.con)
+
+            concurrent=list(Occurrence.objects.filter(start_time__lt=(pending_o.end_time + datetime.timedelta(minutes=30)),end_time__gt=(pending_o.start_time - datetime.timedelta(minutes=30))).filter(Q(challenge__in=sk8er_chal)|Q(training__in=sk8er_train)).exclude(pk=pending_o.pk))
+
+            if len(concurrent)>0:
+                return concurrent
+            else:
+                return False
+        else:
+            return False
+
+
     def check_conflicts(self):
         """Gets occurrences, checks to see if any are at conflicting times """
         from swingtime.models import Occurrence #need here in case of import error?

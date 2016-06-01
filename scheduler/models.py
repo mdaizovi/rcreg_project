@@ -281,22 +281,53 @@ class Roster(Matching_Criteria):
             return False
 
     def add_sk8er_challenge(self, skater_pk):
+        add_fail_reason=False
+        is_free=True
+
+
+########test this, only works in theory, haven't tested at all##############
+
         skater_added=None
         add_fail=None
         if self.spacea():
             try:
-                try:
-                    skater_added=Registrant.objects.get(pk=skater_pk)
+                skater_added=Registrant.objects.get(pk=skater_pk)
+                my_cs=list(self.roster1.all()) + list(self.roster2.all()) #should only be 1, but i suck and made it fk instead of 1:1
+                my_os=[]
+                concurrent=[]
+                for c in my_cs:
+                    my_os+=list(c.occurrence_set.all())
+
+                for o in my_os:#there should only be 1, but just ot be safe
+                    #occupied=skater_added.is_occupied(o) this is occupied in general
+                    occupied=skater_added.is_occupied_coaching(o) #this only applies to coaches
+                    if occupied:
+                        concurrent+=occupied
+
+                if len(concurrent)>0:
+                    add_fail=skater_added
+                    add_fail_reason=" because %s is busy with "%(skater_added.name)
+                    ci=0
+                    for c in concurrent:
+                        ci+=1
+                        if ci>1:
+                            if ci==len(concurrent):
+                                add_fail_reason+=", & "+c.name
+                            else:
+                                add_fail_reason+=", "+c.name
+                        else:
+                            add_fail_reason+=c.name
+
+                if not add_fail:
                     self.participants.add(skater_added)
                     self.save()
-                except:
-                    add_fail=Registrant.objects.get(pk=skater_pk)
             except:
-                pass
+                add_fail=Registrant.objects.get(pk=skater_pk)
         else:
             add_fail=Registrant.objects.get(pk=skater_pk)
+            add_fail_reason=" because the roster is full."
 
-        return skater_added,add_fail
+        return skater_added,add_fail,add_fail_reason
 
     def remove_sk8er_challenge(self, skater_pk):
         skater_remove=None
