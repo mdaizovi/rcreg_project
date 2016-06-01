@@ -47,8 +47,8 @@ def conflict_check(
 ):
     """This is a big mess of code but it can check all coaches in 2 seconds and 1 db hit per coach."""
     start=datetime.now()
-    print "starting conflict_check"
-    print "dbc0:", len(dbconnection.queries)
+    #print "starting conflict_check"
+    #print "dbc0:", len(dbconnection.queries)
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -143,12 +143,9 @@ def conflict_check(
             active="registrant"
             relevant_reg=[]
 
-        #relevant_conflicts=[]
         for r in relevant_reg:
             hard_conflict=[]
             soft_conflict=[]
-            #conflict=[]
-            #free=[]
             occur_list=busy.get(r)
             for o in occur_list:
                 for o2 in occur_list:
@@ -156,12 +153,13 @@ def conflict_check(
                         if o.os_hard_intersect(o2):
                             if o2 not in hard_conflict:
                                 hard_conflict.append(o2)
+                            if o not in hard_conflict:
+                                hard_conflict.append(o)
                         elif o.os_soft_intersect(o2):
-                            if (o2 not in soft_conflict) and (o2 not in hard_conflict):
+                            if (o2 not in soft_conflict):
                                 soft_conflict.append(o2)
-                        # else:
-                        #     if o2 not in free:
-                        #         free.append(o2)
+                            if (o not in soft_conflict):
+                                soft_conflict.append(o)
 
             if len(hard_conflict)>0:
                 hard_conflict.sort(key=lambda o:(o.start_time, o.end_time))
@@ -170,15 +168,13 @@ def conflict_check(
                 soft_conflict.sort(key=lambda o:(o.start_time, o.end_time))
                 relevant_soft_conflicts.append({r:soft_conflict})
 
-    print "dbcend:", len(dbconnection.queries)
+    #print "dbcend:", len(dbconnection.queries)
     elapsed=datetime.now()-start
-    print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
+    #print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
     return render(request, template, {
         'con':con,
         'active':active,
         'relevant_conflicts':[relevant_hard_conflicts,relevant_soft_conflicts],
-        # 'relevant_hard_conflicts':relevant_hard_conflicts,
-        # 'relevant_soft_conflicts':relevant_soft_conflicts,
         'coach_search':coach_search,
         'captain_search':captain_search,
         'registrant_search':registrant_search
