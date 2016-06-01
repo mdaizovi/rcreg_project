@@ -46,6 +46,9 @@ def conflict_check(
     **extra_context
 ):
     """optimize later, this is going to be about a million db hits"""
+    start=datetime.now()
+    print "starting conflict_check"
+    print "dbc0:", len(dbconnection.queries)
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -62,35 +65,93 @@ def conflict_check(
     captain_search=False
     registrant_search=False
 
-
-    #print "dbc0:", len(dbconnection.queries)
-
     if request.method == 'POST':
         selection = request.POST.copy()
-        #print "selection", selection
         if 'coach' in request.POST:
+
+            ### This is a big mess of code but it can check all coaches in 2 seconds and 1 db hit per coach.
+
             coach_search=True
             active="coach"
-            trainos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None).select_related('training').prefetch_related('training__coach').prefetch_related('training__coach__user__registrant_set')
-
-            training=[]
-            for o in trainos:
-                if o.training not in training:
-                    training.append(o.training)
-
+            scheduled_os=list(Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').select_related('challenge__roster1__captain').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2__captain').prefetch_related('challenge__roster2__participants'))
+            trainings=[]
             coaches=[]
-            coach_reg=[]
-            for t in training:
-                for c in t.coach.all():
-                    if c not in coaches:
-                        coaches.append(c)
-                        coach_reg+=list(c.user.registrant_set.filter(con=con))
+            reg_pk=[]
+            challenges=[]
+            act_dict={}
+            busy={}
 
+            for o in scheduled_os:
+                if o.training:
+                    coach_reg=[]
+                    if o.training not in trainings:
+                        trainings.append(o.training)
+                        for c in o.training.coach.all():
+                            if c not in coaches:
+                                coaches.append(c)
+                                coach_reg+=list(c.user.registrant_set.filter(con=con))
+                    if o.training not in act_dict:
+                        act_dict[o.training]={"os":[o],"figureheads":coach_reg,"participants":coach_reg}
+                    else:
+                        tmp=act_dict.get(o.training)
+                        tmpo=tmp.get("os")
+                        tmpo.append(o)
+                        tmp["os"]=list(tmpo)
+                        #act_dict[o.training=tmp #don't thinkis necessary
+                    for c in coach_reg:
+                        if c not in busy:
+                            busy[c]=[o]
+                        else:
+                            temporary=busy.get(c)
+                            temporary.append(o)
+
+                elif o.challenge:
+                    if o.challenge not in challenges:
+                        challenges.append(o.challenge)
+
+                    if o.challenge not in act_dict:
+                        figureheads=[]
+                        participants=[]
+                        for r in [o.challenge.roster1,o.challenge.roster2]:
+                            figureheads.append(r.captain)
+                            if r.captain not in busy:
+                                busy[r.captain]=[o]
+                            else:
+                                temporary=busy.get(r.captain)
+                                temporary.append(o)
+
+                            for p in r.participants.all():
+                                participants.append(p)
+                                if p not in busy:
+                                    busy[p]=[o]
+                                else:
+                                    temporary=busy.get(p)
+                                    temporary.append(o)
+
+                        act_dict[o.challenge]={"os":[o],"figureheads":figureheads,"participants":participants}
+                    else:
+                        print "error, challenge has 2 occurrences?"
+            coach_conflicts=[]
             for r in coach_reg:
-                conflict,free=r.check_conflicts()
-                if len(conflict)>0:
-                    coach_conflicts.append({r:conflict})
+                conflict=[]
+                free=[]
+                occur_list=busy.get(r)
+                for o in occur_list:
+                    for o2 in occur_list:
+                        if o!=o2:
+                            if o.os_soft_intersect(o2):
+                                if o2 not in conflict:
+                                    conflict.append(o2)
+                            #someday separate by hard and soft?
+                            # elif o.os_hard_intersect(o2):
+                            #     if o2 not in conflict:
+                            #         conflict.append(o2)
+                            else:
+                                if o2 not in free:
+                                    free.append(o2)
 
+                            if len(conflict)>0:
+                                coach_conflicts.append({r:conflict})
 
         elif 'captain' in request.POST:
             active="captain"
@@ -119,7 +180,9 @@ def conflict_check(
             active="registrant"
             registrant_conflicts=[1,2,3]#just to have a list
 
-    #print "dbc1:", len(dbconnection.queries)
+    print "dbcend:", len(dbconnection.queries)
+    elapsed=datetime.now()-start
+    print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
     return render(request, template, {
         'con':con,
         'active':active,

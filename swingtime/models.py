@@ -162,10 +162,6 @@ class OccurrenceManager(models.Manager):
         for act in possibles:
             this_act_data={}
 
-
-
-
-
             ############ start gathering locaiton per activity###############
             ########this is where it's beng evaluated, i bet. If I oculd sort ahead of time I'd massively cut down on db trips.
             if act.location_type =='Flat Track':
