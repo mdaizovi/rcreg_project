@@ -21,7 +21,7 @@ from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
-from con_event.models import Con
+from con_event.models import Con,Blackout
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
@@ -50,12 +50,12 @@ def conflict_check(
 
     #I'm such a retard! this counts all captain conflict even if they're just participants!
     #need to make it only matter when captain is a captain,
-    #and also include blckouts 
+    #and also include blckouts
 
 
 
-    #print "starting conflict_check"
-    #print "dbc0:", len(dbconnection.queries)
+    print "starting conflict_check"
+    print "dbc0:", len(dbconnection.queries)
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -150,6 +150,12 @@ def conflict_check(
             active="registrant"
             relevant_reg=[]
 
+        related_blackouts=Blackout.objects.filter(registrant__in=relevant_reg).prefetch_related('registrant')
+        for b in related_blackouts:
+            r_busy=busy.get(b.registrant)
+            tempo=b.make_temp_o()
+            r_busy.append(tempo)
+
         for r in relevant_reg:
             hard_conflict=[]
             soft_conflict=[]
@@ -175,7 +181,7 @@ def conflict_check(
                 soft_conflict.sort(key=lambda o:(o.start_time, o.end_time))
                 relevant_soft_conflicts.append({r:soft_conflict})
 
-    #print "dbcend:", len(dbconnection.queries)
+    print "dbcend:", len(dbconnection.queries)
     elapsed=datetime.now()-start
     #print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
     return render(request, template, {

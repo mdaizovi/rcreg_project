@@ -39,7 +39,7 @@
         <p class="margin-top-25"><b>{{k.name}}</b></p>
         <ul>
         {%for c in v %}
-        <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+        <li><b>{%if not c.challenge and not c.training%}BLACKOUT{%else%}{{c.name}}{%endif%}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
         {%endfor%}<!-- for c in v -->
       </ul>
         {%endfor%}<!-- for k,v in cdict.iteritems -->

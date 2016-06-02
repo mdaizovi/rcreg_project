@@ -240,11 +240,11 @@ class Blackout(models.Model):
         """takes a temporary, unsaved occurrence from blackout, for use in auto scheduling to indicate person busy at this time"""
         from swingtime.models import Occurrence
         if self.ampm=="AM":
-            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 0, 0)
-            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 11, 59)
+            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 0, 30)
+            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 11, 29)
         elif self.ampm=="PM":
-            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 12, 0)
-            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 23, 59)
+            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 12, 30)
+            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 23, 29)
         tempo=Occurrence(start_time=start_time,end_time=end_time)
 
         return tempo
