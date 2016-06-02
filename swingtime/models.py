@@ -248,6 +248,7 @@ class OccurrenceManager(models.Manager):
             figureheads+=attr_dict.get('figureheads')
             participants+=attr_dict.get('participants')
         print "dbc2.5:", len(dbconnection.queries)
+        print "figureheads",figureheads
 
         for f in figureheads:
             if f.pk not in fpks:
@@ -291,22 +292,24 @@ class OccurrenceManager(models.Manager):
         #     print k
         #     print v
 
-        print "dbc5:", len(dbconnection.queries)
+        #print "dbc5:", len(dbconnection.queries)
         related_blackouts=Blackout.objects.filter(registrant__in=figureheads).prefetch_related('registrant')
-        print "dbc6:", len(dbconnection.queries)
+        #print "dbc6:", len(dbconnection.queries)
+
         for b in related_blackouts:
-            r_busy=busy.get(r)
+            #r_busy=busy.get(r) this is hw it was, i think only getting 1 person's blackout!
+            r_busy=busy.get(b.registrant)
             if b.ampm=="AM":
                 start_time=datetime(b.date.year, b.date.month, b.date.day, 0, 0)
-                end_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
+                end_time=datetime(b.date.year, b.date.month, b.date.day, 11, 59)
             elif b.ampm=="PM":
                 start_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
                 end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
             tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
             r_busy.append(tempo)
-            busy[r]=r_busy
-        print "dbc7:", len(dbconnection.queries)
-
+            busy[b.registrant]=r_busy
+        # print "dbc7:", len(dbconnection.queries)
+        #
         # print "bust test2"
         # for k,v in busy.iteritems():
         #     print k
@@ -314,12 +317,15 @@ class OccurrenceManager(models.Manager):
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
+            print "act: ",act
 
             level1=[]
             level15=[]
             level2=[]
             interestexact=this_act_dict.get("interestexact")
             interestremoved=this_act_dict.get("interestremoved")
+            print "len interestexact",len(interestexact)
+            print "len interestremoved",len(interestremoved)
 
             for o in interestexact:
                 figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
@@ -360,15 +366,15 @@ class OccurrenceManager(models.Manager):
             act_list=avail_score_dict.get(score)
             #print "act_list",act_list
             for act in act_list:
-                #print "act: ",act
+                print "act: ",act
                 oselected=False
                 this_act_dict=all_act_data.get(act)
                 l1=this_act_dict.get('level1')
-                #print "len l1: ",len(l1)
+                print "len l1: ",len(l1)
                 l15=this_act_dict.get('level15')
-                #print "len l15: ",len(l15)
+                print "len l15: ",len(l15)
                 l2=this_act_dict.get('level2')
-                #print "len l2: ",len(l2)
+                print "len l2: ",len(l2)
 
                 if len(l1)>0:
                     #print "len l1: ",len(l1)
@@ -395,6 +401,9 @@ class OccurrenceManager(models.Manager):
                                 #print "o taken, keep going"
                                 #print "len l1: ",len(l1)
                                 l1.remove(o)
+                                if not figurehead_intersect:
+                                    if o not in l2:
+                                        l2.append(o)
                         else:
                             #print "o taken, keep going"
                             #print "len l1: ",len(l1)
@@ -409,7 +418,6 @@ class OccurrenceManager(models.Manager):
                             figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
                             participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
                             if not figurehead_intersect and not participant_intersect:
-
                                 #print"not in taken"
                                 prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
                                 #print"prefix: ",prefix
@@ -426,21 +434,23 @@ class OccurrenceManager(models.Manager):
                                 #print "o taken, keep going"
                                 #print "len l15: ",len(l15)
                                 l15.remove(o)
+                                if not figurehead_intersect:
+                                    if o not in l2:
+                                        l2.append(o)
                         else:
                             #print "o taken, keep going"
                             #print "len l15: ",len(l15)
                             l15.remove(o)
 
                 elif len(l2)>0 and not oselected:
-                    #print "len l2: ",len(l2)
+                    print "going for l2, len ",len(l2)
                     while len(l2)>0 and not oselected:
                         o=choice(l2)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
                             figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
                             participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
-                            if not participant_intersect:
-
+                            if not figurehead_intersect:
                                 #print"not in taken"
                                 prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
                                 #print"prefix: ",prefix
