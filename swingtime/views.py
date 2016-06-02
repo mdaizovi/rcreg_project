@@ -47,6 +47,13 @@ def conflict_check(
 ):
     """This is a big mess of code but it can check all coaches in 2 seconds and 1 db hit per coach."""
     start=datetime.now()
+
+    #I'm such a retard! this counts all captain conflict even if they'remparticipating!
+    #need to make it only matter when captain is a captain,
+    #and also include blckouts 
+
+
+
     #print "starting conflict_check"
     #print "dbc0:", len(dbconnection.queries)
     if con_id:
@@ -538,15 +545,6 @@ def act_unsched(
 
         if 'Auto_Chal' in request.POST or 'Auto_Train' in request.POST:
             pk_list=[]
-            #taken_os=[] #only necessary if i make it choose randomly
-
-
-            #activities=[]
-            #possible_dicts={}
-            #act_tups=[]
-            #o_dicts={}
-            #o_tups=[]
-
 
             if 'Auto_Chal' in request.POST:
                 for k in post_keys:
@@ -565,7 +563,7 @@ def act_unsched(
                 print "dbc pre possibles train:", len(dbconnection.queries)
                 possibles=Training.objects.filter(pk__in=pk_list).prefetch_related('coach').prefetch_related('coach__user').prefetch_related('coach__user__registrant_set')#2 hits pet training, evaluated later
 
-            print "dbc2:", len(dbconnection.queries)
+            #print "dbc2:", len(dbconnection.queries)
             #######if i want to rewrite otto, start here with getting possibles,
             all_act_data={}
             for act in possibles:
@@ -619,15 +617,15 @@ def act_unsched(
                         added2schedule.append(o)
                         save_success=True
     #if not post, or just saves
-    print "d5:", len(dbconnection.queries)
+    #print "d5:", len(dbconnection.queries)
     cfilter=list(Challenge.objects.filter(con=con, RCaccepted=True).select_related('roster1__captain').select_related('roster2__captain').prefetch_related('occurrence_set'))
     tfilter=list(Training.objects.filter(con=con, RCaccepted=True).prefetch_related('coach__user__registrant_set').prefetch_related('occurrence_set'))
     for q in [cfilter,tfilter]:
-        print "d6:", len(dbconnection.queries)
+        #print "d6:", len(dbconnection.queries)
         cycle+=1
         temp_dict={}
         for obj in q:#why dies this evaulat every time?
-            print "d7:", len(dbconnection.queries)
+            #print "d7:", len(dbconnection.queries)
             if (obj.is_a_training() and obj.sessions and len(obj.occurrence_set.all())<obj.sessions) or (len(obj.occurrence_set.all())<=0):#0 db hits
             #if len(obj.occurrence_set.all())<=0:#later will have to be different, for repeat trainings
                 score=len(obj.get_figurehead_blackouts())#this is 4 db hits
@@ -637,7 +635,7 @@ def act_unsched(
                     this_list=temp_dict.get(score)
                     this_list.append(obj)
                     temp_dict[score]=list(this_list)
-        print "d8:", len(dbconnection.queries)
+        #print "d8:", len(dbconnection.queries)
         score_list=temp_dict.keys()
         score_list.sort(reverse=True)
         od_list=[]

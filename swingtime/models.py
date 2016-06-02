@@ -146,8 +146,8 @@ class OccurrenceManager(models.Manager):
         gets all possible Occurrences for entire group, divides up by which would suit each activity
         doesbn't sort by conflict yet"""
         #0 db hits?!? wtf?
-        print "gather possibles experiment"
-        print "dbc1:", len(dbconnection.queries)
+        #print "gather possibles experiment"
+        #print "dbc1:", len(dbconnection.queries)
         venues=con.venue.all()
         all_locations=Location.objects.filter(venue__in=venues) #this works. should i select/prefetch anything?
         #date_range=con.get_date_range()
@@ -155,7 +155,7 @@ class OccurrenceManager(models.Manager):
         #base_q=Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end)
         base_q=list(Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end).select_related('location'))
 
-        print "dbc2:", len(dbconnection.queries)
+        #print "dbc2:", len(dbconnection.queries)
 
         possibles=all_act_data.keys()
 
@@ -199,7 +199,7 @@ class OccurrenceManager(models.Manager):
             dur_delta=int(duration*60)
             this_act_data["dur_delta"]=dur_delta
             ############ end interest, activity type, per activity###############
-            print "dbc2.5:", len(dbconnection.queries)
+            #print "dbc2.5:", len(dbconnection.queries)
 
             #act_os=base_q.filter(interest__in=[proxy_interest-1,proxy_interest,proxy_interest+1], location__in=act_locations,end_time=F('start_time') + timedelta(minutes=dur_delta))
             act_os=[]
@@ -209,7 +209,7 @@ class OccurrenceManager(models.Manager):
 
 
             this_act_data["act_os"]=act_os
-            print "dbc2.6:", len(dbconnection.queries)
+            #print "dbc2.6:", len(dbconnection.queries)
             interestexact=[]
             interestremoved=[]
 
@@ -220,12 +220,12 @@ class OccurrenceManager(models.Manager):
                     interestremoved.append(o)
             this_act_data["interestexact"]=interestexact
             this_act_data["interestremoved"]=interestremoved
-            print "dbc2.7:", len(dbconnection.queries)
+            #print "dbc2.7:", len(dbconnection.queries)
             #update dict w/ new data
             old_act_data=all_act_data.get(act)
             old_act_data.update(this_act_data)
 
-        print "dbc3:", len(dbconnection.queries)
+        #print "dbc3:", len(dbconnection.queries)
         return all_act_data
 
     #---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ class OccurrenceManager(models.Manager):
         Takes in dict w/k of activity, v list of criteria, including possible occurrences
         now need to sort by interest match, conflicts, among self and each other, without too maky db hits"""
         print "starting sort possibilities"
-        print "dbc1:", len(dbconnection.queries)
+        #print "dbc1:", len(dbconnection.queries)
         from swingtime.forms import L1Check
         #date_range=con.get_date_range()
         figureheads=[]
@@ -243,12 +243,12 @@ class OccurrenceManager(models.Manager):
         ppks=[]
         busy={}
 
-        print "dbc2:", len(dbconnection.queries)
+        #print "dbc2:", len(dbconnection.queries)
         for attr_dict in all_act_data.values():
             figureheads+=attr_dict.get('figureheads')
             participants+=attr_dict.get('participants')
         print "dbc2.5:", len(dbconnection.queries)
-        print "figureheads",figureheads
+        print "figureheads len",len(figureheads)
 
         for f in figureheads:
             if f.pk not in fpks:
@@ -262,9 +262,9 @@ class OccurrenceManager(models.Manager):
             if p not in busy:
                 busy[p]=[]
 
-        print "dbc3 models:", len(dbconnection.queries)
+        #print "dbc3 models:", len(dbconnection.queries)
         scheduled_os=Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').prefetch_related('challenge__roster1__participants').prefetch_related('challenge__roster2__participants')
-        print "dbc4:", len(dbconnection.queries)
+        #print "dbc4:", len(dbconnection.queries)
         #1 chal=8 db hits above. too many? 2 trains=7 hits maybe doesn't matter how many acts?
         for o in scheduled_os:
             if o.challenge:
@@ -273,10 +273,9 @@ class OccurrenceManager(models.Manager):
                         if r in busy:
                             r_busy=busy.get(r)
                             r_busy.append(o)
-                            busy[r]=r_busy
+                            busy[r]=list(r_busy)
                         else:
                             busy[r]=[o]
-
 
             elif o.training:
                 for c in o.training.coach.all():
@@ -284,7 +283,7 @@ class OccurrenceManager(models.Manager):
                         if r in busy:
                             r_busy=busy.get(r)
                             r_busy.append(o)
-                            busy[r]=r_busy
+                            busy[r]=list(r_busy)
                         else:
                             busy[r]=[o]
         # print "bust test1"
@@ -307,7 +306,7 @@ class OccurrenceManager(models.Manager):
                 end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
             tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
             r_busy.append(tempo)
-            busy[b.registrant]=r_busy
+            busy[b.registrant]=list(r_busy)
         # print "dbc7:", len(dbconnection.queries)
         #
         # print "bust test2"
@@ -324,8 +323,8 @@ class OccurrenceManager(models.Manager):
             level2=[]
             interestexact=this_act_dict.get("interestexact")
             interestremoved=this_act_dict.get("interestremoved")
-            print "len interestexact",len(interestexact)
-            print "len interestremoved",len(interestremoved)
+            #print "len interestexact",len(interestexact)
+            #print "len interestremoved",len(interestremoved)
 
             for o in interestexact:
                 figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
@@ -366,15 +365,20 @@ class OccurrenceManager(models.Manager):
             act_list=avail_score_dict.get(score)
             #print "act_list",act_list
             for act in act_list:
-                print "act: ",act
+                #print "act: ",act
                 oselected=False
                 this_act_dict=all_act_data.get(act)
                 l1=this_act_dict.get('level1')
-                print "len l1: ",len(l1)
+                #print "len l1: ",len(l1)
                 l15=this_act_dict.get('level15')
-                print "len l15: ",len(l15)
+                #print "len l15: ",len(l15)
                 l2=this_act_dict.get('level2')
-                print "len l2: ",len(l2)
+                #print "len l2: ",len(l2)
+                figs=this_act_dict.get('figureheads')
+                parts=this_act_dict.get('participants')
+                #print "len figs",len(figs)
+                #print "len partss",len(parts)
+
 
                 if len(l1)>0:
                     #print "len l1: ",len(l1)
@@ -382,28 +386,31 @@ class OccurrenceManager(models.Manager):
                         o=choice(l1)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
-                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
-                            if not figurehead_intersect and not participant_intersect:
-                                #print"not in taken"
-                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
-                                #print"prefix: ",prefix
-                                level1pairs[(act,o,"Perfect Match")]=L1Check(prefix=prefix)
-                                taken_os.append(o)
-                                l1.remove(o)
-                                oselected=True
-                                for l in [this_act_dict.get('figureheads'),this_act_dict.get('participants')]:
-                                    for r in l:
-                                        r_busy=busy.get(r)
-                                        r_busy.append(o)
-                                break
+                            figurehead_intersect=o.busy_soft(figs,busy)
+                            if not figurehead_intersect:
+                                participant_intersect=o.busy_soft(parts,busy)
+                                if not participant_intersect:
+                                    #print"not in taken"
+                                    prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
+                                    #print"prefix: ",prefix
+                                    level1pairs[(act,o,"Perfect Match")]=L1Check(prefix=prefix)
+                                    taken_os.append(o)
+                                    l1.remove(o)
+                                    oselected=True
+
+                                    for l in [figs,parts]:
+                                        for r in l:
+                                            r_busy=busy.get(r)
+                                            r_busy.append(o)
+                                    break
+                                else:#if participant intersect
+                                    l1.remove(o)
+                                    if o not in l2:
+                                        l2.append(o)
                             else:
                                 #print "o taken, keep going"
                                 #print "len l1: ",len(l1)
                                 l1.remove(o)
-                                if not figurehead_intersect:
-                                    if o not in l2:
-                                        l2.append(o)
                         else:
                             #print "o taken, keep going"
                             #print "len l1: ",len(l1)
@@ -415,21 +422,26 @@ class OccurrenceManager(models.Manager):
                         o=choice(l15)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
-                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
-                            if not figurehead_intersect and not participant_intersect:
-                                #print"not in taken"
-                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
-                                #print"prefix: ",prefix
-                                level1pairs[(act,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
-                                taken_os.append(o)
-                                l15.remove(o)
-                                oselected=True
-                                for l in [this_act_dict.get('figureheads'),this_act_dict.get('participants')]:
-                                    for r in l:
-                                        r_busy=busy.get(r)
-                                        r_busy.append(o)
-                                break
+                            figurehead_intersect=o.busy_soft(figs,busy)
+                            if not figurehead_intersect:
+                                participant_intersect=o.busy_soft(parts,busy)
+                                if not participant_intersect:
+                                    #print"not in taken"
+                                    prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
+                                    #print"prefix: ",prefix
+                                    level1pairs[(act,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
+                                    taken_os.append(o)
+                                    l15.remove(o)
+                                    oselected=True
+                                    for l in [figs,parts]:
+                                        for r in l:
+                                            r_busy=busy.get(r)
+                                            r_busy.append(o)
+                                    break
+                                else:#if participant intersect
+                                    l1.remove(o)
+                                    if o not in l2:
+                                        l2.append(o)
                             else:
                                 #print "o taken, keep going"
                                 #print "len l15: ",len(l15)
@@ -443,13 +455,12 @@ class OccurrenceManager(models.Manager):
                             l15.remove(o)
 
                 elif len(l2)>0 and not oselected:
-                    print "going for l2, len ",len(l2)
+                    #print "going for l2, len ",len(l2)
                     while len(l2)>0 and not oselected:
                         o=choice(l2)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
-                            participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                            figurehead_intersect=o.busy_soft(figs,busy)
                             if not figurehead_intersect:
                                 #print"not in taken"
                                 prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
@@ -458,6 +469,11 @@ class OccurrenceManager(models.Manager):
                                 taken_os.append(o)
                                 l2.remove(o)
                                 oselected=True
+
+                                for l in [figs,parts]:
+                                    for r in l:
+                                            r_busy=busy.get(r)
+                                            r_busy.append(o)
                                 break
                             else:
                                 #print "o taken, keep going"
@@ -647,7 +663,6 @@ class Occurrence(models.Model):
         """takes in list of relevant registrant, dict w/ registrant as key, list of occurrences reg is in as v,
         checks to see if reg is busy/ w/ soft intersection"""
         #print "starting  busy_soft for ",self.challenge,self.training,self.start_time,self.end_time
-        #print "participants: "
         intersection=False
         for f in participant_list:
             #print f
