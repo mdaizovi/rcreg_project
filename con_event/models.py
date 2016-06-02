@@ -236,6 +236,20 @@ class Blackout(models.Model):
     def __unicode__(self):
         return "%s %s (%s)" % (self.registrant, self.date,self.ampm)
 
+    def make_temp_o(self):
+        """takes a temporary, unsaved occurrence from blackout, for use in auto scheduling to indicate person busy at this time"""
+        from swingtime.models import Occurrence
+        if self.ampm=="AM":
+            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 0, 0)
+            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 11, 59)
+        elif self.ampm=="PM":
+            start_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 12, 0)
+            end_time=datetime.datetime(self.date.year, self.date.month, self.date.day, 23, 59)
+        tempo=Occurrence(start_time=start_time,end_time=end_time)
+
+        return tempo
+
+
     class Meta:
         ordering=('registrant','date')
         unique_together = ('registrant','date','ampm')

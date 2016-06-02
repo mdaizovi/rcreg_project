@@ -48,7 +48,7 @@ def conflict_check(
     """This is a big mess of code but it can check all coaches in 2 seconds and 1 db hit per coach."""
     start=datetime.now()
 
-    #I'm such a retard! this counts all captain conflict even if they'remparticipating!
+    #I'm such a retard! this counts all captain conflict even if they're just participants!
     #need to make it only matter when captain is a captain,
     #and also include blckouts 
 

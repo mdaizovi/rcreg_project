@@ -296,23 +296,23 @@ class OccurrenceManager(models.Manager):
         #print "dbc6:", len(dbconnection.queries)
 
         for b in related_blackouts:
-            #r_busy=busy.get(r) this is hw it was, i think only getting 1 person's blackout!
+            #makig sure method words before deleting code
+            # r_busy=busy.get(b.registrant)
+            # if b.ampm=="AM":
+            #     start_time=datetime(b.date.year, b.date.month, b.date.day, 0, 0)
+            #     end_time=datetime(b.date.year, b.date.month, b.date.day, 11, 59)
+            # elif b.ampm=="PM":
+            #     start_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
+            #     end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
+            # tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
+            # r_busy.append(tempo)
+            # busy[b.registrant]=list(r_busy)
+
             r_busy=busy.get(b.registrant)
-            if b.ampm=="AM":
-                start_time=datetime(b.date.year, b.date.month, b.date.day, 0, 0)
-                end_time=datetime(b.date.year, b.date.month, b.date.day, 11, 59)
-            elif b.ampm=="PM":
-                start_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
-                end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
-            tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
+            tempo=b.make_temp_o()
             r_busy.append(tempo)
             busy[b.registrant]=list(r_busy)
-        # print "dbc7:", len(dbconnection.queries)
-        #
-        # print "bust test2"
-        # for k,v in busy.iteritems():
-        #     print k
-        #     print v
+
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
@@ -455,7 +455,7 @@ class OccurrenceManager(models.Manager):
                             l15.remove(o)
 
                 elif len(l2)>0 and not oselected:
-                    #print "going for l2, len ",len(l2)
+                    print "going for l2, len ",len(l2)
                     while len(l2)>0 and not oselected:
                         o=choice(l2)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
@@ -472,8 +472,8 @@ class OccurrenceManager(models.Manager):
 
                                 for l in [figs,parts]:
                                     for r in l:
-                                            r_busy=busy.get(r)
-                                            r_busy.append(o)
+                                        r_busy=busy.get(r)
+                                        r_busy.append(o)
                                 break
                             else:
                                 #print "o taken, keep going"
