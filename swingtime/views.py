@@ -50,9 +50,9 @@ def conflict_check(
 
     #I'm such a retard! this counts all captain conflict even if they're just participants!
     #need to make it only matter when captain is a captain,
-    #and also include blckouts
-
-
+    #when coach is coaching
+    #then figure out how to make Otto recognize coaches as more important participnts?
+    #coaches are getting double booked AFTER their training is scheduled
 
     print "starting conflict_check"
     print "dbc0:", len(dbconnection.queries)
@@ -76,6 +76,7 @@ def conflict_check(
         scheduled_os=list(Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').select_related('challenge__roster1__captain').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2__captain').prefetch_related('challenge__roster2__participants'))
         act_dict={}
         busy={}
+        busy_figurehead={}#like busy dict, but only when reg is being a coach or captain
         all_coach_reg=[]
         all_cap_reg=[]
         all_participants=[]
@@ -100,12 +101,19 @@ def conflict_check(
                     tmpo.append(o)
                     tmp["os"]=list(tmpo)
                     #act_dict[o.training=tmp #don't thinkis necessary
+
                 for c in coach_reg:
                     if c not in busy:
                         busy[c]=[o]
                     else:
                         temporary=busy.get(c)
                         temporary.append(o)
+
+                    if c not in busy_figurehead:
+                        busy_figurehead[c]=[o]
+                    else:
+                        temporary_fig=busy_figurehead.get(c)
+                        temporary_fig.append(o)
 
             elif o.challenge:
                 if o.challenge not in act_dict:
@@ -117,7 +125,14 @@ def conflict_check(
                             busy[r.captain]=[o]
                         else:
                             temporary=busy.get(r.captain)
-                            temporary.append(o)
+
+                        if r.captain not in busy_figurehead:
+                            busy_figurehead[r.captain]=[o]
+                        else:
+                            temporary_fig=busy_figurehead.get(r.captain)
+                            temporary_fig.append(o)
+
+
                         if r.captain not in all_cap_reg:
                             all_cap_reg.append(r.captain)
 
@@ -139,29 +154,48 @@ def conflict_check(
             coach_search=True
             active="coach"
             relevant_reg=all_coach_reg
+            busy1=busy_figurehead ##copare busy to busy and I'll get all activity conflicts. Compare busy figurehead to busy and i only get times that ocnflict w/ coaching or captaining times
+            busy2=busy
 
         elif 'captain' in request.POST:
             active="captain"
             captain_search=True
             relevant_reg=all_cap_reg
+            busy1=busy_figurehead##copare busy to busy and I'll get all activity conflicts. Compare busy figurehead to busy and i only get times that ocnflict w/ coaching or captaining times
+            busy2=busy
 
         elif 'registrant' in request.POST:
             registrant_search=True
             active="registrant"
+            #relevant_reg=all_participants
             relevant_reg=[]
+            busy1=busy
+            busy2=busy
 
         related_blackouts=Blackout.objects.filter(registrant__in=relevant_reg).prefetch_related('registrant')
+
         for b in related_blackouts:
             r_busy=busy.get(b.registrant)
             tempo=b.make_temp_o()
             r_busy.append(tempo)
+            # if b.registrant in busy_figurehead:
+            #     fig_busy=busy_figurehead.get(b.registrant)
+            #     tempo=b.make_temp_o()
+            #     fig_busy.append(tempo)
+            # else:
+            #     r_busy=busy.get(b.registrant)
+            #     tempo=b.make_temp_o()
+            #     r_busy.append(tempo)
 
         for r in relevant_reg:
             hard_conflict=[]
             soft_conflict=[]
-            occur_list=busy.get(r)
-            for o in occur_list:
-                for o2 in occur_list:
+
+            occur_list1=busy1.get(r)
+            occur_list2=busy2.get(r)
+
+            for o in occur_list1:
+                for o2 in (occur_list2+occur_list1):#so this compares active occurrences with passive occurrences, blackouts, as well as other acive occurrences
                     if o!=o2:
                         if o.os_hard_intersect(o2):
                             if o2 not in hard_conflict:
@@ -183,7 +217,7 @@ def conflict_check(
 
     print "dbcend:", len(dbconnection.queries)
     elapsed=datetime.now()-start
-    #print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
+    print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
     return render(request, template, {
         'con':con,
         'active':active,

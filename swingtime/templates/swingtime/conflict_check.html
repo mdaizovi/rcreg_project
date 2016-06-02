@@ -39,7 +39,7 @@
         <p class="margin-top-25"><b>{{k.name}}</b></p>
         <ul>
         {%for c in v %}
-        <li><b>{%if not c.challenge and not c.training%}BLACKOUT{%else%}{{c.name}}{%endif%}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+        <li><b>{%if not c.challenge and not c.training%}BLACKOUT{%else%}{{c.name}} ({{c.activity.get_figurehead_display}}){%endif%}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
         {%endfor%}<!-- for c in v -->
       </ul>
         {%endfor%}<!-- for k,v in cdict.iteritems -->
@@ -66,8 +66,8 @@
           <p class="margin-top-25"><b>{{k.name}}</b></p>
           <ul>
           {%for c in v %}
-          <li><b>{{c.name}}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
-          {%endfor%}<!-- for c in v -->
+          <li><b>{%if not c.challenge and not c.training%}BLACKOUT{%else%}{{c.name}} ({{c.activity.get_figurehead_display}}){%endif%}</b> {{c.location.abbrv}} {{ c.start_time|date:"D d M" }} {{ c.start_time|date:"f a" }} to {{ c.end_time|date:"f a" }}</li>
+            {%endfor%}<!-- for c in v -->
         </ul>
           {%endfor%}<!-- for k,v in cdict.iteritems -->
         {%endfor%}<!-- for cdict in captain_conflicts-->
@@ -84,8 +84,8 @@
               <button type="submit" class="btn btn-success margin-top-10">Check Registrant Conflicts</button>
           </form>
           {%if registrant_search%}
-          <p class="margin-top-10">This is going to have to come later, is less important than coaches and captains</p>
-          {%endif%}
+          <p>disabled, because it will take forever</p>
+          {%endif%}<!-- if reg search-->
 
 
             </div><!-- end tab-pane -->
