@@ -676,6 +676,7 @@ def edit_roster(request, roster_id):
     skater_added=False
     skater_remove=False
     remove_fail=False
+    add_fail_reason=None
 
     if request.method == "POST":
         if 'add skater' in request.POST:
