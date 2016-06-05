@@ -233,7 +233,7 @@ class OccurrenceManager(models.Manager):
         """Meant to make Otto run faster by moving all db queries.
         Takes in dict w/k of activity, v list of criteria, including possible occurrences
         now need to sort by interest match, conflicts, among self and each other, without too maky db hits"""
-        print "starting sort possibilities"
+        #print "starting sort possibilities"
         #print "dbc1:", len(dbconnection.queries)
         from swingtime.forms import L1Check
         #date_range=con.get_date_range()
@@ -254,9 +254,6 @@ class OccurrenceManager(models.Manager):
             for p in these_p:
                 if p not in participants:
                     participants.append(p)
-
-        print "dbc2.5:", len(dbconnection.queries)
-        #print "figureheads len",len(figureheads)
 
         for f in figureheads:
             if f.pk not in fpks:
@@ -318,7 +315,7 @@ class OccurrenceManager(models.Manager):
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
-            #print "\nact: ",act
+            print "\nact: ",act
             act_p=this_act_dict.get('participants')
             act_f=this_act_dict.get('figureheads')
 
@@ -330,22 +327,34 @@ class OccurrenceManager(models.Manager):
 
             #check to see if any participants are coaches, and if so, remove coach session occurrences
             coach_participants=set(act_p).intersection(set(busy_coaching.keys()))
-            if len(coach_participants)>0:
-                for l in [interestexact,interestremoved]:
-                    to_remove=[]
-                    for o in l:
-                        coach_intersect=o.busy_soft(list(coach_participants),busy_coaching)
-                        if coach_intersect:
-                            to_remove.append(o)
-                            ###this is the problem. after it removes one it skips the next in line
-                            #l.remove(o)
-                            #don't change the to_remove instead of l.remove, this was making a mystery by not testing all occurrences against coach schedules, was skipping
+############################## uncomment here if you want to be less restrictive w/ coach schedules, only get rid of an occurrence if they're busy coaching at the time.
+    ## solution 1
+            # if len(coach_participants)>0:
+            #     for l in [interestexact,interestremoved]:
+            #         to_remove=[]
+            #         for o in l:
+            #             coach_intersect=o.busy_soft(list(coach_participants),busy_coaching)
+            #             if coach_intersect:
+            #                 to_remove.append(o)
+            #                 ###this is the problem. after it removes one it skips the next in line
+            #                 #l.remove(o)
+            #                 #don't change the to_remove instead of l.remove, this was making a mystery by not testing all occurrences against coach schedules, was skipping
+            #
+            #         while len(to_remove)>0:
+            #             for o in to_remove:
+            #                 l.remove(o)
+            #                 to_remove.remove(o)
 
-                    while len(to_remove)>0:
-                        for o in to_remove:
-                            l.remove(o)
-                            to_remove.remove(o)
-
+## solution 2
+            #this is actually a mcuh easier way to deal with that.
+            #adding any coach as a figurehead makes sure they have no conflicts.
+            #doesn't distinguish betwheen whether they're coaching at the time or not.
+            #might cause a problem by being too restrictive, giving coaches too much preference.
+            #fuck it, I'll leave it that way for now.
+            for c in list(coach_participants):
+                if c not in act_f:
+                    act_f.append(c)
+###############################################################
             for o in interestexact:
                 figurehead_intersect=o.busy_soft(act_f,busy)
                 participant_intersect=o.busy_soft(act_p,busy)
