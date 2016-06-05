@@ -606,20 +606,21 @@ def act_unsched(
             #print "dbc2:", len(dbconnection.queries)
             #######if i want to rewrite otto, start here with getting possibles,
             all_act_data={}
+
             for act in possibles:
                 if act.is_a_challenge():
-                    print "dbc2.1:", len(dbconnection.queries)
+                    #print "dbc2.1:", len(dbconnection.queries)
                     figureheads=[act.roster1.captain,act.roster2.captain]#0 hits!
                     participants=list(act.roster1.participants.all())+list(act.roster2.participants.all())#2 hits
-                    print "dbc2.2:", len(dbconnection.queries)
+                    #print "dbc2.2:", len(dbconnection.queries)
                     all_act_data[act]={'figureheads':figureheads,'participants':participants}
                 elif act.is_a_training():
                     participants=[]
-                    print "dbc2.3:", len(dbconnection.queries)
+                    #print "dbc2.3:", len(dbconnection.queries)
                     for c in act.coach.all():
-                        print "dbc2.4:", len(dbconnection.queries)
+                        #print "dbc2.4:", len(dbconnection.queries)
                         participants+=list(c.user.registrant_set.filter(con=con))#1 hit
-                        print "dbc2.5:", len(dbconnection.queries)
+                        #print "dbc2.5:", len(dbconnection.queries)
                     all_act_data[act]={'figureheads':participants,'participants':participants}
 
             print "dbc3 views:", len(dbconnection.queries)

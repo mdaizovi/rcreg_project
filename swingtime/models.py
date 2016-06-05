@@ -242,13 +242,21 @@ class OccurrenceManager(models.Manager):
         fpks=[]
         ppks=[]
         busy={}
+        busy_coaching={}
 
         #print "dbc2:", len(dbconnection.queries)
         for attr_dict in all_act_data.values():
-            figureheads+=attr_dict.get('figureheads')
-            participants+=attr_dict.get('participants')
+            these_f=attr_dict.get('figureheads')
+            for f in these_f:
+                if f not in figureheads:
+                    figureheads.append(f)
+            these_p=attr_dict.get('participants')
+            for p in these_p:
+                if p not in participants:
+                    participants.append(p)
+
         print "dbc2.5:", len(dbconnection.queries)
-        print "figureheads len",len(figureheads)
+        #print "figureheads len",len(figureheads)
 
         for f in figureheads:
             if f.pk not in fpks:
@@ -280,34 +288,28 @@ class OccurrenceManager(models.Manager):
             elif o.training:
                 for c in o.training.coach.all():
                     for r in c.user.registrant_set.filter(con=con):
-                        if r in busy:
-                            r_busy=busy.get(r)
+                        if r in busy_coaching:
+                            r_busy=busy_coaching.get(r)
                             r_busy.append(o)
-                            busy[r]=list(r_busy)
+                            busy_coaching[r]=list(r_busy)
                         else:
-                            busy[r]=[o]
-        # print "bust test1"
-        # for k,v in busy.iteritems():
-        #     print k
-        #     print v
+                            busy_coaching[r]=[o]
+        #first make a separate coaching dict for conflict checks later, then conbine with the regular busy dict
+        for k,v in busy_coaching.iteritems():
+            if k in busy:
+                r_busy=busy.get(k)
+                for o in v:
+                    if o not in r_busy:
+                        r_busy.append(o)
+                busy[k]=list(r_busy) #i dobn't actually think this is necessary
+            else:
+                busy[k]=v
 
         #print "dbc5:", len(dbconnection.queries)
         related_blackouts=Blackout.objects.filter(registrant__in=figureheads).prefetch_related('registrant')
         #print "dbc6:", len(dbconnection.queries)
 
         for b in related_blackouts:
-            #makig sure method words before deleting code
-            # r_busy=busy.get(b.registrant)
-            # if b.ampm=="AM":
-            #     start_time=datetime(b.date.year, b.date.month, b.date.day, 0, 0)
-            #     end_time=datetime(b.date.year, b.date.month, b.date.day, 11, 59)
-            # elif b.ampm=="PM":
-            #     start_time=datetime(b.date.year, b.date.month, b.date.day, 12, 0)
-            #     end_time=datetime(b.date.year, b.date.month, b.date.day, 23, 59)
-            # tempo=Occurrence(start_time=start_time,end_time=end_time) #make a pretend occurrance of same time
-            # r_busy.append(tempo)
-            # busy[b.registrant]=list(r_busy)
-
             r_busy=busy.get(b.registrant)
             tempo=b.make_temp_o()
             r_busy.append(tempo)
@@ -316,33 +318,53 @@ class OccurrenceManager(models.Manager):
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
-            print "act: ",act
+            #print "\nact: ",act
+            act_p=this_act_dict.get('participants')
+            act_f=this_act_dict.get('figureheads')
 
             level1=[]
             level15=[]
             level2=[]
             interestexact=this_act_dict.get("interestexact")
             interestremoved=this_act_dict.get("interestremoved")
-            #print "len interestexact",len(interestexact)
-            #print "len interestremoved",len(interestremoved)
+
+            #check to see if any participants are coaches, and if so, remove coach session occurrences
+            coach_participants=set(act_p).intersection(set(busy_coaching.keys()))
+            if len(coach_participants)>0:
+                for l in [interestexact,interestremoved]:
+                    to_remove=[]
+                    for o in l:
+                        coach_intersect=o.busy_soft(list(coach_participants),busy_coaching)
+                        if coach_intersect:
+                            to_remove.append(o)
+                            ###this is the problem. after it removes one it skips the next in line
+                            #l.remove(o)
+                            #don't change the to_remove instead of l.remove, this was making a mystery by not testing all occurrences against coach schedules, was skipping
+
+                    while len(to_remove)>0:
+                        for o in to_remove:
+                            l.remove(o)
+                            to_remove.remove(o)
 
             for o in interestexact:
-                figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
-                participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                figurehead_intersect=o.busy_soft(act_f,busy)
+                participant_intersect=o.busy_soft(act_p,busy)
 
-                if not figurehead_intersect and not participant_intersect:
-                    level1.append(o)
-                elif not figurehead_intersect and participant_intersect:
-                    level2.append(o)
+                if not figurehead_intersect:
+                    if not participant_intersect:
+                        level1.append(o)
+                    else:
+                        level2.append(o)
 
             for o in interestremoved:
-                figurehead_intersect=o.busy_soft(this_act_dict.get('figureheads'),busy)
-                participant_intersect=o.busy_soft(this_act_dict.get('participants'),busy)
+                figurehead_intersect=o.busy_soft(act_f,busy)
+                participant_intersect=o.busy_soft(act_p,busy)
 
-                if not figurehead_intersect and not participant_intersect:
-                    level15.append(o)
-                elif not figurehead_intersect and participant_intersect:
-                    level2.append(o)
+                if not figurehead_intersect:
+                    if not participant_intersect:
+                        level15.append(o)
+                    else:
+                        level2.append(o)
 
             avail_score=( (len(level1)*100) + (len(level15)*10) + (len(level2)*1) )
             if avail_score in avail_score_dict:
@@ -365,7 +387,7 @@ class OccurrenceManager(models.Manager):
             act_list=avail_score_dict.get(score)
             #print "act_list",act_list
             for act in act_list:
-                #print "act: ",act
+                #print "\nact: ",act
                 oselected=False
                 this_act_dict=all_act_data.get(act)
                 l1=this_act_dict.get('level1')
@@ -381,7 +403,6 @@ class OccurrenceManager(models.Manager):
 
 
                 if len(l1)>0:
-                    #print "len l1: ",len(l1)
                     while len(l1)>0 and not oselected:
                         o=choice(l1)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
@@ -394,6 +415,7 @@ class OccurrenceManager(models.Manager):
                                     prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
                                     #print"prefix: ",prefix
                                     level1pairs[(act,o,"Perfect Match")]=L1Check(prefix=prefix)
+                                    #print "selecting ", o.start_time, o.end_time
                                     taken_os.append(o)
                                     l1.remove(o)
                                     oselected=True
@@ -417,7 +439,6 @@ class OccurrenceManager(models.Manager):
                             l1.remove(o)
 
                 if len(l15)>0 and not oselected:
-                    #print "len l15: ",len(l15)
                     while len(l15)>0 and not oselected:
                         o=choice(l15)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
@@ -433,6 +454,7 @@ class OccurrenceManager(models.Manager):
                                     taken_os.append(o)
                                     l15.remove(o)
                                     oselected=True
+                                    #print "selecting ", o.start_time, o.end_time
                                     for l in [figs,parts]:
                                         for r in l:
                                             r_busy=busy.get(r)
@@ -455,7 +477,7 @@ class OccurrenceManager(models.Manager):
                             l15.remove(o)
 
                 elif len(l2)>0 and not oselected:
-                    print "going for l2, len ",len(l2)
+                    #print "going for l2, len ",len(l2)
                     while len(l2)>0 and not oselected:
                         o=choice(l2)
                         #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
@@ -467,6 +489,7 @@ class OccurrenceManager(models.Manager):
                                 #print"prefix: ",prefix
                                 level1pairs[(act,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
                                 taken_os.append(o)
+                                #print "selecting ", o.start_time, o.end_time
                                 l2.remove(o)
                                 oselected=True
 
@@ -648,31 +671,53 @@ class Occurrence(models.Model):
             return None
     #---------------------------------------------------------------------------
     def os_soft_intersect(self,o2):
+        #print "starting os_soft_intersect: ", self.start_time, self.end_time
+        #print "against ",o2.start_time, o2.end_time
         if (o2.start_time<(self.end_time + timedelta(minutes=30))) and (o2.end_time>(self.start_time - timedelta(minutes=30) ) ):
+            #print "true"
             return True
         else:
+            #print "false"
             return False
     #---------------------------------------------------------------------------
     def os_hard_intersect(self,o2):
+        #print "starting os_hard_intersect: ", self.start_time, self.end_time
+        #print "against ",o2.start_time, o2.end_time
         if (o2.start_time<self.end_time) and (o2.end_time>self.start_time):
+            #print "true"
             return True
         else:
+            #print "false"
             return False
     #-------------------------------------------------------------------------------
     def busy_soft(self,participant_list,busy_dict):
         """takes in list of relevant registrant, dict w/ registrant as key, list of occurrences reg is in as v,
         checks to see if reg is busy/ w/ soft intersection"""
-        #print "starting  busy_soft for ",self.challenge,self.training,self.start_time,self.end_time
+        #print "\n\nstarting  busy_soft for ",self.challenge,self.training,self.start_time,self.end_time
         intersection=False
-        for f in participant_list:
-            #print f
-            busy_list=busy_dict.get(f)
-            #print "busy_list",busy_list
-            for o2 in busy_list:
-                #print o2.start_time,o2.end_time
-                if self.os_soft_intersect(o2):
-                    intersection=True
-        #print "intersection",intersection
+        i=0
+        #print "len(participant_list)",len(participant_list)
+        while not intersection and i<len(participant_list):
+            for f in participant_list:
+                #print "starting i is ",i
+                #print f
+                busy_list=busy_dict.get(f)
+                #print "busy_list",busy_list
+                for o2 in busy_list:
+                    #print "tessting ",o2.start_time,o2.end_time
+                    if self.os_soft_intersect(o2):
+                        intersection=True
+                        #print "about to break a"
+                        break
+                i+=1
+                if intersection:
+                    #print "about to break b"
+                    break
+            if intersection:
+                #print "about to break c"
+                break
+            #print "ending i is ",i
+        #print "busy_soft intersection",intersection
         return intersection
 
     #-------------------------------------------------------------------------------
