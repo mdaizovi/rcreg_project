@@ -23,7 +23,7 @@
 
 
     {%if add_fail %}
-    <div class="alert alert-danger" role="alert">{{add_fail.sk8name}} NOT added to {{roster.name}}</div>
+    <div class="alert alert-danger" role="alert">{%if add_fail.sk8name%}{{add_fail.sk8name}} NOT added to {{my_team.name}} {%endif%}{%if add_fail_reason%}{{add_fail_reason}}{% endif %}</div>
     {%elif skater_added %}
     <div class="alert alert-success" role="alert">{{skater_added.sk8name}} added to {{roster.name}}</div>
     {%endif%}

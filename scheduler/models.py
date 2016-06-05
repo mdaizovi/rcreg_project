@@ -283,10 +283,6 @@ class Roster(Matching_Criteria):
     def add_sk8er_challenge(self, skater_pk):
         add_fail_reason=False
         is_free=True
-
-
-########test this, only works in theory, haven't tested at all##############
-
         skater_added=None
         add_fail=None
         if self.spacea():
@@ -322,7 +318,11 @@ class Roster(Matching_Criteria):
                     self.participants.add(skater_added)
                     self.save()
             except:
-                add_fail=Registrant.objects.get(pk=skater_pk)
+                try:
+                    add_fail=Registrant.objects.get(pk=skater_pk)
+                except:
+                    add_fail=True
+                    add_fail_reason="Error selecting skater, please try again"
         else:
             add_fail=Registrant.objects.get(pk=skater_pk)
             add_fail_reason=" because the roster is full."
