@@ -21,7 +21,7 @@ from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
-from con_event.models import Con,Blackout
+from con_event.models import Con,Blackout,LOCATION_CATEGORY,LOCATION_TYPE,LOCATION_TYPE_FILTER
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
@@ -54,8 +54,8 @@ def conflict_check(
     #then figure out how to make Otto recognize coaches as more important participnts?
     #coaches are getting double booked AFTER their training is scheduled
 
-    print "starting conflict_check"
-    print "dbc0:", len(dbconnection.queries)
+    #print "starting conflict_check"
+    #print "dbc0:", len(dbconnection.queries)
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
@@ -215,9 +215,9 @@ def conflict_check(
                 soft_conflict.sort(key=lambda o:(o.start_time, o.end_time))
                 relevant_soft_conflicts.append({r:soft_conflict})
 
-    print "dbcend:", len(dbconnection.queries)
+    #print "dbcend:", len(dbconnection.queries)
     elapsed=datetime.now()-start
-    print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
+    #print "all done conflict checl!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
     return render(request, template, {
         'con':con,
         'active':active,
@@ -559,8 +559,8 @@ def act_unsched(
     **extra_context
 ):
     start=datetime.now()
-    print "starting act unsched"
-    print "dbc0:", len(dbconnection.queries)
+    #print "starting act unsched"
+    #print "dbc0:", len(dbconnection.queries)
 
 
     if con_id:
@@ -578,7 +578,7 @@ def act_unsched(
     cycle=-1
     possibles=[]
 
-    print "dbc1:", len(dbconnection.queries)
+    #print "dbc1:", len(dbconnection.queries)
     if request.method == 'POST':
         post_keys=dict(request.POST).keys()
         #print request.POST
@@ -623,17 +623,14 @@ def act_unsched(
                         #print "dbc2.5:", len(dbconnection.queries)
                     all_act_data[act]={'figureheads':participants,'participants':participants}
 
-            print "dbc3 views:", len(dbconnection.queries)
+            #print "dbc3 views:", len(dbconnection.queries)
             all_act_data=Occurrence.objects.gather_possibles(con,all_act_data)
-            print "dbc4:", len(dbconnection.queries)
+            #print "dbc4:", len(dbconnection.queries)
             level1pairs= Occurrence.objects.sort_possibles(con, all_act_data,level1pairs,prefix_base)
 
-
-
-
             elapsed=datetime.now()-start
-            print "all done act unsched!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
-            print "dbcend:", len(dbconnection.queries)
+            #print "all done act unsched!!! Took %s (%s Seconds)"% (elapsed,elapsed.seconds)
+            #print "dbcend:", len(dbconnection.queries)
 
             new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
             extra_context.update(new_context)
@@ -690,7 +687,7 @@ def act_unsched(
                 od_list.append(od)
         activities.append(od_list)
 
-    print "dbcnonpostend:", len(dbconnection.queries)
+    #print "dbcnonpostend:", len(dbconnection.queries)
     new_context={"added2schedule":added2schedule,"save_attempt":save_attempt,"save_success":save_success,"level1pairs":level1pairs,"slotcreateform":SlotCreate(),"activities":activities,"con":con,"con_list":Con.objects.all()}
     extra_context.update(new_context)
     return render(request, template, extra_context)
@@ -1091,7 +1088,9 @@ def _datetime_view(
     loc_id=None,
     timeslot_factory=None,
     items=None,
-    params=None
+    params=None,
+    lcat=None,
+    ltype=None
 ):
     '''
     Build a time slot grid representation for the given datetime ``dt``. See
@@ -1119,10 +1118,23 @@ def _datetime_view(
         con=Con.objects.get(start__lte=dt, end__gte=dt)
         con_id=con.pk
         all_locations=con.get_locations()
+
         if loc_id:
             locations=[Location.objects.get(pk=int(loc_id))]
+        elif lcat or ltype:
+            venues=list(con.venue.all())
+            if lcat:
+                ind=int(lcat)
+                loc_cat=LOCATION_CATEGORY[ind][1]
+                base_q=Location.objects.filter(venue__in=venues,location_category__in=[loc_cat])
+            elif ltype:
+                ind=int(ltype)
+                loc_type=LOCATION_TYPE_FILTER[ind][1]
+                base_q=Location.objects.filter(venue__in=venues,location_type__in=loc_type)
+            locations=list(base_q)
         else:
             locations=con.get_locations()
+
     except ObjectDoesNotExist:
         con=None
         con_id=None
@@ -1135,10 +1147,12 @@ def _datetime_view(
         'con_id':  con_id,
         'locations': locations,
         'loc_id':loc_id,
+        'LOCATION_TYPE':LOCATION_TYPE,
+        'LOCATION_CATEGORY':LOCATION_CATEGORY,
         'maxwidth': 99/(len(locations)+1),
         'next_day':  dt + timedelta(days=+1),
         'prev_day':  dt + timedelta(days=-1),
-        'timeslots': timeslot_factory(dt=dt, items=items, loc_id=loc_id,**params)
+        'timeslots': timeslot_factory(dt=dt, items=items, loc_id=loc_id,lcat=lcat,ltype=ltype,**params)
     })
 
 
@@ -1149,8 +1163,17 @@ def day_view(request, year, month, day, template='swingtime/daily_view.html', **
     See documentation for function``_datetime_view``.
 
     '''
+    if "category" in request.GET:
+        lcat=request.GET['category']
+    else:
+        lcat=None
+
+    if "type" in request.GET:
+        ltype=request.GET['type']
+    else:
+        ltype=None
     dt = datetime(int(year), int(month), int(day))
-    return _datetime_view(request, template, dt, **params)
+    return _datetime_view(request, template, dt, lcat=lcat,ltype=ltype,**params)
 
 
 #-------------------------------------------------------------------------------

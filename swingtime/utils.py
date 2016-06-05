@@ -17,7 +17,7 @@ from swingtime.conf import settings as swingtime_settings
 #from swingtime.models import EventType
 
 
-from con_event.models import Con
+from con_event.models import Con,LOCATION_CATEGORY,LOCATION_TYPE,LOCATION_TYPE_FILTER
 from scheduler.models import Location
 
 
@@ -137,6 +137,8 @@ def create_timeslot_table(
     dt=None,
     items=None,
     loc_id=None,
+    lcat=None,
+    ltype=None,
     start_time=swingtime_settings.TIMESLOT_START_TIME,
     end_time_delta=swingtime_settings.TIMESLOT_END_TIME_DURATION,
     time_delta=swingtime_settings.TIMESLOT_INTERVAL,
@@ -174,10 +176,30 @@ def create_timeslot_table(
     dtstart = datetime.combine(dt.date(), start_time)
     dtend = dtstart + end_time_delta
 
+    # try:
+    #     con=Con.objects.get(start__lte=dt, end__gte=dt)
+    #     if loc_id:
+    #         locations=[Location.objects.get(pk=int(loc_id))]
+    #     else:
+    #         locations=con.get_locations()
+    # except ObjectDoesNotExist:
+    #     con=None
+    #     locations=[]
     try:
         con=Con.objects.get(start__lte=dt, end__gte=dt)
         if loc_id:
             locations=[Location.objects.get(pk=int(loc_id))]
+        elif lcat or ltype:
+            venues=list(con.venue.all())
+            if lcat:
+                ind=int(lcat)
+                loc_cat=LOCATION_CATEGORY[ind][1]
+                base_q=Location.objects.filter(venue__in=venues,location_category__in=[loc_cat])
+            elif ltype:
+                ind=int(ltype)
+                loc_type=LOCATION_TYPE_FILTER[ind][1]
+                base_q=Location.objects.filter(venue__in=venues,location_type__in=loc_type)
+            locations=list(base_q)
         else:
             locations=con.get_locations()
     except ObjectDoesNotExist:

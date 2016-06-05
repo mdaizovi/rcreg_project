@@ -1,7 +1,7 @@
 {% extends "swingtime/swingtime_base.html" %}
 {% block title %}Daily View{% endblock %}
 {% block main_content %}
-    <h3 class="margin-top-10">Daily View{%if locations|length = 1 %}: {%for l in locations%}
+    <h3 class="margin-top-10">Daily View{%if loc_id%}: {%for l in locations%}
       <a href="{% url 'swingtime-location-view' loc_id con_id%}">{{l.name}}</a>{%endfor%}{%endif%}</h3>
 
 {%if con%}
@@ -20,7 +20,7 @@
 
 
 
-<table class="table table-condensed"><tr>
+<table class="table table-condensed" style="max-width:300px;"><tr>
 <td style="border: none;"><div class="dropdown margin-top-10">
 <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
   Locations
@@ -36,7 +36,37 @@
       {{item.abbrv}}</a></li>{%endfor%}
 </ul>
 </div></td>
+
+<td style="border: none;"><div class="dropdown margin-top-10">
+<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+  Location Types
+  <span class="caret"></span>
+</button>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+  {%for item in LOCATION_TYPE%}
+  <li role="presentation">
+    <a href="{% url 'swingtime-daily-view' day.year day.month day.day %}?type={{forloop.counter0}}">
+      {{item.1}}</a></li>{%endfor%}
+</ul>
+
+<td style="border: none;"><div class="dropdown margin-top-10">
+<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+  Location Categories
+  <span class="caret"></span>
+</button>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+  {%for item in LOCATION_CATEGORY%}
+  <li role="presentation">
+    <a href="{% url 'swingtime-daily-view' day.year day.month day.day %}?category={{forloop.counter0}}">
+      {{item.1}}</a></li>{%endfor%}
+</ul>
+</div></td>
+
 </tr></table>
+
+
+
+
 
 
 
@@ -63,10 +93,6 @@
                 {% autoescape off %}
                     {{ cell }}
                 {% endautoescape %}
-
-                <!-- {% if not cell.event_class %}
-                <a href="{% url 'swingtime-add-event' %}?dtstart={{ tm.isoformat }}">+</a>
-                {%endif%} -->
               </td>
                 {%endif%}
                 {% endfor %}

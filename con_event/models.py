@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 AMPM=(('AM','AM'),('PM','PM'))
 #deleting unused locations
 LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'),('Off Skates Athletic Training', 'Off Skates Athletic Training'), ('Seminar/Conference Room', 'Seminar/Conference Room'))
+LOCATION_TYPE_FILTER=(('Flat Track', ['Flat Track']),('Banked Track', ['Banked Track']),('EITHER Flat or Banked Track', ['Flat Track','Banked Track']),('Off Skates Athletic Training', ['Off Skates Athletic Training']), ('Seminar/Conference Room', ['Seminar/Conference Room']))
 LOCATION_CATEGORY=(("Competition Half Length Only","Competition Half Length Only"),("Competition Any Length","Competition Any Length"),("Training","Training"),("Training or Competition","Training or Competition"),("Classroom","Classroom"))
-#LOCATION_CATEGORY=(("Competition","Competition"),("Training","Training"),("Classroom","Classroom"))
+
 #all original locaiton types
 #LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'),('Off Skates Athletic Training Space', 'Off Skates Athletic Training Space'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
 #LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
