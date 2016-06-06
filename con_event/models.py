@@ -122,6 +122,10 @@ class Con(models.Model):
     sched_visible=models.BooleanField(default=False)
     sched_final=models.BooleanField(default=False)
 
+    hoursb4signup=models.FloatField(default=2.0)
+    morning_class_cutoff=models.TimeField(auto_now=False, auto_now_add=False, null=True, blank=True)
+    dayb4signup_start=models.TimeField(auto_now=False, auto_now_add=False,null=True, blank=True)
+
     BPT_event_id=models.CharField(max_length=100,null=True, blank=True)
     ticket_link=models.URLField(null=True, blank=True)
     hotel_book_link=models.URLField(null=True, blank=True)
@@ -217,6 +221,12 @@ class Con(models.Model):
                 if not self.training_submission_end:
                     dt2=datetime.date(self.start.year, month+2, 15)
                     self.training_submission_end=dt2
+
+        if not self.morning_class_cutoff:
+            self.morning_class_cutoff=dt.time(hour=9,minute=30)
+
+        if not self.dayb4signup_start:
+            self.dayb4signup_start=dt.time(hour=21,minute=30)
 
         if not self.country:
             self.country=Country.objects.get(name="United States")
