@@ -223,10 +223,10 @@ class Con(models.Model):
                     self.training_submission_end=dt2
 
         if not self.morning_class_cutoff:
-            self.morning_class_cutoff=dt.time(hour=9,minute=30)
+            self.morning_class_cutoff=datetime.time(hour=9,minute=30)
 
         if not self.dayb4signup_start:
-            self.dayb4signup_start=dt.time(hour=21,minute=30)
+            self.dayb4signup_start=datetime.time(hour=21,minute=30)
 
         if not self.country:
             self.country=Country.objects.get(name="United States")
