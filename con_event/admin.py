@@ -21,6 +21,7 @@ class ConAdmin(admin.ModelAdmin):
     list_display= ('city','start','end')
     fields=(('city','state','country'),('venue'),('start','end'),
         ('challenge_submission_start','training_submission_end'),('sched_visible','sched_final'),
+        ('hoursb4signup','morning_class_cutoff','dayb4signup_start'),
         ('BPT_event_id','ticket_link','hotel_book_link'))
     #exclude=('year',)
 
