@@ -21,7 +21,7 @@ from swingtime.models import Event, Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings
 
-from con_event.models import Con,Blackout,LOCATION_CATEGORY,LOCATION_TYPE,LOCATION_TYPE_FILTER
+from con_event.models import Con,Blackout,LOCATION_CATEGORY,LOCATION_TYPE,LOCATION_TYPE_FILTER,LOCATION_CATEGORY_FILTER
 from con_event.forms import ConSchedStatusForm
 from scheduler.models import Location, Training, Challenge
 from scheduler.forms import ChalStatusForm,TrainStatusForm,CInterestForm,TInterestForm,ActCheck
@@ -1123,14 +1123,16 @@ def _datetime_view(
             locations=[Location.objects.get(pk=int(loc_id))]
         elif lcat or ltype:
             venues=list(con.venue.all())
-            if lcat:
+            if lcat and int(lcat)<len(LOCATION_CATEGORY_FILTER):
                 ind=int(lcat)
-                loc_cat=LOCATION_CATEGORY[ind][1]
-                base_q=Location.objects.filter(venue__in=venues,location_category__in=[loc_cat])
-            elif ltype:
+                loc_cat=LOCATION_CATEGORY_FILTER[ind][1]
+                base_q=Location.objects.filter(venue__in=venues,location_category__in=loc_cat)
+            elif ltype and int(ltype)<len(LOCATION_TYPE_FILTER):
                 ind=int(ltype)
                 loc_type=LOCATION_TYPE_FILTER[ind][1]
                 base_q=Location.objects.filter(venue__in=venues,location_type__in=loc_type)
+            else:
+                base_q=Location.objects.filter(venue__in=venues)
             locations=list(base_q)
         else:
             locations=con.get_locations()
