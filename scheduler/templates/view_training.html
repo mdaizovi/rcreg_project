@@ -90,14 +90,17 @@
     <div class="panel-body"><h2 class="text-center">
       <small>
         {%if roster.can_register%}
+
         {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}</small></h2>
         <table class="table table-striped">
         <tr><th> </th><th>Name </th></tr>
           {%for skater in roster.participants.all%}
           <tr><td>{{ forloop.counter }}.</td><td>{{skater.name}}</td></tr>{%endfor%}
         </table>
-        {%else%}<i>Signup has not started yet; please check back later.</i></small></h2>
+
+        {%else%}<i>Signup has not started yet; please check back {%if can_register_at %}after <br>{{ can_register_at|date:"D d M f a" }} {%else%}later.{%endif%}</i></small></h2>
         {%endif%}
+
     </div>
   </div>
 

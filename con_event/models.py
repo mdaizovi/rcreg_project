@@ -624,36 +624,24 @@ class Registrant(Matching_Criteria):
         from swingtime.models import Occurrence, TrainingRoster #need here in case of import error?
         reg_coach=self.user.is_a_coach()
         reg_os=[]
-        #print "dbc0:", len(dbconnection.queries)
 
         if reg_coach:
             coach_trains=reg_coach.training_set.filter(con=self.con).prefetch_related('occurrence_set')
             for t in coach_trains:
                 reg_os+=list(t.occurrence_set.all())
 
-        #print "dbca:", len(dbconnection.queries)
-        #why did i do this? training roster should be irrelevant at time of scheduling
-        #it doesnt even make any sense, adding the roster to the occurrence list
-        # reg_trains=list(self.trainingroster_set.all())
-        # for tr in reg_trains:
-        #     if tr.registered:
-        #         reg_os.append(tr.registered)
-        #     elif tr.auditing:
-        #         reg_os.append(tr.auditing)
-
-        #print "dbcb:", len(dbconnection.queries)
         reg_ros=list(self.roster_set.all())
         chal=[]
         for ros in reg_ros:
             chal+=list(ros.roster1.all())
             chal+=list(ros.roster2.all())
-            #print "dbcc:", len(dbconnection.queries)
+
             for c in chal:
                 for o in c.occurrence_set.all(): #othersise it gets added 2x
                     if o not in reg_os:
                         reg_os.append(o)
         reg_os.sort(key=lambda o: o.start_time)
-        #print "dbc1:", len(dbconnection.queries)
+
         return reg_os
 
     def is_occupied(self,pending_o):

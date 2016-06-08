@@ -32,9 +32,12 @@ no_list=["",u'',None,"None"]
             #mvp_id_list= selection.getlist('mvpid')
             #print "selectiondict: ",selectiondict
             #selectiondict=dict(selection.lists())
+
+
 @login_required
 def my_schedule(request):
-    """Used for Registrants to see My Schedule. If reg_id is provided and User is a boss, can also be hijacked ot see other people's schedules"""
+    """Used for Registrants to see My Schedule.
+    If reg_id is provided and User is a boss, can also be hijacked to see other people's schedules"""
     user=request.user
     most_upcoming=Con.objects.most_upcoming()
     registrant_dict_list=[]
@@ -43,16 +46,6 @@ def my_schedule(request):
     spoof_user=None
     spoof_error=False
 
-    # if reg_id:
-    #     print "REG ID is: ",reg_id
-    #     try:
-    #         reg=Registrant.objects.get(pk=reg_id)
-    #         registrant_list=[reg]
-    #         upcoming_registrants=[reg]
-    #         reg_coach=reg.user.is_a_coach()
-    #     except ObjectDoesNotExist:
-    #         return render_to_response('my_schedule.html',{},context_instance=RequestContext(request))
-        #ll the stuff that happens if this is a Boss spoofing, not perosn checking their own schedule
     if user.is_the_boss() and ("registrant" in request.GET or "user" in request.GET): #and is a boss
 
         if "user" in request.GET: #and is a boss
@@ -89,33 +82,6 @@ def my_schedule(request):
     #happens whether is reg checking thier own scheudle or Boss spoofing it
     if not spoof_error:
         for registrant in registrant_list:
-            ###############temporarily commenting out jsut ot be sure registrant model method get_occurrences() works
-            # reg_os=[]
-            #
-            # if reg_coach:
-            #     coach_trains=reg_coach.training_set.filter(con=registrant.con)
-            #     for t in coach_trains:
-            #         reg_os+=list(t.occurrence_set.all())
-            #
-            # reg_trains=list(registrant.trainingroster_set.all())
-            # for tr in reg_trains:
-            #     if tr.registered:
-            #         reg_os+=tr.registered
-            #     elif tr.auditing:
-            #         reg_os+=tr.auditing
-            #
-            # reg_ros=list(registrant.roster_set.all())
-            # chal=[]
-            # for ros in reg_ros:
-            #     chal+=list(ros.roster1.all())
-            #     chal+=list(ros.roster2.all())
-            #     for c in chal:
-            #         for o in c.occurrence_set.all(): #othersise it gets added 2x
-            #             if o not in reg_os:
-            #                 reg_os.append(o)
-            # reg_os.sort(key=lambda o: o.start_time)
-            ###############temporarily commenting out jsut ot be sure registrant model method get_occurrences() works
-
             registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':registrant.get_occurrences()}
             registrant_dict_list.append(registrant_dict)
 
@@ -131,13 +97,9 @@ def my_schedule(request):
 
     return render_to_response('my_schedule.html',{'spoof_error':spoof_error,'spoof_user':spoof_user,'spoof_reg':spoof_reg,'active':active,'registrant_dict_list':registrant_dict_list,'registrant_list':registrant_list}, context_instance=RequestContext(request))
 
-
-###############
-
-
 @login_required
 def email_captain(request, roster_id):
-    """This form will only show if captain has agreed to accept emails and has a user with an emial address"""
+    """This form will only show if captain has agreed to accept emails and has a user with an email address"""
     user=request.user
     roster=Roster.objects.get(pk=roster_id)
     captain=roster.captain
@@ -194,7 +156,7 @@ def coach_profile(request):
 
 @login_required
 def email_coach(request, coach_id):
-    """This assumes that coach has a user and an user email address.
+    """This assumes that coach has a user and a user email address.
     I think it's important coaches supply an email address, how can you rely on someone you can't get in touch with?"""
     user=request.user
     coach=Coach.objects.get(pk=coach_id)
@@ -238,6 +200,8 @@ def view_training(request, activity_id,o_id=None):
     visible=False
     occur=None
     rosters=[]
+    can_register_at=None
+
     try:
         training=Training.objects.get(pk=int(activity_id))
         if o_id:
@@ -245,6 +209,7 @@ def view_training(request, activity_id,o_id=None):
                 occur=Occurrence.objects.get(training=training, pk=int(o_id))
                 if hasattr(occur, 'registered'):
                     rosters.append(occur.registered)
+                    can_register_at=occur.registered.can_register_at()
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
 
@@ -252,6 +217,7 @@ def view_training(request, activity_id,o_id=None):
                     rosters.append(occur.auditing)
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
+
             except:
                 pass
         Tos=list(Occurrence.objects.filter(training=training))
@@ -263,7 +229,8 @@ def view_training(request, activity_id,o_id=None):
                 single=occurrences[0]
         else:
             occurrences=[]
-        return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+
+        return render_to_response('view_training.html',{'can_register_at':can_register_at,'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))
 
@@ -285,9 +252,10 @@ def trainings_home(request,con_id=None,):
             date_dict[day]=[]
 
         for o in scheduled:
-            temp_list=date_dict.get(o.start_time.date())
-            temp_list.append(o)
-            date_dict[o.start_time.date()]=list(temp_list)
+            if o.start_time.date() in date_dict:
+                temp_list=date_dict.get(o.start_time.date())
+                temp_list.append(o)
+                date_dict[o.start_time.date()]=list(temp_list)
 
         for v in date_dict.values():
             v.sort(key=lambda o: o.start_time)

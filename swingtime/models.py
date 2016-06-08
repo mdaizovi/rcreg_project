@@ -1,6 +1,11 @@
+
 from datetime import datetime, date, timedelta
+#this import might fuck up oyhr things?
+import datetime
+#this import might fuck up oyhr things?
 from dateutil import rrule
 from django.contrib.auth.models import User,Group
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.dateparse import parse_datetime,parse_time
@@ -891,10 +896,49 @@ class TrainingRoster(models.Model):
             allowed=[True,False,None]
         return allowed
 
+    def can_register_at(self):
+        """Returns datetime registration for class starts
+        both for displaying that time and checking if now is past that time"""
+
+        can_reg=None
+        regtimes=[]
+
+        if self.registered or self.auditing:
+            if self.registered:
+                o=self.registered
+            elif self.auditing:
+                o=self.auditing
+            con=o.training.con
+
+            ostart=datetime.time(hour=o.start_time.hour,minute=o.start_time.minute)
+            if ostart<=con.morning_class_cutoff:#if class starts early enough in the morning
+                yday = timedelta(days=1)
+                startday=o.start_time.date()-yday
+                regtimes.append(datetime.datetime(year=startday.year, month=startday.month, day=startday.day, hour=con.dayb4signup_start.hour, minute=con.dayb4signup_start.minute))
+
+            #otherwise this is time-hoursb4signup
+            #it calculates both just in case timezone doesn't work and they do something like 48 hours before class time or something
+            b4signup = timedelta(hours=float(con.hoursb4signup))
+            regtime=o.start_time-b4signup
+            regtimes.append(datetime.datetime(year=o.start_time.year, month=o.start_time.month, day=o.start_time.day, hour=regtime.hour, minute=regtime.minute))
+
+            if len(regtimes)>0:
+                can_reg=min(regtimes)
+
+        return can_reg
+
+
     def can_register(self):
         """Returns true if registration window is open, False if not.
-        Will be determined by 2 hour window before class starts, but for now is always False bc avent written scheduler yet"""
-        return False
+        Will be determined by 2(?) hour window before class starts"""
+        can_reg=self.can_register_at()
+
+        now=timezone.now()
+
+        if can_reg and now>=can_reg:
+            return True
+        else:
+            return False
 
     def get_maxcap(self):
         '''checks is roster has a cap cap. If not, supplies defaults listed at top of file
