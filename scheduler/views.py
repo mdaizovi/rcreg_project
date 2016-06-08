@@ -209,7 +209,6 @@ def view_training(request, activity_id,o_id=None):
                 occur=Occurrence.objects.get(training=training, pk=int(o_id))
                 if hasattr(occur, 'registered'):
                     rosters.append(occur.registered)
-                    can_register_at=occur.registered.can_register_at()
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
 
@@ -217,7 +216,6 @@ def view_training(request, activity_id,o_id=None):
                     rosters.append(occur.auditing)
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
-
             except:
                 pass
         Tos=list(Occurrence.objects.filter(training=training))
@@ -230,7 +228,7 @@ def view_training(request, activity_id,o_id=None):
         else:
             occurrences=[]
 
-        return render_to_response('view_training.html',{'can_register_at':can_register_at,'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+        return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))
 
@@ -266,11 +264,9 @@ def trainings_home(request,con_id=None,):
 
 
 @login_required
-#def register_training(request, activity_id,o_id=None):
 def register_training(request,o_id):
-    #to do:
-    #if volunteer, check time before allowing register. Right now only checks editable by
-    #this needs to be changed completely, as i change trianing/registered structure
+    """Registers skaters for Registered/Auditig Training Rosters for Training Occurrences.
+    Permisisons and timing checked in view"""
     user=request.user
     add_fail=None
     skater_added=None
@@ -278,6 +274,7 @@ def register_training(request,o_id):
     skater_remove=None
     roster=None
     occur=None
+
     try:
         occur=Occurrence.objects.get(pk=int(o_id))
         training=occur.training
@@ -287,7 +284,6 @@ def register_training(request,o_id):
 
 
     if occur and user in occur.can_add_sk8ers():
-        #TODO: check if volunteer, if so, check time of class. if boss, let do this any time.
 
         registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
         auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)

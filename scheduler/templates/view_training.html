@@ -64,6 +64,7 @@
     </button>
     <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
       <li><a href="{% url 'view_training' training.pk o.pk %}">See Session Roster</a></li>
+
       {% if user in o.can_add_sk8ers %}
       {% url 'register_training' o.pk as register_url%}
       <li role="separator" class="divider"></li>
@@ -89,16 +90,16 @@
     <div class="panel-heading"><h2 class="text-center">{% cycle 'Registered' 'Auditing' %}</h2></div>
     <div class="panel-body"><h2 class="text-center">
       <small>
-        {%if roster.can_register%}
+        {%if roster and roster.can_register%}
 
-        {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}</small></h2>
+        {%if roster and roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}</small></h2>
         <table class="table table-striped">
         <tr><th> </th><th>Name </th></tr>
           {%for skater in roster.participants.all%}
           <tr><td>{{ forloop.counter }}.</td><td>{{skater.name}}</td></tr>{%endfor%}
         </table>
 
-        {%else%}<i>Signup has not started yet; please check back {%if can_register_at %}after <br>{{ can_register_at|date:"D d M f a" }} {%else%}later.{%endif%}</i></small></h2>
+        {%else%}<i>Signup has not started yet; please check back {%if roster and roster.can_register_at %}after <br>{{ roster.can_register_at|date:"D d M f a" }} {%else%}later.{%endif%}</i></small></h2>
         {%endif%}
 
     </div>
