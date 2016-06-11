@@ -205,7 +205,8 @@ def view_training(request, activity_id,o_id=None):
     try:
         training=Training.objects.get(pk=int(activity_id))
         if o_id:
-            try:
+            #try:
+            if 3==3:
                 occur=Occurrence.objects.get(training=training, pk=int(o_id))
                 if hasattr(occur, 'registered'):
                     rosters.append(occur.registered)
@@ -216,8 +217,8 @@ def view_training(request, activity_id,o_id=None):
                     rosters.append(occur.auditing)
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
-            except:
-                pass
+            # except:
+            #     pass
         Tos=list(Occurrence.objects.filter(training=training))
 
         if training.con.sched_visible:

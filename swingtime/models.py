@@ -1,5 +1,5 @@
 
-from datetime import datetime, date, timedelta
+#from datetime import datetime, date, timedelta
 #this import might fuck up oyhr things?
 import datetime
 #this import might fuck up oyhr things?
@@ -123,8 +123,8 @@ class OccurrenceManager(models.Manager):
 
         * ``event`` can be an ``Event`` instance for further filtering.
         '''
-        dt = dt or datetime.now()
-        start = datetime(dt.year, dt.month, dt.day)
+        dt = dt or datetime.datetime.now()
+        start = datetime.datetime(dt.year, dt.month, dt.day)
         end = start.replace(hour=23, minute=59, second=59)
         qs = self.filter(
             models.Q(
@@ -209,7 +209,7 @@ class OccurrenceManager(models.Manager):
             #act_os=base_q.filter(interest__in=[proxy_interest-1,proxy_interest,proxy_interest+1], location__in=act_locations,end_time=F('start_time') + timedelta(minutes=dur_delta))
             act_os=[]
             for o in base_q:
-                if (o.interest in [proxy_interest-1,proxy_interest,proxy_interest+1]) and (o.location in act_locations) and (o.end_time==(o.start_time + timedelta(minutes=dur_delta)) ) :
+                if (o.interest in [proxy_interest-1,proxy_interest,proxy_interest+1]) and (o.location in act_locations) and (o.end_time==(o.start_time + datetime.timedelta(minutes=dur_delta)) ) :
                     act_os.append(o)
 
 
@@ -646,7 +646,7 @@ class Occurrence(models.Model):
             duration=float(activity.duration)
 
         dur_delta=int(duration*60)
-        end_time=self.start_time+timedelta(minutes=dur_delta)
+        end_time=self.start_time+datetime.timedelta(minutes=dur_delta)
         return end_time
     #---------------------------------------------------------------------------
     def get_initial_interest(self,start_time):
@@ -669,7 +669,7 @@ class Occurrence(models.Model):
         #0 db hits
         #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
         #adding a half hour padding:
-        concurrent=list(Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training'))
+        concurrent=list(Occurrence.objects.filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),end_time__gt=(self.start_time - datetime.timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training'))
 
         for o in concurrent:
             event_activity=o.get_activity()
@@ -687,7 +687,7 @@ class Occurrence(models.Model):
     def os_soft_intersect(self,o2):
         #print "starting os_soft_intersect: ", self.start_time, self.end_time
         #print "against ",o2.start_time, o2.end_time
-        if (o2.start_time<(self.end_time + timedelta(minutes=30))) and (o2.end_time>(self.start_time - timedelta(minutes=30) ) ):
+        if (o2.start_time<(self.end_time + datetime.timedelta(minutes=30))) and (o2.end_time>(self.start_time - datetime.timedelta(minutes=30) ) ):
             #print "true"
             return True
         else:
@@ -748,7 +748,7 @@ class Occurrence(models.Model):
             occur_part=[]
         #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
         #adding a half hour padding:
-        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + timedelta(minutes=30)),end_time__gt=(self.start_time - timedelta(minutes=30))).exclude(pk=self.pk)
+        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),end_time__gt=(self.start_time - datetime.timedelta(minutes=30))).exclude(pk=self.pk)
 
         for o in concurrent:
             event_activity=o.get_activity()
@@ -912,13 +912,13 @@ class TrainingRoster(models.Model):
 
             ostart=datetime.time(hour=o.start_time.hour,minute=o.start_time.minute)
             if ostart<=con.morning_class_cutoff:#if class starts early enough in the morning
-                yday = timedelta(days=1)
+                yday = datetime.timedelta(days=1)
                 startday=o.start_time.date()-yday
                 regtimes.append(datetime.datetime(year=startday.year, month=startday.month, day=startday.day, hour=con.dayb4signup_start.hour, minute=con.dayb4signup_start.minute))
 
             #otherwise this is time-hoursb4signup
             #it calculates both just in case timezone doesn't work and they do something like 48 hours before class time or something
-            b4signup = timedelta(hours=float(con.hoursb4signup))
+            b4signup = datetime.timedelta(hours=float(con.hoursb4signup))
             regtime=o.start_time-b4signup
             regtimes.append(datetime.datetime(year=o.start_time.year, month=o.start_time.month, day=o.start_time.day, hour=regtime.hour, minute=regtime.minute))
 
