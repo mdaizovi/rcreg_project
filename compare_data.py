@@ -15,13 +15,32 @@ Top funcitons copied from Basic_Data."""
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'
 export_path=static_path+'exported/'
+date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+
+#python manage.py shell
+#from compare_data import*
+
+#db_xlfile=(import_path+'Registrant-2016-06-12 REORDERED copy.xlsx')
+#bpt_xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
+
+#sort_it_out(db_xlfile,bpt_xlfile)
+
+
+#if you just want to look for name dupes:
+
+#python manage.py shell
+#from compare_data import*
+
+#xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
+#all_data=make_excel_odict_list(xlfile)
+#same_name(all_data)
 
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 
 def wb_or_str(xlfile):
-    """cehcks is xlfile input is a strong of name, or wb object. either makes or returns object."""
+    """checks is xlfile input is a strong of name, or wb object. either makes or returns object."""
     if isinstance(xlfile , basestring):
         #if a string of file name is entered
         wb = openpyxl.load_workbook(xlfile)
@@ -30,8 +49,6 @@ def wb_or_str(xlfile):
         wb = xlfile
     return wb
 
-#xlfile=(static_path+'myheader.xlsx')
-#xlfile=(static_path+'BPTheader.xlsx')
 def get_header(xlfile):
     wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
@@ -67,6 +84,7 @@ def write_wb(target_location,target_name,od_list,header):
 
 def make_excel_odict_list(xlfile):
     """Takes in excel file of BPT registrant data, turns each row into an ordered dict, returns list of all ordered dicts"""
+    print "make_excel_odict_list"
     wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
     #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
@@ -80,9 +98,9 @@ def make_excel_odict_list(xlfile):
             data_holding_dict[c]=data
         all_data.append(data_holding_dict)
     #so by now all_data has a shit ton of stuff
+    print "len all_data",len(all_data)
     return all_data
 
-#xlfile=(export_path+'SingleEmailRegistrants.xlsx')
 def find_incompletes(xlfile):
     """this assumes BPT header, not my header"""
     all_data=make_excel_odict_list(xlfile)
@@ -125,8 +143,6 @@ def find_incompletes(xlfile):
 
     return no_sk8name_file,no_real_name_file,complete_entries_file
 
-
-#xlfile=(import_path+"RollerTron.xlsx")
 def email_dupes(xlfile):
     """Takes in list of ordered dicts from BPT Excel sheet, shits out 2 excels: 1 of people who entered unique emails,
     1 of peolpe who are attached to an email that is used more than once."""
@@ -172,8 +188,6 @@ def email_dupes(xlfile):
 
     return single_file,dupe_file
 
-#target_file=(import_path+'RollerTron Attendee 02 29 16.xlsx')
-#single_file, dupe_file, no_sk8name_file, no_real_name_file, complete_entries_file=sort_BPT_excel(target_file)
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
     BPT_header = get_header((static_path+'BPTheader.xlsx'))
@@ -195,10 +209,11 @@ class Registrant:
         self.BPT_Ticket_ID=None
 
 
-
 def make_temp_registrants(all_data):
     """makes temporary registrant objects from the OD list of existing real Registrants from the DB,
     mimcking important attributes. As exported from Excel, re-arranged to mimic BPT so I could re-use code"""
+    print "make_temp_registrants"
+    print "len all_data",len(all_data)
 
     reg_obj_list=[]
     dict_connection={}
@@ -233,6 +248,70 @@ def make_temp_registrants(all_data):
     return reg_obj_list,dict_connection
 
 
+def same_name(od_list):
+    """Inspired by Carla Smith affair, 1 had orignial input too loose, so different people with the same name but different emails, diff sk8names, oculd be seen as 1 perosn
+    As of May 2016 that has been changed.
+    Takes in ordered dict list of everyone from BPT list who should be in DB,
+    sees who has the same name, prints list of possible doppelgangers."""
+    print "starting same_name"
+    print "bpt_obj_list len",len(od_list)
+
+    names={}
+    sortedods=[]
+
+    dupes=[]
+    for od in od_list:
+
+        first_name=od.get("AA")
+        if not first_name:
+            first_name=od.get("F")
+
+        last_name=od.get("Z")
+        if not last_name:
+            last_name=od.get("E")
+
+
+        email=od.get("AB")
+        if not email:
+            email=od.get("Q")
+
+        if first_name and last_name:
+            sk8ername_str=first_name+" "+last_name
+
+            if sk8ername_str in names and (email!=names.get(sk8ername_str)):
+                dupes.append(od)
+
+                for ods in sortedods:
+                    fn=ods.get("AA")
+                    if not fn:
+                        fn=ods.get("F")
+                    ln=ods.get("Z")
+                    if not ln:
+                        ln=ods.get("E")
+
+                    if fn and ln:
+                        sk8n=fn+" "+ln
+                        if sk8n==sk8ername_str:
+                            dupes.append(ods)
+                            break
+
+            else:
+                names[sk8ername_str]=email
+                sortedods.append(od)
+
+    print "names len",len(names)
+    print "dupes len",len(dupes)
+
+    if len(dupes)>0:
+        header=get_header((static_path+'BPTheader.xlsx'))
+        name_str='Doppelsk8ers '+ date_str +'.xlsx'
+        write_wb(export_path,name_str,dupes,header)
+        print "Doppelsk8ers written"
+    else:
+        print "no dupes"
+
+
+
 def comp_obj_lists(db_obj_list, bpt_obj_list):
     """mimics db lookup to see which objects are in 1 list but not the other.
     First list should be objs in DB, second objects that may or may not be in DB"""
@@ -250,12 +329,14 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
             this_tup=tuple(list2btuple)
             search_crit_list.append(this_tup)
             dict_connection[this_tup]= obj
-        return search_crit_list,dict_connection
+
+        return search_crit_list, dict_connection
 
     def trim_obj_list(in_db, bpt_obj_list,search_crit_list_str):
-        """takes list of which objects ar ein the db as of moment and which should be but haven't been found yet,
+        """takes list of which objects are in the db as of moment and which should be but haven't been found yet,
         makes search criteria list of db entries and filters should be in by, returns
         modified lists of who is in d and who may not be, after that filter"""
+        print "trim_obj_list("
 
         in_db_search_crit_list,in_db_dict_connection=make_search_crit_list(search_crit_list_str, in_db)
         bpt_search_crit_list,bpt_dict_connection=make_search_crit_list(search_crit_list_str, bpt_obj_list)
@@ -263,6 +344,8 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
         bpt_set = set(bpt_search_crit_list)
         db_set = set(in_db_search_crit_list)
         intersect=bpt_set.intersection(db_set)
+        print "intersect len: ",len(intersect)
+        just_found=[]
 
         for obj_tup in intersect:
             if obj_tup is not None:
@@ -270,66 +353,96 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
                 obj=bpt_dict_connection.get(obj_tup)
                 if obj is not None:
                     bpt_obj_list.remove(obj)
+                    just_found.append(obj)
 
         #make shallow copies, not pointers.
-        return list(in_db), list(bpt_obj_list)
+        return list(in_db), list(bpt_obj_list),just_found
 
 
+
+    print "pre sort len:"
     in_db=list(db_obj_list)
+    print "in_db len: ",len(in_db)
     not_found_yet=list(bpt_obj_list)
+    print "not_found_yet len: ",len(not_found_yet)
 
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["email", "first_name","last_name","sk8name"])
-    print "pass 1: %s found in DB by emial, fname, lname,sk8name, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found=[]
+    print "all_found len: ",len(all_found)
 
-    #next, email and fname and lname NOT sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["email", "first_name","last_name"])
-    print "pass 2: %s found in DB by email, fname, lname,but NOT sk8name, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
-
-    #next, email and fname and lname NOT sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["email","last_name"])
-    print "pass 3: %s found in DB by email, lname, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["email", "first_name","last_name","sk8name"])
+    print "pass 1: %s found in DB by emial, fname, lname,sk8name, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
     #next, email and fname and lname NOT sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["email", "first_name",])
-    print "pass 4: %s found in DB by email, fname, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["email", "first_name","last_name"])
+    print "pass 2: %s found in DB by email, fname, lname,but NOT sk8name, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
+############this looks like it could be problematic, prodice false positives. commented out########
+
+    #next, email and fname and lname NOT sk8name
+    # in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["email","last_name"])
+    # print "pass 3: %s found in DB by email, lname, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    #all_found+=just_found
+    #print "all_found len: ",len(all_found)
+#######################################
+
+
+    #next, email and fname and lname NOT sk8name
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["email", "first_name",])
+    print "pass 4: %s found in DB by email, fname, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
     #next, email and sk8nme
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["email", "sk8name"])
-    print "pass 5: %s found in DB by email, and sk8name, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["email", "sk8name"])
+    print "pass 5: %s found in DB by email, and sk8name, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
     #next, email and fname and lname and sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["first_name","last_name","sk8name"])
-    print "pass 6: %s found in DB by fname, lname,sk8name, NOT email %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["first_name","last_name","sk8name"])
+    print "pass 6: %s found in DB by fname, lname,sk8name, NOT email %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
         #next, email and fname and lname and sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["first_name","sk8name"])
-    print "pass 7: %s found in DB by lname,sk8name %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["first_name","sk8name"])
+    print "pass 7: %s found in DB by fname,sk8name %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
     #next, email and fname and lname and sk8name
-    in_db, not_found_yet=trim_obj_list(in_db, not_found_yet,["last_name","sk8name"])
-    print "pass 8: %s found in DB by lname, sk8name, %s not found, %s total "%( str(len(in_db)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    in_db, not_found_yet,just_found=trim_obj_list(in_db, not_found_yet,["last_name","sk8name"])
+    print "pass 8: %s found in DB by lname, sk8name, %s not found, %s total "%( str(len(just_found)), str(len(not_found_yet)), str((len(in_db)+len(not_found_yet))) )
+    all_found+=just_found
+    print "all_found len: ",len(all_found)
 
-    return in_db, not_found_yet
+    return in_db, not_found_yet,all_found
 
-
-
-#python manage.py shell
-#from compare_data import*
-#db_xlfile=(import_path+'RegistrantsAll.xlsx')
-#bpt_xlfile=(import_path+'BPTAll.xlsx')
-#sort_it_out(db_xlfile,bpt_xlfile)
 def sort_it_out(db_xlfile,bpt_xlfile):
     """bundles all of my funcitons together so I don't have to type so much"""
+    print "sort_it_out: "
     db_all_data=make_excel_odict_list(db_xlfile)
+    print "len db_all_data",len(db_all_data)
     bpt_all_data=make_excel_odict_list(bpt_xlfile)
+    print "len bpt_all_data",len(bpt_all_data)
 
     db_obj_list,db_dict_connection=make_temp_registrants(db_all_data)
+    print "db_obj_list",len(db_obj_list)
+    print "db_dict_connection",len(db_dict_connection)
     bpt_obj_list,bpt_dict_connection=make_temp_registrants(bpt_all_data)
+    print "bpt_obj_list",len(bpt_obj_list)
+    print "bpt_dict_connection",len(bpt_dict_connection)
 
-    in_db_obj, not_found_yet_obj=comp_obj_lists(db_obj_list, bpt_obj_list)
+    in_db_obj, not_found_yet_obj,all_found_list=comp_obj_lists(db_obj_list, bpt_obj_list)
+    print "len in_db_obj",len(in_db_obj)
+    print "len not_found_yet_obj",len(not_found_yet_obj)
 
     in_db=[]
-    for obj in in_db_obj:
+    #for obj in in_db_obj:
+    for obj in all_found_list:
         od=bpt_dict_connection.get(obj)
         if od:
             in_db.append(od)
