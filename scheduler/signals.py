@@ -1,8 +1,8 @@
-#from scheduler.models import Roster
+
 def delete_homeless_roster_chg(sender, instance,**kwargs):
-    """upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
+    """Pre-delete. upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
     Not necessary for Training, d/t 1:1 """
-    #print "starting delete_homeless_roster_chg"
+    print "starting delete_homeless_roster_chg"
     my_rosters=[]
     if instance.roster1:
         my_rosters.append(instance.roster1)
@@ -12,7 +12,7 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
         if r.id and not r.name and not r.captain:
             connections=list(r.roster1.all())+list(r.roster2.all())
             if len(connections)<=1:
-                #print "this si where I would delete ",r
+                print "this is where I would delete ",r.pk, r
                 r.delete()
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
@@ -26,18 +26,18 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
-    """Deletes Challenge if it has no Rosters"""
+    """Post-Save. Deletes Challenge if it has no Rosters"""
     if not instance.roster1 and not instance.roster2:
-        #print "about to delete homeless challenge",instance
+        print "about to delete homeless challenge",instance
         instance.delete()
 
 
 def adjust_captaining_no(sender, instance,**kwargs):
-    '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
+    '''Pre-Delete on Roster. Upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
     #somehow this is related to why my User name would change after I deleted all of the Registrant's rosters,
     #But I'm still not sure why.
     #actualy cap number is realted to chalenges, not rosters. this should run when a captain leaves/deletes a challenge, or not at all
-    #print "deleting roster, running adjust captain number"
+    print "deleting roster, running adjust captain number"
     if instance.captain:
         captain=instance.captain
         instance.captain=None

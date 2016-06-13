@@ -14,7 +14,7 @@ from scheduler.app_settings import MAX_CAPTAIN_LIMIT
 from django.forms.models import model_to_dict
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT_Affiliate_ID
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete,post_init,pre_init
-from con_event.signals import update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
+from con_event.signals import sched_final_cleanup,update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
 import logging
 #Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -238,6 +238,9 @@ class Con(models.Model):
             self.ticket_link="http://rollercon.com/register/rollercon-pass/"
 
         super(Con, self).save()
+
+post_save.connect(sched_final_cleanup, sender=Con)
+
 
 class Blackout(models.Model):
     registrant=models.ForeignKey('Registrant',related_name="blackout")#did not set null on delete, I'm okay with this going away if registrant goes away

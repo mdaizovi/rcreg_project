@@ -2,10 +2,43 @@ from django.db.models import Q
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.forms.models import model_to_dict
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-#from django.contrib.auth.models import User#maybe unnecessary?
 
-#http://stackoverflow.com/questions/32287975/django-auto-create-intermediate-model-instances-for-new-instance-created-in-fore
-#http://stackoverflow.com/questions/17645801/when-to-use-pre-save-save-post-save-in-django
+def sched_final_cleanup(sender, instance,**kwargs):
+    """Post-save on Con. If Schedule is final, cleans up (deletes) unsubmitted, unscheduled Challenges and Trainings from that Con."""
+    print "starting sched_final_cleanup"
+    if instance.sched_final:
+        from scheduler.models import Challenge, Training
+        c_no_os=[]
+        t_no_os=[]
+        dead_chals=Challenge.objects.filter(RCaccepted=False, con=instance)
+        for c in dead_chals:
+            if c.occurrence_set.count()<1:
+                c_no_os.append(c)
+        if len(c_no_os)>1:
+            print len(c_no_os)," Challenges set to be deleted:"
+            for c in c_no_os:
+                print c.pk, c
+                #c.delete() #commented out so I can investigate to make sure all of these SHOULD be deleted
+        else:
+            print "no Challenges to delete"
+
+        dead_trains=Training.objects.filter(RCaccepted=False,con=instance)
+        for t in dead_trains:
+            if t.occurrence_set.count()<1:
+                t_no_os.append(t)
+        if len(t_no_os)>1:
+            print len(t_no_os)," Trainings set to be deleted:"
+            for t in t_no_os:
+                print t.pk, t
+                #t.delete() #commented out so I can investigate to make sure all of these SHOULD be deleted
+        else:
+            print "no Trainings to delete"
+
+        #things I expect ot run:
+        #delete_homeless_roster_chg, which deletes both rosters before deleting the Challenge
+        #adjust_captaining_no, which will save both Captains
+        #ad
+
 
 
 def update_user_fl_name(sender, instance,**kwargs):
@@ -38,7 +71,7 @@ def delete_homeless_user(sender, instance,**kwargs):
     if instance.user:#people w/ no email addresses might not have a user
         if len(instance.user.registrant_set.all()) <= 1 and not instance.user.is_staff and not instance.user.is_superuser:
             print "would delete ",instance.user," here, but temporarily suspended delete_homeless_user"
-            pass 
+            pass
             #print "about to delete",instance.user
             #instance.user.delete()
 
