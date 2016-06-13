@@ -14,7 +14,7 @@ db_User_Name = 'rcregsite'
 DB_User_Password = 'mice4rice'
 DB_Name = 'rcregsite$default'
 DB_Host= db_User_Name+'.mysql.pythonanywhere-services.com'
-backupDir = '/home/rcregsite/backup'
+backupDir = '/home/rcregsite/backup/'
 
 now = datetime.now()
 print "now is ",now
@@ -23,9 +23,9 @@ print "today is ",today
 
 if int(today) in [13, 7, 21]:
 
-    #datetime = time.strftime('%m%d%Y-%H%M%S')
     datetime = time.strftime('%Y %m %d')
-    datetimeBackupDir = backupDir + "/dbdump "+datetime
+    #datetimeBackupDir = backupDir + "dbdump "+datetime
+    datetimeBackupDir = backupDir + datetime
 
     print "creating backup folder"
     if not os.path.exists(datetimeBackupDir):
@@ -34,9 +34,9 @@ if int(today) in [13, 7, 21]:
     #original
     #mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h mysql.server --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
     #or:
-    mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
+    mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > ''" + datetimeBackupDir + "/" + DB_Name + ".sql'"
     print "mysqldump_cmd ",mysqldump_cmd
-    #os.system(mysqldump_cmd)
+    os.system(mysqldump_cmd)
 
 else:
     print "No Scheduled DB backup today.\n"
