@@ -14,7 +14,8 @@ DB_Name = 'rcregsite$default'
 DB_Host= db_User_Name+'.mysql.pythonanywhere-services.com'
 backupDir = '/home/rcregsite/backup/dump'
 
-datetime = time.strftime('%m%d%Y-%H%M%S')
+#datetime = time.strftime('%m%d%Y-%H%M%S')
+datetime = time.strftime('%Y %m %d')
 datetimeBackupDir = backupDir + datetime
 
 print "creating backup folder"
