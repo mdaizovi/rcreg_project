@@ -18,7 +18,7 @@ def sched_final_cleanup(sender, instance,**kwargs):
             print len(c_no_os)," Challenges set to be deleted:"
             for c in c_no_os:
                 print c.pk, c
-                #c.delete() #commented out so I can investigate to make sure all of these SHOULD be deleted
+                #c.delete() #passes local investigation, but want to check on production just ot be sure
         else:
             print "no Challenges to delete"
 
@@ -30,15 +30,9 @@ def sched_final_cleanup(sender, instance,**kwargs):
             print len(t_no_os)," Trainings set to be deleted:"
             for t in t_no_os:
                 print t.pk, t
-                #t.delete() #commented out so I can investigate to make sure all of these SHOULD be deleted
+                #t.delete() #passes local investigation, but want to check on production just ot be sure 
         else:
             print "no Trainings to delete"
-
-        #things I expect ot run:
-        #delete_homeless_roster_chg, which deletes both rosters before deleting the Challenge
-        #adjust_captaining_no, which will save both Captains
-        #ad
-
 
 
 def update_user_fl_name(sender, instance,**kwargs):

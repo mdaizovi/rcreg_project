@@ -16,7 +16,7 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,LOCATION_CATEGORY,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL,SKILL_LEVEL_GAME
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
-from scheduler.signals import adjust_captaining_no,challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
+from scheduler.signals import challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
 from scheduler.app_settings import CLOSE_CHAL_SUB_AT
 from copy import deepcopy
 from swingtime.conf.swingtime_settings import TIMESLOT_INTERVAL,TIMESLOT_START_TIME,TIMESLOT_END_TIME_DURATION
@@ -525,7 +525,6 @@ class Roster(Matching_Criteria):
         #unique_together = ('name','con','captain')#I think this is my original sin. fuck me.
 
 post_save.connect(delete_homeless_roster_ros, sender=Roster)
-pre_delete.connect(adjust_captaining_no, sender=Roster)
 
 class Activity(models.Model):
     #fields that are shared between challenge and training

@@ -1,19 +1,29 @@
 
 def delete_homeless_roster_chg(sender, instance,**kwargs):
-    """Pre-delete. upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
+    """Challenge Pre-delete. upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
     Not necessary for Training, d/t 1:1 """
     print "starting delete_homeless_roster_chg"
     my_rosters=[]
+    caps=[]
     if instance.roster1:
         my_rosters.append(instance.roster1)
+        if instance.roster1.captain:
+            caps.append(instance.roster1.captain)
     if instance.roster2:
         my_rosters.append(instance.roster2)
+        if instance.roster2.captain:
+            caps.append(instance.roster2.captain)
     for r in my_rosters:
-        if r.id and not r.name and not r.captain:
+        # if r.id and not r.name and not r.captain: #this is probably too stringent
+        if r.id:
             connections=list(r.roster1.all())+list(r.roster2.all())
-            if len(connections)<=1:
+            if len(connections)<=1:#1 because this challenge hasn't been deleted yet.
                 print "this is where I would delete ",r.pk, r
-                r.delete()
+                #r.delete() #I don't know why I'm disabling. just to be safe for a bit.
+
+    for c in caps:#to adjust captain number
+        c.save()
+
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Post Save from Roster
@@ -22,7 +32,7 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
     my_connections=list(instance.roster1.all())+list(instance.roster2.all())
 
     if len(my_connections)<1 and not instance.captain:
-        #print "about to delete ",instance
+        print "about to delete ",instance
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
@@ -37,11 +47,14 @@ def adjust_captaining_no(sender, instance,**kwargs):
     #somehow this is related to why my User name would change after I deleted all of the Registrant's rosters,
     #But I'm still not sure why.
     #actualy cap number is realted to chalenges, not rosters. this should run when a captain leaves/deletes a challenge, or not at all
-    print "deleting roster, running adjust captain number"
-    if instance.captain:
-        captain=instance.captain
-        instance.captain=None
-        captain.save()
+    # print "deleting roster, running adjust captain number"
+    # if instance.captain:
+    #     captain=instance.captain
+    #     instance.captain=None
+    #     captain.save()
+    pass
+    #want to mke sure all is good before i delete forever. this didn't work'
+
 
 def challenge_defaults(sender, instance,**kwargs):
     """Pre-save Challenge
