@@ -17,13 +17,12 @@ DB_Host= db_User_Name+'.mysql.pythonanywhere-services.com'
 backupDir = '/home/rcregsite/backup/'
 
 now = datetime.now()
-print "now is ",now
 today=now.day
 print "today is ",today
 
-if int(today) in [13, 7, 21]:
+if int(today) in [7, 21]:
 
-    datetime = time.strftime('%Y %m %d ')
+    datetime = time.strftime('%Y %m %d')
     datetimeBackupDir = backupDir + datetime+"/"
 
     print "finding backup folder"
@@ -32,8 +31,9 @@ if int(today) in [13, 7, 21]:
         os.makedirs(datetimeBackupDir)
 
     mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > '" + datetimeBackupDir +DB_Name + ".sql'"
-    print "mysqldump_cmd ",mysqldump_cmd
+    #print "mysqldump_cmd ",mysqldump_cmd
     os.system(mysqldump_cmd)
+    print "db dumped"
 
 else:
     print "No Scheduled DB backup today.\n"
