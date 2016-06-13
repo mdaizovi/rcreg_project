@@ -17,36 +17,26 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
 
 def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Post Save from Roster
-    Deletes a Roster if it has no Captain and no Challenges or Trainings"""
+    Deletes a Roster if it has no Captain and no Challenges"""
     print "running delete_homeless_roster_ros("
     my_connections=list(instance.roster1.all())+list(instance.roster2.all())
 
-    #don't need, w/ new trainingroster structure
-    # if instance.registered:
-    #     my_connections.append(instance.registered)
-    # if instance.auditing:
-    #     my_connections.append(instance.auditing)
-    #
-    # if len(my_connections)<1 and not instance.captain and not instance.registered and not instance.auditing:
-
     if len(my_connections)<1 and not instance.captain:
-        print "about to delete ",instance
-        print "this is where I WOULD delete ",instance
-        #instance.delete() #temporarily disabled, just in case, w/ changeover
+        #print "about to delete ",instance
+        instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
     """Deletes Challenge if it has no Rosters"""
     if not instance.roster1 and not instance.roster2:
         #print "about to delete homeless challenge",instance
-        #print "delete_homeless_chg: this is where I WOULD delete ",instance
         instance.delete()
 
 
 def adjust_captaining_no(sender, instance,**kwargs):
     '''upon deleting a roster, removes captain and saves registrant to adjust captain number.'''
     #somehow this is related to why my User name would change after I deleted all of the Registrant's rosters,
-    #But I'm still nt sure why. Registrant didn't get deleted did it?
-    #actualy cap number is realted to chalenges, not rosters. this should run when a cap leaves/delets a challenge, or not at all
+    #But I'm still not sure why.
+    #actualy cap number is realted to chalenges, not rosters. this should run when a captain leaves/deletes a challenge, or not at all
     #print "deleting roster, running adjust captain number"
     if instance.captain:
         captain=instance.captain
