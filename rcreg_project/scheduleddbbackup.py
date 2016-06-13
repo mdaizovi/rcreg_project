@@ -12,11 +12,11 @@ db_User_Name = 'rcregsite'
 DB_User_Password = 'mice4rice'
 DB_Name = 'rcregsite$default'
 DB_Host= db_User_Name+'.mysql.pythonanywhere-services.com'
-backupDir = '/home/rcregsite/backup/dump'
+backupDir = '/home/rcregsite/backup'
 
 #datetime = time.strftime('%m%d%Y-%H%M%S')
 datetime = time.strftime('%Y %m %d')
-datetimeBackupDir = backupDir + datetime
+datetimeBackupDir = backupDir + "dbdump "+datetime
 
 print "creating backup folder"
 if not os.path.exists(datetimeBackupDir):
@@ -25,5 +25,5 @@ if not os.path.exists(datetimeBackupDir):
 #original
 #mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h mysql.server --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
 #or:
-#mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
-#os.system(mysqldump_cmd)
+mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
+os.system(mysqldump_cmd)
