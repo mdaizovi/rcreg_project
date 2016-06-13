@@ -23,18 +23,14 @@ print "today is ",today
 
 if int(today) in [13, 7, 21]:
 
-    datetime = time.strftime('%Y %m %d')
-    #datetimeBackupDir = backupDir + "dbdump "+datetime
-    datetimeBackupDir = backupDir + datetime
+    datetime = time.strftime('%Y %m %d ')
 
-    print "creating backup folder"
+    print "finding backup folder"
     if not os.path.exists(datetimeBackupDir):
+        print "creating backup folder"
         os.makedirs(datetimeBackupDir)
 
-    #original
-    #mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h mysql.server --databases '" + DB_Name + "' > " + datetimeBackupDir + "/" + DB_Name + ".sql"
-    #or:
-    mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > ''" + datetimeBackupDir + "/" + DB_Name + ".sql'"
+    mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='" + DB_User_Password + "' -h "+DB_Host+" --databases '" + DB_Name + "' > '" + backupDir +  datetime+ " "+DB_Name + ".sql'"
     print "mysqldump_cmd ",mysqldump_cmd
     os.system(mysqldump_cmd)
 
