@@ -30,7 +30,7 @@ def sched_final_cleanup(sender, instance,**kwargs):
             print len(t_no_os)," Trainings set to be deleted:"
             for t in t_no_os:
                 print t.pk, t
-                #t.delete() #passes local investigation, but want to check on production just ot be sure 
+                #t.delete() #passes local investigation, but want to check on production just ot be sure
         else:
             print "no Trainings to delete"
 
@@ -61,7 +61,7 @@ def delete_homeless_user(sender, instance,**kwargs):
     '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants,
     If they're not staff. I added that just in case to make sure I never accidentally delete RollerTron.
     REMEMBER never delete all homeless Users, because that will delete SuperUser RollerTron'''
-    #print "starting delete_homeless_user"
+    print "starting delete_homeless_user"
     if instance.user:#people w/ no email addresses might not have a user
         if len(instance.user.registrant_set.all()) <= 1 and not instance.user.is_staff and not instance.user.is_superuser:
             print "would delete ",instance.user," here, but temporarily suspended delete_homeless_user"
