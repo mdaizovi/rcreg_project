@@ -195,6 +195,7 @@ def view_coach(request, coach_id):
 
 
 def view_training(request, activity_id,o_id=None):
+    """If no Occurrence, jst the training and coach data. if schedule is visible and there is an Occurrence, that info will be available."""
     user=request.user
     single=False
     visible=False
@@ -205,8 +206,15 @@ def view_training(request, activity_id,o_id=None):
     try:
         training=Training.objects.get(pk=int(activity_id))
         if o_id:
-            #try:
-            if 3==3:
+            try:
+                occur=Occurrence.objects.get(training=training, pk=int(o_id))
+                registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
+                auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
+                rosters=[registered,auditing]
+
+            except:
+                #If I do it thi way, it says "try back later" until registraiton stats, no time
+                #so moved to except, probably will never run
                 occur=Occurrence.objects.get(training=training, pk=int(o_id))
                 if hasattr(occur, 'registered'):
                     rosters.append(occur.registered)
@@ -217,8 +225,7 @@ def view_training(request, activity_id,o_id=None):
                     rosters.append(occur.auditing)
                 else:
                     rosters.append(True)#so that the Registered/Auditing order in template will still work
-            # except:
-            #     pass
+
         Tos=list(Occurrence.objects.filter(training=training))
 
         if training.con.sched_visible:
@@ -283,7 +290,6 @@ def register_training(request,o_id):
     except ObjectDoesNotExist:
         return render_to_response('register_training.html',{},context_instance=RequestContext(request))
 
-
     if occur and user in occur.can_add_sk8ers():
 
         registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
@@ -299,7 +305,7 @@ def register_training(request,o_id):
 
         if request.method == "POST":
             selection = request.POST.copy()
-            print "selection", selection
+            #print "selection", selection
             if 'search register' in request.POST:
                 reg_search_form=SearchForm(request.POST)
                 if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
