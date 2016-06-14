@@ -65,7 +65,7 @@
 {%if NOTIFY_UNACCEPTED_CHALLENGES%}<li>{{NOTIFY_UNACCEPTED_CHALLENGES}} Competitive
 event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_CHALLENGES > 1%}have{%else%}has{%endif%} not been accepted by yourself or your opposing captain.</li>{%endif%}
 {%if NOTIFY_PENDING_CHALLENGES%}<li>{{NOTIFY_PENDING_CHALLENGES}} Competitive event{{ NOTIFY_PENDING_CHALLENGES|pluralize }} which {%if NOTIFY_PENDING_CHALLENGES > 1%}have{%else%}has{%endif%} not been submitted.</li>{%endif%}
-</ul></div>{%endif%}<!-- ALL_CHALLENGE_NOTIFY -->
+</ul></div>{%endif%}<!-- if ALL_CHALLENGE_NOTIFY -->
 {%endif%}<!-- dict.pending -->
 
 {%if dict.my_chals%}

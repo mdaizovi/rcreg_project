@@ -15,22 +15,21 @@ Top funcitons copied from Basic_Data."""
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'
 export_path=static_path+'exported/'
-date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+date_str=datetime.date.today().strftime("%B %d %Y")
+
+########If you want to run data comparison to see if all people who SHOULD be in the database ARE.
 
 #python manage.py shell
 #from compare_data import*
-
 #db_xlfile=(import_path+'Registrant-2016-06-12 REORDERED copy.xlsx')
 #bpt_xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
-
 #sort_it_out(db_xlfile,bpt_xlfile)
 
 
-#if you just want to look for name dupes:
+#########if you just want to look for name dupes:
 
 #python manage.py shell
 #from compare_data import*
-
 #xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
 #all_data=make_excel_odict_list(xlfile)
 #same_name(all_data)
@@ -50,9 +49,11 @@ def wb_or_str(xlfile):
     return wb
 
 def get_header(xlfile):
+    """Gets header from source Excel sheet for printing other
+    input: Excel file
+    output: """
     wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
-    #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
     header=collections.OrderedDict()
     for row in range(1, sheet.get_highest_row() + 1):
         for  c in data_columns:#global vairable, look at top of file
@@ -84,10 +85,9 @@ def write_wb(target_location,target_name,od_list,header):
 
 def make_excel_odict_list(xlfile):
     """Takes in excel file of BPT registrant data, turns each row into an ordered dict, returns list of all ordered dicts"""
-    print "make_excel_odict_list"
+
     wb=wb_or_str(xlfile)
     sheet = wb.get_active_sheet()
-    #sheet=wb.get_sheet_by_name('downloadreports-1')#this only works for RollerTron.xlsx
     all_data=[]
     highest_row=sheet.get_highest_row()
     for row in range(2, sheet.get_highest_row() + 1):
@@ -97,12 +97,13 @@ def make_excel_odict_list(xlfile):
             data=sheet[location].value
             data_holding_dict[c]=data
         all_data.append(data_holding_dict)
-    #so by now all_data has a shit ton of stuff
-    print "len all_data",len(all_data)
+
     return all_data
 
 def find_incompletes(xlfile):
-    """this assumes BPT header, not my header"""
+    """this assumes BPT header, not my header form exporting Admin
+    Makes sure each Registrant has all the necessary informaiton
+    Returns 3 Excel files"""
     all_data=make_excel_odict_list(xlfile)
     no_sk8name=[]
     no_real_name=[]
@@ -121,7 +122,8 @@ def find_incompletes(xlfile):
             complete_entries.append(od)
 
     header=get_header((static_path+'BPTheader.xlsx'))
-    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #global vairable, look at top of file
 
     if len(no_sk8name)>0:
         name_str='NoSk8NameReg '+ date_str +'.xlsx'
@@ -145,7 +147,7 @@ def find_incompletes(xlfile):
 
 def email_dupes(xlfile):
     """Takes in list of ordered dicts from BPT Excel sheet, shits out 2 excels: 1 of people who entered unique emails,
-    1 of peolpe who are attached to an email that is used more than once."""
+    1 of people who are attached to an email that is used more than once."""
     all_data=make_excel_odict_list(xlfile)
     email_list=[]
     last_email=None
@@ -160,7 +162,6 @@ def email_dupes(xlfile):
             print "long email ",email2
             long_emails.append(od)
 
-
     for od in all_data:
         email2=od.get("AB")
         if int(email_list.count(email2))>1:
@@ -169,7 +170,9 @@ def email_dupes(xlfile):
             good_emails.append(od)
 
     header=get_header((static_path+'BPTheader.xlsx'))
-    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #global vairable, look at top of file
+
     if len(good_emails)>0:
         name_str='SingleEmailRegistrants '+ date_str +'.xlsx'
         single_file=write_wb(export_path,name_str,good_emails,header)
@@ -212,13 +215,9 @@ class Registrant:
 def make_temp_registrants(all_data):
     """makes temporary registrant objects from the OD list of existing real Registrants from the DB,
     mimcking important attributes. As exported from Excel, re-arranged to mimic BPT so I could re-use code"""
-    print "make_temp_registrants"
-    print "len all_data",len(all_data)
 
     reg_obj_list=[]
     dict_connection={}
-
-    #"print all_data line 199",all_data
 
     for od in all_data:
         email=ascii_only_no_punct(od.get("AB"))
@@ -253,8 +252,6 @@ def same_name(od_list):
     As of May 2016 that has been changed.
     Takes in ordered dict list of everyone from BPT list who should be in DB,
     sees who has the same name, prints list of possible doppelgangers."""
-    print "starting same_name"
-    print "bpt_obj_list len",len(od_list)
 
     names={}
     sortedods=[]
@@ -299,9 +296,6 @@ def same_name(od_list):
                 names[sk8ername_str]=email
                 sortedods.append(od)
 
-    print "names len",len(names)
-    print "dupes len",len(dupes)
-
     if len(dupes)>0:
         header=get_header((static_path+'BPTheader.xlsx'))
         name_str='Doppelsk8ers '+ date_str +'.xlsx'
@@ -344,27 +338,22 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
         bpt_set = set(bpt_search_crit_list)
         db_set = set(in_db_search_crit_list)
         intersect=bpt_set.intersection(db_set)
-        print "intersect len: ",len(intersect)
+
         just_found=[]
 
         for obj_tup in intersect:
             if obj_tup is not None:
-                #print obj_tup, " in difference"
                 obj=bpt_dict_connection.get(obj_tup)
                 if obj is not None:
                     bpt_obj_list.remove(obj)
                     just_found.append(obj)
 
-        #make shallow copies, not pointers.
+        #reminder: make shallow copies, not pointers.
         return list(in_db), list(bpt_obj_list),just_found
 
 
-
-    print "pre sort len:"
     in_db=list(db_obj_list)
-    print "in_db len: ",len(in_db)
     not_found_yet=list(bpt_obj_list)
-    print "not_found_yet len: ",len(not_found_yet)
 
     all_found=[]
     print "all_found len: ",len(all_found)
@@ -422,26 +411,16 @@ def comp_obj_lists(db_obj_list, bpt_obj_list):
     return in_db, not_found_yet,all_found
 
 def sort_it_out(db_xlfile,bpt_xlfile):
-    """bundles all of my funcitons together so I don't have to type so much"""
-    print "sort_it_out: "
+    """bundles all of my functions together so I don't have to type so much"""
     db_all_data=make_excel_odict_list(db_xlfile)
-    print "len db_all_data",len(db_all_data)
     bpt_all_data=make_excel_odict_list(bpt_xlfile)
-    print "len bpt_all_data",len(bpt_all_data)
 
     db_obj_list,db_dict_connection=make_temp_registrants(db_all_data)
-    print "db_obj_list",len(db_obj_list)
-    print "db_dict_connection",len(db_dict_connection)
     bpt_obj_list,bpt_dict_connection=make_temp_registrants(bpt_all_data)
-    print "bpt_obj_list",len(bpt_obj_list)
-    print "bpt_dict_connection",len(bpt_dict_connection)
 
     in_db_obj, not_found_yet_obj,all_found_list=comp_obj_lists(db_obj_list, bpt_obj_list)
-    print "len in_db_obj",len(in_db_obj)
-    print "len not_found_yet_obj",len(not_found_yet_obj)
 
     in_db=[]
-    #for obj in in_db_obj:
     for obj in all_found_list:
         od=bpt_dict_connection.get(obj)
         if od:
@@ -454,7 +433,8 @@ def sort_it_out(db_xlfile,bpt_xlfile):
             not_found_yet.append(od)
 
     header=get_header((static_path+'BPTheader.xlsx'))
-    date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
+    #global vairable, look at top of file
 
     if len(in_db)>0:
         name_str='BPT IN RollerTron '+ date_str +'.xlsx'

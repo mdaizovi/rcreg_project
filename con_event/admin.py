@@ -1,12 +1,12 @@
 from django.contrib import admin
-from con_event.models import Con,Registrant,Blackout, Country, State, State,Blog,SKILL_LEVEL, SKILL_LEVEL_SK8R
+from con_event.models import Con,Registrant,Blackout, Country, State,Blog,SKILL_LEVEL, SKILL_LEVEL_SK8R
 from import_export import resources
-from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin,ExportMixin
+from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from django.contrib.auth.models import User
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models import Q
 
-#State and Country are not here, no need to edit from admin
+"""State and Country are not here, no need to edit from admin"""
 
 
 class CountryAdmin(admin.ModelAdmin):
@@ -23,7 +23,6 @@ class ConAdmin(admin.ModelAdmin):
         ('challenge_submission_start','training_submission_end'),('sched_visible','sched_final'),
         ('hoursb4signup','morning_class_cutoff','dayb4signup_start'),
         ('BPT_event_id','ticket_link','hotel_book_link'))
-    #exclude=('year',)
 
 class RegistrantResource(resources.ModelResource):
 
@@ -35,7 +34,6 @@ class RegistrantResource(resources.ModelResource):
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('id','state','country','con')
-        #import_id_fields = ('state','country','con')
         skip_unchanged = True
         report_skipped = True
 
@@ -63,13 +61,10 @@ class BlackoutResource(resources.ModelResource):
         fields = ('id','registrant','date','ampm')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
-        #I'm not sure how this works
-        #import_id_fields = ('registrant')
         skip_unchanged = True
         report_skipped = True
 
 class BlackoutAdmin(ImportExportModelAdmin):
-#class BlackoutAdmin(ExportMixin): #don't do this it doesn't work
 
     list_display = ('registrant','date','ampm')
     fields = ('registrant','date','ampm')
@@ -81,13 +76,11 @@ class BlogResource(resources.ModelResource):
         fields = ('id','headline','slugname','date','user','post')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
-        #I'm not sure how this works
         import_id_fields = ('user')
         skip_unchanged = True
         report_skipped = True
 
 class BlogAdmin(ImportExportModelAdmin):
-#class BlogAdmin(admin.ModelAdmin):
     list_display= ('headline', 'date',)
     exclude=('slugname',)
     view_on_site = True

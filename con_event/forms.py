@@ -2,7 +2,7 @@
 from django import forms
 from django.forms import ModelForm
 from con_event.models import Con, Registrant,Blackout,SKILL_LEVEL_SK8R
-from datetimewidget.widgets import DateTimeWidget
+#from datetimewidget.widgets import DateTimeWidget #really beautiful widget I intended to use for Blackots, ended up just splitting it into am/pm
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 import string
@@ -14,8 +14,7 @@ class SearchForm(forms.Form):
         super(SearchForm, self).__init__(*args, **kwargs)
         self.fields['search_q']=forms.CharField(required=False,label="Search")
         self.tooltip="To refine selection, search by skater name. Otherwise, select from all eligible skaters"
-        # self.fields['search_q']=forms.CharField(required=False,label="Search",
-        #     widget=forms.TextInput())
+
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
@@ -54,6 +53,7 @@ class SearchForm(forms.Form):
 
 
 class RegistrantProfileForm(ModelForm):
+    """Used in registrant_profile view"""
     def __init__(self, *args, **kwargs):
         super(RegistrantProfileForm, self).__init__(*args, **kwargs)
         instancepk=self.instance.id
@@ -88,8 +88,9 @@ class RegistrantProfileForm(ModelForm):
         }
 
 class EligibleRegistrantForm(forms.Form):
+    """Used all over the place for editing Roster participants and TrainingRoster participants."""
     def __init__(self, *args, **kwargs):
-        #only sending pks so I can do my own custom filtering each time I need this form
+        #vague so can do custom filtering each time form is used. ex, right pass level, skill level, etc.
         eligibles = kwargs.pop('my_arg')
 
         super(EligibleRegistrantForm, self).__init__(*args, **kwargs)
@@ -117,6 +118,7 @@ class EligibleRegistrantForm(forms.Form):
                 })
 
 class ConSchedStatusForm(ModelForm):
+    """Used in Calendar for Khaleesi, so she doesn't have to go to Admin."""
     class Meta:
         model = Con
         fields = ['sched_visible','sched_final']
@@ -135,6 +137,8 @@ class ConSchedStatusForm(ModelForm):
 
 
 class AvailabilityForm(forms.Form):
+    """Used to get Blackouts from Captains and Coaches for scheduling purposes.
+    Shows up in My Profile, if they're coaching or captining."""
 
     def __init__(self, *args, **kwargs):
         date = kwargs.pop('date')
@@ -147,13 +151,10 @@ class AvailabilityForm(forms.Form):
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                #'class': 'form-control',
                  'id': str(date),
                  'name': str(date),
                 })
 
-        #Doesn't seem to be any difference between disabled and readonly, in this case.
         self.fields['date'].widget.attrs['disabled'] = True
-        #self.fields['date'].widget.attrs['readonly'] = True
         self.fields['am'].required = False
         self.fields['pm'].required = False

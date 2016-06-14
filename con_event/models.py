@@ -3,44 +3,43 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.db import connection as dbconnection
-#print "dbc0:", len(dbconnection.queries)
 import datetime
-from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
-#from datetime import datetime, timedelta
-#from . import signals #this file exists but it's blank bc I decided to put the signals under the models
+from django.core.urlresolvers import reverse
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT
-from django.forms.models import model_to_dict
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT_Affiliate_ID
-from django.db.models.signals import pre_save, post_save,post_delete,pre_delete,post_init,pre_init
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from con_event.signals import sched_final_cleanup,update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
-import logging
+
+#pretty sure I never use logging
+#import logging
 #Get an instance of a logger
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
+
+#from django.db import connection as dbconnection #for checking db hits and speed
+#print "dbc0:", len(dbconnection.queries) #syntax reminder, for checking db hits and speed
+
+
 
 AMPM=(('AM','AM'),('PM','PM'))
-#deleting unused locations
+
 LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'),('Off Skates Athletic Training', 'Off Skates Athletic Training'), ('Seminar/Conference Room', 'Seminar/Conference Room'))
 LOCATION_TYPE_FILTER=(('Flat Track', ['Flat Track']),('Banked Track', ['Banked Track']),('EITHER Flat or Banked Track', ['Flat Track','Banked Track']),('Off Skates Athletic Training', ['Off Skates Athletic Training']), ('Seminar/Conference Room', ['Seminar/Conference Room']))
 LOCATION_CATEGORY=(("Competition Half Length Only","Competition Half Length Only"),("Competition Any Length","Competition Any Length"),("Training","Training"),("Training or Competition","Training or Competition"),("Classroom","Classroom"))
 LOCATION_CATEGORY_FILTER=(("Competition Half Length Only",["Competition Half Length Only"]),("Competition Any Length",["Competition Any Length","Competition Half Length Only","Competition","Training or Competition"]),("Training",["Training","Training or Competition"]),("Training or Competition",["Training or Competition","Training","Competition","Competition Half Length Only","Competition Any Length"]),("Classroom",["Classroom"]))
-#all original locaiton types
-#LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'),('Off Skates Athletic Training Space', 'Off Skates Athletic Training Space'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
-#LOCATION_TYPE=(('Flat Track', 'Flat Track'),('Banked Track', 'Banked Track'),('EITHER Flat or Banked Track', 'EITHER Flat or Banked Track'), ('Any Skateable Surface', 'Any Skateable Surface'), ('Seminar/Conference Room', 'Seminar/Conference Room'),('Other', 'Other'))
+
 GENDER= (('Female', 'Female'), ('Male', 'Male'), ('NA/Coed','NA/Coed'))
 SKILL_LEVEL_SK8R= ((None,'NA'),('D', 'Rookie'), ('C', 'Beginner'),('B', 'Intermediate'), ('A', 'Advanced'))
 SKILL_LEVEL_ACT= ((None, "No skill restrictions; all levels welcome"),('ABC', 'All Contact Safe (A-C)'),('CO', 'Beginner Only- no Coed (C)'),('BC', 'Beginner/Intermediate Only (B-C)'),('BO', 'Intermediate Only (B)'),('AB', 'Intermediate / Advanced Only (A-B)'),('AO', 'Advanced Only (A)'))
 SKILL_LEVEL_TNG = tuple(list(SKILL_LEVEL_ACT[:2]) + [tuple(SKILL_LEVEL_ACT[-2])])#this weirdnes is neseccary, don't touch it
 SKILL_LEVEL_CHG = tuple([tuple(SKILL_LEVEL_ACT[0])]+list(SKILL_LEVEL_ACT[2:]))
-#SKILL_LEVEL_GAME = tuple(list(SKILL_LEVEL_ACT[2:]))
 SKILL_LEVEL_GAME = SKILL_LEVEL_CHG #I'm not whether i want this the same or not, but now i need ot keep so no import error
 SKILL_LEVEL= SKILL_LEVEL_SK8R+SKILL_LEVEL_ACT
-#INSURANCE= (('W', 'WFTDA'), ('U', 'USARS'), ('C','CRDi'),('EPA','Event Pass ALREADY purchased'),('EPW','Event Pass WILL be purchased'))
 PASS_TYPES=(('MVP', 'MVP'), ('Skater', 'Skater'), ('Offskate', 'Offskate'))
 
 #reminder: mvp can do everything, skater can do challenges and off skates trainings but no on skates trainings, and offskate is self explanatiory
 
+#These could be choices for the additional BPT questions, to analyze later, but I don't think I'll be adding that feature.
 #AGE_GROUP= (('<18', '<18'),('19-20', '19-20'),('21-30', '21-30'), ('31-40', '31-40'), ('41-50','41-50'),('50+','50+'),('NA','Not yr bizness'))
 #FAV_PART= (('1st', 'This is my first Rollercon!'),('ONSK8', 'On Skates Training'),('OFFSK8', 'Off Skates Training'), ('BCP', 'Bouts & Challenges (playing)'), ('BCW', 'Bouts & Challenges (watching)'),('SW','Seminars & Workshops'),('247P','24/7 Pool Party'),('BNB','Black n Blue & PM Social Events'),('OSS','Open Skate & Scrimmages'),('VN','Volunteering'),('VV','Vendor Village'))
 #INSURANCE= (('W', 'WFTDA'), ('U', 'USARS'), ('C','CRDi'),('EPA','Event Pass ALREADY purchased'),('EPW','Event Pass WILL be purchased'))
@@ -73,7 +72,7 @@ class ConManager(models.Manager):
 
     def upcoming_cons(self):
         '''Gets list of Cons that are coming soonest without having ended more than 7 days ago.
-        I chose 7 arbitrarily, assuming no one will be adding s more than a week after a Con,
+        I chose 7 arbitrarily, assuming no one will be adding stuff more than a week after a Con,
         but wanting to leave room to potentially prepare for more than 1 Con per year.
         Will always return a list, even if an empty one.'''
         cutoff=datetime.date.today() - datetime.timedelta(days=7)
@@ -100,7 +99,7 @@ class ConManager(models.Manager):
     def most_recent(self):
        '''Gets single most recent past Con, having ended more than 7 days ago. Dependont on/see past_cons above
        If no past Cons, returns None'''
-       ######should I consolidate most_upcoming with most_recent, or will that get confusing? or it it better to DRY it up?
+
        past=self.past_cons()
        try:
            most_recent_con=past[0]
@@ -147,14 +146,15 @@ class Con(models.Model):
             return None
 
     def schedule_final(self):
-        #I should find everywhere I put this and jusr replace it
+        #This method was written before the field was created.
+        #I should find everywhere I put this and just replace it. I don't know where all it is, don't care enough to make a mess by missing a few
         if self.sched_final:
             return True
         else:
             return False
 
     def can_submit_chlg_by_date(self):
-        """"only checks to see if there is a chalenge submission date and that date has passed.
+        """"only checks to see if there is a challenge submission date and that date has passed.
         Does not check if received too many submissions already"""
         can_submit=False
         if self.challenge_submission_start:
@@ -176,7 +176,7 @@ class Con(models.Model):
 
     def can_submit_trng_by_date(self):
         """"only checks to see if there is a training submission end date and that date has passed.
-        Does not check if received too many trainings already"""
+        Does not check if received too many trainings already (currently no such thing as too many trainings)"""
         can_submit=False
         if self.training_submission_end:
             if self.training_submission_end >= datetime.date.today():
@@ -196,6 +196,7 @@ class Con(models.Model):
         return date_list
 
     def get_locations(self):
+        """Gets all locations assosciated w/ Con. Used a lot in Calendr/scheduling"""
         from scheduler.models import Location
         venues=self.venue.all()
         locations=[]
@@ -206,8 +207,7 @@ class Con(models.Model):
         return locations
 
     def save(self, *args, **kwargs):
-        '''saves self.year as start.year, if no year already saved'''
-        #if not self.year or self.year!=self.start.year:
+
         if self.year != self.start.year:
             self.year = self.start.year
 
@@ -328,8 +328,6 @@ class Matching_Criteria(models.Model):
 
     def intl_icon(self):
         if self.intl:
-            #return "glyphicon icon-passportbig"
-            #return "glyphicon icon-plane-outline"
             return "glyphicon icon-globe-alt"
         else:
             return "glyphicon icon-universal-access"
@@ -385,10 +383,11 @@ class RegistrantManager(models.Manager):
     def eligible_sk8ers(self, roster):
         '''roster relates to training or challenge roster, this returns list of eligible registrants
         only checks gender, intll, skill and con.'''
-        already_registered=list(roster.participants.all())#this works regardless of Roste or TrainingRoster
+        already_registered=list(roster.participants.all())#this works regardless of Roster or TrainingRoster
         from scheduler.models import Challenge
         #this challenge doesn't matter if is training, will just turn up empty
         if hasattr(roster, 'captain'):
+            #makes sure people on opposing team can't be selected.
             challenge_set=list(Challenge.objects.filter(Q(roster1=roster)|Q(roster2=roster)))
             opposing_skaters=[]
             for c in challenge_set:
@@ -415,6 +414,9 @@ class Registrant(Matching_Criteria):
     pass_type=models.CharField(max_length=30, choices=PASS_TYPES, default='MVP')
     #the only 3 necessary and unique fields, besides con, which is in matching criteria
     email=models.EmailField(max_length=50)
+    #remember, email can't be unique=true across the board bc same email for same person for different cons.
+    #but it is unique for email and con.
+
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
 
@@ -456,7 +458,7 @@ class Registrant(Matching_Criteria):
         '''Returns True if  is considered INTL for supplied Con. Else, False'''
         if self.country and (self.country == con.country):
             if self.state:
-                if self.state != con.state and self.state.slugname in ["HI","AK","AP"]:#mke sure this works
+                if self.state != con.state and self.state.slugname in ["HI","AK","AP"]:
                     return True
             else:
                 return False
@@ -466,7 +468,8 @@ class Registrant(Matching_Criteria):
             return True
 
     def can_sk8(self):
-        if self.pass_type=='MVP' or self.pass_type=='Skater':
+        #if self.pass_type=='MVP' or self.pass_type=='Skater':#why did I write it this way?
+        if self.pass_type in ['MVP','Skater']:
             return True
         else:
             return False
@@ -487,75 +490,64 @@ class Registrant(Matching_Criteria):
         else:
             return False
 
-    def unaccepted_challenges(self):
-        """returns list of challenges in which registrant is listed as captain but has not accepted challenge,
-        or in which registrant is captain, has accepted challenge, but opponent has rejected.
-        either way action is require on registrant's part (either accept of find a new opponent)"""
-        from scheduler.models import Challenge
-        #print "unaccepted challenges",unaccepted_challenges
-        unaccepted_challenges=Challenge.objects.filter(Q(roster1__captain=self)|Q(roster2__captain=self)).filter(Q(captain1accepted=False)|Q(captain2accepted=False))
-        return unaccepted_challenges
 
-    def unsubmitted_challenges(self):
-        '''Returns a list of all chellenges in which Registrant is captain, but challeng has not been submitted
-        only if submission day has passed
-        don't change this without consulting notify something something in rcreg_project/custom processors.'''
-        from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
-        my_rosters=list(Roster.objects.filter(captain=self))
-        unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
-        return unsubmitted
-
-
-    def pending_challenges(self):
-        '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
-        #####AH! people weren't getting notified of challenges they were invited to, becuse weren't on the roster yet. What a dummy!!!
-        from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
-        my_rosters=list(self.roster_set.all())
-        my_cap_rosters=list(Roster.objects.filter(captain=self))
-        for r in my_cap_rosters:
-            if r not in my_rosters:
-                my_rosters.append(r)
-        pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
-        return pending
-
-    def scheduled_challenges(self):
-        '''Returns a list of all chellenges in which Registrant is on roster, and challenge is confirmed'''
-        #not written yet, currently no such thing as a scheduled challenge
-        return None
-
-    def unconfirmed_challenges(self):
-        '''Returns a list of all chellenges in which Registrant is on a roster,
-        chalenge has been submitted, but is not accepted by RC. This is wheter or not reg is a captain, captian is irrelevant'''
-        from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
-        my_rosters=list(self.roster_set.all())
-        my_cap_rosters=list(Roster.objects.filter(captain=self))
-        for r in my_cap_rosters:
-            if r not in my_rosters:
-                my_rosters.append(r)
-        #this was making challenges disappear, not ready to show whether scheduled yet.
-        #unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
-        unconfirmed=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
-        return unconfirmed
+#### unaccepted_challenges and unsubmitted_challenges appear to only be used in context processors.
+#testing idea of rewriting query there#####
+    # def unaccepted_challenges(self):
+    #     """returns list of challenges in which registrant is listed as captain but has not accepted challenge,
+    #     or in which registrant is captain, has accepted challenge, but opponent has rejected.
+    #     either way action is require on registrant's part (either accept of find a new opponent)"""
+    #     from scheduler.models import Challenge
+    #     unaccepted_challenges=Challenge.objects.filter(Q(roster1__captain=self)|Q(roster2__captain=self)).filter(Q(captain1accepted=False)|Q(captain2accepted=False))
+    #     return unaccepted_challenges
+    #
+    # def unsubmitted_challenges(self):
+    #     '''Returns a list of all chellenges in which Registrant is captain, but challeng has not been submitted
+    #     only if submission day has passed
+    #     don't change this without consulting notify something something in rcreg_project/custom processors.'''
+    #     from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
+    #     my_rosters=list(Roster.objects.filter(captain=self))
+    #     unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
+    #     return unsubmitted
+##############################
 
 
-#######I think i can just get rid of this
-    # def unconfirmed_trainings(self):
-    #     '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
-    #     matched by self.user to coach.user
-    #     This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''
-    #     from scheduler.models import Training,Coach #put here to avoid import error with Matching_Criteria
-    #     try:
-    #         coach_me=Coach.objects.get(user=user)
-    #     except:
-    #         coach_me=None
-    #     if coach_me:
-    #         #unconfirmed=list(coach_me.training_set.filter(RCaccepted=False, con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
-    #         unconfirmed=list(coach_me.training_set.filter(con=self.con))#this only returns if coach, since registraiton m2m is attached to roster object.
-    #         return unconfirmed
-    #     else:
-    #         return None
 
 
+
+############ I think I don't need these anymore?###########
+
+    # def pending_challenges(self):
+    #     '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
+    #     from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
+    #     my_rosters=list(self.roster_set.all())
+    #     my_cap_rosters=list(Roster.objects.filter(captain=self))
+    #     for r in my_cap_rosters:
+    #         if r not in my_rosters:
+    #             my_rosters.append(r)
+    #     pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
+    #     return pending
+
+    # def scheduled_challenges(self):
+    #     '''Returns a list of all chellenges in which Registrant is on roster, and challenge is confirmed'''
+    #     #not written yet, currently no such thing as a scheduled challenge
+    #     return None
+
+    # def unconfirmed_challenges(self):
+    #     '''Returns a list of all chellenges in which Registrant is on a roster,
+    #     chalenge has been submitted, but is not accepted by RC. This is wheter or not reg is a captain, captian is irrelevant'''
+    #     from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
+    #     my_rosters=list(self.roster_set.all())
+    #     my_cap_rosters=list(Roster.objects.filter(captain=self))
+    #     for r in my_cap_rosters:
+    #         if r not in my_rosters:
+    #             my_rosters.append(r)
+    #     #this was making challenges disappear, not ready to show whether scheduled yet.
+    #     #unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
+    #     unconfirmed=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
+    #     return unconfirmed
+
+############ I think I don't need these anymore?###########
 
 
     def criteria_conflict(self):
@@ -584,9 +576,9 @@ class Registrant(Matching_Criteria):
             return None,None,captain_conflict
 
     def conflict_sweep(self):
-        '''calls criteria_conflict, removes from any rosters that have conflicts,
-        including removing self as captain, making challenges unconfirmed
-        ONLY WRITTEN FOR CHALLENGE, NOT TRAINING, DO LATER'''
+        '''Calls criteria_conflict, removes from any rosters that have conflicts,
+        Doesn't let you do it if are captain.
+        ONLY WRITTEN FOR CHALLENGE, NOT TRAINING.'''
         problem_criteria,potential_conflicts,captain_conflict=self.criteria_conflict()
         if not captain_conflict:
             if potential_conflicts:
@@ -648,7 +640,7 @@ class Registrant(Matching_Criteria):
         return reg_os
 
     def is_occupied(self,pending_o):
-        """Takes in pending occurrence, checks to see if it ocnflicts w/ anything skater is doing at moment"""
+        """Takes in pending occurrence, checks to see if it conflicts w/ anything skater is doing at moment"""
         from swingtime.models import Occurrence #need here in case of import error?
         from scheduler.models import Challenge, Training,Coach
         sk8er_ros=self.roster_set.all()
@@ -667,7 +659,7 @@ class Registrant(Matching_Criteria):
             return False
 
     def is_occupied_coaching(self,pending_o):
-        """Takes in pending occurrence, checks to see if it ocnflicts w/ anything skater is doing at moment"""
+        """Same as is_occupied, but only cares if they are coaching at that moment. Challenges aren't looked for."""
         from swingtime.models import Occurrence #need here in case of import error?
         from scheduler.models import Challenge, Training,Coach
         sk8er_ros=self.roster_set.all()
@@ -716,15 +708,13 @@ class Registrant(Matching_Criteria):
 
     def get_my_schedule_url(self):
         """Used for bosses to check someone's schedule
-        at point of writing i dont know where to link ot this, just thought i might as well add it"""
+        at point of writing I dont know where to link ot this, just thought I might as well add it"""
         from scheduler.views import my_schedule
         url = "%s?registrant=%s" % (reverse('scheduler.views.my_schedule'),self.pk)
         return url
 
     def save(self, *args, **kwargs):
-        '''custom functions: removes non-ascii chars and punctuation from names
-        makes most_upcoming con the con, if none supplied
-        if no user, finds user with same email and matches, or creates one'''
+
         string_fields=['first_name','last_name','sk8name','sk8number','BPT_Ticket_ID','affiliation','ins_carrier','ins_number','age_group','favorite_part','volunteer']
         for item in string_fields:
             att_unclean=getattr(self, item)
@@ -757,8 +747,10 @@ class Registrant(Matching_Criteria):
         unique_together = (('con','email'),('con','user'),('con','last_name','first_name','sk8name'))
 
 pre_save.connect(clean_registrant_import, sender=Registrant)
-post_save.connect(update_user_fl_name, sender=Registrant)
+#shouldn't match_user be a pre-save?
 post_save.connect(match_user, sender=Registrant)
+
+post_save.connect(update_user_fl_name, sender=Registrant)
 post_save.connect(sync_reg_permissions, sender=Registrant)
 pre_delete.connect(delete_homeless_user, sender=Registrant)
 
@@ -781,7 +773,7 @@ class Blog(models.Model):
         return self.slugname
 
     def get_next_and_previous(self):
-        #http://stackoverflow.com/questions/1931008/is-there-a-clever-way-to-get-the-previous-next-item-using-the-django-orm
+
         try:
             next_blog=self.get_next_by_date()
         except:
@@ -793,9 +785,6 @@ class Blog(models.Model):
         return next_blog,previous_blog
 
     def save(self, *args, **kwargs):
-        '''custom functions: removes non-ascii chars and punctuation from names
-        makes most_upcoming con the con, if none supplied
-        if no user, finds user with same email and matches, or creates one'''
         string_fields=['headline']
         for item in string_fields:
             att_unclean=getattr(self, item)

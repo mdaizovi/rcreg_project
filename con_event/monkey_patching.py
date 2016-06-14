@@ -4,8 +4,14 @@ from django.core.urlresolvers import reverse
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models import Q
 
+
+"""This whole file is methods I've added to the User class.
+I know that monkey patching is frowned upon,
+but these methods are peppered all over the views, templates, etc, so changing them is ill-advised.
+Sometimes models are imported in method to avoid import error."""
+
+
 def is_a_boss(self):
-    #if self in list(User.objects.filter(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME])):
     if self in list(User.objects.filter(Q(is_staff=True)|Q(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))):
         return True
     else:
@@ -45,11 +51,8 @@ def can_edit_score(self):
         return False
 
 def registrants(self):
-    #Import Registrant here because otherwise it imports too before apps are declared in settings
-    #and it throws a long mess of bullshit:
-    #http://stackoverflow.com/questions/29635765/django-1-9-deprecation-warnings-app-label
     from con_event.models import Registrant
-    ############
+
     try:
         registrant_list= list(self.registrant_set.all())
     except:
@@ -82,11 +85,8 @@ def all_cons(self):
 
 
 def upcoming_registrants(self):
-    #Import Registrant here because otherwise it imports too before apps are declared in settings
-    #and it throws a long mess of bullshit:
-    #http://stackoverflow.com/questions/29635765/django-1-9-deprecation-warnings-app-label
     from con_event.models import Registrant,Con
-    ############
+
     cons=Con.objects.upcoming_cons()
     reglist=list(Registrant.objects.filter(user=self, con__in=cons))
     if len(reglist)>0:
@@ -108,11 +108,9 @@ def upcoming_cons(self):
         return None
 
 def get_most_recent_registrant(self):
-    #Import Registrant here because otherwise it imports too before apps are declared in settings
-    #and it throws a long mess of bullshit:
-    #http://stackoverflow.com/questions/29635765/django-1-9-deprecation-warnings-app-label
+
     from con_event.models import Registrant
-    ############
+
     most_recent_user=None
     reglist=list(Registrant.objects.filter(user=self).order_by("-con"))
     if len(reglist)>0:
@@ -120,11 +118,8 @@ def get_most_recent_registrant(self):
     return most_recent_user
 
 def get_registrant_for_most_upcoming_con(self):
-    #Import Registrant & Con here because otherwise it imports too before apps are declared in settings
-    #and it throws a long mess of bullshit:
-    #http://stackoverflow.com/questions/29635765/django-1-9-deprecation-warnings-app-label
     from con_event.models import Registrant,Con
-    ############ maybe I don't need to import at all, will be imported by time I call function?
+
     con=Con.objects.most_upcoming()
     try:
         relevant_user=Registrant.objects.get(user=self, con=con)

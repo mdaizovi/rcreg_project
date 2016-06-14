@@ -41,7 +41,6 @@ def update_user_fl_name(sender, instance,**kwargs):
     if instance.user:#people w/ no email addresses might not have a user
         if (instance.sk8name and instance.sk8number):
             if((instance.user.first_name !=instance.sk8name) or (instance.user.last_name !=instance.sk8number)):
-                #print "first part true"
                 if instance.user.first_name !=instance.sk8name:
                     instance.user.first_name =instance.sk8name
                 if instance.user.last_name !=instance.sk8number:
@@ -49,7 +48,6 @@ def update_user_fl_name(sender, instance,**kwargs):
                 instance.user.save()
         elif (instance.first_name and instance.last_name):
             if ((instance.user.first_name !=instance.first_name) or (instance.user.last_name !=instance.last_name )):
-                #print "scond part true"
                 if instance.user.first_name !=instance.first_name:
                     instance.user.first_name =instance.first_name
                 if instance.user.last_name !=instance.last_name:
@@ -61,17 +59,15 @@ def delete_homeless_user(sender, instance,**kwargs):
     '''before deleting a registrant, removes user if deleting reg will mean user no longer has any registrants,
     If they're not staff. I added that just in case to make sure I never accidentally delete RollerTron.
     REMEMBER never delete all homeless Users, because that will delete SuperUser RollerTron'''
-    print "starting delete_homeless_user"
     if instance.user:#people w/ no email addresses might not have a user
         if len(instance.user.registrant_set.all()) <= 1 and not instance.user.is_staff and not instance.user.is_superuser:
             print "would delete ",instance.user," here, but temporarily suspended delete_homeless_user"
-            pass
-            #print "about to delete",instance.user
             #instance.user.delete()
 
 def clean_registrant_import(sender, instance,**kwargs):
     """hard-coding of expected format of importing an excel sheet of Registrant data from BPT, and saving it in a format that suits my models
-    Fields that I haven't cleaned because I think are fine as-is: email, first_name,last_name,sk8name,sk8number"""
+    Fields that I haven't cleaned because I think are fine as-is: email, first_name,last_name,sk8name,sk8number
+    This will probably never get used anymore since I made the Easier BPT Upload, but I guess no sense in deleting it."""
 
     model_dict=model_to_dict(instance)
     for k,v in model_dict.iteritems():
@@ -82,19 +78,17 @@ def clean_registrant_import(sender, instance,**kwargs):
                 clean_value=clean_value[:100]
             setattr(instance, k, clean_value)
 
-    #print instance.sk8name,instance.first_name, instance.last_name,instance.email
     pass_split=str(instance.pass_type).split()
-    #print "pass_split",pass_split
+
     if set(["Not","Skating","NA","na","N/A",None,0,"0","Off","Offskate"]).intersection(pass_split):
         instance.pass_type ="Offskate"
     elif set(["Skater","SKATER","Sk8er","On SK8s","SK8s"]).intersection(pass_split):
         instance.pass_type ="Skater"
     else:
         instance.pass_type ="MVP"
-    #print "instance.pass_type",instance.pass_type
 
     skill_split=str(instance.skill).split()
-    #print "skill_split",skill_split
+
     if set(["Advanced","ADVANCED", "advanced","A"]).intersection(skill_split):
         instance.skill ="A"
     elif set(["Beginner","BEGINNER","beginner","C"]).intersection(skill_split):
@@ -105,17 +99,15 @@ def clean_registrant_import(sender, instance,**kwargs):
         instance.skill ="D"
     else:
         instance.skill = None
-    #print "instance.skill",instance.skill
 
     gender_split=str(instance.gender).split()
-    #print "gender_split",gender_split
+
     if set(["Female","FEMALE","female"]).intersection(gender_split):
         instance.gender='Female'
     elif set(["Male","MALE","male"]).intersection(gender_split):
         instance.gender='Male'
     else:
         instance.gender='NA/Coed'
-    #print "instance.gender",instance.gender
 
 
 def match_user(sender, instance,**kwargs):
@@ -151,11 +143,12 @@ def match_user(sender, instance,**kwargs):
 
 
 def sync_reg_permissions(sender, instance,**kwargs):
-    """Checks to see if user is in custom BIG_BOSS_GROUP_NAME/LOWER_BOSS_GROUP_NAME permission groups,
+    """post_save Registrant.
+    Checks to see if user is in custom BIG_BOSS_GROUP_NAME/LOWER_BOSS_GROUP_NAME permission groups,
     if so, gives staff/superuser permissions.
     I used to have:
         If have permissions but not in groups, removes permissions.
-    but commented out because I think Ivann might start giving permissions piecemeal"""
+    but commented out because I think Ivanna might start giving permissions piecemeal"""
 
     user=instance.user
     groups=user.groups.all()

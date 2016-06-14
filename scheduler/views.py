@@ -37,7 +37,8 @@ no_list=["",u'',None,"None"]
 @login_required
 def my_schedule(request):
     """Used for Registrants to see My Schedule.
-    If reg_id is provided and User is a boss, can also be hijacked to see other people's schedules"""
+    If registrant or user in get and User is a boss, can also be hijacked to see other people's schedules.
+    If not the boss, ignores and shows you your own."""
     user=request.user
     most_upcoming=Con.objects.most_upcoming()
     registrant_dict_list=[]
@@ -408,7 +409,7 @@ def my_trainings(request):
             my_trains=coach.training_set.filter(con=registrant.con)
         else:
             my_trains=None
-        #later I'll need to write logic/liks for giving feedback if you're not the coach.
+
         registrant_dict={'con':registrant.con, 'registrant':registrant, 'my_trains':my_trains}
         registrant_dict_list.append(registrant_dict)
 
@@ -533,8 +534,6 @@ def propose_new_training(request):
     most_upcoming_con=Con.objects.most_upcoming()
 
     if request.method == "POST":
-        #selection = request.POST.copy()
-        #print "selection", selection
 
         if 'duration' in request.POST:
             training_made=Training.objects.get(pk=request.POST['training_id'])
@@ -563,16 +562,6 @@ def propose_new_training(request):
                 #you need to commit false on registered because a roster with no connections,captain, or name will be deleted in a post save signal
                 #then connect training to registered/auditing. then save all.
                 training_made=trainingmodelform.save()
-                ###########redo, or delete, or whatever###############
-                # registered_made.con=training_made.con
-                # registered_made.gender='NA/Coed'
-                # auditing_made=Roster(gender='NA/Coed',skill=None,intl=False,con=training_made.con)
-                # registered_made.registered=training_made
-                # auditing_made.auditing=training_made
-                # auditing_made.save()
-                # registered_made.save()#then save to the relationship is kept.
-                # auditing_made.save()
-                #################redo, or delete, or whatever#########
                 coach, c_create=Coach.objects.get_or_create(user=user)
                 if c_create:
                     coach.save()
@@ -1055,12 +1044,11 @@ def my_challenges(request):
     registrant_dict_list=[]
 
     for registrant in registrant_list:
-        # pending=list(registrant.pending_challenges())
-        # scheduled=registrant.scheduled_challenges()
-        # unconfirmed=registrant.unconfirmed_challenges()
-        pending=None
-        scheduled=None
-        unconfirmed=None
+        #i think this is legacy, don't think I use them anymore
+        # pending=None
+        # scheduled=None
+        # unconfirmed=None
+        #####end suspected legacy
 
         my_rosters=list(registrant.roster_set.all())
         my_chals=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)|Q(roster1__captain=registrant)|Q(roster2__captain=registrant)))
@@ -1075,7 +1063,8 @@ def my_challenges(request):
             cap_exceeded=False
         chals_submitted=[c for c in chals_cap if c.submitted_on]
 
-        registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
+        #registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
+        registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant,}
         registrant_dict_list.append(registrant_dict)
 
     upcoming_registrants=user.upcoming_registrants()

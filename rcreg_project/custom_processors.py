@@ -1,11 +1,11 @@
 #custom_processors.py
 from rcreg_project.settings import CUSTOM_SITE_ADMIN_EMAIL, RC_GENERAL_ADMIN_EMAIL
-#from django.conf import settings#this is for time zone?
-
+from django.db.models import Q
 
 def all_challenge_notifications(request):
     """If User has unaccepted or unsubmitted challenges, notified.
-    Recently modified to not notify if submission window is closed due to too many challenges"""
+    Recently modified to not notify if submission window is closed due to too many challenges
+    Considering moving unaccepted_challenges and unsubmitted_challenges logic from model method to here, bc think this is only place it's used"""
     from django.conf import settings#this is for time zone?
     from scheduler.models import Challenge
     user=request.user
@@ -16,10 +16,21 @@ def all_challenge_notifications(request):
         try:
             registrant_upcoming_con=user.get_registrant_for_most_upcoming_con()
             if not Challenge.objects.submission_full(registrant_upcoming_con.con):
-                NOTIFY_UNACCEPTED_CHALLENGES=len(list(registrant_upcoming_con.unaccepted_challenges()))
+            #### unaccepted_challenges and unsubmitted_challenges appear to only be used in context processors.
+            #testing idea of rewriting query here#####
+            #
+            #     NOTIFY_UNACCEPTED_CHALLENGES=len(list(registrant_upcoming_con.unaccepted_challenges()))
+            #     con=registrant_upcoming_con.con
+            #     if con.can_submit_chlg():
+            #         NOTIFY_PENDING_CHALLENGES=len(registrant_upcoming_con.unsubmitted_challenges())
+
                 con=registrant_upcoming_con.con
                 if con.can_submit_chlg():
-                    NOTIFY_PENDING_CHALLENGES=len(registrant_upcoming_con.unsubmitted_challenges())
+                    my_rosters=list(Roster.objects.filter(captain=registrant_upcoming_con))
+                    NOTIFY_PENDING_CHALLENGES=len(list( Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None) ))
+
+                NOTIFY_UNACCEPTED_CHALLENGES=len(list( Challenge.objects.filter(Q(roster1__captain=registrant_upcoming_con)|Q(roster2__captain=registrant_upcoming_con)).filter(Q(captain1accepted=False)|Q(captain2accepted=False)) ))
+
         except:
             pass
     if NOTIFY_PENDING_CHALLENGES:
@@ -44,6 +55,8 @@ def get_upcoming_con_context(request):
     return {'up_con_year':upcoming_con_context.start.year,'up_con_month':upcoming_con_context.start.month}
 
 def upcoming_days(request):
+    ###I have no idea where I use this. Maybe I intended to and forgot of maybe it's buried somewhere.
+    #Maybe it's used in the swingtime/calendar?
     from con_event.models import Con
     upcoming=Con.objects.most_upcoming()
     upcoming_days=upcoming.get_date_range()

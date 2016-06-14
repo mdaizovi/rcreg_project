@@ -1,31 +1,29 @@
-from django.shortcuts import render,render_to_response, redirect
+from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
-from django.db import connection as dbconnection
-#print "dbc0:", len(dbconnection.queries)
 from con_event.forms import RegistrantProfileForm,AvailabilityForm
 from con_event.BPTExcel import BPTUploadForm
 from con_event.models import Blog, Con, Registrant,Blackout
-import collections
 import datetime
-from openpyxl import Workbook
 from swingtime.models import Occurrence
+#from openpyxl import Workbook #I thought I needed for upload_reg, doesn't seem to be needed here
+#from django.db import connection as dbconnection #for checking db hits and speed
+#print "dbc0:", len(dbconnection.queries) #syntax reminder, for checking db hits and speed 
 
 @login_required
 def upload_reg(request):
+    """Easy upload for uplaoding an Excel sheet into DB.
+    Excel sheet must be XLSX and look exactly like BPT reports did in 2016, otherwise file will be rejected.
+    """
     save_attempt=False
     save_success=False
     reg_added=[]
     if request.method == 'POST':
         form=BPTUploadForm(request.POST, request.FILES)
-        #print request.POST
         save_attempt=True
-        if form.my_valid():
-            print"view my valid"
-            if form.is_valid():
-                #don't touch the my valid/is valid, it has to be that way
-                print"view is valid"
+        if form.my_valid():#don't touch the my valid/is valid, it has to be that way
+            if form.is_valid():#don't touch the my valid/is valid, it has to be that way
                 wb=form.make_registrants()
                 save_success=True
                 filename='RollerTron Upload %s.xlsx'%(datetime.date.today().strftime("%B %d %Y"))
@@ -43,14 +41,16 @@ def upload_reg(request):
 
 def CheapAirDynamic(request):
     '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
-    i think it's their fault, not mine, though'''
+    I think it's their fault, not mine, though'''
     most_upcoming=Con.objects.most_upcoming()
     return render_to_response('CheapAirDynamic.html', {'most_upcoming':most_upcoming},context_instance=RequestContext(request))
+
 
 def index(request):
     most_upcoming=Con.objects.most_upcoming()
     blog=Blog.objects.latest('date')
     return render_to_response('index.html', {'most_upcoming':most_upcoming,'blog':blog},context_instance=RequestContext(request))
+
 
 @login_required
 def WTFAQ(request):
@@ -63,16 +63,18 @@ def announcement(request, slugname):
     next_blog,previous_blog=blog.get_next_and_previous()
     return render_to_response('announcement.html', {'previous_blog':previous_blog,'next_blog':next_blog,'blog':blog},context_instance=RequestContext(request))
 
+
 def all_announcements(request):
     return render_to_response('all_announcements.html', {'blogs':Blog.objects.all()},context_instance=RequestContext(request))
 
+
 @login_required
 def registrant_profile(request):
-    '''Thie view feels dicey. It gets all registrants for user and displays them. Only the first in th list,
+    '''Gets all registrants for user and displays them. Only the first in the list,
     presumably most recent, is editable--all others are disabled.
-    You can modify and change data and presumable only the most recent Registrant will be saved, but it feels like this
-    is precarious and could massively fuck up someday.
-    form.media relates to the datetime widget. I don't now why it only works on the first tab, but I made all others disbled anyway, so no problem?
+    You can modify and change data and presumable only the most recent Registrant will be saved.
+    If Users ever need to be able to edit 2 Registrants at once, like for overlapping Cons, it will need to be rewritten.
+    form.media relates to the datetime widget. I don't know why it only works on the first tab, but I made all others disbled anyway, so no problem?
     '''
     save_attempt=False
     save_success=False
@@ -83,15 +85,8 @@ def registrant_profile(request):
     problem_criteria=None
     potential_conflicts=None
     captain_conflict=None
-    selection=None
-
 
     if request.method == 'POST':
-        selection = request.POST.copy()
-        #print "selection", selection
-        #selectiondict=dict(selection.lists())
-        #print "selectiondict: ",selectiondict
-
         save_attempt=True
         this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
         this_con=this_reg.con
@@ -109,7 +104,9 @@ def registrant_profile(request):
             this_reg.sk8number=request.POST['sk8number']
         problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
 
-        if 'blackouts_visible' in request.POST:#I was accidentaly saving blackout unavailable days for people who didn't even see them! shit!
+        if 'blackouts_visible' in request.POST:
+            # # 'blackouts_visible' in request.POST  is important because no avilability check means a Blackout is made.
+            # If there's no check (because no form) a blckout will be made, and then you have thousands of Blacouts for people who didn't even know, didn't even see the form.
             bo_tup_list=[]
             available=[]
             for key, value in request.POST.items():
@@ -120,7 +117,7 @@ def registrant_profile(request):
                 ampmlist=[]
                 if str(date)+"-am" not in available:
                     #If it's not checked that means a Blackout needs to be made.
-                    #If it's checked, that day is available, don't want a blakcout for that day.
+                    #If it's checked, that day is available, don't want a blackout for that day.
                     bo_tup_list.append((date,"AM"))
                 if str(date)+"-pm" not in available:
                     bo_tup_list.append((date,"PM"))
@@ -135,7 +132,6 @@ def registrant_profile(request):
                         save_success=True
                 else:
                     hidden_forms=[RegistrantProfileForm(request.POST or None, instance=this_reg)]
-                    #hidden_form=RegistrantProfileForm(request.POST or None, instance=this_reg)
                     return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_forms':hidden_forms,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
 
             else:#if no problem criteria
@@ -149,9 +145,9 @@ def registrant_profile(request):
         datelist=None
         form = RegistrantProfileForm(instance=registrant)
 
-        #maybe i should only run this is con hasn't happened yet?
+        #only runs if con hasn't happened yet, since blackouts are used for scheduling. Could also be disabled after schedule is final, I suppose.
         if (registrant.con.start > datetime.date.today()):
-            if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):
+            if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):#only collect blackouts for coaches and captains, not every registrant
                 datelist=registrant.con.get_date_range()
                 for bo in registrant.blackout.all():
                     bo_list.append((bo.date,bo.ampm))
@@ -183,24 +179,23 @@ def registrant_profile(request):
         except:
             active=None
 
-
     return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
 
 @login_required
 def know_thyself(request, con_id=None):
-    #https://media.giphy.com/media/7WsCPB5iNzDwI/giphy.gif
+    """Some basic Con analytics.
+    Hideous long code in the view because this is the one and only time this data is ever necessary,
+    no reason to write methods over it.
+    It's hard to read to cut down on DB hits; my apologies."""
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
         except:
             return render_to_response('know_thyself.html', {},context_instance=RequestContext(request))
     else:
-        #con=Con.objects.most_recent()
         con=Con.objects.most_upcoming()
-    #print "dbc0:", len(dbconnection.queries)
-    #all_r=list(Registrant.objects.filter(con=con)) #800 db hits
-    #all_r=list(Registrant.objects.filter(con=con).select_related('user')) #400 db hits
+
     all_r=list(Registrant.objects.filter(con=con).select_related('country').select_related('state').select_related('user').prefetch_related('user__registrant_set')) #6 db hits!
 
     mvp_pass=[]
