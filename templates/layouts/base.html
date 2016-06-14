@@ -113,16 +113,17 @@ example syntax for use, if name is skate2
         </ul>
         {%endif%}
 
+  {% if user.is_a_boss %}
         <ul class="nav nav-sidebar">
-          {% if user.is_a_boss %}
           <li><a href="{%url 'admin:index' %}"><b>Admin</b></a></li>
-          {% if user.is_the_boss %}
           <li><a href="{% url 'upload_reg' %}">Registrant Upload</a></li>
+          {% if user.is_the_boss %}
           <li><a href="{%url 'calendar_home' %}">Calendar</a></li>
            <li><a href="{%url 'know_thyself' %}">Know Thyself</a></li>
           {%endif%}<!-- end if THE boss -->
-            <li><a href="{%url 'WTFAQ' %}">What the FAQ?!?</a></li>{%endif%}<!-- end if A boss -->
+            <li><a href="{%url 'WTFAQ' %}">What the FAQ?!?</a></li>
         </ul>
+    {%endif%}<!-- end if A boss -->
 
         <ul class="nav nav-sidebar">
           <li><a href="{% url 'challenges_home' %}"><b>Competition Home</b></a></li>
