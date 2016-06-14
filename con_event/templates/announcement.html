@@ -4,11 +4,7 @@
   <link href="{% static "css/blog.css" %}" rel="stylesheet">
 {% load i18n %}
 
-
   {% block blogcontent %}
-
-
-
         <div class="blog-post">
           <h1 class="blog-post-title">{{blog.headline}}</h1>
           <p class="blog-post-meta">{{blog.date}} by {{blog.user.first_name}}</p>

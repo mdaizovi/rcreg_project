@@ -39,9 +39,9 @@
     <div class="alert alert-success" role="alert">{{this_reg.con}} Profile Successfully Updated!
     {%elif captain_conflict%}
       <div class="alert alert-danger" role="alert">Selecting this criteria for
-        {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
+        {% for criteria in problem_criteria %}{%if not forloop.first %} and {%endif%}<b>{{criteria}}</b>{%endfor%}
         would make you ineligible for
-        {% for conflict in potential_conflicts %}{%if not forloop.first %} and{%endif%}<b>{{conflict }}</b>{%endfor%}. Changes not made.
+        {% for conflict in potential_conflicts %}{%if not forloop.first %} and {%endif%}<b>{{conflict.name }}</b>{%endfor%}. Changes not made.
     {%elif problem_criteria and potential_conflicts %}
         <div class="alert alert-danger" role="alert">You have been removed from {%for roster in potential_conflicts %}{%if not forloop.first %} and{%endif%} <b>{{roster.name}}</b>{%endfor%}
            because changing your {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}{{criteria}}{%endfor%} made you ineligible.
@@ -132,6 +132,4 @@
 </div><!-- end row-->
 
 
- <!--I don't think I need this script-->
-<!--<script src="{% static "js/offcanvas.js" %}" ></script> -->
 {% endblock %}
