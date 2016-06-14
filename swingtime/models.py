@@ -539,7 +539,7 @@ class Occurrence(models.Model):
     event = models.ForeignKey(Event, verbose_name=_('event'),null=True, blank=True,on_delete=models.SET_NULL)
     #Why did i say null=true for locaiton? prob so occurrance doesn't get deleted if locaiton does
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
-    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING)
+    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING, default=3)
 
     training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
     challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)

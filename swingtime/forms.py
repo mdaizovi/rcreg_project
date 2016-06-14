@@ -453,7 +453,8 @@ class SingleOccurrenceForm(forms.ModelForm):
 
         self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
         self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
-        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
+        #self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
+        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest', initial=self.instance.interest or 3)
         try:
             con=Con.objects.get(start__lte=date, end__gte=date)
             cs=Challenge.objects.filter(con=con,RCaccepted=True)

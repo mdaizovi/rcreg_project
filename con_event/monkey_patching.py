@@ -13,7 +13,7 @@ Sometimes models are imported in method to avoid import error."""
 
 def is_a_boss(self):
     #if self in list(User.objects.filter(Q(is_staff=True)|Q(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))):
-    #raising the bar for what it means to be a boss, seeing if that causes problems.
+    #raising the bar for what it means to be a boss, commenting for now to see if that causes problems.
     if self in list(User.objects.filter(Q(is_superuser=True)|Q(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))):
         return True
     else:
