@@ -31,6 +31,7 @@
 <li><a href="#howchangename">What do I need to know about changing someone's name?</a></li>
 <li><a href="#howINTLREG">How do I make a Registrant INTL?</a></li>
 <li><a href="#howINTLTR">How do I make a Training INTL?</a></li>
+<li><a href="#howRegTr">How do I sign people up for Training classes?</a></li>
 <li><a href="#INTLCAP">What's the deal with signing people up for INTL classes? The numbers are weird.</a></li>
 <li><a href="#hownewattendee">How do I input new Registrants (Attendees)?</a></li>
 <li><a href="#howdloccur">Is there a way to get an excel version of the schedule now with details like the one we used to download from Google?</a></li>
@@ -72,6 +73,9 @@ It would be possible to manually connect registrants with different email addres
     <li><b>year</b> (Year of Con. It takes this from the start date)</li>
     <li><b>challenge_submission_start</b> (1st day of month, 4 months prior to Con. A Con that starts in July will always have a Challenge Submission Date of March 1)</li>
     <li><b>training_submission_end</b> (15th day of month, 2 months prior to Con. A Con that starts in July will always have a Training Submission End Date of May 15)</li>
+    <li><b>hoursb4signup</b> (default is 2) This is how many hours before a Training's start that MVPs can be registered for it by a Volunteer.</li>
+    <li><b>morning_class_cutoff</b> (default is 9:30am) If a Training is scheduled to happen before this time, a Volunteer can register people for it the day before the Training is scheduled.</li>
+    <li><b>dayb4signup_start</b> (default is 9:30pm) This is the <i>time</i> a Volunteer can start registering people for tomorrow's early morning class.</li>
     <li><b>hotel_book_link</b> For the home landing page. Always <a href="http://rollercon.com/register/hotel-reservations/">http://rollercon.com/register/hotel-reservations/</a> unless otherwise specified </li>
     <li><b>ticket_link</b> For the home landing page. Always <a href="http://rollercon.com/register/rollercon-pass/">http://rollercon.com/register/rollercon-pass/</a> unless otherwise specified </li>
 </ul>
@@ -169,6 +173,27 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
   You still need to be INTL to be signed up for the INTL Registration TrainingRoster, but anyone can sign up for the Auditing TrainingRoster, and that's the roster of people that may or may not be allowed to skate during the training, if the Coach allows.<br>
   So that's why the numbers are weird, because the Auditing Capacity is actually:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
 </p>
+<p>&nbsp;</p><hr>
+
+<span class="anchor" id="howRegTr"></span>
+<p><b>How do I sign people up for Training classes?</b></p>
+<p>
+  When the schedule is marked visible anyone (whether logged in or not) can access Trainings from the <a href="/scheduler/trainings/">main Training home page</a>.<br>
+Find the right Training and follow link to its page. There's a lot of magic embedded everywhere that you only see if you're the right person supposed to see it. Basically:
+<ul>
+  <li>Everyone can see the basic training info (coach, description, skill, etc)</li>
+  <li>If the schedule for that Con is Visible and the Training is scheduled (has an Occurrence object) it will say where/when, and under the Scheduled Session header, each Occurrence has a dropdwon with the option: See Session Roster.
+    Otherwise, it says that this event is not scheduled or the schedule is not available.</li>
+  <li> If the User is logged in and is the Coach of the Training or is a Khaleesi or Blood Rider, they can see a green "Edit Training" button.
+  <li>If the User is logged in and is a Volunteer or a Khaleesi or Blood Rider, if they click on the dropdown and assosciated with the Occurrance (the thing that says when/where it'll be)
+    and in addition to "See Session Roster" they will see "Register MVPs". If it's too early (as dictated by the 3 fields set in the Con: (hoursb4signup, morning_class_cutoff, and dayb4signup_start)
+    following that link will just tell them to come back when it's the right time.
+    A Khaleesi or Blood Rider can register people at any time, but their names will only be visible on the Training page after the registration window is open.</li>
+  </ul>
+The Registration/Audit buttons work exactly like signing people up for Challenges-- you can only find the skater if they're in the system and eligible by skill and pass.
+</p>
+
+
 <p>&nbsp;</p><hr>
 
 
