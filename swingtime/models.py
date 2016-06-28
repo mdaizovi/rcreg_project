@@ -836,9 +836,7 @@ class TrainingRoster(models.Model):
 
     #Reminder: can have 1 of these but not both.
       #why did i decide to do it this way, instead of occurrence linking to TrainingRoster?
-      #maybe so i don't bog down every nn-training occurrence w/2 empty fields.
-      #i hope i can make this, then delete all training/auditings, then change the related name w/out o so I don't have to change any code.
-      #oh wait the change is that now occurrence has a registered or auditing, not training
+      #maybe so i don't bog down every non-training occurrence w/2 empty fields.
     registered=models.OneToOneField("Occurrence", null=True,blank=True,related_name="registered")
     auditing=models.OneToOneField("Occurrence", null=True,blank=True,related_name="auditing")
 

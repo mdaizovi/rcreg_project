@@ -128,6 +128,7 @@ class TrainingRosterAdmin(admin.ModelAdmin):#No import/export
     search_fields = ('registered__training__name','auditing__training__name')
     fields = (('intl','cap'),'participants',('registered','auditing'))
     view_on_site = False
+    filter_horizontal = ('participants',)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         try:#So will still work when making a new one
