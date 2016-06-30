@@ -109,7 +109,8 @@ example syntax for use, if name is skate2
               <span class="badge tooltip-bottom" style="background-color:red;"title="You have {{ALL_CHALLENGE_NOTIFY}} competitive issue{{ ALL_CHALLENGE_NOTIFY|pluralize }} to attend to">
                 {{ALL_CHALLENGE_NOTIFY }}</span>{%endif%}
             </a></li>
-          <li><a href="{% url 'my_trainings' %}">My Trainings</li>
+          <li><a href="{% url 'my_trainings' %}">My Trainings</a></li>
+          <li><a href="{% url 'my_schedule' %}">My Schedule</a></li>
         </ul>
         {%endif%}
 

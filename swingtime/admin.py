@@ -56,7 +56,6 @@ class OccurrenceResource(resources.ModelResource):
         if activity and activity.is_a_training():
             desc+=activity.name
             if hasattr(occurrence,'registered') or hasattr(occurrence,'auditing'):
-                print "%s has reg or aud"%(str(occurrence))
                 if occurrence.registered.intl or occurrence.auditing.intl:
                     desc+=" INTL "
             if activity.onsk8s:
