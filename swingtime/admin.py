@@ -85,7 +85,7 @@ class OccurrenceResource(resources.ModelResource):
             return ""
 
     def dehydrate_day(self,occurrence):
-        fmt=occurrence.start_time.date().strftime("%m-%d-%Y")
+        fmt=occurrence.start_time.date().strftime("%m/%d/%Y")
         return fmt
 
     def dehydrate_start(self,occurrence):
