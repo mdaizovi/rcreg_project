@@ -59,10 +59,11 @@ class OccurrenceResource(resources.ModelResource):
                 print "%s has reg or aud"%(str(occurrence))
                 if occurrence.registered.intl or occurrence.auditing.intl:
                     desc+=" INTL "
-            desc+="( %s ["%(activity.skill_display())
-            if not activity.contact:
-                desc+="NO "
-            desc+="Contact])"
+            if activity.onsk8s:
+                desc+=" ( %s ["%(activity.skill_display())
+                if not activity.contact:
+                    desc+="NO "
+                desc+="Contact])"
         elif activity and activity.is_a_challenge():
             desc+=activity.name
             desc+=" [%s]"%(activity.skill_display())
