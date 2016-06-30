@@ -66,9 +66,7 @@ class OccurrenceResource(resources.ModelResource):
         desc=""
 
         if activity:
-            skill_text=activity.skill_display()
-            if ("ABCD" in skill_text) or (skill_text=="ABCD"):
-                skill_text.replace("ABCD", "ALL")
+            skill_text=activity.skill_display().replace("ABCD", "ALL")
 
             if activity.is_a_training():
                 desc+=activity.name
@@ -80,19 +78,9 @@ class OccurrenceResource(resources.ModelResource):
                     if not activity.contact:
                         desc+=" [NO Contact]"
                     desc+=")"
+
             elif activity.is_a_challenge():
-
-                gender_display=activity.gender_display()
-                # if "&" in gender_display:
-                #     gen_list=gender_display.split()
-                #     print gen_list
-                #     gender_display=gen_list[0][0]+" & "+gen_list[2][0]
-                # else:
-                #     gender_display=gender_display[0]
-
-                if "NA/Coed" in gender_display:
-                    gender_display.replace("NA/Coed", "Co-ed")
-
+                gender_display=activity.gender_display().replace("NA/Coed", "Co-ed")
                 desc+="%s (%s [%s])"%(activity.name,skill_text,gender_display)
 
         return desc
