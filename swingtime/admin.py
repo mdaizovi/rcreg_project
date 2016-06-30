@@ -47,25 +47,54 @@ class OccurrenceResource(resources.ModelResource):
     figureheads=fields.Field()
     description=fields.Field()
     name_with_data=fields.Field()
+    gcal_location=fields.Field()
+
+    def dehydrate_gcal_location(self,occurrence):
+        activity=occurrence.get_activity()
+        loc=""
+        if activity and activity.is_a_training():
+            loc=activity.display_coach_names()
+        elif activity and activity.is_a_challenge():
+            loc=occurrence.location.name
+            #loc=occurrence.location.abbrv #don't know wich one they want
+        return loc
+
 
     def dehydrate_name_with_data(self,occurrence):
-        #chal has name plus skill
-        #training has name, coach,
+        #Big mess to make it look how they want so they ca import to gcal
         activity=occurrence.activity
         desc=""
-        if activity and activity.is_a_training():
-            desc+=activity.name
-            if hasattr(occurrence,'registered') or hasattr(occurrence,'auditing'):
-                if occurrence.registered.intl or occurrence.auditing.intl:
-                    desc+=" INTL "
-            if activity.onsk8s:
-                desc+=" (%s ["%(activity.skill_display())
-                if not activity.contact:
-                    desc+="NO "
-                desc+="Contact])"
-        elif activity and activity.is_a_challenge():
-            desc+=activity.name
-            desc+=" [%s]"%(activity.skill_display())
+
+        if activity:
+            skill_text=activity.skill_display()
+            if skill_text=="ABCD":
+                skill_text="ALL"
+
+            if activity.is_a_training():
+                desc+=activity.name
+                if hasattr(occurrence,'registered') or hasattr(occurrence,'auditing'):
+                    if occurrence.registered.intl or occurrence.auditing.intl:
+                        desc+=" INTL "
+                if activity.onsk8s:
+                    desc+=" (%s "%(skill_text)
+                    if not activity.contact:
+                        desc+="[NO Contact]"
+                    desc+=")"
+            elif activity.is_a_challenge():
+
+                gender_display=activity.gender_display()
+                if "&" in gender_display:
+                    gen_list=gender_display.split()
+                    print gen_list
+                    gender_display=gen_list[0][0]+" & "+gen_list[2][0]
+                else:
+                    gender_display=gender_display[0]
+
+                if "N" in gender_display:
+                    gender_display.replace("N", "Co-ed")
+
+                desc+="%s [%s, %s]"%(activity.name,skill_text,gender_display)
+
         return desc
 
 
@@ -106,12 +135,7 @@ class OccurrenceResource(resources.ModelResource):
         activity=occurrence.activity
         desc=""
         if activity and activity.is_a_training():
-            coach_n=activity.display_coach_names()
-            if coach_n:
-                desc+=coach_n
-            full_desc=activity.full_description()
-            if full_desc:
-                desc+="\n\n"+full_desc
+            desc=activity.full_description()
         elif activity and activity.is_a_challenge():
             #Hoo boy. I'm sorry for this.
             #if activity.roster1 and activity.roster1.captain and activity.roster1.color:
@@ -134,7 +158,7 @@ class OccurrenceResource(resources.ModelResource):
 
     class Meta:
         model = Occurrence
-        fields = ('day','start','end','training__name','challenge__name','name_with_data','figureheads','skill_display','location__abbrv','con_display','description')
+        fields = ('day','start','end','training__name','challenge__name','name_with_data','figureheads','skill_display','location__abbrv','con_display','description','gcal_location')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
