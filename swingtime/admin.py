@@ -46,6 +46,27 @@ class OccurrenceResource(resources.ModelResource):
     con_display=fields.Field()
     figureheads=fields.Field()
     description=fields.Field()
+    name_with_data=fields.Field()
+
+    def dehydrate_name_with_data(self,occurrence):
+        #chal has name plus skill
+        #training has name, coach,
+        activity=occurrence.activity
+        desc=""
+        if activity and activity.is_a_training():
+            desc+=activity.name
+            if hasattr(occurrence,'registered') or hasattr(occurrence,'auditing'):
+                print "%s has reg or aud"%(str(occurrence))
+                if occurrence.registered.intl or occurrence.auditing.intl:
+                    desc+=" INTL "
+            desc+="( %s ["%(activity.skill_display())
+            if not activity.contact:
+                desc+="NO "
+            desc+="Contact])"
+        elif activity and activity.is_a_challenge():
+            desc+=activity.name
+            desc+=" [%s]"%(activity.skill_display())
+        return desc
 
 
     def dehydrate_skill_display(self,occurrence):
@@ -63,7 +84,8 @@ class OccurrenceResource(resources.ModelResource):
             return ""
 
     def dehydrate_day(self,occurrence):
-        return occurrence.start_time.date()
+        fmt=occurrence.start_time.date().strftime("%m-%d-%Y")
+        return fmt
 
     def dehydrate_start(self,occurrence):
         d=occurrence.start_time
@@ -82,17 +104,37 @@ class OccurrenceResource(resources.ModelResource):
 
     def dehydrate_description(self,occurrence):
         activity=occurrence.activity
-        # if activity and hasattr(activity, 'description'):
-        #     return activity.description
+        desc=""
         if activity and activity.is_a_training():
-            return activity.full_description()
-        else:
-            return ""
+            coach_n=activity.display_coach_names()
+            if coach_n:
+                desc+=coach_n
+            full_desc=activity.full_description()
+            if full_desc:
+                desc+="\n\n"+full_desc
+        elif activity and activity.is_a_challenge():
+            #Hoo boy. I'm sorry for this.
+            #if activity.roster1 and activity.roster1.captain and activity.roster1.color:
+            desc+="%s"%(activity.roster1.name)
+            if activity.roster1.color:
+                desc+=" (%s)"%activity.roster1.color
+            desc+=" %s\n"%(activity.roster1.captain.name)
+            desc+="%s"%(activity.roster2.name)
+            if activity.roster2.color:
+                desc+=" (%s)"%activity.roster2.color
+            desc+=" %s\n"%(activity.roster2.captain.name)
+
+            desc+="\n*This schedule placement is tentative and subject to change until the final schedule is released in the summer."
+            desc+="\n\nInformation about this challenge, including roster submission deadlines and procedures: http://tinyurl.com/RC-captain-info"
+            desc+="\n\nRollerCon events are scheduled in Pacific Standard Time, but your google calendar might change it to your time zone."
+            desc+="http://www.timeanddate.com/worldclock/converter.html If you want it to show in your google calendar, you can go to the calendar here:"
+            desc+="http://rollercon.com/events/  Find the event, click to expand it, then click the link that says 'copy to my calendar.'' "
+        return desc
 
 
     class Meta:
         model = Occurrence
-        fields = ('day','start','end','training__name','challenge__name','figureheads','skill_display','location__abbrv','con_display','description')
+        fields = ('day','start','end','training__name','challenge__name','name_with_data','figureheads','skill_display','location__abbrv','con_display','description')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
