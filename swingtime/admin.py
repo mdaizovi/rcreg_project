@@ -70,6 +70,9 @@ class OccurrenceResource(resources.ModelResource):
             if skill_text=="ABCD":
                 skill_text="ALL"
 
+            if "ABCD" in skill_text:
+                skill_text.replace("ABCD", "ALL")
+
             if activity.is_a_training():
                 desc+=activity.name
                 if hasattr(occurrence,'registered') or hasattr(occurrence,'auditing'):
@@ -83,17 +86,17 @@ class OccurrenceResource(resources.ModelResource):
             elif activity.is_a_challenge():
 
                 gender_display=activity.gender_display()
-                if "&" in gender_display:
-                    gen_list=gender_display.split()
-                    print gen_list
-                    gender_display=gen_list[0][0]+" & "+gen_list[2][0]
-                else:
-                    gender_display=gender_display[0]
+                # if "&" in gender_display:
+                #     gen_list=gender_display.split()
+                #     print gen_list
+                #     gender_display=gen_list[0][0]+" & "+gen_list[2][0]
+                # else:
+                #     gender_display=gender_display[0]
 
-                if "N" in gender_display:
-                    gender_display.replace("N", "Co-ed")
+                if "NA/Coed" in gender_display:
+                    gender_display.replace("NA/Coed", "Co-ed")
 
-                desc+="%s [%s, %s]"%(activity.name,skill_text,gender_display)
+                desc+="%s (%s [%s])"%(activity.name,skill_text,gender_display)
 
         return desc
 
