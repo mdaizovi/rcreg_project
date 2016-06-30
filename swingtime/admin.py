@@ -59,7 +59,7 @@ class OccurrenceResource(resources.ModelResource):
                 if occurrence.registered.intl or occurrence.auditing.intl:
                     desc+=" INTL "
             if activity.onsk8s:
-                desc+=" ( %s ["%(activity.skill_display())
+                desc+=" (%s ["%(activity.skill_display())
                 if not activity.contact:
                     desc+="NO "
                 desc+="Contact])"
