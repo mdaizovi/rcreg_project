@@ -67,10 +67,7 @@ class OccurrenceResource(resources.ModelResource):
 
         if activity:
             skill_text=activity.skill_display()
-            if skill_text=="ABCD":
-                skill_text="ALL"
-
-            if "ABCD" in skill_text:
+            if ("ABCD" in skill_text) or (skill_text=="ABCD"):
                 skill_text.replace("ABCD", "ALL")
 
             if activity.is_a_training():
@@ -79,9 +76,9 @@ class OccurrenceResource(resources.ModelResource):
                     if occurrence.registered.intl or occurrence.auditing.intl:
                         desc+=" INTL "
                 if activity.onsk8s:
-                    desc+=" (%s "%(skill_text)
+                    desc+=" (%s"%(skill_text)
                     if not activity.contact:
-                        desc+="[NO Contact]"
+                        desc+=" [NO Contact]"
                     desc+=")"
             elif activity.is_a_challenge():
 
