@@ -9,7 +9,7 @@ from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT_Affiliate_ID
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
-from con_event.signals import sched_final_cleanup,update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
+from con_event.signals import update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
 
 #pretty sure I never use logging
 #import logging
@@ -153,6 +153,27 @@ class Con(models.Model):
         else:
             return False
 
+    def get_unscheduled_acts(self):
+        """Cleans up (deletes) unsubmitted, unscheduled Challenges and Trainings from that Con."""
+        print "starting sched_final_cleanup"
+        c_no_os=[]
+        t_no_os=[]
+        if self.sched_final:
+            from scheduler.models import Challenge, Training
+            dead_chals=Challenge.objects.filter(RCaccepted=False, con=self)
+            for c in dead_chals:
+                if c.occurrence_set.count()<1:
+                    c_no_os.append(c)
+
+            dead_trains=Training.objects.filter(RCaccepted=False,con=self)
+            for t in dead_trains:
+                if t.occurrence_set.count()<1:
+                    t_no_os.append(t)
+
+        return c_no_os,t_no_os
+
+
+
     def can_submit_chlg_by_date(self):
         """"only checks to see if there is a challenge submission date and that date has passed.
         Does not check if received too many submissions already"""
@@ -238,8 +259,6 @@ class Con(models.Model):
             self.ticket_link="http://rollercon.com/register/rollercon-pass/"
 
         super(Con, self).save()
-
-post_save.connect(sched_final_cleanup, sender=Con)
 
 
 class Blackout(models.Model):

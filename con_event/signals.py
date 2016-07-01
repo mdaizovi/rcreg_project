@@ -3,37 +3,6 @@ from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.forms.models import model_to_dict
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 
-def sched_final_cleanup(sender, instance,**kwargs):
-    """Post-save on Con. If Schedule is final, cleans up (deletes) unsubmitted, unscheduled Challenges and Trainings from that Con."""
-    print "starting sched_final_cleanup"
-    if instance.sched_final:
-        from scheduler.models import Challenge, Training
-        c_no_os=[]
-        t_no_os=[]
-        dead_chals=Challenge.objects.filter(RCaccepted=False, con=instance)
-        for c in dead_chals:
-            if c.occurrence_set.count()<1:
-                c_no_os.append(c)
-        if len(c_no_os)>1:
-            print len(c_no_os)," Challenges set to be deleted:"
-            for c in c_no_os:
-                print c.pk, c
-                #c.delete() #passes local investigation, but want to check on production just ot be sure
-        else:
-            print "no Challenges to delete"
-
-        dead_trains=Training.objects.filter(RCaccepted=False,con=instance)
-        for t in dead_trains:
-            if t.occurrence_set.count()<1:
-                t_no_os.append(t)
-        if len(t_no_os)>1:
-            print len(t_no_os)," Trainings set to be deleted:"
-            for t in t_no_os:
-                print t.pk, t
-                #t.delete() #passes local investigation, but want to check on production just ot be sure
-        else:
-            print "no Trainings to delete"
-
 
 def update_user_fl_name(sender, instance,**kwargs):
     """postsave signal from Registrant, changes User first and last name if Registrant did.

@@ -6,12 +6,6 @@
 <div class="row">
 
 
-  {%if save_success%}
-  <div class="alert alert-success" role="alert">{{con}} Schedule Status Successfully Updated!</div>
-    {%endif%}
-
-
-
 <table style="width:100%;"><tr><td style="border: none; text-align:center;">
       <h3 class="margin-top-10 text-center">Schedule Status: {{con}}</h3></td>
 
@@ -30,20 +24,23 @@
   </td></tr></table>
 
 
+<div class="col-md-6 pull-left">
 {%if form%}
-    <div class="col-md-4 center-block" style="float: none; margin: 0 auto;">
+    <div class="center-block" style="float: none; margin: 0 auto;">
       <div class="well well-md margin-top-10">
-
+        <h4 style="text-align:center;">Schedule Status</h4>
+        {%if save_success%}
+        <div class="alert alert-success" role="alert">{{con}} Schedule Status Successfully Updated!</div>
+          {%endif%}
 
 <form method="POST" class="post-form">
 {% csrf_token %}
-
+<input type="hidden" name="sched_stus_form" value="on" />
 {%if form.errors%}
 {% for field, errors in form.errors.items %}
     {% for error in errors %}
     <p class="text-warning">{{error}}</p>
     {%endfor%}{%endfor%}{%endif%}
-
 
 <table class="table">
 {%for field in form%}
@@ -53,7 +50,53 @@
 <button type="submit" class="btn btn-success margin-top-10 center-block"> Save Schedule Status </button>
 </div><!-- end well-->
 </div><!-- end col-md-4-->
+</form>
 {%endif%}
+</div>
+
+<div class="col-md-6 pull-right">
+      <div class="center-block" style="float: none; margin: 0 auto;">
+        <div class="well well-md margin-top-10">
+          <h4 style="text-align:center;">Cull Unscheduled Activities</h4>
+          <form method="POST" class="post-form">
+          {% csrf_token %}
+  <p style="text-align:center;">{% if con and con.sched_visible and con.sched_final%}
+    <input type="hidden" name="cull_form" value="on" />
+    {%if not cull_attempt%}
+    Find all Challenges and Trainings that have been submitted for {{con}} and have not been scheduled, gather for deletion.
+    <input type="hidden" name="get_chopping" value="on" />
+      <button type="submit" class="btn btn-warning margin-top-10 center-block">See Chopping Block</button>
+      {%else%}
+
+      {%if c_no_os|length > 0 or t_no_os|length > 0 %}
+      Delete unscheduled activities (displayed below). <b>This is permanent.</b>
+      <input type="hidden" name="confirm_delete" value="on" />
+      <button type="submit" class="btn btn-danger margin-top-10 center-block">Cull Activities</button>
+
+      <table style="width:100%;"><tr><td style="border: none;">
+      <tr>
+        <td>
+        <ul>{%for c in c_no_os%}
+          <li>{{c}}</li>{%endfor%}</ul>
+      </td>
+      <td>
+        <ul>{%for t in t_no_os%}
+          <li>{{t}}</li>{%endfor%}</ul>
+      </td>
+    </tr></table>
+
+      {%else%}
+      {%if cull_success%}<div class="alert alert-success" role="alert">Unscheduled activities successfully deleted!</div>{%endif%}
+      <i>No unscheduled activities found for {{con}}</i>
+      {%endif%}<!-- if there are activities to delete-->
+      {%endif%}<!-- if not cull attempt-->
+
+
+
+{%else%}Please make this year's schedule both visible and final before trying to delete unscheduled activities.
+{%endif%}
+  </p></form>
+</div></div></div>
 
 
 
