@@ -69,19 +69,24 @@
       {%else%}
 
       {%if c_no_os|length > 0 or t_no_os|length > 0 %}
-      Delete unscheduled activities (displayed below). <b>This is permanent.</b>
+      Delete unscheduled activities (displayed below).<br><b>This is permanent.</b>
       <input type="hidden" name="confirm_delete" value="on" />
       <button type="submit" class="btn btn-danger margin-top-10 center-block">Cull Activities</button>
 
       <table style="width:100%;"><tr><td style="border: none;">
+        <tr><th style="text-align:center;width:50%;">Challenges</th><th style="text-align:center;width:50%;">Trainings</th></tr>
       <tr>
-        <td>
+        <td style="vertical-align: top;">
+          {%if c_no_os|length > 0 %}
         <ul>{%for c in c_no_os%}
-          <li>{{c}}</li>{%endfor%}</ul>
+          <li>{{c.name}}</li>{%endfor%}</ul>
+          {%else%}<i>No Challenges found</i>{%endif%}
       </td>
-      <td>
+      <td style="vertical-align: top;">
+          {%if t_no_os|length > 0 %}
         <ul>{%for t in t_no_os%}
-          <li>{{t}}</li>{%endfor%}</ul>
+          <li>{{t.name}}</li>{%endfor%}</ul>
+            {%else%}<i>No Trainings found</i>{%endif%}
       </td>
     </tr></table>
 

@@ -154,20 +154,19 @@ class Con(models.Model):
             return False
 
     def get_unscheduled_acts(self):
-        """Cleans up (deletes) unsubmitted, unscheduled Challenges and Trainings from that Con."""
-        print "starting sched_final_cleanup"
+        """Gathers unscheduled Challenges and Trainings so they can be culled after the schedule is final."""
         c_no_os=[]
         t_no_os=[]
         if self.sched_final:
-            from scheduler.models import Challenge, Training
-            dead_chals=Challenge.objects.filter(RCaccepted=False, con=self)
+            from scheduler.models import Challenge, Training# here insted of top to preventimport error
+            dead_chals=Challenge.objects.filter(con=self)
             for c in dead_chals:
-                if c.occurrence_set.count()<1:
+                if c.occurrence_set.all().count()<1:
                     c_no_os.append(c)
 
-            dead_trains=Training.objects.filter(RCaccepted=False,con=self)
+            dead_trains=Training.objects.filter(con=self)
             for t in dead_trains:
-                if t.occurrence_set.count()<1:
+                if t.occurrence_set.all().count()<1:
                     t_no_os.append(t)
 
         return c_no_os,t_no_os

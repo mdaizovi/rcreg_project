@@ -14,12 +14,10 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
         if instance.roster2.captain:
             caps.append(instance.roster2.captain)
     for r in my_rosters:
-        # if r.id and not r.name and not r.captain: #this is probably too stringent
         if r.id:
             connections=list(r.roster1.all())+list(r.roster2.all())
             if len(connections)<=1:#1 because this challenge hasn't been deleted yet.
-                print "this is where I would delete ",r.pk, r
-                #r.delete() #I don't know why I'm disabling. just to be safe for a bit.
+                r.delete()
 
     for c in caps:#to adjust captain number
         c.save()
@@ -32,13 +30,11 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
     my_connections=list(instance.roster1.all())+list(instance.roster2.all())
 
     if len(my_connections)<1 and not instance.captain:
-        print "about to delete ",instance
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):
     """Post-Save. Deletes Challenge if it has no Rosters"""
     if not instance.roster1 and not instance.roster2:
-        print "about to delete homeless challenge",instance
         instance.delete()
 
 

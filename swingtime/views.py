@@ -728,8 +728,6 @@ def sched_status(
         con = get_object_or_404(Con, pk=Con.objects.most_upcoming().pk)
     c_no_os=[]
     t_no_os=[]
-    c_no_os=[1,2,3]#get rid fo this late,r hard coding to test desired results
-    t_no_os=[4,5,6]#get rid fo this late,r hard coding to test desired results
     cull_attempt=False
     cull_success=False
 
@@ -742,28 +740,18 @@ def sched_status(
                 save_success=True
         elif "cull_form" in request.POST:
             form = form_class(instance=con)
-            #c_no_os,t_no_os=con.get_unscheduled_acts()
+            c_no_os,t_no_os=con.get_unscheduled_acts()
             cull_attempt=True
             if "get_chopping" in request.POST:
-                print "return 2 lists of what's to be deleted"
+                pass #I don't actually use this, should probably remove from the view.
             elif "confirm_delete" in request.POST:
+                for c in c_no_os:
+                    c.delete()
+                for t in t_no_os:
+                    t.delete()
+                c_no_os,t_no_os=con.get_unscheduled_acts() #refresh to confirm nothing left
 
-
-
-
-########reminder: this works wit test template, but you need to put real dummy activities in and make sure it work,s and doesn't affect the people at all.
-######refresh memory of all homeless things, make sure nothing nothing nothing undesireable will happen.
-
-
-                # for c in c_no_os:
-                #     c.delete()
-                # for t in t_no_os:
-                #     t.delete()
-                #c_no_os,t_no_os=con.get_unscheduled_acts() #refresh to confirm nothing left
                 cull_success=True
-
-                c_no_os=[] #get rid fo this late,r hard coding to test desired results
-                t_no_os=[]#get rid fo this late,r hard coding to test desired results
 
     else:#if not post, just return form
         form = form_class(instance=con)
