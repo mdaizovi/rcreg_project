@@ -32,7 +32,6 @@ def get_chal_os(con):
     Gets all scheduled Challenge Occurrances for con, returns dict w/ K,V  of date, chal list."""
     chalo_dict={}
     chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
-    print "len chalos ",len(chalos)
     for c in chalos:
         if c.start_time.date() not in chalo_dict:
             chalo_dict[c.start_time.date()]=[c]
@@ -42,6 +41,21 @@ def get_chal_os(con):
             chalo_dict[c.start_time.date()]=list(tmp)
 
     return chalo_dict
+
+#traino_dict=get_train_os(con)
+def get_train_os(con):
+    """For printing out Excel backup sheets.
+    Gets all scheduled Challenge Occurrances for con, returns dict w/ K,V  of date, chal list."""
+    o_dict={}
+    tos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None)
+    for c in tos:
+        if c.start_time.date() not in o_dict:
+            o_dict[c.start_time.date()]=[c]
+        else:
+            tmp=o_dict.get(c.start_time.date())
+            tmp.append(c)
+            o_dict[c.start_time.date()]=list(tmp)
+    return o_dict
 
 #make_chal_backup(chalo_dict)
 def make_chal_backup(acto_dict):
@@ -123,6 +137,61 @@ def make_chal_backup(acto_dict):
                 sheet["G"+str(starti)].value = name
                 rno+=1
                 starti+=1
+
+            wb.save(filename = fullfilename)
+    print "done making xl files"
+
+
+#make_train_backup(traino_dict)
+def make_train_backup(acto_dict):
+    """Takes in dict of k,b day, occurrence list, to make basic excel sheet backups.
+    directory tree: Date, location, chal time+name"""
+    BASE_DIR=os.getcwd()
+    comp_path=os.path.join(BASE_DIR, "Training")
+    if not os.path.isdir(comp_path):
+        os.makedirs(comp_path)
+
+    for k,v in acto_dict.iteritems():
+        daystr=k.strftime('%m-%d-%Y')
+        daypath=os.path.join(comp_path, daystr)
+        if not os.path.isdir(daypath):
+            os.makedirs(daypath)
+
+        for acto in v:
+            oloc=acto.location
+            loc_path=os.path.join(daypath, oloc.abbrv)
+            if not os.path.isdir(loc_path):
+                os.makedirs(loc_path)
+
+            timestr=acto.start_time.strftime('%H %M %p ')
+            xlfilename=timestr+(acto.name)+".xlsx"
+            fullfilename=os.path.join(loc_path, xlfilename)
+
+            wb = openpyxl.Workbook()
+            sheet = wb.active
+
+            sheet["A1"].value = acto.training.name
+            sheet["A2"].value = acto.training.display_coach_names()
+            sheet["A3"].value = acto.start_time.strftime('%m-%d-%Y')
+            sheet["A4"].value = acto.start_time.strftime('%H %M %p')
+            sheet["A5"].value = acto.location.name
+            sheet["B6"].value = "REGISTERED"
+            sheet["E6"].value = "AUDITING"
+
+            starti=7
+            rno=int(1)
+            for r in range(1,61):
+                sheet["A"+str(starti)].value = str(rno)+"."
+                rno+=1
+                starti+=1
+
+            starti=7
+            rno=int(1)
+            for r in range(1,11):
+                sheet["D"+str(starti)].value = str(rno)+"."
+                rno+=1
+                starti+=1
+
 
             wb.save(filename = fullfilename)
     print "done making xl files"
