@@ -7,7 +7,9 @@ from django.db.models import Q
 from django.utils import timezone
 import csv
 import os
+#import string
 import datetime
+from datetime import datetime
 from rcreg_project.settings import BASE_DIR
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 import openpyxl
@@ -21,6 +23,113 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+
+
+#con=Con.objects.get(year="2016")
+#chalo_dict=get_chal_os(con)
+def get_chal_os(con):
+    """For printing out Excel backup sheets.
+    Gets all scheduled Challenge Occurrances for con, returns dict w/ K,V  of date, chal list."""
+    chalo_dict={}
+    chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
+    print "len chalos ",len(chalos)
+    for c in chalos:
+        if c.start_time.date() not in chalo_dict:
+            chalo_dict[c.start_time.date()]=[c]
+        else:
+            tmp=chalo_dict.get(c.start_time.date())
+            tmp.append(c)
+            chalo_dict[c.start_time.date()]=list(tmp)
+
+    return chalo_dict
+
+#make_chal_backup(chalo_dict)
+def make_chal_backup(acto_dict):
+    """Takes in dict of k,b day, occurrence list, to make basic excel sheet backups.
+    directory tree: Date, location, chal time+name"""
+    BASE_DIR=os.getcwd()
+    comp_path=os.path.join(BASE_DIR, "Competition")
+    if not os.path.isdir(comp_path):
+        os.makedirs(comp_path)
+
+    for k,v in acto_dict.iteritems():
+        daystr=k.strftime('%m-%d-%Y')
+        daypath=os.path.join(comp_path, daystr)
+        if not os.path.isdir(daypath):
+            os.makedirs(daypath)
+
+        for acto in v:
+            oloc=acto.location
+            loc_path=os.path.join(daypath, oloc.abbrv)
+            if not os.path.isdir(loc_path):
+                os.makedirs(loc_path)
+
+            timestr=acto.start_time.strftime('%H %M %p ')
+            xlfilename=timestr+(acto.name)+".xlsx"
+            fullfilename=os.path.join(loc_path, xlfilename)
+
+            wb = openpyxl.Workbook()
+            sheet = wb.active
+
+            sheet["A1"].value = "TEAM"
+            sheet["A2"].value = "COLOR"
+            sheet["B1"].value = acto.challenge.roster1.name
+            sheet["B2"].value = acto.challenge.roster1.color
+
+            sheet["E1"].value = "TEAM"
+            sheet["E2"].value = "COLOR"
+            sheet["F1"].value = acto.challenge.roster2.name
+            sheet["F2"].value = acto.challenge.roster2.color
+
+            sheet["A4"].value = "# of players"
+            sheet["E4"].value = "# of players"
+            sheet["B4"].value = "Skater #"
+            sheet["F4"].value = "Skater #"
+            sheet["C4"].value = "Skater Name"
+            sheet["G4"].value = "Skater Name"
+
+            starti=6
+            rno=int(1)
+            r1=list(acto.challenge.roster1.participants.all())
+            r1.sort(key=lambda x: x.sk8number)
+            for r in r1:
+                if r==acto.challenge.roster1.captain:
+                    if r.sk8name:
+                        name=r.sk8name+" (Captain)"
+                    else:
+                        name="(Captain)"
+                else:
+                    name=r.sk8name
+                sheet["A"+str(starti)].value = str(rno)+"."
+                sheet["B"+str(starti)].value = r.sk8number
+                sheet["C"+str(starti)].value = name
+                rno+=1
+                starti+=1
+
+            starti=6
+            rno=int(1)
+            r2=list(acto.challenge.roster2.participants.all())
+            r2.sort(key=lambda x: x.sk8number)
+            for r in r2:
+                if r==acto.challenge.roster2.captain:
+                    if r.sk8name:
+                        name=r.sk8name+" (Captain)"
+                    else:
+                        name="(Captain)"
+                else:
+                    name=r.sk8name
+                sheet["E"+str(starti)].value = str(rno)+"."
+                sheet["F"+str(starti)].value = r.sk8number
+                sheet["G"+str(starti)].value = name
+                rno+=1
+                starti+=1
+
+            wb.save(filename = fullfilename)
+    print "done making xl files"
+
+
+
+
 
 # reg,aud,reg_and_aud,chal,both,neither,rall=rostercheck()
 
@@ -103,10 +212,6 @@ def make_random_acts():
         c.save()
 
     #print "challenges",challenges
-
-
-
-
 
 
 #con=Con.objects.get(year="2016")
@@ -697,57 +802,3 @@ def import_from_excel(complete_entries_file,con):
         name_str='RegistrantREPEATEMAILFAIL '+ date_str +'.xlsx'
         write_wb(export_path,name_str,repeat_email_list,header)
         print "repeat_email_list written"
-
-
-# #########temporary roster splitting funcitons############
-# ####### maybe temporarily disable delete signals and replace w/ print statements in case I fuck up somewhere, so i won't accidentally delete all?######
-#
-# #python manage.py shell
-# #from basic_data import*
-#
-# #lessthan1,just1,morethan1=get_shared_rosters()
-# def get_shared_rosters():
-#     lessthan1=[]
-#     just1=[]
-#     morethan1=[]
-#     for r in Roster.objects.all():
-#         connections=list(r.roster1.all())+list(r.roster2.all())
-#         if len(connections)==1:
-#             just1.append(r)
-#         elif len(connections)<1 and not r.registered and not r.auditing:
-#             print "homeless roster ",r," pk: ",r.pk
-#             lessthan1.append(r)
-#         elif len(connections)>1:
-#             print "dual roster: ",r," pk: ",r.pk
-#             morethan1.append(r)
-#
-#     print "final tally: "
-#     print "homeless: ",len(lessthan1)
-#     print "just1: ",len(just1)
-#     print "morethan1: ",len(morethan1)
-#
-#     return lessthan1,just1,morethan1
-#
-# #unglue(morethan1)
-# def unglue(roster_list):
-#     for r in roster_list:
-#         print "starting to unglue ",r
-#         connections=list(r.roster1.all())+list(r.roster2.all())
-#         print len(connections)," connections :",connections
-#
-#         for c in connections[1:]:
-#             this_clone=r.clone_roster()
-#
-#             old_team,selected_team=c.replace_team(r,this_clone)
-#
-#             print old_team," is no longer in ",c," now it's ",selected_team
-#             c.save()
-#
-#         print "prev captain #: ",r.captain.captaining
-#         r.captain.save()#to reset captain#
-#         print "new captain #: ",r.captain.captaining
-#         print "done ungluing ",r
-#     print "done with unglue function"
-#
-# ##########after done, re enable delete signals#########
-# ###########################start real basic data#########################
