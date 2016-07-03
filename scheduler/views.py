@@ -988,6 +988,7 @@ def view_challenge(request, activity_id):
 
         if user.can_edit_score() or (user in challenge.editable_by()) or participating:
             #these are all the people that can see communication
+            participating=True#before adding this NSOs couldn't see communication. Oops.
             if not request.method == "POST":
                 communication_form=CommunicationForm(initial={'communication':challenge.communication})
 

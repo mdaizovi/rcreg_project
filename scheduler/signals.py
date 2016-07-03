@@ -26,9 +26,7 @@ def delete_homeless_roster_chg(sender, instance,**kwargs):
 def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Post Save from Roster
     Deletes a Roster if it has no Captain and no Challenges"""
-    print "running delete_homeless_roster_ros("
     my_connections=list(instance.roster1.all())+list(instance.roster2.all())
-
     if len(my_connections)<1 and not instance.captain:
         instance.delete()
 
