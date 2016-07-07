@@ -1381,6 +1381,16 @@ class Training(Activity):
 
         return allowed
 
+    def passes_str(self):
+        allowed=self.passes_allowed()
+        passstr=""
+        for s in allowed:
+            passstr+=(s+", ")
+        passstr=passstr[:-2]
+        return passstr
+
+
+
     def passes_tooltip_title(self):
         pass_list=self.passes_allowed()
         pass_string=""

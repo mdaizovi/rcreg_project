@@ -62,7 +62,11 @@ def make_chal_backup(acto_dict):
     """Takes in dict of k,b day, occurrence list, to make basic excel sheet backups.
     directory tree: Date, location, chal time+name"""
     BASE_DIR=os.getcwd()
-    comp_path=os.path.join(BASE_DIR, "Competition")
+    now=timezone.now()
+    nowstr=now.strftime('%m %d %Y')
+    com_str="Competition (printed %s)"%(nowstr)
+    comp_path=os.path.join(BASE_DIR, com_str)
+
     if not os.path.isdir(comp_path):
         os.makedirs(comp_path)
 
@@ -74,7 +78,9 @@ def make_chal_backup(acto_dict):
 
         for acto in v:
             oloc=acto.location
-            loc_path=os.path.join(daypath, oloc.abbrv)
+            loc_folder="%s (%s)"%(oloc.abbrv,daystr)
+            loc_path=os.path.join(daypath, loc_folder)
+            #loc_path=os.path.join(daypath, oloc.abbrv)
             if not os.path.isdir(loc_path):
                 os.makedirs(loc_path)
 
@@ -85,24 +91,47 @@ def make_chal_backup(acto_dict):
             wb = openpyxl.Workbook()
             sheet = wb.active
 
-            sheet["A1"].value = "TEAM"
-            sheet["A2"].value = "COLOR"
-            sheet["B1"].value = acto.challenge.roster1.name
-            sheet["B2"].value = acto.challenge.roster1.color
+            sheet["A1"].value = acto.challenge.roster1.name
+            sheet["B1"].value = "VS"
+            sheet["C1"].value = acto.challenge.roster2.name
 
-            sheet["E1"].value = "TEAM"
-            sheet["E2"].value = "COLOR"
-            sheet["F1"].value = acto.challenge.roster2.name
-            sheet["F2"].value = acto.challenge.roster2.color
+            sheet["A2"].value = acto.location.abbrv
+            sheet["B2"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
 
-            sheet["A4"].value = "# of players"
-            sheet["E4"].value = "# of players"
-            sheet["B4"].value = "Skater #"
-            sheet["F4"].value = "Skater #"
-            sheet["C4"].value = "Skater Name"
-            sheet["G4"].value = "Skater Name"
+            sheet["D2"].value = "Printed:"
+            sheet["E2"].value = nowstr
 
-            starti=6
+
+            sheet["A4"].value = "TEAM"
+            sheet["B4"].value = acto.challenge.roster1.name
+            sheet["A5"].value = "COLOR"
+            sheet["B5"].value = acto.challenge.roster1.color
+            sheet["A6"].value = "CAPTAIN"
+            sheet["B6"].value = acto.challenge.roster1.captain.name
+            sheet["A7"].value = "SKILL"
+            sheet["B7"].value = acto.challenge.roster1.skill_display()
+            sheet["A8"].value = "GENDER"
+            sheet["B8"].value = acto.challenge.roster1.gender_text()
+
+            sheet["E4"].value = "TEAM"
+            sheet["E5"].value = "COLOR"
+            sheet["F4"].value = acto.challenge.roster2.name
+            sheet["F5"].value = acto.challenge.roster2.color
+            sheet["E6"].value = "CAPTAIN"
+            sheet["F6"].value = acto.challenge.roster2.captain.name
+            sheet["E7"].value = "SKILL"
+            sheet["F7"].value = acto.challenge.roster2.skill_display()
+            sheet["E8"].value = "GENDER"
+            sheet["F8"].value = acto.challenge.roster2.gender_text()
+
+            sheet["A10"].value = "# of players"
+            sheet["E10"].value = "# of players"
+            sheet["B10"].value = "Skater #"
+            sheet["F10"].value = "Skater #"
+            sheet["C10"].value = "Skater Name"
+            sheet["G10"].value = "Skater Name"
+
+            starti=11
             rno=int(1)
             r1=list(acto.challenge.roster1.participants.all())
             r1.sort(key=lambda x: x.sk8number)
@@ -120,7 +149,7 @@ def make_chal_backup(acto_dict):
                 rno+=1
                 starti+=1
 
-            starti=6
+            starti=11
             rno=int(1)
             r2=list(acto.challenge.roster2.participants.all())
             r2.sort(key=lambda x: x.sk8number)
@@ -147,7 +176,11 @@ def make_train_backup(acto_dict):
     """Takes in dict of k,b day, occurrence list, to make basic excel sheet backups.
     directory tree: Date, location, chal time+name"""
     BASE_DIR=os.getcwd()
-    comp_path=os.path.join(BASE_DIR, "Training")
+    now=timezone.now()
+    nowstr=now.strftime('%m %d %Y')
+    train_str="Training (printed %s)"%(nowstr)
+    comp_path=os.path.join(BASE_DIR, train_str)
+
     if not os.path.isdir(comp_path):
         os.makedirs(comp_path)
 
@@ -159,7 +192,8 @@ def make_train_backup(acto_dict):
 
         for acto in v:
             oloc=acto.location
-            loc_path=os.path.join(daypath, oloc.abbrv)
+            loc_folder="%s (%s)"%(oloc.abbrv,daystr)
+            loc_path=os.path.join(daypath, loc_folder)
             if not os.path.isdir(loc_path):
                 os.makedirs(loc_path)
 
@@ -170,25 +204,38 @@ def make_train_backup(acto_dict):
             wb = openpyxl.Workbook()
             sheet = wb.active
 
+            sheet["E3"].value = "Printed: %s"%(nowstr)
+
             sheet["A1"].value = acto.training.name
             sheet["A2"].value = acto.training.display_coach_names()
-            sheet["A3"].value = acto.start_time.strftime('%m-%d-%Y')
-            sheet["A4"].value = acto.start_time.strftime('%H %M %p')
-            sheet["A5"].value = acto.location.name
-            sheet["B6"].value = "REGISTERED"
-            sheet["E6"].value = "AUDITING"
+            sheet["A3"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
+            sheet["A4"].value = acto.location.name
 
-            starti=7
+            sheet["B6"].value = "Registration Roster"
+            sheet["A7"].value = "Skill:"
+            sheet["B7"].value = acto.training.skill_display()
+            sheet["A8"].value = "Pass:"
+            sheet["B8"].value = acto.training.passes_str()
+            sheet["B10"].value = "Name"
+
+            sheet["F6"].value = "Auditing Roster"
+            sheet["E7"].value = "Skill:"
+            sheet["F7"].value = "ABCD"
+            sheet["E8"].value = "Pass:"
+            sheet["F8"].value = "MVP, Skater, Offskate" #right? confirm.
+            sheet["F10"].value = "Name"
+
+            starti=11
             rno=int(1)
             for r in range(1,61):
                 sheet["A"+str(starti)].value = str(rno)+"."
                 rno+=1
                 starti+=1
 
-            starti=7
+            starti=11
             rno=int(1)
             for r in range(1,11):
-                sheet["D"+str(starti)].value = str(rno)+"."
+                sheet["E"+str(starti)].value = str(rno)+"."
                 rno+=1
                 starti+=1
 
