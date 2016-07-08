@@ -87,7 +87,11 @@ def make_chal_backup(acto_dict):
                 os.makedirs(loc_path)
 
             timestr=acto.start_time.strftime('%H %M %p ')
-            xlfilename=timestr+(acto.name)+".xlsx"
+            #xlfilename=timestr+(acto.name)+".xlsx"
+            #in case of illegal characters (was only a problem for trainings)
+            xlfilename=timestr+(ascii_only_no_punct(acto.name))+".xlsx"
+
+
             fullfilename=os.path.join(loc_path, xlfilename)
 
             wb = openpyxl.Workbook()
@@ -201,7 +205,11 @@ def make_train_backup(acto_dict):
                 os.makedirs(loc_path)
 
             timestr=acto.start_time.strftime('%H %M %p ')
-            xlfilename=timestr+(acto.name)+".xlsx"
+
+            #xlfilename=timestr+(acto.name)+".xlsx"
+            #becuase had illegal characters in it
+            xlfilename=timestr+(ascii_only_no_punct(acto.name))+".xlsx"
+
             fullfilename=os.path.join(loc_path, xlfilename)
 
             wb = openpyxl.Workbook()
@@ -209,9 +217,7 @@ def make_train_backup(acto_dict):
 
             sheet["E3"].value = "Printed: %s"%(nowstr)
 
-            #sheet["A1"].value = acto.training.name
-            #becuase had illegal characters in it
-            sheet["A1"].value = ascii_only_no_punct(acto.training.data_title)
+            sheet["A1"].value = acto.training.name
             sheet["A2"].value = acto.training.display_coach_names()
             sheet["A3"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
             sheet["A4"].value = acto.location.name
