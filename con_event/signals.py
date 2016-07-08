@@ -130,6 +130,10 @@ def sync_reg_permissions(sender, instance,**kwargs):
             if not user.is_superuser:
                 user.is_superuser=True
                 user.save()
+
+    #not sure if this works, thought Ivanna made Bacon a Khaleesi but that didn't make her a superuser.
+    #TODO later.
+
     # elif user.is_staff or user.is_superuser:#clean out people who are no longer in group
     #     if user.is_superuser and BIG_BOSS_GROUP_NAME not in groups:
     #         user.is_superuser=False

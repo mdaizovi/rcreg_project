@@ -2,7 +2,6 @@
 def delete_homeless_roster_chg(sender, instance,**kwargs):
     """Challenge Pre-delete. upon deleting Challenge, checks to see if related rosters have other connections, if not, deletes them as well
     Not necessary for Training, d/t 1:1 """
-    print "starting delete_homeless_roster_chg"
     my_rosters=[]
     caps=[]
     if instance.roster1:
@@ -27,7 +26,7 @@ def delete_homeless_roster_ros(sender, instance,**kwargs):
     """Post Save from Roster
     Deletes a Roster if it has no Captain and no Challenges"""
     my_connections=list(instance.roster1.all())+list(instance.roster2.all())
-    if len(my_connections)<1 and not instance.captain:
+    if len(my_connections)<1 and not instance.captain: #this is probably too onerous, should delete even if has captain.
         instance.delete()
 
 def delete_homeless_chg(sender, instance,**kwargs):

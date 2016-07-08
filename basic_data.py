@@ -210,7 +210,8 @@ def make_train_backup(acto_dict):
             sheet["E3"].value = "Printed: %s"%(nowstr)
 
             #sheet["A1"].value = acto.training.name
-            sheet["A1"].value = acto.training.data_title
+            #becuase had illegal characters in it
+            sheet["A1"].value = ascii_only_no_punct(acto.training.data_title)
             sheet["A2"].value = acto.training.display_coach_names()
             sheet["A3"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
             sheet["A4"].value = acto.location.name
@@ -303,22 +304,22 @@ def make_random_acts():
     #print "captains",captains
     print "len captains",len(captains)
 
-    # trainings=[]
-    # while len(trainings)<40:
-    #     c=choice(coaches)
-    #     print c
-    #     coach, created=Coach.objects.get_or_create(user=c.user)
-    #     print "coach",coach
-    #     location_type=choice(LOCATION_TYPE)[0]
-    #     t=Training(name=randomword(10),con=con,RCaccepted=True, duration="2",interest=3,location_type=location_type)
-    #     trainings.append(t)
-    #     t.save()
-    #     print t," saved!"
-    #     t.coach.add(coach)
-    #     t.save()
+    trainings=[]
+    while len(trainings)<20:
+        c=choice(coaches)
+        print c
+        coach, created=Coach.objects.get_or_create(user=c.user)
+        #print "coach",coach
+        location_type=choice(LOCATION_TYPE)[0]
+        t=Training(name=randomword(10),con=con,RCaccepted=True, duration="2",interest=3,location_type=location_type)
+        trainings.append(t)
+        t.save()
+        #print t," saved!"
+        t.coach.add(coach)
+        t.save()
 
     challenges=[]
-    while len(challenges)<100:
+    while len(challenges)<30:
         location_type=choice(LOCATION_TYPE[:3])[0]
         r1=Roster(name=randomword(10),con=con,captain=choice(all_reg))
         r2=Roster(name=randomword(10),con=con,captain=choice(all_reg))
@@ -331,7 +332,7 @@ def make_random_acts():
         challenges.append(c)
         c.save()
 
-    #print "challenges",challenges
+    print "challenges",len(challenges)
 
 
 #con=Con.objects.get(year="2016")

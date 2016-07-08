@@ -48,12 +48,6 @@ def conflict_check(
     """This is a big mess of code but it can check all coaches in 2 seconds and 1 db hit per coach."""
     start=datetime.now()
 
-    #I'm such a retard! this counts all captain conflict even if they're just participants!
-    #need to make it only matter when captain is a captain,
-    #when coach is coaching
-    #then figure out how to make Otto recognize coaches as more important participnts?
-    #coaches are getting double booked AFTER their training is scheduled
-
     #print "starting conflict_check"
     #print "dbc0:", len(dbconnection.queries)
     if con_id:
