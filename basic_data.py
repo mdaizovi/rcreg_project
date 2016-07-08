@@ -25,6 +25,8 @@ data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
 
 
+#python manage.py shell
+#from basic_data import*
 #con=Con.objects.get(year="2016")
 #chalo_dict=get_chal_os(con)
 def get_chal_os(con):
@@ -91,9 +93,10 @@ def make_chal_backup(acto_dict):
             wb = openpyxl.Workbook()
             sheet = wb.active
 
-            sheet["A1"].value = acto.challenge.roster1.name
-            sheet["B1"].value = "VS"
-            sheet["C1"].value = acto.challenge.roster2.name
+            # sheet["A1"].value = acto.challenge.roster1.name
+            # sheet["B1"].value = "VS"
+            # sheet["C1"].value = acto.challenge.roster2.name
+            sheet["A1"].value = acto.challenge.data_title
 
             sheet["A2"].value = acto.location.abbrv
             sheet["B2"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
@@ -206,7 +209,8 @@ def make_train_backup(acto_dict):
 
             sheet["E3"].value = "Printed: %s"%(nowstr)
 
-            sheet["A1"].value = acto.training.name
+            #sheet["A1"].value = acto.training.name
+            sheet["A1"].value = acto.training.data_title
             sheet["A2"].value = acto.training.display_coach_names()
             sheet["A3"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
             sheet["A4"].value = acto.location.name

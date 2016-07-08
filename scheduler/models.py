@@ -557,6 +557,31 @@ class Activity(models.Model):
         else:
             return False
 
+
+    @property
+    def data_title(self):
+        """Takes info from Challenge/Training, returns title in format RC Ladies are accustomed to.
+        MOSTLY. I can't include INTL unless I know which Occurrence it is, which I don't at this point."""
+
+        desc=""
+        skill_text=self.skill_display().replace("ABCD", "ALL")
+
+        if self.is_a_training():
+            desc+=self.name
+
+            if self.onsk8s:
+                desc+=" (%s"%(skill_text)
+                if not self.contact:
+                    desc+=" [NO Contact]"
+                desc+=")"
+
+        elif self.is_a_challenge():
+            gender_display=self.gender_display().replace("NA/Coed", "Co-ed")
+            desc+="%s (%s [%s])"%(self.name,skill_text,gender_display)
+
+        return desc
+
+
     def get_default_interest(self):
         """if chal, gets average of teams skill.
         if training, gerts average of coach skill
