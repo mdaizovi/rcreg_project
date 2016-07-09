@@ -94,7 +94,7 @@
       <small>
         {%if roster and roster.can_register%}
 
-        {%if roster and roster.spacea %}Available Spaces: {{roster.spacea}}{%else%} ROSTER FULL{%endif%}</small></h2>
+        {%if roster.spacea %}Available Spaces: {{roster.spacea}}{%else%}ROSTER FULL{%endif%}</small></h2>
         <table class="table table-striped">
         <tr><th> </th><th>Name </th></tr>
           {%for skater in roster.participants.all%}

@@ -930,7 +930,6 @@ class TrainingRoster(models.Model):
         """Returns true if registration window is open, False if not.
         Will be determined by 2(?) hour window before class starts"""
         can_reg=self.can_register_at()
-
         now=timezone.now()
 
         if can_reg and now>=can_reg:
@@ -946,11 +945,12 @@ class TrainingRoster(models.Model):
         I think it'll take people a long time to figure tha tout, if they ever do.'''
 
         if self.cap:
+            #print "cap is ",cap
             maxcap=self.cap
         else:
             if self.registered and self.registered.training:
                 if self.registered.training.regcap:
-                    maxcap=registered.training.regcap
+                    maxcap=self.registered.training.regcap
                 else:
                     maxcap=DEFAULT_REG_CAP
 
@@ -980,8 +980,11 @@ class TrainingRoster(models.Model):
 
     def spacea(self):
         '''gets maxcap (see above), checks is participants are fewer'''
+        #print "starting spacea for ",self
         maxcap=self.get_maxcap()
+        #print "maxcap ",maxcap
         spacea=maxcap-self.participants.count()
+        #print "spacea ",spacea
 
         if spacea>0:
             return spacea

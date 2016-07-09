@@ -57,9 +57,9 @@
       <div class="col-sm-6">
       <div class="well well-lg">
         <h3 class="text-center">Registered</h3>
-        <p class="text-center" {% if occur.registered.spacea %}
-        >Available spaces: {{ occur.registered.spacea }}
-      {%else%} style="color:red"> ROSTER FULL {%endif%}
+        <p class="text-center"
+        {% if occur.registered.spacea %}>Available spaces: {{ occur.registered.spacea }}
+      {%else%} style="color:red;"> ROSTER FULL {%endif%}
     </p>
 
 <div class="well well-sm">
