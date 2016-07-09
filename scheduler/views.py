@@ -986,6 +986,12 @@ def view_challenge(request, activity_id):
         if len( set(challenge.participating_in()).intersection(registrant_list) ) > 0:
             participating=True
 
+
+
+######if i'm logged in as an NSO and I edit score, the communication box disapears, only the save button.
+
+
+
         if user.can_edit_score() or (user in challenge.editable_by()) or participating:
             #these are all the people that can see communication
             participating=True#before adding this NSOs couldn't see communication. Oops.
@@ -994,12 +1000,16 @@ def view_challenge(request, activity_id):
 
             if user.can_edit_score() or (user in challenge.editable_by()):
                 can_edit=True
-                if request.method == "POST" and 'communication' in request.POST:
+                if request.method == "POST":
                     communication_form=CommunicationForm(request.POST)
-                    if communication_form.is_valid():
+                    if ('communication' in request.POST) and communication_form.is_valid():
+                        communication_form=CommunicationForm(request.POST)
                         challenge.communication=request.POST['communication']
                         challenge.save()
                         communication_saved=True
+                    else:
+                        communication_form=CommunicationForm(initial={'communication':challenge.communication})
+
             else:#if just a skater
                 communication_form.fields['communication'].widget.attrs['readonly'] = True
                 communication_form.fields['communication'].widget.attrs.update({'style' : 'background-color:white;'})
