@@ -652,17 +652,20 @@ def edit_roster(request, roster_id):
         skater_search_form.fields['search_q'].label = "Skater Name"
         entry_query = skater_search_form.get_query(['sk8name','last_name','first_name'])
         if entry_query:
-            found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query)
+            #found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query) #this is only eligible skaters
+            found_entries = Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']).filter(entry_query) #this is all skaters
             eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
             eligible_participants.fields['eligible_registrant'].label = "Found Eligible Skaters"
         else:
-            found_entries = Registrant.objects.eligible_sk8ers(roster).order_by('sk8name','last_name','first_name')
+            #found_entries = Registrant.objects.eligible_sk8ers(roster).order_by('sk8name','last_name','first_name') #this is only eligible skaters
+            found_entries = Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']).order_by('sk8name','last_name','first_name') #this is all skaters
             eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
             eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
     else:
         skater_search_form=SearchForm()
         skater_search_form.fields['search_q'].label = "Skater Name"
-        eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(roster))
+        #eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(roster)) #this is all skaters
+        eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']))
         eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
 
 
@@ -985,12 +988,6 @@ def view_challenge(request, activity_id):
 
         if len( set(challenge.participating_in()).intersection(registrant_list) ) > 0:
             participating=True
-
-
-
-######if i'm logged in as an NSO and I edit score, the communication box disapears, only the save button.
-
-
 
         if user.can_edit_score() or (user in challenge.editable_by()) or participating:
             #these are all the people that can see communication
