@@ -32,6 +32,7 @@
 <li><a href="#howINTLREG">How do I make a Registrant INTL?</a></li>
 <li><a href="#howINTLTR">How do I make a Training INTL?</a></li>
 <li><a href="#howRegTr">How do I sign people up for Training classes?</a></li>
+<li><a href="#howRegCap">How do I change the cap for a Training? It looks like there's several ways</a></li>
 <li><a href="#INTLCAP">What's the deal with signing people up for INTL classes? The numbers are weird.</a></li>
 <li><a href="#hownewattendee">How do I input new Registrants (Attendees)?</a></li>
 <li><a href="#howdloccur">Is there a way to get an excel version of the schedule now with details like the one we used to download from Google?</a></li>
@@ -170,16 +171,6 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
   <li>Save.</li></ol>
 <p>&nbsp;</p><hr>
 
-<span class="anchor" id="INTLCAP"></span>
-<p><b>What's the deal with signing people up for INTL classes? The numbers are weird</b></p>
-<p>If a Registered TrainingRoster is marked as INTL, then the Auditing TrainingRoster will allow a lot more people to sign up-- basically it'll borrow spaces from the Registration roster.<br>
-  You still need to be INTL to be signed up for the INTL Registration TrainingRoster, but anyone can sign up for the Auditing TrainingRoster, and that's the roster of people that may or may not be allowed to skate during the training, if the Coach allows.<br>
-  So that's why the numbers are weird, because the Auditing Capacity is actually borrowing spots from the Registered TrainingRoster:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
-  <br>When adding people on the Registration TrainingRoster, if some of its spots have been taken by the Auding TrainingRoster, the number of spots will be diminished.<br>
-  It may look like it's screwy, but odds are it's not. You'll get the hang of it.
-</p>
-<p>&nbsp;</p><hr>
-
 <span class="anchor" id="howRegTr"></span>
 <p><b>How do I sign people up for Training classes?</b></p>
 <p>
@@ -197,10 +188,31 @@ Find the right Training and follow link to its page. There's a lot of magic embe
   </ul>
 The Registration/Audit buttons work exactly like signing people up for Challenges-- you can only find the skater if they're in the system and eligible by skill and pass.
 </p>
-
-
 <p>&nbsp;</p><hr>
 
+
+<span class="anchor" id="howRegCap"></span>
+<p><b>How do I change the cap for a Training? It looks like there's several ways</b></p>
+<p>There's 3 different ways you can set the man number of spots in a training, and which one gets used goes in order of most specific to least specific.<br>
+  <ul><li>If the TrainingRoster for the specific Occurrence has a specific cap, that is the one that is used.
+    <br>You can set that either by finding the <a href="/admin/swingtime/occurrence/">Occurrence in the Admin</a>,
+    or finding the <a href="/admin/swingtime/trainingroster/">TrainingRoster in the Admin</a>.<br>
+  This can be used if a Training is going to happen several times but one of the sessions will have a smaller group than the other, and needs a different cap from the other one.</li>
+    <li>If you want all Occurrences of this Training to have a specifc cap, you can set that in the <a href="/admin/scheduler/training/">Training in the Admin</a>.
+      <br><b>regcap</b> refers to the max number of people that can be added to a Registered TrainingRoster, and <b>audcap</b> is the max number that can Audit the class.</li>
+    <li>Otherwise, the default is 60 for a Registered TrainingRoster and 10 for the Auditing TrainingRoster.</li></ul>
+</p>
+<p>&nbsp;</p><hr>
+
+<span class="anchor" id="INTLCAP"></span>
+<p><b>What's the deal with signing people up for INTL classes? The numbers are weird</b></p>
+<p>If a Registered TrainingRoster is marked as INTL, then the Auditing TrainingRoster will allow a lot more people to sign up-- basically it'll borrow spaces from the Registration roster.<br>
+  You still need to be INTL to be signed up for the INTL Registration TrainingRoster, but anyone can sign up for the Auditing TrainingRoster, and that's the roster of people that may or may not be allowed to skate during the training, if the Coach allows.<br>
+  So that's why the numbers are weird, because the Auditing Capacity is actually borrowing spots from the Registered TrainingRoster:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
+  <br>When adding people on the Registration TrainingRoster, if some of its spots have been taken by the Auding TrainingRoster, the number of spots will be diminished.<br>
+  It may look like it's screwy, but odds are it's not. You'll get the hang of it.
+</p>
+<p>&nbsp;</p><hr>
 
 <span class="anchor" id="hownewattendee"></span>
 <p><b>How do I input new Registrants (Attendees)?</b></p>
