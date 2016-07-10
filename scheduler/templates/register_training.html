@@ -57,10 +57,11 @@
       <div class="col-sm-6">
       <div class="well well-lg">
         <h3 class="text-center">Registered</h3>
-        <p class="text-center"
-        {% if occur.registered.spacea %}>Available spaces: {{ occur.registered.spacea }}
-      {%else%} style="color:red;"> ROSTER FULL {%endif%}
-    </p>
+        <table class="table-condensed" style="width: 100%;"><tr><td style="text-align:center;">People signed up:  {{ occur.registered.participants.count }}</td>
+          <td style="text-align:center;
+        {% if occur.registered.spacea %}">Available spaces: {{ occur.registered.spacea }}
+      {%else%} color:red;"> ROSTER FULL {%endif%}
+    </td></tr></table>
 
 <div class="well well-sm">
       <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
@@ -101,10 +102,12 @@
   <div class="col-sm-6">
     <div class="well well-lg">
     <h3 class="text-center">Auditing</h3>
-    <p class="text-center" {% if occur.auditing.spacea %}
-    >Available spaces: {{ occur.auditing.spacea }}
-    {%else%} style="color:red"> ROSTER FULL {%endif%}
-    </p>
+    <table class="table-condensed" style="width: 100%;"><tr><td style="text-align:center;">People signed up:  {{ occur.auditing.participants.count }}</td>
+      <td style="text-align:center;
+    {% if occur.auditing.spacea %}">Available spaces: {{ occur.auditing.spacea }}
+  {%else%} color:red;"> ROSTER FULL {%endif%}
+</td></tr></table>
+
 
 <div class="well well-sm">
   <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>

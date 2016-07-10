@@ -944,21 +944,33 @@ class TrainingRoster(models.Model):
         general training defaults-number of people registered. Tht is so coaches can have a larger audit roster in empty INTL classes.
         LOOPHOLE: people w/out an MVP pass can sign up to audit an INTL class and then be allowed in to participate.
         I think it'll take people a long time to figure tha tout, if they ever do.'''
-        print "getting maxcap for ",self
+        intl=False
 
         if self.registered and self.registered.training:
             #If this is a registration training roster
-            audcap=None
+
+            #get regcap
             if self.cap:
-                maxcap=self.cap
+                regcap=self.cap
             elif self.registered.training.regcap:
-                maxcap=self.registered.training.regcap
+                regcap=self.registered.training.regcap
             else:
-                maxcap=DEFAULT_REG_CAP
+                regcap=DEFAULT_REG_CAP
+
+            if self.intl:
+                intl=True
+
+                #get audcap. Only need if is intl
+                audcap=DEFAULT_AUD_CAP #might get overwritten, jsut here so I don't need ot do 2 elses
+                if self.registered.auditing and self.registered.auditing.cap:
+                    audcap=self.registered.auditing.cap
+                elif self.registered.training and self.registered.training.audcap:
+                    audcap=self.registered.training.audcap
+            else:#if not intl
+                maxcap=regcap
 
         elif self.auditing and self.auditing.training:
             #if this is the auditing trainingroster
-
             #need to get audcap even if is INTL and gets overridden, bc is used in equation
             if self.cap:
                 audcap=self.cap
@@ -967,70 +979,40 @@ class TrainingRoster(models.Model):
             else:
                 audcap=DEFAULT_AUD_CAP
 
-
-        if audcap:#if this is an audit TrainingRoster, not registered
             if self.auditing.registered.intl:
-                #here's the priority of triaingroster.cap, to trainingcap, to default
-                if self.auditing.registered.cap:
-                    regcap=self.auditing.registered.cap
-                elif self.auditing.training.regcap:
-                    regcap=self.auditing.training.regcap
-                else:
-                    regcap=DEFAULT_REG_CAP
+                intl=True
 
+                regcap=DEFAULT_REG_CAP#might get overwritten, jsut here so I don't need ot do 2 elses
+                if self.auditing.registered and self.auditing.registered.cap:
+                    regcap=self.auditing.registered.cap
+                elif self.auditing.training and self.auditingtraining.regcap:
+                    regcap=self.auditingtraining.regcap
+            else:
+                maxcap=audcap
+
+        if intl:
+            if self.registered and self.registered.training:#If this is a registration training roster
+            #what to do if is registration
+                if self.registered.auditing:
+                    audsk8=self.registered.auditing.participants.count()
+                else:
+                    audsk8=0
+
+                intlborrow=audsk8-audcap #how mant people were borrowed from unfulfilled regcap?
+                if intlborrow>0:
+                    maxcap=regcap-intlborrow #how many people are allowed minus people borroed from reg roster for audit
+                else:
+                    maxcap=regcap
+
+            elif self.auditing and self.auditing.training:#if this is the auditing trainingroster
                 if self.auditing.registered:
                     regsk8=self.auditing.registered.participants.count()
                 else:
                     regsk8=0
 
                 maxcap=((regcap-regsk8)+audcap)
-            else: #if not INTL
-                maxcap=audcap
 
-        print "maxcap is ",maxcap
         return maxcap
-
-
-
-
-
-        # if self.cap:
-        #     maxcap=self.cap
-        # else:
-        #     if self.registered and self.registered.training:
-        #         if self.registered.training.regcap:
-        #             maxcap=self.registered.training.regcap
-        #         else:
-        #             maxcap=DEFAULT_REG_CAP
-        #
-        #     elif self.auditing and self.auditing.training:
-        #         if self.auditing.training.regcap:
-        #             regcap=self.auditing.training.regcap
-        #         else:
-        #             regcap=DEFAULT_REG_CAP
-        #         if self.auditing.registered:
-        #             regsk8=self.auditing.registered.participants.count()
-        #         else:
-        #             regsk8=0
-        #
-        #         if self.auditing.training.audcap:
-        #             audcap=self.auditing.training.audcap
-        #         else:
-        #             audcap=DEFAULT_AUD_CAP
-        #
-        #         if self.auditing.registered.intl:
-        #             maxcap=((regcap-regsk8)+audcap)
-        #         else:
-        #             maxcap=audcap
-        #     else:
-        #         maxcap=None
-        #
-        # return maxcap
-
-
-
-
-
 
 
     def spacea(self):
