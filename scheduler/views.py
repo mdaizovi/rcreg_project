@@ -237,8 +237,6 @@ def view_training(request, activity_id,o_id=None):
         else:
             occurrences=[]
 
-        print "view training"
-
         return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))

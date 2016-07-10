@@ -158,12 +158,15 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
 
 <span class="anchor" id="howINTLTR"></span>
 <p><b>How do I make a Training INTL?</b></p>
-<p>Because a Training can be offered several times and might not be INTL each time, you make a training INTL through the Occurrence that you want to be INTL.<br>
-  You only need to do that if you want to sign people up for a class, or if you want to make the Registered TrainingRoster INTL, otherwise it'll get automaticaly made when the Volunteer goes to the Training Occurrence Registration page.</p>
-<p>To make the Registration or Auditing TrainingRoster one through the <a href="/admin/swingtime/occurrence/">Occurrence Admin</a>:
+<p>Because a Training can be offered several times and might not be INTL each time, you make a training INTL through the Occurrence TrainingRoster that you want to be INTL.<br>
+  The Occurrence TrainingRoster doesn't automatically exist for every Training or Occurrence, it only gets created the first time someone looks at that individual Training page or through the Admin.<br>
+  (this is so the DB won't get clogged up with TrainingRosters for classes that no one ever gets signed up for, like off-skates seminars)</p>
+<p>To make the Registration or Auditing TrainingRoster through the <a href="/admin/swingtime/occurrence/">Occurrence Admin</a>:
 <ol><li>Find the right Occurrence (the training you want at the time that you want)</li>
-  <li> Click the first green + "Add another Training roster" button.</li>
-    <li> A bunch of shit will pop up. Find the part on the left that says, "Intl", find the little dropdown under that, and choose "Yes"</li>
+  <li>Check to see if the TrainingRosters have already been made. If you see 2 skinny rows that say "Training Rosters" and "Intl / Skill / Cap / Participants / Delete?" with not much in it, you need to click the green button to make one (more on that in a minute.)<br>
+    If you see a lot of shit, including 2 big boxes that say "Available Participants" and "Chosen Participants", then the TrainingRoster exists already.</li>
+  <li><b>If you need to make a TrainingRoster because it does not exist,</b> click the first green + "Add another Training roster" button. The 2 big  "Available Participants" and "Chosen Participants" boxes will pop up.</li>
+    <li>Find the part on the left that says, "Intl", find the little dropdown under that, and choose "Yes"</li>
   <li>Save.</li></ol>
 <p>&nbsp;</p><hr>
 
@@ -171,7 +174,9 @@ Also, I strip out non-ascii characters like accents and umlauts, as well as punc
 <p><b>What's the deal with signing people up for INTL classes? The numbers are weird</b></p>
 <p>If a Registered TrainingRoster is marked as INTL, then the Auditing TrainingRoster will allow a lot more people to sign up-- basically it'll borrow spaces from the Registration roster.<br>
   You still need to be INTL to be signed up for the INTL Registration TrainingRoster, but anyone can sign up for the Auditing TrainingRoster, and that's the roster of people that may or may not be allowed to skate during the training, if the Coach allows.<br>
-  So that's why the numbers are weird, because the Auditing Capacity is actually:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
+  So that's why the numbers are weird, because the Auditing Capacity is actually borrowing spots from the Registered TrainingRoster:<br>( (Registration Capacity-people registered)+(Audit Capacity-people auditing) )
+  <br>When adding people on the Registration TrainingRoster, if some of its spots have been taken by the Auding TrainingRoster, the number of spots will be diminished.<br>
+  It may look like it's screwy, but odds are it's not. You'll get the hang of it.
 </p>
 <p>&nbsp;</p><hr>
 
