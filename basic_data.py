@@ -13,6 +13,7 @@ from datetime import datetime
 from rcreg_project.settings import BASE_DIR
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 import openpyxl
+from openpyxl.styles import Font, Style,Color, Fill,PatternFill,Border,colors
 import collections
 from random import choice
 import random, string
@@ -23,6 +24,7 @@ export_path=static_path+'exported/'
 
 data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
     'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
+redFill = PatternFill(start_color='FFFF0000',end_color="FFFFFF00",fill_type='solid')
 
 
 #python manage.py shell
@@ -108,37 +110,44 @@ def make_chal_backup(acto_dict):
             sheet["D2"].value = "Printed:"
             sheet["E2"].value = nowstr
 
+            if acto.challenge.communication:
+                sheet["A4"].value = "ATTN:"
+                sheet["A4"].fill = redFill
+                sheet.merge_cells('B4:G4')
+                sheet["B4"].value = acto.challenge.communication
+                #sheet.row_dimensions[4].height=100
+                sheet.row_dimensions[4].height=(12 * len( acto.challenge.communication.splitlines() ) )
 
-            sheet["A4"].value = "TEAM"
-            sheet["B4"].value = acto.challenge.roster1.name
-            sheet["A5"].value = "COLOR"
-            sheet["B5"].value = acto.challenge.roster1.color
-            sheet["A6"].value = "CAPTAIN"
-            sheet["B6"].value = acto.challenge.roster1.captain.name
-            sheet["A7"].value = "SKILL"
-            sheet["B7"].value = acto.challenge.roster1.skill_display()
-            sheet["A8"].value = "GENDER"
-            sheet["B8"].value = acto.challenge.roster1.gender_text()
+            sheet["A6"].value = "TEAM"
+            sheet["B6"].value = acto.challenge.roster1.name
+            sheet["A7"].value = "COLOR"
+            sheet["B7"].value = acto.challenge.roster1.color
+            sheet["A8"].value = "CAPTAIN"
+            sheet["B8"].value = acto.challenge.roster1.captain.name
+            sheet["A9"].value = "SKILL"
+            sheet["B9"].value = acto.challenge.roster1.skill_display()
+            sheet["A10"].value = "GENDER"
+            sheet["B10"].value = acto.challenge.roster1.gender_text()
 
-            sheet["E4"].value = "TEAM"
-            sheet["E5"].value = "COLOR"
-            sheet["F4"].value = acto.challenge.roster2.name
-            sheet["F5"].value = acto.challenge.roster2.color
-            sheet["E6"].value = "CAPTAIN"
-            sheet["F6"].value = acto.challenge.roster2.captain.name
-            sheet["E7"].value = "SKILL"
-            sheet["F7"].value = acto.challenge.roster2.skill_display()
-            sheet["E8"].value = "GENDER"
-            sheet["F8"].value = acto.challenge.roster2.gender_text()
+            sheet["E6"].value = "TEAM"
+            sheet["E7"].value = "COLOR"
+            sheet["F6"].value = acto.challenge.roster2.name
+            sheet["F7"].value = acto.challenge.roster2.color
+            sheet["E8"].value = "CAPTAIN"
+            sheet["F8"].value = acto.challenge.roster2.captain.name
+            sheet["E9"].value = "SKILL"
+            sheet["F9"].value = acto.challenge.roster2.skill_display()
+            sheet["E10"].value = "GENDER"
+            sheet["F10"].value = acto.challenge.roster2.gender_text()
 
-            sheet["A10"].value = "# of players"
-            sheet["E10"].value = "# of players"
-            sheet["B10"].value = "Skater #"
-            sheet["F10"].value = "Skater #"
-            sheet["C10"].value = "Skater Name"
-            sheet["G10"].value = "Skater Name"
+            sheet["A12"].value = "# of players"
+            sheet["E12"].value = "# of players"
+            sheet["B12"].value = "Skater #"
+            sheet["F12"].value = "Skater #"
+            sheet["C12"].value = "Skater Name"
+            sheet["G12"].value = "Skater Name"
 
-            starti=11
+            starti=13
             rno=int(1)
             r1=list(acto.challenge.roster1.participants.all())
             r1.sort(key=lambda x: x.sk8number)
@@ -156,7 +165,7 @@ def make_chal_backup(acto_dict):
                 rno+=1
                 starti+=1
 
-            starti=11
+            starti=13
             rno=int(1)
             r2=list(acto.challenge.roster2.participants.all())
             r2.sort(key=lambda x: x.sk8number)
