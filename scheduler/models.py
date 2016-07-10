@@ -1414,8 +1414,6 @@ class Training(Activity):
         passstr=passstr[:-2]
         return passstr
 
-
-
     def passes_tooltip_title(self):
         pass_list=self.passes_allowed()
         pass_string=""

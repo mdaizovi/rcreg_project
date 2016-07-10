@@ -881,10 +881,8 @@ class TrainingRoster(models.Model):
 
     def intl_tooltip_title(self):
         if self.intl:
-            print "intl_tooltip_title intl"
             return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
         else:
-            print "intl_tooltip_title NOT intl"
             return "No location restrictions for registration"
 
     def intls_allowed(self):
@@ -985,7 +983,7 @@ class TrainingRoster(models.Model):
                 regcap=DEFAULT_REG_CAP#might get overwritten, jsut here so I don't need ot do 2 elses
                 if self.auditing.registered and self.auditing.registered.cap:
                     regcap=self.auditing.registered.cap
-                elif self.auditing.training and self.auditingtraining.regcap:
+                elif self.auditing.training and self.auditing.training.regcap:
                     regcap=self.auditingtraining.regcap
             else:
                 maxcap=audcap
@@ -1034,6 +1032,45 @@ class TrainingRoster(models.Model):
         they are only true in activity.editable_by. This is Bosses and Volunteers.'''
         allowed_editors=list(User.objects.filter(groups__name__in=['Volunteer',BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
         return allowed_editors
+
+    def skills_allowed(self):
+        if self.skill:
+            allowed=list(self.skill)
+            if "O" in allowed:
+                allowed.remove("O")
+        else:
+            allowed=["A","B","C","D"]
+        return allowed
+
+    def skill_display(self):
+        """This makes it so I don't see A0, just A, or AB, or something more understandable"""
+        prettify=''.join(self.skills_allowed())
+        return prettify
+
+    def skill_tooltip_title(self):
+        if self.skill:
+            allowed=self.skills_allowed()
+            allowed.sort(reverse=True)
+            skill_dict=dict(SKILL_LEVEL)
+            str_base="Registrant must identify skill as"
+            str_end= " in Profile in order to register"
+            str_mid=""
+            for item in allowed:
+                if item:
+                    displayable=skill_dict.get(item)
+                    if item==allowed[-1]:
+                        item_str=" or "+displayable
+                    else:
+                        item_str=" "+displayable+","
+
+                str_mid+=item_str
+            return str_base+str_mid+str_end
+        else:
+            return "No skill restrictions for registration"
+
+    def skill_icon(self):
+        if not self.skill:
+            return "glyphicon icon-universal-access"
 
     # def save(self, *args, **kwargs):
     #     if self.registered and self.registered.training:
