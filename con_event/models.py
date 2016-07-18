@@ -468,6 +468,13 @@ class Registrant(Matching_Criteria):
         else:
             return "Incomplete Name record"
 
+    @property
+    def realname(self):
+        if self.first_name and self.last_name:
+            return "%s %s" % (self.first_name, self.last_name)
+        else:
+            return "Incomplete Name Record"
+
 
     def __unicode__(self):
         return self.name+": "+str(self.con)

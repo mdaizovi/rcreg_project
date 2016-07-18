@@ -45,6 +45,7 @@ class OccurrenceResource(resources.ModelResource):
     skill_display=fields.Field()
     con_display=fields.Field()
     figureheads=fields.Field()
+    coach_real_name=fields.Field()
     description=fields.Field()
     name_with_data=fields.Field()
     gcal_location=fields.Field()
@@ -58,7 +59,6 @@ class OccurrenceResource(resources.ModelResource):
             loc=occurrence.location.name
             #loc=occurrence.location.abbrv #don't know wich one they want
         return loc
-
 
     def dehydrate_name_with_data(self,occurrence):
         #Big mess to make it look how they want so they ca import to gcal
@@ -119,6 +119,20 @@ class OccurrenceResource(resources.ModelResource):
         else:
             return ""
 
+    def dehydrate_coach_real_name(self,occurrence):
+        real_names=""
+
+        activity=occurrence.activity
+        if activity and activity.is_a_training:
+            regs=activity.get_figurehead_registrants()
+            for r in regs:
+                real_names+=r.realname+", "
+            real_names=real_names[:-2]
+
+        return real_names
+
+
+
     def dehydrate_description(self,occurrence):
         activity=occurrence.activity
         desc=""
@@ -146,7 +160,7 @@ class OccurrenceResource(resources.ModelResource):
 
     class Meta:
         model = Occurrence
-        fields = ('day','start','end','training__name','challenge__name','name_with_data','figureheads','skill_display','location__abbrv','con_display','description','gcal_location')
+        fields = ('day','start','end','training__name','challenge__name','name_with_data','figureheads','coach_real_name','skill_display','location__abbrv','con_display','description','gcal_location')
         #note to self: to include fk fields in export order, you need to specify fields. doesn't work if you do exclude.
         export_order=fields
         import_id_fields = ('event',)
