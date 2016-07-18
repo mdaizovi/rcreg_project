@@ -848,12 +848,17 @@ class TrainingRoster(models.Model):
 
     @property
     def name(self):
+        basename=""
         if self.registered:
-            return ("%s %s (REGISTERED)"%(self.registered.name,self.registered.start_time.strftime("%a %B %d %I:%-M %p")))
+            if self.intl:
+                basename+="INTL "
+            basename+=("%s %s (REGISTERED)"%(self.registered.name,self.registered.start_time.strftime("%a %B %d %I:%-M %p")))
         elif self.auditing:
-            return ("%s %s (AUDITING)"%(self.auditing.name, self.auditing.start_time.strftime("%a %B %d %I:%-M %p")))
+            basename+=("%s %s (AUDITING)"%(self.auditing.name, self.auditing.start_time.strftime("%a %B %d %I:%-M %p")))
         else:
-            return "Training Roster sans Training"
+            basename+="Training Roster sans Training"
+            
+        return basename
     #---------------------------------------------------------------------------
     def validate_unique(self, *args, **kwargs):
         super(TrainingRoster, self).validate_unique(*args, **kwargs)

@@ -217,7 +217,11 @@ def make_train_backup(acto_dict):
 
             #xlfilename=timestr+(acto.name)+".xlsx"
             #becuase had illegal characters in it
-            xlfilename=timestr+(ascii_only_no_punct(acto.name))+".xlsx"
+            regros, rcreated=TrainingRoster.objects.get_or_create(registered=acto)
+            if regros.intl:
+                xlfilename=timestr+(ascii_only_no_punct(acto.name))+" INTL.xlsx"
+            else:
+                xlfilename=timestr+(ascii_only_no_punct(acto.name))+".xlsx"
 
             fullfilename=os.path.join(loc_path, xlfilename)
 
@@ -231,14 +235,21 @@ def make_train_backup(acto_dict):
             sheet["A3"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
             sheet["A4"].value = acto.location.name
 
-            sheet["B6"].value = "Registration Roster"
+            if regros.intl:
+                sheet["B6"].value = "INTL ONLY Registration Roster"
+            else:
+                sheet["B6"].value = "Registration Roster"
             sheet["A7"].value = "Skill:"
             sheet["B7"].value = acto.training.skill_display()
             sheet["A8"].value = "Pass:"
             sheet["B8"].value = acto.training.passes_str()
             sheet["B10"].value = "Name"
 
-            sheet["F6"].value = "Auditing Roster"
+            if regros.intl:
+                sheet["F6"].value = "Auditing Roster (non-INTL skaters go here, maybe coach will let them skate.)"
+            else:
+                sheet["F6"].value = "Auditing Roster"
+
             sheet["E7"].value = "Skill:"
             sheet["F7"].value = "ABCD"
             sheet["E8"].value = "Pass:"
@@ -247,18 +258,21 @@ def make_train_backup(acto_dict):
 
             starti=11
             rno=int(1)
-            for r in range(1,61):
+            #regros, rcreated=TrainingRoster.objects.get_or_create(registered=acto) #moved above so i can find out if INTL
+            rmaxcap=regros.get_maxcap()
+            for r in range(1,(rmaxcap+1)):
                 sheet["A"+str(starti)].value = str(rno)+"."
                 rno+=1
                 starti+=1
 
             starti=11
             rno=int(1)
-            for r in range(1,11):
+            audros,acreated=TrainingRoster.objects.get_or_create(auditing=acto)
+            amaxcap=audros.get_maxcap()
+            for r in range(1,(amaxcap+1)):
                 sheet["E"+str(starti)].value = str(rno)+"."
                 rno+=1
                 starti+=1
-
 
             wb.save(filename = fullfilename)
     print "done making xl files"
