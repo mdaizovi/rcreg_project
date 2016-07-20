@@ -6,6 +6,7 @@ from django.db import connection as dbconnection
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
 from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
@@ -212,6 +213,18 @@ def view_training(request, activity_id,o_id=None):
                 registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
                 auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
                 rosters=[registered,auditing]
+
+                if 'download_excel' in request.POST:
+                    print "'download_excel' in request.POST"
+
+########don't know if this works, am half drunk and didn't give it a button yet#######
+                    wb,xlfilename=occur.excel_backup()
+                    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                    response['Content-Disposition'] = 'attachment; filename=%s'%(xlfilename)
+                    wb.save(response)
+                    return response
+#########################################
+
 
             except:
                 #If I do it thi way, it says "try back later" until registraiton stats, no time
@@ -1007,6 +1020,17 @@ def view_challenge(request, activity_id):
                     else:
                         communication_form=CommunicationForm(initial={'communication':challenge.communication})
 
+                    if 'download_excel' in request.POST:
+                        try:
+                            occur=Occurrence.objects.get(challenge=challenge)
+                            wb,xlfilename=occur.excel_backup()
+                            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                            response['Content-Disposition'] = 'attachment; filename=%s'%(xlfilename)
+                            wb.save(response)
+                            return response
+                        except:
+                            pass #I'm drunk. I don't care. The NSO shouldn't be here if it's not scheduled anyway.
+
             else:#if just a skater
                 communication_form.fields['communication'].widget.attrs['readonly'] = True
                 communication_form.fields['communication'].widget.attrs.update({'style' : 'background-color:white;'})
@@ -1021,23 +1045,6 @@ def view_challenge(request, activity_id):
                 challenge.save()
             else:
                 pass
-                #print "not post or errors: ",score_form.errors
-    #I was toying w/ letting sort name and # in this view, but I don't like the way it treats litte and capital like different letters,
-    #And I can't highlight number dupes
-    # if challenge and challenge.roster1:
-    #     for s in challenge.roster1.participants.all():
-    #         r1data.append({"sk8name":s.sk8name, "sk8number":s.sk8number})
-    # if challenge and challenge.roster2:
-    #     for s in challenge.roster2.participants.all():
-    #         r2data.append({"sk8name":s.sk8name, "sk8number":s.sk8number})
-    # print "r2data",r2data
-    #
-    # r1table = RosterTable(r1data)
-    # RequestConfig(request).configure(r1table)
-    #
-    # r2table = RosterTable(r2data)
-    # RequestConfig(request).configure(r2table)
-    # tables=[r1table,r2table]
 
     return render_to_response('view_challenge.html',{"communication_saved":communication_saved,"can_edit":can_edit,'participating':participating,'communication_form':communication_form,'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
 
