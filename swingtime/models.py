@@ -840,7 +840,59 @@ class Occurrence(models.Model):
             sheet = wb.active
 
             if self.training:
-                pass
+
+                regros, rcreated=TrainingRoster.objects.get_or_create(registered=self)
+
+                if regros.intl:
+                    splitxlfilename=xlfilename.split(".")
+                    newname=splitxlfilename[0]+" INTL"
+                    xlfilename=''.join([newname,splitxlfilename[1]])
+
+                sheet["E3"].value = "Printed: %s"%(timezone.now().strftime('%m %d %Y'))
+                sheet["A1"].value = self.training.name
+                sheet["A2"].value = self.training.display_coach_names()
+                sheet["A3"].value = self.start_time.strftime('%H %M %p, %m-%d-%Y')
+                sheet["A4"].value = self.location.name
+
+                if regros.intl:
+                    sheet["B6"].value = "INTL ONLY Registration Roster"
+                else:
+                    sheet["B6"].value = "Registration Roster"
+                sheet["A7"].value = "Skill:"
+                sheet["B7"].value = self.training.skill_display()
+                sheet["A8"].value = "Pass:"
+                sheet["B8"].value = self.training.passes_str()
+                sheet["B10"].value = "Name"
+
+                if regros.intl:
+                    sheet["F6"].value = "Auditing Roster (non-INTL skaters go here, maybe coach will let them skate.)"
+                else:
+                    sheet["F6"].value = "Auditing Roster"
+
+                sheet["E7"].value = "Skill:"
+                sheet["F7"].value = "ABCD"
+                sheet["E8"].value = "Pass:"
+                sheet["F8"].value = "MVP, Skater, Offskate" #right? confirm.
+                sheet["F10"].value = "Name"
+
+                starti=11
+                rno=int(1)
+                #regros, rcreated=TrainingRoster.objects.get_or_create(registered=acto) #moved above so i can find out if INTL
+                rmaxcap=regros.get_maxcap()
+                for r in range(1,(rmaxcap+1)):
+                    sheet["A"+str(starti)].value = str(rno)+"."
+                    rno+=1
+                    starti+=1
+
+                starti=11
+                rno=int(1)
+                audros,acreated=TrainingRoster.objects.get_or_create(auditing=self)
+                amaxcap=audros.get_maxcap()
+                for r in range(1,(amaxcap+1)):
+                    sheet["E"+str(starti)].value = str(rno)+"."
+                    rno+=1
+                    starti+=1
+
             elif self.challenge:
 
                 sheet["A1"].value = self.challenge.data_title
@@ -924,9 +976,6 @@ class Occurrence(models.Model):
                     starti+=1
 
         return wb,xlfilename
-
-
-
 
 #-------------------------------------------------------------------------------
 class TrainingRoster(models.Model):
