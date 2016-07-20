@@ -49,24 +49,18 @@ class BPTUploadForm(forms.Form):
     def my_valid(self):
         """Don't touch this it has to be this way to return any of all erorr messages w/out just losing the file and thinking that's the problem"""
         IMPORT_FILE_TYPES=[".xls",".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.ms-excel"]
-        print"starting my valid"
         if self.is_valid():
             data = self.cleaned_data
             xlfile = data['xlfile']
-            print"is valid"
 
             try:
                 if xlfile and xlfile.content_type and xlfile.content_type not in IMPORT_FILE_TYPES:
-                    print"not excel"
                     self._errors["xlfile"] = self.error_class(['Please provide an Excel sheet'])
                 elif xlfile and self.get_header(base_header_file) != self.get_header(xlfile):
-                    print"doesn't match"
                     self._errors["xlfile"] = self.error_class(['The format of the uploaded file, including the Header, must be identical to 2016 BPT reports'])
                 elif not xlfile:
-                    print"nofile"
                     self._errors["xlfile"] = self.error_class(['Field Cannot be blank. Please provide an Excel sheet.'])
             except:
-                print"excepting in my valid"
                 self._errors["xlfile"] = self.error_class(["Unspecified error. Please try another file."])
             return data
 
@@ -76,9 +70,7 @@ class BPTUploadForm(forms.Form):
 
     def make_excel_odict_list(self,xlfile):
         """Takes in excel file of BPT registrant data, turns each row into an ordered dict, returns list of all ordered dicts"""
-        print "starting make excel odic list"
         wb = openpyxl.load_workbook(xlfile)
-        #sheet = wb.get_active_sheet()
         sheet =wb.active
         all_data=[]
         highest_row=sheet.get_highest_row()
@@ -176,28 +168,23 @@ class BPTUploadForm(forms.Form):
                 this_reg=None
                 try:#stating with most matches, broadening, until i'm sure it doesn't exist
                     this_reg=Registrant.objects.get(con=con, email=email,first_name=first_name,last_name=last_name,sk8name=sk8name)
-                    print "found %s, first try"%(this_reg)
                 except ObjectDoesNotExist:
                     #first try: con and email match, and EITHER f/l name or ska8name
                     reg_q=Registrant.objects.filter(con=con, email=email).filter(Q(first_name__iexact=first_name,last_name__iexact=last_name)|Q(sk8name__iexact=sk8name))
                     if reg_q.count()==1:
                         this_reg=reg_q[0]
-                        print "found %s, second try"%(this_reg)
                     else:#allow for same person, different email
                         #reg_q=Registrant.objects.filter(con=con).filter(Q(first_name__iexact=first_name,last_name__iexact=last_name)|Q(sk8name__iexact=sk8name,sk8number__iexact=sk8number))
                         #the above allowed skaters w/ same name to be merged as same person, if email wasn't found.
                         reg_q=Registrant.objects.filter(con=con,first_name__iexact=first_name,last_name__iexact=last_name, sk8name__iexact=sk8name)
                         if reg_q.count()==1:
                             this_reg=reg_q[0]
-                            print "found %s, third try w/ diff email"%(this_reg)
                         else:
                             try:
                                 Registrant.objects.get(con=con, email=email)
-                                print "email exists"
                                 repeat_email_list.append(od)
                             except ObjectDoesNotExist:
                                 #here's where I think doesn't exist, make a new One . if repeat email, will fail upon save
-                                print "think doesn't exist"
                                 this_reg=Registrant(con=con, email=email,first_name=first_name,last_name=last_name)
 
                 if this_reg:#ie if no repeat email
@@ -205,44 +192,27 @@ class BPTUploadForm(forms.Form):
                         'country':country,'state':state,'BPT_Ticket_ID':BPT_Ticket_ID,'affiliation':affiliation,'ins_carrier':ins_carrier,'ins_number':ins_number,'age_group':age_group,
                         'favorite_part':favorite_part,'volunteer':volunteer}
                     for k,v in attr_dict.iteritems():
-                        print k," is ",v
-                        #value = getattr(this_reg, k)
-                        #if v and not value:
                         if v:
-                            print "setting or updating",this_reg,"s ",k
                             setattr(this_reg, k, v)
-                        elif not v:
-                            print "od doesn't have ",k
-                        # elif value:
-                        #     print this_reg,"already has a ",k,": ",value
-                            #NEW NOTE this was making everyone have default MVP Female setting
-    ########temporarily suspending save just to see printout###########
+
                     this_reg.save()
                     this_reg.save()#think I have to do twice tomake user? I forgot.
-    # ##################################
                     success_list.append(od)
-                    print this_reg," Succesfully made"
             except:
-                print "Fail: "
                 error_list.append(od)
-                print this_reg
 
         return success_list, error_list,repeat_email_list
 
     def make_registrants(self):
-        print "I'm making registrants!"
         #http://www.dangtrinh.com/2016/01/generate-excel-file-with-openpyxl-in.html
 
         cdata=self.cleaned_data
-        print "cdata",cdata
         con=Con.objects.get(pk=int(cdata['con']))
         xlfile = cdata['xlfile']
 
         #sort through the data
         header=self.get_header(base_header_file)
-        print "header",header
         all_data=self.make_excel_odict_list(xlfile)
-        print "got all data"
         no_sk8_or_real_name,bad_emails,complete_entries=self.find_incompletes(all_data)
 
         reg_made, errors_list, email_dupe=self.import_from_od(complete_entries,con)
