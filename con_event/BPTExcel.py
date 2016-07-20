@@ -226,7 +226,6 @@ class BPTUploadForm(forms.Form):
 
         #output the data
         try:
-        #if 2==2:
             first=True
             wb = Workbook()
             for dk,dv in data_dict.iteritems():
@@ -241,7 +240,6 @@ class BPTUploadForm(forms.Form):
                 for k,v in header.iteritems():
                     location=str(k)+str(r)
                     sheet[location].value = v
-########this might be a huge fucking mess. try it out.##########
                 for od in dv:
                     r+=1
                     for k,v in od.iteritems():

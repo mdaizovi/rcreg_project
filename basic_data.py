@@ -88,102 +88,10 @@ def make_chal_backup(acto_dict):
             if not os.path.isdir(loc_path):
                 os.makedirs(loc_path)
 
-            timestr=acto.start_time.strftime('%H %M %p ')
-            #xlfilename=timestr+(acto.name)+".xlsx"
-            #in case of illegal characters (was only a problem for trainings)
-            xlfilename=timestr+(ascii_only_no_punct(acto.name))+".xlsx"
-
-
+            wb,xlfilename=acto.excel_backup()
             fullfilename=os.path.join(loc_path, xlfilename)
-
-            wb = openpyxl.Workbook()
-            sheet = wb.active
-
-            # sheet["A1"].value = acto.challenge.roster1.name
-            # sheet["B1"].value = "VS"
-            # sheet["C1"].value = acto.challenge.roster2.name
-            sheet["A1"].value = acto.challenge.data_title
-
-            sheet["A2"].value = acto.location.abbrv
-            sheet["B2"].value = acto.start_time.strftime('%H %M %p, %m-%d-%Y')
-
-            sheet["D2"].value = "Printed:"
-            sheet["E2"].value = nowstr
-
-            if acto.challenge.communication:
-                sheet["A4"].value = "ATTN:"
-                sheet["A4"].fill = redFill
-                sheet.merge_cells('B4:G4')
-                sheet["B4"].value = acto.challenge.communication
-                #sheet.row_dimensions[4].height=100
-                sheet.row_dimensions[4].height=(12 * len( acto.challenge.communication.splitlines() ) )
-
-            sheet["A6"].value = "TEAM"
-            sheet["B6"].value = acto.challenge.roster1.name
-            sheet["A7"].value = "COLOR"
-            sheet["B7"].value = acto.challenge.roster1.color
-            sheet["A8"].value = "CAPTAIN"
-            sheet["B8"].value = acto.challenge.roster1.captain.name
-            sheet["A9"].value = "SKILL"
-            sheet["B9"].value = acto.challenge.roster1.skill_display()
-            sheet["A10"].value = "GENDER"
-            sheet["B10"].value = acto.challenge.roster1.gender_text()
-
-            sheet["E6"].value = "TEAM"
-            sheet["E7"].value = "COLOR"
-            sheet["F6"].value = acto.challenge.roster2.name
-            sheet["F7"].value = acto.challenge.roster2.color
-            sheet["E8"].value = "CAPTAIN"
-            sheet["F8"].value = acto.challenge.roster2.captain.name
-            sheet["E9"].value = "SKILL"
-            sheet["F9"].value = acto.challenge.roster2.skill_display()
-            sheet["E10"].value = "GENDER"
-            sheet["F10"].value = acto.challenge.roster2.gender_text()
-
-            sheet["A12"].value = "# of players"
-            sheet["E12"].value = "# of players"
-            sheet["B12"].value = "Skater #"
-            sheet["F12"].value = "Skater #"
-            sheet["C12"].value = "Skater Name"
-            sheet["G12"].value = "Skater Name"
-
-            starti=13
-            rno=int(1)
-            r1=list(acto.challenge.roster1.participants.all())
-            r1.sort(key=lambda x: x.sk8number)
-            for r in r1:
-                if r==acto.challenge.roster1.captain:
-                    if r.sk8name:
-                        name=r.sk8name+" (Captain)"
-                    else:
-                        name="(Captain)"
-                else:
-                    name=r.sk8name
-                sheet["A"+str(starti)].value = str(rno)+"."
-                sheet["B"+str(starti)].value = r.sk8number
-                sheet["C"+str(starti)].value = name
-                rno+=1
-                starti+=1
-
-            starti=13
-            rno=int(1)
-            r2=list(acto.challenge.roster2.participants.all())
-            r2.sort(key=lambda x: x.sk8number)
-            for r in r2:
-                if r==acto.challenge.roster2.captain:
-                    if r.sk8name:
-                        name=r.sk8name+" (Captain)"
-                    else:
-                        name="(Captain)"
-                else:
-                    name=r.sk8name
-                sheet["E"+str(starti)].value = str(rno)+"."
-                sheet["F"+str(starti)].value = r.sk8number
-                sheet["G"+str(starti)].value = name
-                rno+=1
-                starti+=1
-
             wb.save(filename = fullfilename)
+
     print "done making xl files"
 
 

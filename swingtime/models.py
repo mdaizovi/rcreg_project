@@ -21,8 +21,11 @@ from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from scheduler.models import Location, Challenge, Training,INTEREST_RATING,DEFAULT_REG_CAP,DEFAULT_AUD_CAP
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
+from rcreg_project.extras import ascii_only_no_punct
 #import datetime #why did I dd this? it broke the calendar daily view
 from random import choice
+import openpyxl
+from openpyxl.styles import PatternFill
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 except ImportError:
@@ -823,6 +826,109 @@ class Occurrence(models.Model):
         return allowed_editors
 
 #-------------------------------------------------------------------------------
+    def excel_backup(self):
+        """Writes/returns xlsx file of relevant data, to be gathered ahead of the con and be used as a Plan B,
+        or for people who don't want to use the site, I guess (I think redundant, Ivanna insists)"""
+        wb=None
+
+        if self.training or self.challenge:
+
+            timestr=self.start_time.strftime('%H %M %p ')
+            xlfilename=timestr+(ascii_only_no_punct(self.name))+".xlsx"
+
+            wb = openpyxl.Workbook()
+            sheet = wb.active
+
+            if self.training:
+                pass
+            elif self.challenge:
+
+                sheet["A1"].value = self.challenge.data_title
+
+                sheet["A2"].value = self.location.abbrv
+                sheet["B2"].value = self.start_time.strftime('%H %M %p, %m-%d-%Y')
+
+                sheet["D2"].value = "Printed:"
+                sheet["E2"].value = timezone.now().strftime('%m %d %Y')
+
+                if self.challenge.communication:
+                    sheet["A4"].value = "ATTN:"
+                    sheet["A4"].fill = PatternFill(start_color='FFFF0000',end_color="FFFFFF00",fill_type='solid')
+                    sheet.merge_cells('B4:G4')
+                    sheet["B4"].value = self.challenge.communication
+                    sheet.row_dimensions[4].height=(12 * len( self.challenge.communication.splitlines() ) )
+
+                sheet["A6"].value = "TEAM"
+                sheet["B6"].value = self.challenge.roster1.name
+                sheet["A7"].value = "COLOR"
+                sheet["B7"].value = self.challenge.roster1.color
+                sheet["A8"].value = "CAPTAIN"
+                sheet["B8"].value = self.challenge.roster1.captain.name
+                sheet["A9"].value = "SKILL"
+                sheet["B9"].value = self.challenge.roster1.skill_display()
+                sheet["A10"].value = "GENDER"
+                sheet["B10"].value = self.challenge.roster1.gender_text()
+
+                sheet["E6"].value = "TEAM"
+                sheet["E7"].value = "COLOR"
+                sheet["F6"].value = self.challenge.roster2.name
+                sheet["F7"].value = self.challenge.roster2.color
+                sheet["E8"].value = "CAPTAIN"
+                sheet["F8"].value = self.challenge.roster2.captain.name
+                sheet["E9"].value = "SKILL"
+                sheet["F9"].value = self.challenge.roster2.skill_display()
+                sheet["E10"].value = "GENDER"
+                sheet["F10"].value = self.challenge.roster2.gender_text()
+
+                sheet["A12"].value = "# of players"
+                sheet["E12"].value = "# of players"
+                sheet["B12"].value = "Skater #"
+                sheet["F12"].value = "Skater #"
+                sheet["C12"].value = "Skater Name"
+                sheet["G12"].value = "Skater Name"
+
+                starti=13
+                rno=int(1)
+                r1=list(self.challenge.roster1.participants.all())
+                r1.sort(key=lambda x: x.sk8number)
+                for r in r1:
+                    if r==self.challenge.roster1.captain:
+                        if r.sk8name:
+                            name=r.sk8name+" (Captain)"
+                        else:
+                            name="(Captain)"
+                    else:
+                        name=r.sk8name
+                    sheet["A"+str(starti)].value = str(rno)+"."
+                    sheet["B"+str(starti)].value = r.sk8number
+                    sheet["C"+str(starti)].value = name
+                    rno+=1
+                    starti+=1
+
+                starti=13
+                rno=int(1)
+                r2=list(self.challenge.roster2.participants.all())
+                r2.sort(key=lambda x: x.sk8number)
+                for r in r2:
+                    if r==self.challenge.roster2.captain:
+                        if r.sk8name:
+                            name=r.sk8name+" (Captain)"
+                        else:
+                            name="(Captain)"
+                    else:
+                        name=r.sk8name
+                    sheet["E"+str(starti)].value = str(rno)+"."
+                    sheet["F"+str(starti)].value = r.sk8number
+                    sheet["G"+str(starti)].value = name
+                    rno+=1
+                    starti+=1
+
+        return wb,xlfilename
+
+
+
+
+#-------------------------------------------------------------------------------
 class TrainingRoster(models.Model):
     """Used for Registration and Auditing roster for training Occurrences.
     Can be made in the Admin if made INTL, or made using get_or_create in register_training view.
@@ -857,7 +963,7 @@ class TrainingRoster(models.Model):
             basename+=("%s %s (AUDITING)"%(self.auditing.name, self.auditing.start_time.strftime("%a %B %d %I:%-M %p")))
         else:
             basename+="Training Roster sans Training"
-            
+
         return basename
     #---------------------------------------------------------------------------
     def validate_unique(self, *args, **kwargs):
