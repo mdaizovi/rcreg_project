@@ -69,6 +69,10 @@
       {% url 'register_training' o.pk as register_url%}
       <li role="separator" class="divider"></li>
       <li role="presentation"><a href="{{register_url}}">Register MVPs</a></li>
+      <li role="separator" class="divider"></li>
+      <li role="presentation" class="text-center">
+        <form method="POST" class="post-form">{% csrf_token %}
+        <button type="submit" class="btn btn-success btn-xs" name="download_excel">Download Excel</button></form></li>
       {%endif%}
     </ul>
       {%endfor%}

@@ -204,7 +204,6 @@ def view_training(request, activity_id,o_id=None):
     occur=None
     rosters=[]
     can_register_at=None
-
     try:
         training=Training.objects.get(pk=int(activity_id))
         if o_id:
@@ -213,18 +212,12 @@ def view_training(request, activity_id,o_id=None):
                 registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
                 auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
                 rosters=[registered,auditing]
-
                 if 'download_excel' in request.POST:
-                    print "'download_excel' in request.POST"
-
-########don't know if this works, am half drunk and didn't give it a button yet#######
                     wb,xlfilename=occur.excel_backup()
                     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                     response['Content-Disposition'] = 'attachment; filename=%s'%(xlfilename)
                     wb.save(response)
                     return response
-#########################################
-
 
             except:
                 #If I do it thi way, it says "try back later" until registraiton stats, no time
