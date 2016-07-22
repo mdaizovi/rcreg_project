@@ -35,7 +35,8 @@ def get_chal_os(con):
     """For printing out Excel backup sheets.
     Gets all scheduled Challenge Occurrances for con, returns dict w/ K,V  of date, chal list."""
     chalo_dict={}
-    chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(challenge=None)
+    conend=datetime(con.end.year, con.end.month, con.end.day, 23,59)
+    chalos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=conend).exclude(challenge=None)
     for c in chalos:
         if c.start_time.date() not in chalo_dict:
             chalo_dict[c.start_time.date()]=[c]
@@ -51,7 +52,8 @@ def get_train_os(con):
     """For printing out Excel backup sheets.
     Gets all scheduled Challenge Occurrances for con, returns dict w/ K,V  of date, chal list."""
     o_dict={}
-    tos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).exclude(training=None)
+    conend=datetime(con.end.year, con.end.month, con.end.day, 23,59)
+    tos=Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=conend).exclude(training=None)
     for c in tos:
         if c.start_time.date() not in o_dict:
             o_dict[c.start_time.date()]=[c]
