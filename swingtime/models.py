@@ -915,10 +915,9 @@ class Occurrence(models.Model):
                 sheet["A7"].value = "COLOR"
                 sheet["B7"].value = self.challenge.roster1.color
                 sheet["A8"].value = "CAPTAIN"
-                cap1str=self.challenge.roster1.captain.name
+                sheet["B8"].value = self.challenge.roster1.captain.name
                 if self.challenge.roster1.captain.email:
-                    cap1str+= " (%s)"%(self.challenge.roster1.captain.email)
-                sheet["B8"].value = cap1str
+                    sheet["C8"].value = self.challenge.roster1.captain.email
                 sheet["A9"].value = "SKILL"
                 sheet["B9"].value = self.challenge.roster1.skill_display()
                 sheet["A10"].value = "GENDER"
@@ -929,10 +928,10 @@ class Occurrence(models.Model):
                 sheet["F6"].value = self.challenge.roster2.name
                 sheet["F7"].value = self.challenge.roster2.color
                 sheet["E8"].value = "CAPTAIN"
-                cap2str=self.challenge.roster2.captain.name
+                sheet["F8"].value = self.challenge.roster2.captain.name
                 if self.challenge.roster2.captain.email:
-                    cap2str+= " (%s)"%(self.challenge.roster2.captain.email)
-                sheet["F8"].value = cap2str
+                    sheet["G8"].value = self.challenge.roster2.captain.email
+
                 sheet["E9"].value = "SKILL"
                 sheet["F9"].value = self.challenge.roster2.skill_display()
                 sheet["E10"].value = "GENDER"
