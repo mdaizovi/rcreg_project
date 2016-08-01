@@ -11,15 +11,8 @@ from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME,BPT
 from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from con_event.signals import update_user_fl_name,delete_homeless_user,clean_registrant_import,match_user,sync_reg_permissions
 
-#pretty sure I never use logging
-#import logging
-#Get an instance of a logger
-#logger = logging.getLogger(__name__)
-
 #from django.db import connection as dbconnection #for checking db hits and speed
 #print "dbc0:", len(dbconnection.queries) #syntax reminder, for checking db hits and speed
-
-
 
 AMPM=(('AM','AM'),('PM','PM'))
 
@@ -514,66 +507,6 @@ class Registrant(Matching_Criteria):
             return True
         else:
             return False
-
-
-#### unaccepted_challenges and unsubmitted_challenges appear to only be used in context processors.
-#testing idea of rewriting query there#####
-    # def unaccepted_challenges(self):
-    #     """returns list of challenges in which registrant is listed as captain but has not accepted challenge,
-    #     or in which registrant is captain, has accepted challenge, but opponent has rejected.
-    #     either way action is require on registrant's part (either accept of find a new opponent)"""
-    #     from scheduler.models import Challenge
-    #     unaccepted_challenges=Challenge.objects.filter(Q(roster1__captain=self)|Q(roster2__captain=self)).filter(Q(captain1accepted=False)|Q(captain2accepted=False))
-    #     return unaccepted_challenges
-    #
-    # def unsubmitted_challenges(self):
-    #     '''Returns a list of all chellenges in which Registrant is captain, but challeng has not been submitted
-    #     only if submission day has passed
-    #     don't change this without consulting notify something something in rcreg_project/custom processors.'''
-    #     from scheduler.models import Challenge #put here to avoid import error with Matching_Criteria
-    #     my_rosters=list(Roster.objects.filter(captain=self))
-    #     unsubmitted=Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None)
-    #     return unsubmitted
-##############################
-
-
-
-
-
-############ I think I don't need these anymore?###########
-
-    # def pending_challenges(self):
-    #     '''Returns a list of all chellenges in which Registrant is on roster, but challeng has not been submitted'''
-    #     from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
-    #     my_rosters=list(self.roster_set.all())
-    #     my_cap_rosters=list(Roster.objects.filter(captain=self))
-    #     for r in my_cap_rosters:
-    #         if r not in my_rosters:
-    #             my_rosters.append(r)
-    #     pending=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).filter(submitted_on=None))
-    #     return pending
-
-    # def scheduled_challenges(self):
-    #     '''Returns a list of all chellenges in which Registrant is on roster, and challenge is confirmed'''
-    #     #not written yet, currently no such thing as a scheduled challenge
-    #     return None
-
-    # def unconfirmed_challenges(self):
-    #     '''Returns a list of all chellenges in which Registrant is on a roster,
-    #     chalenge has been submitted, but is not accepted by RC. This is wheter or not reg is a captain, captian is irrelevant'''
-    #     from scheduler.models import Challenge,Roster #put here to avoid import error with Matching_Criteria
-    #     my_rosters=list(self.roster_set.all())
-    #     my_cap_rosters=list(Roster.objects.filter(captain=self))
-    #     for r in my_cap_rosters:
-    #         if r not in my_rosters:
-    #             my_rosters.append(r)
-    #     #this was making challenges disappear, not ready to show whether scheduled yet.
-    #     #unconfirmed=list(Challenge.objects.filter(RCaccepted=False).filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
-    #     unconfirmed=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)).exclude(submitted_on=None))
-    #     return unconfirmed
-
-############ I think I don't need these anymore?###########
-
 
     def criteria_conflict(self):
         problem_criteria=[]
