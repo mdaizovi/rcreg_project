@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+{% extends 'layouts/base.html'%}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<head>
+<title>{% block title %}My Trainings{% endblock %}</title>
+</head>
+
+
+<div class="row" id="moreInfo">
+  <div class="col-sm-12">
+    <h3>My Reviews</h3>
+
+    {%if not registrant_dict_list%}
+    <div class="alert alert-danger" role="alert">
+    You have not have any RollerCon passes on file. Please contact the site administrator if you believe this to be in error.</div>
+    {%else%}
+
+    <div class="tabbable">
+      <ul class="nav nav-tabs">
+
+{%for dict in registrant_dict_list%}
+
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with '#tab'|add:con_number as tab_number %}
+
+<li {%if dict.con == active %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{dict.con}}</a></li>
+
+{%endwith%}{%endwith%}
+{%endfor%}
+</ul>
+
+<div class="tab-content margin-top-10">
+{%for dict in registrant_dict_list%}
+{% with forloop.counter|stringformat:"s" as con_number %}
+{% with 'tab'|add:con_number as tab_number %}
+
+
+<div class="tab-pane {%if dict.con == active %}active{%endif%}" id="{{tab_number}}">
+
+
+  <div class="row">
+    <div class="col-md-12 pull-left">
+
+    <div class="panel panel-default">
+    <!-- <div class="panel-heading"><b>My Challenges</b></div>-->
+    <div class="panel-body">
+{%if dict.conpassed%}
+
+<table class="table table-hover">
+<tr><th>Review</th><th class="text-center" colspan="3">Actions</th></tr>
+<tr><td><b>{{dict.con}}</b></td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_con' dict.con.id %}" role="button">Review</a></td></tr>
+  {%for train in dict.trainings%}
+  <tr><td><b>{{train.name}}</b> (<i>{{train.display_coach_names}}</i>)</td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_training' train.id %}" role="button">Review</a></td></tr>
+  {%endfor%}
+</table>
+
+
+{%else%}
+<i>Please wait until the Con is over before reviewing it!</i>
+{%endif%}
+
+    </div>
+
+    </div>
+
+
+        </div><!-- end row -->
+        </div><!-- end col-md-4 center-block-->
+        </div><!-- end tab-pane -->
+        {%endwith%}{%endwith%}
+        {%endfor%}<!-- dict in registrant_dict_list% -->
+
+      </div><!-- end tab-content -->
+    </div><!-- end tabbable -->
+{%endif%}<!-- if registrant_dict_list, ie if they have registered for at least one con -->
+
+  </div><!-- end col-sm-12 -->
+</div><!-- end row-->
+
+
+
+{% endblock %}
