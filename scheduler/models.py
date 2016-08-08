@@ -1608,7 +1608,7 @@ class ReviewTraining(models.Model):
     def __unicode__(self):
         return  "%s %s" % (self.training, self.date)
 
-class Review_RC(models.Model):
+class ReviewCon(models.Model):
     date=models.DateField(auto_now=True, null=True)
     #DON'T SHARE REGISTRANT WITH ANYONE, INCLUDING CONFERENCE ORGANIZERS.
     #I just didn't see the point in premature optimization, making random review codes to remain anonymous, etc.

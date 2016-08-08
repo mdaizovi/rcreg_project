@@ -2,6 +2,7 @@
 from con_event.models import Con,Registrant, SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL, SKILL_LEVEL_ACT
 from django.contrib import admin
 from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
+#from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach,ReviewTraining,ReviewCon
 from import_export import resources,fields
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from django.core.urlresolvers import reverse, resolve
@@ -272,9 +273,45 @@ class CoachAdmin(ImportExportModelAdmin):
     view_on_site = True
 
 
+# class ReviewTrainingResource(resources.ModelResource):
+#     class Meta:
+#         model = ReviewTraining
+#         fields = ('id','user','description','can_email','user__email','user__first_name','user__last_name','user__username')
+#         export_order=fields
+#         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
+#         import_id_fields = ('user',)
+#         skip_unchanged = True
+#         report_skipped = True
+#
+# class ReviewTrainingAdmin(ImportExportModelAdmin):
+# #class CoachAdmin(ImportExportActionModelAdmin):
+#     search_fields = ('user__username','user__first_name', 'user__last_name')
+#     #list_display= ('user',)
+#     resource_class = ReviewTrainingResource
+#     view_on_site = True
+#
+# class ReviewConResource(resources.ModelResource):
+#     class Meta:
+#         model = ReviewCon
+#         fields = ('id','user','description','can_email','user__email','user__first_name','user__last_name','user__username')
+#         export_order=fields
+#         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
+#         import_id_fields = ('user',)
+#         skip_unchanged = True
+#         report_skipped = True
+#
+# class ReviewConAdmin(ImportExportModelAdmin):
+#     search_fields = ('user__username','user__first_name', 'user__last_name')
+#     #list_display= ('user',)
+#     resource_class = Review_RCResource
+#     view_on_site = True
+
+
 admin.site.register(Venue, VenueAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Roster, RosterAdmin)
 admin.site.register(Challenge, ChallengeAdmin)
 admin.site.register(Training, TrainingAdmin)
 admin.site.register(Coach, CoachAdmin)
+#admin.site.register(ReviewTraining, ReviewTrainingAdmin)
+#admin.site.register(ReviewCon, ReviewConAdmin)
