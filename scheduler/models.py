@@ -40,6 +40,49 @@ DEFAULT_REG_CAP=60
 DEFAULT_AUD_CAP=10
 SKILL_INTEREST_DICT={'AO':5, 'AB':4,'BO':3,'BC':2,'CO':1,'ABC':1,'A':5,'B':3,"C":2,"D":1}
 
+#for reviews:
+RULESET=(('W', 'WFTDA'), ('U', 'USARS'),('M', 'MRDA'), ('J', 'JRDA'), ('R', 'RDCL'),('O', 'OTHER'))
+YEARS_PLAYING= (('1', '<2'),('2', '2-4'),('5', '5-7'), ('8', '8 or more'),('NA', "Supporter/fan, not a player" ),('NYB','Not yr bizness'))
+FAV_PART= (('1st', 'This is my first Rollercon!'),('ONSK8', 'On Skates Training'),('OFFSK8', 'Off Skates Training'), ('BCP', 'Bouts & Challenges (playing)'), ('BCW', 'Bouts & Challenges (watching)'),('SW','Seminars & Workshops'),('247P','24/7 Pool Party'),('BNB','Black n Blue & PM Social Events'),('OSS','Open Skate & Scrimmages'),('VN','Volunteering'),('VV','Vendor Village'))
+SESSION_REVIEW_DICT={1:'No, not at all',2: 'Not much',3: 'No opinion/neutral opinion',4: 'Yes, somewhat',5: 'Yes, absolutely!'}
+RC_REVIEW_DICT={1:'Very dissatisfied',2: 'A little dissatisfied',3:'No opinion/neutral opinion',4: 'Somewhat satisfied',5: 'Very satisfied'}
+RC_REVIEW_RANIKING_DICT={1:'Most Important',2: '2nd Most Important',3:'3rd Most Important',4:'4th Most Important',5: '5th Most Important',6: '6th Most Important',7: '7th Most Important'}
+
+
+def FAV_PART_EXPANDED(FAV_PART):
+    NEW_FAV_PART=[("OFL","Officiating Learning Opportunities"),("AWE","It was all awesome")]
+    for tup in FAV_PART:
+        if tup not in [('1st', 'This is my first Rollercon!')]:
+            NEW_FAV_PART.append(tup)
+    return tuple(NEW_FAV_PART)
+
+
+def GET_NUMBER_RATINGS(number, review_dict):
+    ratelist=[]
+    if review_dict:
+        for i in range(1,number):
+            words=review_dict.get(i)
+            tup=(str(i),words)
+            ratelist.append(tup)
+    else:
+        for i in range(1,number):
+            tup=(str(i),str(i))
+            ratelist.append(tup)
+    ratelist.sort(reverse=True)
+    ratetup=tuple(ratelist)
+    return ratetup
+
+def GET_RC_EXPERIENCE():
+    yearlist=[('EVERY',"I have been to every RollerCon")]
+    nextyear=datetime.date.today() + datetime.timedelta(years=1)
+    nyear=nextyear.year()
+    for i in range(2005,nyear):
+        tup=(str(i),str(i))
+        yearlist.append(tup)
+    yeartup=tuple(yearlist)
+    return yeartup
+
+
 class Venue(models.Model):
     name=models.CharField(max_length=50, unique=True)
 
@@ -1529,3 +1572,77 @@ class Coach(models.Model):
 
     class Meta:
         ordering=('user',)
+
+
+class ReviewTraining(models.Model):
+    date=models.DateField(auto_now=True, null=True)
+    training=models.ForeignKey(Training)
+    #DON'T SHARE REGISTRANT WITH ANYONE, INCLUDING CONFERENCE ORGANIZERS.
+    #I just didn't see the point in premature optimization, making random review codes to remain anonymous, etc.
+    #the only one who will have the power to match reviewrs with their reviews is the coder-- you.
+    #Don't do it.
+    registrant=models.ForeignKey(Registrant)
+
+    prepared=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    articulate=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    hear=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    learn_new=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    recommend=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    another_class=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+
+    #Reminder: next two only for on skates##############
+    skill_level_expected=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    drills_helpful=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    ###############
+    share_feedback=models.BooleanField(default=False)
+    league_visit=models.BooleanField(default=False)
+    league_referral=models.CharField(max_length=100,null=True, blank=True)
+
+    comments_text=models.TextField(null=True, blank=True)
+
+    ### optional
+    ruleset=models.CharField(max_length=30, null=True,blank=True, choices=RULESET)
+    years_playing=models.CharField(max_length=30, null=True,blank=True, choices=YEARS_PLAYING)
+    RC_Experience=models.CharField(max_length=300, null=True,blank=True)
+
+    def __unicode__(self):
+        return  "%s %s" % (self.training, self.date)
+
+class Review_RC(models.Model):
+    date=models.DateField(auto_now=True, null=True)
+    #DON'T SHARE REGISTRANT WITH ANYONE, INCLUDING CONFERENCE ORGANIZERS.
+    #I just didn't see the point in premature optimization, making random review codes to remain anonymous, etc.
+    #the only one who will have the power to match reviewrs with their reviews is the coder-- you.
+    #Don't do it.
+    registrant=models.ForeignKey(Registrant)
+
+    overall_exp=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    onsk8s=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    offsk8s=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    seminars=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    competitive_events_playing=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    competitive_events_watching=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    social_events=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    shopping=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    lines=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+
+    fav1=models.CharField(max_length=10, choices=FAV_PART_EXPANDED((FAV_PART)),null=True, blank=True)
+    fav2=models.CharField(max_length=10, choices=FAV_PART_EXPANDED((FAV_PART)),null=True, blank=True)
+
+    rank_training=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_competition_playing=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_competition_watching=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_seminars=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_social=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_shopping=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_volunteer=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+
+    comments_text= models.TextField(null=True, blank=True)
+    share_feedback=models.BooleanField(default=True)
+
+    ruleset=models.CharField(max_length=30, null=True,blank=True, choices=RULESET)
+    years_playing=models.CharField(max_length=30, null=True,blank=True, choices=YEARS_PLAYING)
+    RC_Experience=models.CharField(max_length=300, null=True,blank=True)
+
+    def __unicode__(self):
+        return  str(self.date)

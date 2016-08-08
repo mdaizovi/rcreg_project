@@ -32,14 +32,6 @@ PASS_TYPES=(('MVP', 'MVP'), ('Skater', 'Skater'), ('Offskate', 'Offskate'))
 
 #reminder: mvp can do everything, skater can do challenges and off skates trainings but no on skates trainings, and offskate is self explanatiory
 
-#These could be choices for the additional BPT questions, to analyze later, but I don't think I'll be adding that feature.
-#AGE_GROUP= (('<18', '<18'),('19-20', '19-20'),('21-30', '21-30'), ('31-40', '31-40'), ('41-50','41-50'),('50+','50+'),('NA','Not yr bizness'))
-#FAV_PART= (('1st', 'This is my first Rollercon!'),('ONSK8', 'On Skates Training'),('OFFSK8', 'Off Skates Training'), ('BCP', 'Bouts & Challenges (playing)'), ('BCW', 'Bouts & Challenges (watching)'),('SW','Seminars & Workshops'),('247P','24/7 Pool Party'),('BNB','Black n Blue & PM Social Events'),('OSS','Open Skate & Scrimmages'),('VN','Volunteering'),('VV','Vendor Village'))
-#INSURANCE= (('W', 'WFTDA'), ('U', 'USARS'), ('C','CRDi'),('EPA','Event Pass ALREADY purchased'),('EPW','Event Pass WILL be purchased'))
-#RULESET=(('W', 'WFTDA'), ('U', 'USARS'),('M', 'MRDA'), ('J', 'JRDA'), ('R', 'RDCL'),('O', 'OTHER'))
-#YEARS_PLAYING= (('1', '<2'),('2', '2-4'),('5', '5-7'), ('8', '8 or more'),('NA', "Supporter/fan, not a player" ),('NYB','Not yr bizness'))
-#Bool_Choices= (('Y', 'Yes'), ('N', 'No'))
-
 class Country(models.Model):
     name=models.CharField(max_length=50, primary_key=True)
     slugname=models.CharField(max_length=3,unique=True)
@@ -447,6 +439,7 @@ class Registrant(Matching_Criteria):
     age_group=models.CharField(max_length=100, null=True,blank=True)
     favorite_part=models.CharField(max_length=100, null=True,blank=True)
     volunteer=models.CharField(max_length=100, null=True,blank=True)
+
 
     internal_notes= models.TextField(null=True,blank=True)
 
