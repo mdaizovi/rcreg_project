@@ -21,6 +21,7 @@ from django.core.mail import EmailMessage, send_mail
 from django.core.exceptions import ObjectDoesNotExist
 from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
 from swingtime.models import Occurrence,TrainingRoster
+import datetime
 
 import django_tables2 as tables
 from django_tables2  import RequestConfig
@@ -33,6 +34,57 @@ no_list=["",u'',None,"None"]
             #mvp_id_list= selection.getlist('mvpid')
             #print "selectiondict: ",selectiondict
             #selectiondict=dict(selection.lists())
+
+@login_required
+def review_con(request,con_id):
+    user=request.user
+    return render_to_response('review_con.html',{},context_instance=RequestContext(request))
+
+@login_required
+def review_training(request,training_id):
+    user=request.user
+    return render_to_response('review_training.html',{},context_instance=RequestContext(request))
+
+
+
+
+
+@login_required
+def my_reviews(request):
+    user=request.user
+    registrant_list= list(user.registrant_set.all())
+    today=datetime.date.today()
+
+    registrant_dict_list=[]
+
+    for registrant in registrant_list:
+        if today > registrant.con.end:
+            conpassed=True
+        else:
+            conpassed=False
+
+        trainingrosters=registrant.trainingroster_set.all()
+        trainings=[]
+        for tr in trainingrosters:
+            if tr.registered:
+                o=tr.registered
+            elif tr.auditing:
+                o=tr.auditing
+            else:
+                o=None #should never happen
+            if o and o.training:
+                trainings.append(o.training)
+
+        registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
+        registrant_dict_list.append(registrant_dict)
+
+    if len(registrant_list)>1:
+        most_recent_reg=registrant_list[0]
+        active=most_recent_reg.con
+    else:
+        active=None
+
+    return render_to_response('my_reviews.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
 
 @login_required

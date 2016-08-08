@@ -440,7 +440,6 @@ class Registrant(Matching_Criteria):
     favorite_part=models.CharField(max_length=100, null=True,blank=True)
     volunteer=models.CharField(max_length=100, null=True,blank=True)
 
-
     internal_notes= models.TextField(null=True,blank=True)
 
     @property

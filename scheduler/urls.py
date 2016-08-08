@@ -44,4 +44,8 @@ urlpatterns = patterns('',
 
     #url(r'^my_schedule(?:/(?P<reg_id>\d+))?/$', 'scheduler.views.my_schedule',name='my_schedule'),
     url(r'^my_schedule/', 'scheduler.views.my_schedule',name='my_schedule'),
+
+    url(r'^my_reviews/', 'scheduler.views.my_reviews',name='my_reviews'),
+    url(r'^review/con/(?P<con_id>\d+)/$', 'scheduler.views.review_con',name='review_con'),
+    url(r'^review/training/(?P<training_id>\d+)/$', 'scheduler.views.review_training',name='review_training')
 )

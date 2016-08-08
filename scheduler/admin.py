@@ -1,8 +1,7 @@
 #scheduler admin
 from con_event.models import Con,Registrant, SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL, SKILL_LEVEL_ACT
 from django.contrib import admin
-from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach
-#from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach,ReviewTraining,ReviewCon
+from scheduler.models import Venue, Location, Roster, Challenge, Training, Coach, ReviewTraining, ReviewCon
 from import_export import resources,fields
 from import_export.admin import ImportExportModelAdmin,ImportExportActionModelAdmin
 from django.core.urlresolvers import reverse, resolve
@@ -273,38 +272,53 @@ class CoachAdmin(ImportExportModelAdmin):
     view_on_site = True
 
 
-# class ReviewTrainingResource(resources.ModelResource):
-#     class Meta:
-#         model = ReviewTraining
-#         fields = ('id','user','description','can_email','user__email','user__first_name','user__last_name','user__username')
-#         export_order=fields
-#         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
-#         import_id_fields = ('user',)
-#         skip_unchanged = True
-#         report_skipped = True
-#
-# class ReviewTrainingAdmin(ImportExportModelAdmin):
-# #class CoachAdmin(ImportExportActionModelAdmin):
-#     search_fields = ('user__username','user__first_name', 'user__last_name')
-#     #list_display= ('user',)
-#     resource_class = ReviewTrainingResource
-#     view_on_site = True
-#
-# class ReviewConResource(resources.ModelResource):
-#     class Meta:
-#         model = ReviewCon
-#         fields = ('id','user','description','can_email','user__email','user__first_name','user__last_name','user__username')
-#         export_order=fields
-#         #I think I don't want to import this one, only export. too compex. don't think I can specify that, though.
-#         import_id_fields = ('user',)
-#         skip_unchanged = True
-#         report_skipped = True
-#
-# class ReviewConAdmin(ImportExportModelAdmin):
-#     search_fields = ('user__username','user__first_name', 'user__last_name')
-#     #list_display= ('user',)
-#     resource_class = Review_RCResource
-#     view_on_site = True
+class ReviewTrainingResource(resources.ModelResource):
+    class Meta:
+        model = ReviewTraining
+        fields = ('date','training','prepared','articulate','hear','learn_new','recommend','another_class','skill_level_expected','drills_helpful',
+            'share_feedback','league_visit','league_referral','comments_text','registrant__age_group','registrant__skill','registrant__gender','registrant__country','ruleset','years_playing','RC_Experience')
+        export_order=fields
+        skip_unchanged = True
+        report_skipped = True
+
+class ReviewTrainingAdmin(ImportExportModelAdmin):
+    search_fields = ('training__name',) #wish I could add coach, dont think I can
+    list_display= ('training',)
+    list_filter = ('training__con','training__onsk8s',)
+
+    resource_class = ReviewTrainingResource
+
+    # fields = (('training'),
+    #     ('prepared','articulate','hear','learn_new','recommend','another_class'),
+    #     ('skill_level_expected','drills_helpful'),
+    #     ('share_feedback','league_visit','league_referral','comments_text'),
+    #     ('registrant__age_group','registrant__skill','registrant__gender','registrant__country','ruleset','years_playing','RC_Experience'))
+
+    fields = (('training'),
+        ('prepared','articulate','hear','learn_new','recommend','another_class'),
+        ('skill_level_expected','drills_helpful'),
+        ('share_feedback','league_visit','league_referral','comments_text'),
+        ('ruleset','years_playing','RC_Experience'))
+
+
+class ReviewConResource(resources.ModelResource):
+    class Meta:
+        model = ReviewCon
+        fields = ('overall_exp','onsk8s','offsk8s','seminars','competitive_events_playing','competitive_events_watching','social_events','shopping','lines',
+            'fav1','fav2','rank_training','rank_competition_playing','rank_competition_watching','rank_seminars','rank_social','rank_shopping','rank_volunteer',
+            'comments_text','share_feedback','ruleset','years_playing','RC_Experience')
+        export_order=fields
+        skip_unchanged = True
+        report_skipped = True
+
+class ReviewConAdmin(ImportExportModelAdmin):
+    search_fields = ('registrant__con',)
+    list_filter = ('registrant__con',)
+    resource_class = ReviewConResource
+    fields = (('overall_exp'),
+        ('onsk8s','offsk8s','seminars','competitive_events_playing','competitive_events_watching','social_events','shopping','lines'),
+        ('fav1','fav2'),('rank_training','rank_competition_playing','rank_competition_watching','rank_seminars','rank_social','rank_shopping','rank_volunteer'),
+        ('comments_text','share_feedback'),('ruleset','years_playing','RC_Experience'))
 
 
 admin.site.register(Venue, VenueAdmin)
@@ -313,5 +327,5 @@ admin.site.register(Roster, RosterAdmin)
 admin.site.register(Challenge, ChallengeAdmin)
 admin.site.register(Training, TrainingAdmin)
 admin.site.register(Coach, CoachAdmin)
-#admin.site.register(ReviewTraining, ReviewTrainingAdmin)
-#admin.site.register(ReviewCon, ReviewConAdmin)
+admin.site.register(ReviewTraining, ReviewTrainingAdmin)
+admin.site.register(ReviewCon, ReviewConAdmin)
