@@ -9,10 +9,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
-from scheduler.models import Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
+from scheduler.models import ReviewTraining,Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT,CLOSE_CHAL_SUB_AT
 from django.forms.models import model_to_dict
 from datetime import timedelta, date
@@ -38,12 +38,27 @@ no_list=["",u'',None,"None"]
 @login_required
 def review_con(request,con_id):
     user=request.user
+    con=con.objects.get(pk=int(con_id))
+    registrant=Registrant.objects.get(user=user, con=con)
     return render_to_response('review_con.html',{},context_instance=RequestContext(request))
 
 @login_required
 def review_training(request,training_id):
     user=request.user
-    return render_to_response('review_training.html',{},context_instance=RequestContext(request))
+    training=Training.objects.get(pk=int(training_id))
+    registrant=Registrant.objects.get(user=user, con=training.con)
+
+    try:
+        myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
+    except:
+        myreview=ReviewTraining()
+
+
+    #formlist=[TrainingModelForm(request.POST, instance=training,user=user)]
+    form1=ReviewTrainingForm(instance=myreview)
+    form2=ReviewTrainingFormOptional(instance=myreview)
+
+    return render_to_response('review_training.html',{"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
 
 
 
@@ -63,7 +78,7 @@ def my_reviews(request):
         else:
             conpassed=False
 
-        trainingrosters=registrant.trainingroster_set.all()
+        trainingrosters=registrant.trainingroster_set.all() #do select/prefetch related later
         trainings=[]
         for tr in trainingrosters:
             if tr.registered:

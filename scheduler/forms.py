@@ -1,7 +1,7 @@
 #scheduler.forms
 from django import forms
 from django.forms import ModelForm,modelformset_factory
-from scheduler.models import Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster
+from scheduler.models import GET_RC_EXPERIENCE,Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster,ReviewTraining,ReviewCon
 from con_event.models import LOCATION_TYPE, GENDER, Con,Registrant,SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL_ACT,SKILL_LEVEL_GAME
 from django.utils.translation import ugettext_lazy as _
 from django.forms.models import model_to_dict
@@ -366,3 +366,67 @@ class ActCheck(forms.Form):
         for field in iter(self.fields):
             #self.fields[field].widget.attrs.update({'style':'width: 15px','class': 'form-control','name': '%s-%s'%(str(act_type),str(pk))})
             self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})
+
+
+
+
+class ReviewTrainingForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        #training_id = kwargs.pop('my_arg')
+        super(ReviewTrainingForm, self).__init__(*args, **kwargs)
+        #self.fields["training"].queryset =Session.objects.filter(pk=training_id)
+
+        self.fields["prepared"].label ="Was the instructor prepared?"
+        self.fields["articulate"].label ="Was the instructor articulate / did you understand the directions?"
+        self.fields["hear"].label ="Could you hear the instructor?"
+        self.fields["learn_new"].label ="Did you learn new things?"
+        self.fields["recommend"].label ="Would you take this class again or recommend it to a teammate?"
+        self.fields["another_class"].label ="Would you take another class with this instructor?"
+        self.fields["skill_level_expected"].label ="Was the skill level what you expected?"
+        self.fields["drills_helpful"].label ="Did you find the drills helpful?"
+
+        self.fields["share_feedback"].label ="Can we share your feedback with the coach(es)?"
+        # self.fields["league_visit"].label ="Are you interested in having this coach visit your league?"
+        # self.fields["league_referral"].label ="If so, please provide league name and email address"
+        #
+        # self.fields["ruleset"].label ="OPTIONAL: What is ruleset you mostly play under?"
+        # self.fields["years_playing"].label ="OPTIONAL: How many years have you been playing roller derby?"
+        # self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="OPTIONAL: Please check the box(es) of the year(s) you've participated in RollerCon.")
+
+        self.fields["comments_text"].label ="Do you have any other comments to add?"
+
+        # for key in self.fields:
+        #     self.fields[key].required = False
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                })
+
+    class Meta:
+         model = ReviewTraining
+         #exclude = ('date','training','registrant')
+         exclude = ('date','training','registrant','league_visit','league_referral','ruleset','years_playing','RC_Experience')
+
+class ReviewTrainingFormOptional(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(ReviewTrainingFormOptional, self).__init__(*args, **kwargs)
+
+        self.fields["league_visit"].label ="Are you interested in having this coach visit your league?"
+        self.fields["league_referral"].label ="If so, please provide league name and email address"
+
+        self.fields["ruleset"].label ="What is ruleset you mostly play under?"
+        self.fields["years_playing"].label ="How many years have you been playing roller derby?"
+        self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="Please check the box(es) of the year(s) you've participated in RollerCon.")
+
+        for key in self.fields:
+            self.fields[key].required = False
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                })
+
+    class Meta:
+         model = ReviewTraining
+         fields = ('league_visit','league_referral','ruleset','years_playing','RC_Experience')

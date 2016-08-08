@@ -74,11 +74,12 @@ def GET_NUMBER_RATINGS(number, review_dict):
 
 def GET_RC_EXPERIENCE():
     yearlist=[('EVERY',"I have been to every RollerCon")]
-    nextyear=datetime.date.today() + datetime.timedelta(years=1)
-    nyear=nextyear.year()
+    nextyear=datetime.date.today() + datetime.timedelta(days=365.25)
+    nyear=nextyear.year
     for i in range(2005,nyear):
         tup=(str(i),str(i))
         yearlist.append(tup)
+    yearlist.sort(reverse=True)    
     yeartup=tuple(yearlist)
     return yeartup
 
@@ -1594,7 +1595,7 @@ class ReviewTraining(models.Model):
     skill_level_expected=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
     drills_helpful=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
     ###############
-    share_feedback=models.BooleanField(default=False)
+    share_feedback=models.BooleanField(default=True)
     league_visit=models.BooleanField(default=False)
     league_referral=models.CharField(max_length=100,null=True, blank=True)
 
@@ -1636,7 +1637,6 @@ class ReviewCon(models.Model):
     rank_social=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
     rank_shopping=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
     rank_volunteer=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-
     comments_text= models.TextField(null=True, blank=True)
     share_feedback=models.BooleanField(default=True)
 
