@@ -63,6 +63,12 @@ def review_con(request,con_id):
         if request.method == "POST":
             save_attempt=True
             if form1.is_valid() and form2.is_valid() and form3.is_valid():
+
+                ## doesn't work. stupid experience is  a thorn in my side.
+                # exp_list=request.POST['RC_Experience']
+                # print "exp_list",exp_list
+                # myreview.RC_Experience=myreview.format_exp(exp_list)
+
                 myreview.registrant=registrant#in case is new
                 myreview.save()
                 save_success=True

@@ -1653,6 +1653,23 @@ class ReviewCon(models.Model):
     def __unicode__(self):
         return  str(self.date)
 
+
+    def format_exp(self,exp_list):
+        #doesn't do what i want
+        print "list is ",exp_list
+
+        print "self.RC_Experience 1"
+        print self.RC_Experience
+
+        self.RC_Experience="".join(exp_list)
+
+        print "self.RC_Experience 2"
+        print self.RC_Experience
+
+        return self.RC_Experience
+
+
+
     # def save(self, *args, **kwargs):
     #     print "custom save ReviewCon"
     #     print self.RC_Experience
