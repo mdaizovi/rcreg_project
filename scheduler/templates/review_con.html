@@ -17,8 +17,8 @@
       Error locating your Con pass. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
       {%else%}
 
-    <h3>Review <b>{{con}}</b>
-      <br><small>Your review is anonymous; your identity will not be shared with coaches or event organizers</small></h3>
+    <h3>Give Feeback on <b>{{con}}</b>
+      <br><small>Your feedback is anonymous; your identity will not be shared with coaches or event organizers</small></h3>
 
 
     {%if save_attempt%}
@@ -32,15 +32,26 @@
     <form method="POST" class="post-form margin-top-20">
     {% csrf_token %}
 
-    {%if form1%}
-    <div class="col-md-6 pull-left">
-      <b>How satisfied are you with...</b><br>
-        {%for field in form1 %}
-        {%if field.errors%}<li style="color: red;">{{ field.errors }}</li>{%endif%}
-          {{ field.label }} {{ field }}
+
+
+
+      {%if form1%}
+      <div class="col-md-6 pull-left">
+        <table class="table margin-top-15" style="width:100%;">
+            <tr><td colspan="2" style="width:100%;border: none; text-align:center;"><h4><b>How satisfied are you with...</b></h4></td></tr>
+          {%for field in form1 %}
+          {%if field.errors%}<tr><td style="width:50%;"></td><td style="width:50%;color: red;">{{ field.errors }}</td></tr>{%endif%}
+          <tr><td style="width:50%;">{{field.label}}</td><td style="width:50%;">{{field}}</td></tr>
+
         {%endfor%}
-        </div>
-      {%endif%}<!-- if form1-->
+                </table>
+          </div>
+        {%endif%}<!-- if form1-->
+
+
+
+
+
 
       {%if form2%}
       <div class="col-md-6 pull-right">
@@ -85,10 +96,27 @@
     </div><!-- end col-md-6 center-block-->
       {%endif%}<!-- forgot if form2-->
 
+
 </div><!-- end row-->
 
 </div><!-- end row-->
-<button type="submit" class="btn-lg btn-success center-block margin-top-20"> Save Review </button>
+
+{%if form3%}
+<div class="well well-sm" style="background: white;">
+  <table class="table margin-top-15" style="width:100%;">
+      <tr><td colspan="2" style="width:100%;border: none; text-align:center;"><h4><b>Please rank the following in order of importance to you</b></h4></td></tr>
+    {%for field in form3 %}
+    {%if field.errors%}<tr><td style="width:50%;"></td><td style="width:50%;color: red;">{{ field.errors }}</td></tr>{%endif%}
+    <tr><td style="width:50%;">{{field.label}}</td><td style="width:50%;">{{field}}</td></tr>
+
+  {%endfor%}
+          </table>
+
+</div><!-- end well well-lg-->
+  {%endif%}<!-- if form1-->
+
+
+<button type="submit" class="btn-lg btn-success center-block margin-top-20"> Save Feedback </button>
 </form>
 
 

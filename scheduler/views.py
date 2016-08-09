@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import ReviewConRankForm,ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
 from scheduler.models import ReviewCon,ReviewTraining,Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
@@ -58,6 +58,8 @@ def review_con(request,con_id):
 
         form1=ReviewConForm(request.POST or None, instance=myreview)
         form2=ReviewConFormOptional(request.POST or None, instance=myreview)
+        form3=ReviewConRankForm(request.POST or None, instance=myreview)
+
         if request.method == "POST":
             save_attempt=True
             if form1.is_valid() and form2.is_valid():
@@ -65,7 +67,7 @@ def review_con(request,con_id):
                 myreview.save()
                 save_success=True
 
-    return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"registrant":registrant,"con":con},context_instance=RequestContext(request))
+    return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"form3":form3,"registrant":registrant,"con":con},context_instance=RequestContext(request))
 
 @login_required
 def review_training(request,training_id):
