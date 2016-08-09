@@ -1652,3 +1652,8 @@ class ReviewCon(models.Model):
 
     def __unicode__(self):
         return  str(self.date)
+
+    # def save(self, *args, **kwargs):
+    #     print "custom save ReviewCon"
+    #     print self.RC_Experience
+    #     super(ReviewCon, self).save()

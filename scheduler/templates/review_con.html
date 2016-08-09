@@ -61,40 +61,39 @@
           {% for field in form2%}
           <tr>
             {%if field.name == "comments_text"%}
-              <td colspan="4">{{field.label}}</td></tr><tr><td colspan="4">{{field}}</td></tr>
+              <td colspan="4" style="width:100%;">{{field.label}}</td></tr><tr><td colspan="4" style="width:100%;">{{field}}</td></tr>
+
 
           {%elif field.name == "RC_Experience"%}
-            <td colspan="4">{{field.label}}</td></tr>
-                {% for choice in form2.RC_Experience.field.widget.choices %}
+            <td colspan="4" style="width:100%;">{{field.label}}</td></tr>
+                {% for checkbox in form2.RC_Experience %}
+
                 {%if forloop.first%}
-                <tr><td colspan="3" style="text-align:center;">
-                  <label for="">{{choice.1}}</label></td>
-                <td style="text-align: left;" >
-                  <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
-                    {% ifequal form.my_choice_field.data choice.0 %}
-                       checked="checked"
-                    {% endifequal %}/></td></tr>
+                <tr><td colspan="3" style="text-align:center; width:100%;">
+                  {{ checkbox.choice_label }}</td>
+                <td style="text-align: left; width:25%;" >{{ checkbox.tag }} </td></tr>
+                  {%else%}<!-- if not first-->
 
-                  {%else%}
+                  {%cycle "<tr>" " " %}
 
-                {%cycle "<tr>" " " %}
-                    <td style="text-align:right;"><label for="">{{choice.1}}</label></td>
-                  <td style="text-align: left;" >
-                    <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
-                      {% ifequal form.my_choice_field.data choice.0 %}
-                         checked="checked"
-                      {% endifequal %}/></td>
-                 {%cycle " " "<tr>" %}
+                  <td style="text-align:right;">{{ checkbox.choice_label }}</td>
+                  <td style="text-align: left;" >{{ checkbox.tag }} </td>
+                    {%cycle " " "<tr>" %}
+                   {%endif%}<!-- if forloop first-->
 
-                   {%endif%}
-                {% endfor %}
-          {%else%}
+
+
+
+                {% endfor %}<!-- for checkbox-->
+
+          {%else%}<!-- if not experience or comments-->
         <td style="width:50%;" colspan="2">{{field.label}}</td><td colspan="2" style="width:50%;">{{field}}</td></tr>
-        {%endif%}{%endfor%}
+          {%endif%}<!-- f not experience or comments -->
+      {%endfor%}<!-- for field in form2-->
         </table>
       </div><!-- end well-->
     </div><!-- end col-md-6 center-block-->
-      {%endif%}<!-- forgot if form2-->
+      {%endif%}<!-- if form3-->
 
 
 </div><!-- end row-->

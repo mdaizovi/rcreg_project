@@ -498,3 +498,21 @@ class ReviewConFormOptional(forms.ModelForm):
     class Meta:
          model = ReviewCon
          fields = ('ruleset','years_playing','RC_Experience','comments_text')
+
+    # def clean(self,):
+    #     print "running optional form clean"
+    #     if self.is_valid():
+    #         experience  = self.cleaned_data["RC_Experience"]
+    #
+    #         print "experience",experience
+    #
+    #         new_exp=""
+    #         for i in experience:
+    #             new_exp+=i+","
+    #         print "pre trim ",new_exp
+    #         if len(new_exp)>1:
+    #             new_exp=new_exp[:-1]
+    #
+    #         print "post trim ",new_exp
+    #
+    #         self.cleaned_data["RC_Experience"]=new_exp
