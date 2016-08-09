@@ -9,10 +9,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
-from scheduler.models import ReviewTraining,Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
+from scheduler.models import ReviewCon,ReviewTraining,Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT,CLOSE_CHAL_SUB_AT
 from django.forms.models import model_to_dict
 from datetime import timedelta, date
@@ -38,9 +38,34 @@ no_list=["",u'',None,"None"]
 @login_required
 def review_con(request,con_id):
     user=request.user
-    con=con.objects.get(pk=int(con_id))
-    registrant=Registrant.objects.get(user=user, con=con)
-    return render_to_response('review_con.html',{},context_instance=RequestContext(request))
+    con=Con.objects.get(pk=int(con_id))
+    try:
+        registrant=Registrant.objects.get(user=user, con=con)
+    except ObjectDoesNotExist:
+        registrant=None
+    save_attempt=False
+    save_success=False
+    myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+    form1=None
+    form2=None
+
+    if registrant:
+        #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+        try:
+            myreview=ReviewCon.objects.get(registrant=registrant)
+        except:
+            myreview=ReviewCon()
+
+        form1=ReviewConForm(request.POST or None, instance=myreview)
+        form2=ReviewConFormOptional(request.POST or None, instance=myreview)
+        if request.method == "POST":
+            save_attempt=True
+            if form1.is_valid() and form2.is_valid():
+                myreview.registrant=registrant#in case is new
+                myreview.save()
+                save_success=True
+
+    return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"registrant":registrant,"con":con},context_instance=RequestContext(request))
 
 @login_required
 def review_training(request,training_id):

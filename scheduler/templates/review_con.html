@@ -5,26 +5,20 @@
 
 {% block content %}
 <head>
-<title>{% block title %}Review Training{% endblock %}</title>
+<title>{% block title %}Review Con{% endblock %}</title>
 </head>
 
 
 <div class="row" id="moreInfo">
     <div class="col-sm-12">
 
-      {%if not registrant or not training %}
+      {%if not registrant %}
       <div class="alert alert-danger" role="alert">
-      Error locating your Con pass or Training information. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+      Error locating your Con pass. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
       {%else%}
 
-    <h3>Review <b>{{training.name}}</b> <br><i>({{ training.display_coach_names }})</i>
+    <h3>Review <b>{{con}}</b>
       <br><small>Your review is anonymous; your identity will not be shared with coaches or event organizers</small></h3>
-
-
-      {%if not myreview%}
-      <div class="alert alert-danger" role="alert">
-      You are not signed up for this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
-      {%else%}
 
 
     {%if save_attempt%}
@@ -40,6 +34,7 @@
 
     {%if form1%}
     <div class="col-md-6 pull-left">
+      <b>How satisfied are you with...</b><br>
         {%for field in form1 %}
         {%if field.errors%}<li style="color: red;">{{ field.errors }}</li>{%endif%}
           {{ field.label }} {{ field }}
@@ -54,7 +49,10 @@
         <table class="table table-condensed">
           {% for field in form2%}
           <tr>
-          {%if field.name == "RC_Experience"%}
+            {%if field.name == "comments_text"%}
+              <td colspan="4">{{field.label}}</td></tr><tr><td colspan="4">{{field}}</td></tr>
+
+          {%elif field.name == "RC_Experience"%}
             <td colspan="4">{{field.label}}</td></tr>
                 {% for choice in form2.RC_Experience.field.widget.choices %}
                 {%if forloop.first%}
@@ -93,6 +91,6 @@
 <button type="submit" class="btn-lg btn-success center-block margin-top-20"> Save Review </button>
 </form>
 
-{%endif%}<!-- if my_review-->
+
 {%endif%}<!-- if registrant-->
 {% endblock %}

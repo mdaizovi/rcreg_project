@@ -1,7 +1,7 @@
 #scheduler.forms
 from django import forms
 from django.forms import ModelForm,modelformset_factory
-from scheduler.models import RC_REVIEW_DICT,GET_RC_EXPERIENCE,Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster,ReviewTraining,ReviewCon
+from scheduler.models import GET_NUMBER_RATINGS,RC_REVIEW_DICT,GET_RC_EXPERIENCE,Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster,ReviewTraining,ReviewCon
 from con_event.models import LOCATION_TYPE, GENDER, Con,Registrant,SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL_ACT,SKILL_LEVEL_GAME
 from django.utils.translation import ugettext_lazy as _
 from django.forms.models import model_to_dict
@@ -392,7 +392,6 @@ class ReviewTrainingForm(forms.ModelForm):
 
     class Meta:
          model = ReviewTraining
-         #exclude = ('date','training','registrant')
          exclude = ('date','training','registrant','league_visit','league_referral','comments_text')
 
 class ReviewTrainingFormOptional(forms.ModelForm):
@@ -415,14 +414,59 @@ class ReviewTrainingFormOptional(forms.ModelForm):
          model = ReviewTraining
          fields = ('league_visit','league_referral','comments_text')
 
-
-class ReviewConFormOptional(forms.ModelForm):
+class ReviewConForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        super(ReviewConFormOptional, self).__init__(*args, **kwargs)
+        super(ReviewConForm, self).__init__(*args, **kwargs)
 
-        self.fields["ruleset"].label ="What is ruleset you mostly play under?"
-        self.fields["years_playing"].label ="How many years have you been playing roller derby?"
-        self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="Please check the box(es) of the year(s) you've participated in RollerCon.")
+        # self.fields['overall_exp']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Overall experience at RollerCon")
+        # self.fields['onsk8s']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="ON SKATES athletic sessions")
+        # self.fields['offsk8s']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="OFF SKATES athletic sessions")
+        # self.fields['seminars']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Seminars")
+        # self.fields['competitive_events_playing']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Competitive events you PLAYED IN")
+        # self.fields['competitive_events_watching']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Competitive events you WATCHED")
+        # self.fields['social_events']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Social Events, including the pool, Pants-Off Dance-Off, Black & Blue Ball, etc")
+        # self.fields['shopping']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Shopping opportunities")
+        # self.fields['lines']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(6,None),label ="Experience waiting in lines/new registration system")
+        #
+        # self.fields["fav1"].label ="What was your favorite thing at RollerCon?"
+        # self.fields["fav2"].label ="What was your second favorite thing at RollerCon?"
+        #
+        # self.fields['rank_competition_playing']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="PLAYING in Competitive Games (e.g. scrimmages, challenges and full length bouts)")
+        # self.fields['rank_competition_watching']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="WATCHING Competitive Games (e.g. scrimmages, challenges and full length bouts)")
+        # self.fields['rank_training']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Training")
+        # self.fields['rank_seminars']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Seminars")
+        # self.fields['rank_social']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Social Events")
+        # self.fields['rank_shopping']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Shopping/Vendor Village")
+        # self.fields['rank_volunteer']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Opportunities to Volunteer")
+        #
+
+        self.fields['overall_exp'].label ="your overall experience at RollerCon?"
+        self.fields['onsk8s'].label ="ON SKATES athletic sessions?"
+        self.fields['offsk8s'].label ="OFF SKATES athletic sessions?"
+        self.fields['seminars'].label ="Seminars?"
+        self.fields['competitive_events_playing'].label ="Competitive events you PLAYED IN?"
+        self.fields['competitive_events_watching'].label ="Competitive events you WATCHED?"
+        self.fields['social_events'].label ="Social Events, including the pool, Pants-Off Dance-Off, Black & Blue Ball, etc?"
+        self.fields['shopping'].label ="Shopping opportunities"
+        self.fields['lines'].label="Experience waiting in lines?"
+        #self.fields['registrationsys'].label="Registration system?")
+
+
+        self.fields["fav1"].label ="What was your favorite thing at RollerCon?"
+        self.fields["fav2"].label ="What was your second favorite thing at RollerCon?"
+
+        self.fields['rank_competition_playing']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="PLAYING in Competitive Games (e.g. scrimmages, challenges and full length bouts)")
+        self.fields['rank_competition_watching']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="WATCHING Competitive Games (e.g. scrimmages, challenges and full length bouts)")
+        self.fields['rank_training']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Training")
+        self.fields['rank_seminars']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Seminars")
+        self.fields['rank_social']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Social Events")
+        self.fields['rank_shopping']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Shopping/Vendor Village")
+        self.fields['rank_volunteer']=forms.ChoiceField(widget=forms.RadioSelect, choices=GET_NUMBER_RATINGS(8,None),label ="Opportunities to Volunteer")
+
+
+
+
+
 
         for key in self.fields:
             self.fields[key].required = False
@@ -434,4 +478,26 @@ class ReviewConFormOptional(forms.ModelForm):
 
     class Meta:
          model = ReviewCon
-         fields = ('ruleset','years_playing','RC_Experience')
+         exclude = ('date','registrant','ruleset','years_playing','RC_Experience','comments_text')
+
+
+class ReviewConFormOptional(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(ReviewConFormOptional, self).__init__(*args, **kwargs)
+
+        self.fields["ruleset"].label ="What is ruleset you mostly play under?"
+        self.fields["years_playing"].label ="How many years have you been playing roller derby?"
+        self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="Please check the box(es) of the year(s) you've participated in RollerCon.")
+        self.fields["comments_text"].label ="Do you have any other comments to add?"
+
+        for key in self.fields:
+            self.fields[key].required = False
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                })
+
+    class Meta:
+         model = ReviewCon
+         fields = ('ruleset','years_playing','RC_Experience','comments_text')

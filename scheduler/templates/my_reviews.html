@@ -5,13 +5,13 @@
 
 {% block content %}
 <head>
-<title>{% block title %}My Trainings{% endblock %}</title>
+<title>{% block title %}My Reviews{% endblock %}</title>
 </head>
 
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
-    <h3>My Reviews</h3>
+    <h3>My Feedback & Reviews</h3>
 
     {%if not registrant_dict_list%}
     <div class="alert alert-danger" role="alert">
@@ -51,9 +51,9 @@
 
 <table class="table table-hover">
 <tr><th>Review</th><th class="text-center" colspan="3">Actions</th></tr>
-<tr><td><b>{{dict.con}}</b></td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_con' dict.con.id %}" role="button">Review</a></td></tr>
+<tr><td><b>{{dict.con}}</b></td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_con' dict.con.id %}" role="button">Give Feedback</a></td></tr>
   {%for train in dict.trainings%}
-  <tr><td><b>{{train.name}}</b> (<i>{{train.display_coach_names}}</i>)</td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_training' train.id %}" role="button">Review</a></td></tr>
+  <tr><td><b>{{train.name}}</b> (<i>{{train.display_coach_names}}</i>)</td><td class="text-center"><a class="btn btn-success btn-md" href="{% url 'review_training' train.id %}" role="button">Review Training</a></td></tr>
   {%endfor%}
 </table>
 

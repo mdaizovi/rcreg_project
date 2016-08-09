@@ -1601,12 +1601,6 @@ class ReviewTraining(models.Model):
 
     comments_text=models.TextField(null=True, blank=True)
 
-    ### optional
-    #I'm such an idiot. This should only be once, in review con.
-    # ruleset=models.CharField(max_length=30, null=True,blank=True, choices=RULESET)
-    # years_playing=models.CharField(max_length=30, null=True,blank=True, choices=YEARS_PLAYING)
-    # RC_Experience=models.CharField(max_length=300, null=True,blank=True)
-
     def __unicode__(self):
         return  "%s %s" % (self.training, self.date)
 
@@ -1618,25 +1612,26 @@ class ReviewCon(models.Model):
     #Don't do it.
     registrant=models.ForeignKey(Registrant)
 
-    overall_exp=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    onsk8s=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    offsk8s=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    seminars=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    competitive_events_playing=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    competitive_events_watching=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    social_events=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    shopping=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
-    lines=models.IntegerField(choices=GET_NUMBER_RATINGS(6,None))
+    overall_exp=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    onsk8s=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    offsk8s=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    seminars=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    competitive_events_playing=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    competitive_events_watching=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    social_events=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    shopping=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    lines=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT))
+    registrationsys=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,RC_REVIEW_DICT),null=True, blank=True)
 
     fav1=models.CharField(max_length=10, choices=FAV_PART_EXPANDED((FAV_PART)),null=True, blank=True)
     fav2=models.CharField(max_length=10, choices=FAV_PART_EXPANDED((FAV_PART)),null=True, blank=True)
 
-    rank_training=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-    rank_competition_playing=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-    rank_competition_watching=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-    rank_seminars=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-    rank_social=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
-    rank_shopping=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_training=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_competition_playing=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_competition_watching=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_seminars=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_social=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
+    rank_shopping=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
     rank_volunteer=models.IntegerField(choices=GET_NUMBER_RATINGS(8,None),null=True, blank=True)
     comments_text= models.TextField(null=True, blank=True)
     share_feedback=models.BooleanField(default=True)
