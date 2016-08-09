@@ -79,7 +79,7 @@ def GET_RC_EXPERIENCE():
     for i in range(2005,nyear):
         tup=(str(i),str(i))
         yearlist.append(tup)
-    yearlist.sort(reverse=True)    
+    yearlist.sort(reverse=True)
     yeartup=tuple(yearlist)
     return yeartup
 
@@ -1584,16 +1584,16 @@ class ReviewTraining(models.Model):
     #Don't do it.
     registrant=models.ForeignKey(Registrant)
 
-    prepared=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    articulate=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    hear=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    learn_new=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    recommend=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    another_class=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    prepared=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    articulate=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    hear=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    learn_new=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    recommend=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    another_class=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
 
     #Reminder: next two only for on skates##############
-    skill_level_expected=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
-    drills_helpful=models.IntegerField(choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    skill_level_expected=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
+    drills_helpful=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(6,SESSION_REVIEW_DICT))
     ###############
     share_feedback=models.BooleanField(default=True)
     league_visit=models.BooleanField(default=False)

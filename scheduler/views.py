@@ -45,20 +45,46 @@ def review_con(request,con_id):
 @login_required
 def review_training(request,training_id):
     user=request.user
-    training=Training.objects.get(pk=int(training_id))
-    registrant=Registrant.objects.get(user=user, con=training.con)
-
     try:
-        myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
-    except:
-        myreview=ReviewTraining()
+        training=Training.objects.get(pk=int(training_id))
+        try:
+            registrant=Registrant.objects.get(user=user, con=training.con)
+        except ObjectDoesNotExist:
+            registrant=None
+    except ObjectDoesNotExist:
+        training=None
+        registrant=None
 
+    save_attempt=False
+    save_success=False
+    myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+    form1=None
+    form2=None
 
-    #formlist=[TrainingModelForm(request.POST, instance=training,user=user)]
-    form1=ReviewTrainingForm(instance=myreview)
-    form2=ReviewTrainingFormOptional(instance=myreview)
+    if training and registrant:
 
-    return render_to_response('review_training.html',{"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
+        #make sure registrant was actually IN training
+        trainings=registrant.get_trainings_attended()
+        if training in trainings:
+            #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+            try:
+                myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
+            except:
+                myreview=ReviewTraining()
+
+        form1=ReviewTrainingForm(request.POST or None, instance=myreview)
+        form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
+        if request.method == "POST":
+            save_attempt=True
+            print request.POST.copy()
+
+            if form1.is_valid():
+                myreview.training=training #in case is new
+                myreview.registrant=registrant#in case is new
+                myreview.save()
+                save_success=True
+
+    return render_to_response('review_training.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
 
 
 
@@ -78,17 +104,7 @@ def my_reviews(request):
         else:
             conpassed=False
 
-        trainingrosters=registrant.trainingroster_set.all() #do select/prefetch related later
-        trainings=[]
-        for tr in trainingrosters:
-            if tr.registered:
-                o=tr.registered
-            elif tr.auditing:
-                o=tr.auditing
-            else:
-                o=None #should never happen
-            if o and o.training:
-                trainings.append(o.training)
+        trainings=registrant.get_trainings_attended()
 
         registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
         registrant_dict_list.append(registrant_dict)

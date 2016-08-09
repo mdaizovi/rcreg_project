@@ -656,6 +656,25 @@ class Registrant(Matching_Criteria):
         return conflict,free
 
 
+    def get_trainings_attended(self):
+        """Gets Trainings was on registered or auditing rosters for"""
+        from swingtime.models import Occurrence, TrainingRoster #need here in case of import error?
+
+        trainingrosters=self.trainingroster_set.all() #do select/prefetch related later
+        trainings=[]
+        for tr in trainingrosters:
+            if tr.registered:
+                o=tr.registered
+            elif tr.auditing:
+                o=tr.auditing
+            else:
+                o=None #should never happen
+            if o and o.training:
+                trainings.append(o.training)
+
+        return trainings
+
+
     def get_my_schedule_url(self):
         """Used for bosses to check someone's schedule
         at point of writing I dont know where to link ot this, just thought I might as well add it"""

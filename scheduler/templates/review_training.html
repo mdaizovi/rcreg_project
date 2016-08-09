@@ -11,14 +11,21 @@
 
 <div class="row" id="moreInfo">
     <div class="col-sm-12">
+
+      {%if not registrant or not training %}
+      <div class="alert alert-danger" role="alert">
+      Error locating your Con pass or Training information. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+      {%else%}
+
     <h3>Review <b>{{training.name}}</b> <br><i>({{ training.display_coach_names }})</i>
       <br><small>Your review is anonymous; your identity will not be shared with coaches or event organizers</small></h3>
 
 
-    {%if not registrant %}
-    <div class="alert alert-danger" role="alert">
-    You have not have a pass for this Con on file. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
-    {%else%}
+      {%if not myreview%}
+      <div class="alert alert-danger" role="alert">
+      You are not signed up for this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+      {%else%}
+
 
     {%if save_attempt%}
     {%if save_success%}
@@ -34,6 +41,11 @@
       <form method="POST" class="post-form margin-top-20">
       {% csrf_token %}
         {%for field in form1 %}
+
+
+        {%if field.errors%}<li style="color: red;">{{ field.errors }}</li>{%endif%}
+
+
           {{ field.label }} {{ field }}
         {%endfor%}
         <button type="submit" class="btn btn-success margin-top-10"> Save Review </button>
@@ -44,19 +56,18 @@
       {%if form2%}
       <div class="col-md-6 pull-right">
       <div class="well well-md">
-        <h2>OPTIONAL</h2>
+        <h2 style="text-align:center;"><i>Optional</i></h2>
         <form method="POST" class="post-form">
         <table class="table table-condensed">
           {% for field in form2%}
           <tr>
           {%if field.name == "RC_Experience"%}
             <td colspan="4">{{field.label}}</td></tr>
-
                 {% for choice in form2.RC_Experience.field.widget.choices %}
                 {%if forloop.first%}
-                <tr><td colspan="3">
+                <tr><td colspan="3" style="text-align:center;">
                   <label for="">{{choice.1}}</label></td>
-                <td style="text-align: center;" >
+                <td style="text-align: left;" >
                   <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
                     {% ifequal form.my_choice_field.data choice.0 %}
                        checked="checked"
@@ -66,8 +77,8 @@
                   {%else%}
 
                 {%cycle "<tr>" " " %}
-                    <td><label for="">{{choice.1}}</label></td>
-                  <td style="text-align: center;" >
+                    <td style="text-align:right;"><label for="">{{choice.1}}</label></td>
+                  <td style="text-align: left;" >
                     <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
                       {% ifequal form.my_choice_field.data choice.0 %}
                          checked="checked"
@@ -96,5 +107,6 @@
 </div><!-- end row-->
 </div><!-- end row-->
 
+{%endif%}<!-- if my_review-->
 {%endif%}<!-- if registrant-->
 {% endblock %}

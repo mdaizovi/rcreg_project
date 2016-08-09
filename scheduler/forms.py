@@ -1,7 +1,7 @@
 #scheduler.forms
 from django import forms
 from django.forms import ModelForm,modelformset_factory
-from scheduler.models import GET_RC_EXPERIENCE,Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster,ReviewTraining,ReviewCon
+from scheduler.models import RC_REVIEW_DICT,GET_RC_EXPERIENCE,Coach,SESSIONS_TR,COLORS,GAMETYPE,RULESET,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,DURATION,Challenge, Training, Roster,ReviewTraining,ReviewCon
 from con_event.models import LOCATION_TYPE, GENDER, Con,Registrant,SKILL_LEVEL_TNG,SKILL_LEVEL_CHG,SKILL_LEVEL_ACT,SKILL_LEVEL_GAME
 from django.utils.translation import ugettext_lazy as _
 from django.forms.models import model_to_dict
@@ -372,9 +372,7 @@ class ActCheck(forms.Form):
 
 class ReviewTrainingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
-        #training_id = kwargs.pop('my_arg')
         super(ReviewTrainingForm, self).__init__(*args, **kwargs)
-        #self.fields["training"].queryset =Session.objects.filter(pk=training_id)
 
         self.fields["prepared"].label ="Was the instructor prepared?"
         self.fields["articulate"].label ="Was the instructor articulate / did you understand the directions?"
@@ -384,21 +382,18 @@ class ReviewTrainingForm(forms.ModelForm):
         self.fields["another_class"].label ="Would you take another class with this instructor?"
         self.fields["skill_level_expected"].label ="Was the skill level what you expected?"
         self.fields["drills_helpful"].label ="Did you find the drills helpful?"
-
         self.fields["share_feedback"].label ="Can we share your feedback with the coach(es)?"
-        # self.fields["league_visit"].label ="Are you interested in having this coach visit your league?"
-        # self.fields["league_referral"].label ="If so, please provide league name and email address"
-        #
-        # self.fields["ruleset"].label ="OPTIONAL: What is ruleset you mostly play under?"
-        # self.fields["years_playing"].label ="OPTIONAL: How many years have you been playing roller derby?"
-        # self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="OPTIONAL: Please check the box(es) of the year(s) you've participated in RollerCon.")
-
         self.fields["comments_text"].label ="Do you have any other comments to add?"
 
-        # for key in self.fields:
-        #     self.fields[key].required = False
-
         for field in iter(self.fields):
+
+            if field=="comments_text":
+                self.fields[field].required = False
+            else:
+                self.fields[field].required = True
+                #self.fields[field].widget.choices=RC_REVIEW_DICT
+
+
             self.fields[field].widget.attrs.update({
                 'class': 'form-control',
                 })
