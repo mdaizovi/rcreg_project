@@ -1641,7 +1641,7 @@ class ReviewCon(models.Model):
     rank_seminars=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,RC_REVIEW_RANIKING_DICT, False),null=True, blank=True)
     rank_social=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,RC_REVIEW_RANIKING_DICT, False),null=True, blank=True)
     rank_shopping=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,RC_REVIEW_RANIKING_DICT, False),null=True, blank=True)
-    rank_volunteer=models.IntegerField(choices=GET_NUMBER_RATINGS(8,RC_REVIEW_RANIKING_DICT, False),null=True, blank=True)
+    rank_volunteer=models.CharField(max_length=1,choices=GET_NUMBER_RATINGS(8,RC_REVIEW_RANIKING_DICT, False),null=True, blank=True)
 
 
     comments_text= models.TextField(null=True, blank=True)

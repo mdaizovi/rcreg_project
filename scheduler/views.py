@@ -61,8 +61,9 @@ def review_con(request,con_id):
         form3=ReviewConRankForm(request.POST or None, instance=myreview)
 
         if request.method == "POST":
+            print request.POST.copy()
             save_attempt=True
-            if form1.is_valid() and form2.is_valid():
+            if form1.is_valid() and form3.is_valid():
                 myreview.registrant=registrant#in case is new
                 myreview.save()
                 save_success=True
