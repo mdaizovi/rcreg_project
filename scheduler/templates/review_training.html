@@ -35,21 +35,18 @@
     </div>
     {%endif%}<!-- endif save attempt-->
 
+    <form method="POST" class="post-form margin-top-20">
+    {% csrf_token %}
 
     {%if form1%}
     <div class="col-md-6 pull-left">
-      <form method="POST" class="post-form margin-top-20">
-      {% csrf_token %}
+      <table class="table-condensed margin-top-15" style="width:100%;">
         {%for field in form1 %}
+        {%if field.errors%}<tr><td style="width:70%;"></td><td style="width:30%;color: red;">{{ field.errors }}</td></tr>{%endif%}
+        <tr><td style="width:70%;">{{field.label}}</td><td style="width:30%;">{{field}}</td></tr>
 
-
-        {%if field.errors%}<li style="color: red;">{{ field.errors }}</li>{%endif%}
-
-
-          {{ field.label }} {{ field }}
-        {%endfor%}
-        <button type="submit" class="btn btn-success margin-top-10"> Save Review </button>
-      </form>
+      {%endfor%}
+              </table>
         </div>
       {%endif%}<!-- if form1-->
 
@@ -57,55 +54,23 @@
       <div class="col-md-6 pull-right">
       <div class="well well-md">
         <h2 style="text-align:center;"><i>Optional</i></h2>
-        <form method="POST" class="post-form">
-        <table class="table table-condensed">
+        <table class="table">
           {% for field in form2%}
           <tr>
-          {%if field.name == "RC_Experience"%}
-            <td colspan="4">{{field.label}}</td></tr>
-                {% for choice in form2.RC_Experience.field.widget.choices %}
-                {%if forloop.first%}
-                <tr><td colspan="3" style="text-align:center;">
-                  <label for="">{{choice.1}}</label></td>
-                <td style="text-align: left;" >
-                  <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
-                    {% ifequal form.my_choice_field.data choice.0 %}
-                       checked="checked"
-                    {% endifequal %}/></td></tr>
-
-
-                  {%else%}
-
-                {%cycle "<tr>" " " %}
-                    <td style="text-align:right;"><label for="">{{choice.1}}</label></td>
-                  <td style="text-align: left;" >
-                    <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
-                      {% ifequal form.my_choice_field.data choice.0 %}
-                         checked="checked"
-                      {% endifequal %}/></td>
-                 {%cycle " " "<tr>" %}
-
-                   {%endif%}
-                {% endfor %}
-
-
-
-
-
-
+          {%if field.name == "comments_text"%}
+            <td colspan="2">{{field.label}}</td></tr><tr><td colspan="2">{{field}}</td></tr>
           {%else%}
-        <td style="width:50%;" colspan="2">{{field.label}}</td><td colspan="2" style="width:50%;">{{field}}</td></tr>
+        <td style="width:50%;">{{field.label}}</td><td style="width:50%;">{{field}}</td></tr>
         {%endif%}{%endfor%}
-
-
         </table>
-            </form>
-            </div><!-- end row-->
+      </div><!-- end well-->
     </div><!-- end col-md-6 center-block-->
-      {%endif%}<!-- end if dict.bo_list-->
+      {%endif%}<!-- forgot if form2-->
 
 </div><!-- end row-->
 </div><!-- end row-->
+<button type="submit" class="btn-lg btn-success center-block"> Save Review </button>
+</form>
 
 {%endif%}<!-- if my_review-->
 {%endif%}<!-- if registrant-->

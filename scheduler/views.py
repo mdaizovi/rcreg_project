@@ -76,9 +76,7 @@ def review_training(request,training_id):
         form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
         if request.method == "POST":
             save_attempt=True
-            print request.POST.copy()
-
-            if form1.is_valid():
+            if form1.is_valid() and form2.is_valid():
                 myreview.training=training #in case is new
                 myreview.registrant=registrant#in case is new
                 myreview.save()

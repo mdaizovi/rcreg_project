@@ -276,7 +276,7 @@ class ReviewTrainingResource(resources.ModelResource):
     class Meta:
         model = ReviewTraining
         fields = ('date','training','prepared','articulate','hear','learn_new','recommend','another_class','skill_level_expected','drills_helpful',
-            'share_feedback','league_visit','league_referral','comments_text','registrant__age_group','registrant__skill','registrant__gender','registrant__country','ruleset','years_playing','RC_Experience')
+            'share_feedback','league_visit','league_referral','comments_text','registrant__age_group','registrant__skill','registrant__gender','registrant__country')
         export_order=fields
         skip_unchanged = True
         report_skipped = True
@@ -285,20 +285,11 @@ class ReviewTrainingAdmin(ImportExportModelAdmin):
     search_fields = ('training__name',) #wish I could add coach, dont think I can
     list_display= ('training',)
     list_filter = ('training__con','training__onsk8s',)
-
     resource_class = ReviewTrainingResource
-
-    # fields = (('training'),
-    #     ('prepared','articulate','hear','learn_new','recommend','another_class'),
-    #     ('skill_level_expected','drills_helpful'),
-    #     ('share_feedback','league_visit','league_referral','comments_text'),
-    #     ('registrant__age_group','registrant__skill','registrant__gender','registrant__country','ruleset','years_playing','RC_Experience'))
-
     fields = (('training'),
         ('prepared','articulate','hear','learn_new','recommend','another_class'),
         ('skill_level_expected','drills_helpful'),
-        ('share_feedback','league_visit','league_referral','comments_text'),
-        ('ruleset','years_playing','RC_Experience'))
+        ('share_feedback','league_visit','league_referral','comments_text'),)
 
 
 class ReviewConResource(resources.ModelResource):

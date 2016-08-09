@@ -5,132 +5,94 @@
 
 {% block content %}
 <head>
-<title>{% block title %}Profile{% endblock %}</title>
-<!-- necessary for date time widget. Doesn't seem to work if moved-->
-<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>-->
+<title>{% block title %}Review Training{% endblock %}</title>
 </head>
 
 
 <div class="row" id="moreInfo">
-  <div class="col-sm-12">
-    <h3>My RollerCon Registration Profile
-      {% if user.is_a_coach%}<small><i><a href="{% url 'coach_profile' %}">View Coaching Profile</a></i></small>{%endif%}
-    </h3>
+    <div class="col-sm-12">
 
-    {%if not registrant_dict_list %}
-    <div class="alert alert-danger" role="alert">
-    You have not have any RollerCon passes on file. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
-    {%else%}
+      {%if not registrant or not training %}
+      <div class="alert alert-danger" role="alert">
+      Error locating your Con pass or Training information. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+      {%else%}
 
-      <ul class="nav nav-pills margin-top-15">
-        <li role="presentation"><a href="{% url 'my_challenges' %}"><b>My Challenges & Games
-          {%if ALL_CHALLENGE_NOTIFY %}
-          <span class="badge tooltip-bottom" style="background-color:red;"title="You have {{ALL_CHALLENGE_NOTIFY}} competitive issue{{ ALL_CHALLENGE_NOTIFY|pluralize }} to attend to">
-            {{ALL_CHALLENGE_NOTIFY }}</span>{%endif%}
-        </b></a></li>
-        <li role="presentation"><a href="{% url 'my_trainings' %}"><b>My Trainings</a></b></li>
-        <li role="presentation"><a href="{% url 'my_schedule' %}"><b>My Schedule</a></b></li>
-          <li role="presentation"><a href="{% url 'my_reviews' %}"><b>My Reviews</a></b></li>
-      </ul>
+    <h3>Review <b>{{training.name}}</b> <br><i>({{ training.display_coach_names }})</i>
+      <br><small>Your review is anonymous; your identity will not be shared with coaches or event organizers</small></h3>
+
+
+      {%if not myreview%}
+      <div class="alert alert-danger" role="alert">
+      You are not signed up for this training. Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
+      {%else%}
 
 
     {%if save_attempt%}
-
     {%if save_success%}
-    <div class="alert alert-success" role="alert">{{this_reg.con}} Profile Successfully Updated!
-    {%elif captain_conflict%}
-      <div class="alert alert-danger" role="alert">Selecting this criteria for
-        {% for criteria in problem_criteria %}{%if not forloop.first %} and {%endif%}<b>{{criteria}}</b>{%endfor%}
-        would make you ineligible for
-        {% for conflict in potential_conflicts %}{%if not forloop.first %} and {%endif%}<b>{{conflict.name }}</b>{%endfor%}. Changes not made.
-    {%elif problem_criteria and potential_conflicts %}
-        <div class="alert alert-danger" role="alert">You have been removed from {%for roster in potential_conflicts %}{%if not forloop.first %} and{%endif%} <b>{{roster.name}}</b>{%endfor%}
-           because changing your {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}{{criteria}}{%endfor%} made you ineligible.
+    <div class="alert alert-success" role="alert">Review Successfully Saved!
     {%else%}<div class="alert alert-danger" role="alert">Update Failed. Please try again later and contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if this keeps happening.
     {%endif%}<!-- if save success/captain conflict/criteria-->
     </div>
     {%endif%}<!-- endif save attempt-->
 
+    <form method="POST" class="post-form margin-top-20">
+    {% csrf_token %}
 
-
-    <div class="tabbable margin-top-15">
-      <ul class="nav nav-tabs">
-
-{%for dict in registrant_dict_list%}
-
-{% with forloop.counter|stringformat:"s" as con_number %}
-{% with '#tab'|add:con_number as tab_number %}
-
-
-<li {%if dict.con == active %}class="active"{%endif%}><a href="{{tab_number}}" data-toggle="tab">{{dict.con}}</a></li>
-
-        {%endwith%}{%endwith%}
+    {%if form1%}
+    <div class="col-md-6 pull-left">
+        {%for field in form1 %}
+        {%if field.errors%}<li style="color: red;">{{ field.errors }}</li>{%endif%}
+          {{ field.label }} {{ field }}
         {%endfor%}
-      </ul>
+        </div>
+      {%endif%}<!-- if form1-->
 
-      <div class="tab-content margin-top-20">
-        {%for dict in registrant_dict_list%}
-        {% with forloop.counter|stringformat:"s" as con_number %}
-        {% with 'tab'|add:con_number as tab_number %}
+      {%if form2%}
+      <div class="col-md-6 pull-right">
+      <div class="well well-md">
+        <h2 style="text-align:center;"><i>Optional</i></h2>
+        <table class="table table-condensed">
+          {% for field in form2%}
+          <tr>
+          {%if field.name == "RC_Experience"%}
+            <td colspan="4">{{field.label}}</td></tr>
+                {% for choice in form2.RC_Experience.field.widget.choices %}
+                {%if forloop.first%}
+                <tr><td colspan="3" style="text-align:center;">
+                  <label for="">{{choice.1}}</label></td>
+                <td style="text-align: left;" >
+                  <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
+                    {% ifequal form.my_choice_field.data choice.0 %}
+                       checked="checked"
+                    {% endifequal %}/></td></tr>
 
-        <div class="tab-pane {%if dict.con == active %}active{%endif%}" id="{{tab_number}}">
+                  {%else%}
 
-          <div class="row">
-            <form method="POST" class="post-form">
-                  {% csrf_token %}
+                {%cycle "<tr>" " " %}
+                    <td style="text-align:right;"><label for="">{{choice.1}}</label></td>
+                  <td style="text-align: left;" >
+                    <input type="checkbox" name="my_choice_field" value="{{choice.0}}"
+                      {% ifequal form.my_choice_field.data choice.0 %}
+                         checked="checked"
+                      {% endifequal %}/></td>
+                 {%cycle " " "<tr>" %}
 
-            <div class="col-md-4 pull-left">
-  <fieldset {%if dict.con not in upcoming %}disabled{%endif%}>
-{%for field in dict.form %}
-    <div class="form-group">
-      <fieldset {%if field.name == 'intl' or field.name == 'pass_type' %}disabled{%endif%}><!-- FINALLY!!! a way to disable only one field!!!-->
-        {{ field.label }} {{ field }}
-      </fieldset>
-    </div>
-{%endfor%}
-</div><!-- end col-md-6 center-block-->
+                   {%endif%}
+                {% endfor %}
+          {%else%}
+        <td style="width:50%;" colspan="2">{{field.label}}</td><td colspan="2" style="width:50%;">{{field}}</td></tr>
+        {%endif%}{%endfor%}
+        </table>
+      </div><!-- end well-->
+    </div><!-- end col-md-6 center-block-->
+      {%endif%}<!-- forgot if form2-->
 
-
-{%if dict.bo_form_list %}
-<input type="hidden" name="blackouts_visible" value="blackouts_visible" />
-<div class="col-md-6 pull-right">
-
-<div class="well well-md">
-  <h4>Availability<br><small>
-    Please list times that would be acceptable to schedule Trainings you are coaching and/or Challenges you are captaining.</small></h4>
-
-<table class="table table-condensed">
-{%for form in dict.bo_form_list %}
-  <fieldset>
-<tr>{% for field in form%}<td>{{field.label}}</td><td>{{field}}</td>{%endfor%}</tr>
-</fieldset>
-{%endfor%}
-
-
-</table>
-</div>
-</div><!-- end col-md-4 center-block-->
-{%endif%}<!-- end if dict.bo_list-->
-
-
-
-    </div><!-- end row -->
-    <button type="submit" class="btn btn-success margin-top-10" action="{%url 'registrant_profile'%}"
-    {%if dict.con not in upcoming %}disabled{%endif%}> Save Profile </button>
- </fieldset>
- <input type="hidden" name="registrant_id" value="{{ dict.registrant.id }}" />
-</form>
-
-        </div><!-- end tab-pane -->
-        {%endwith%}{%endwith%}
-        {%endfor%}
-
-      </div><!-- end tab-content -->
-    </div><!-- end tabbable -->
-{%endif%}<!-- if media, ie if they have registered for at least one con -->
-
-  </div><!-- end col-sm-12 -->
 </div><!-- end row-->
 
+</div><!-- end row-->
+<button type="submit" class="btn-lg btn-success center-block margin-top-20"> Save Review </button>
+</form>
 
+{%endif%}<!-- if my_review-->
+{%endif%}<!-- if registrant-->
 {% endblock %}

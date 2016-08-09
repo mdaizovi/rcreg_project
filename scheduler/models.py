@@ -1602,9 +1602,10 @@ class ReviewTraining(models.Model):
     comments_text=models.TextField(null=True, blank=True)
 
     ### optional
-    ruleset=models.CharField(max_length=30, null=True,blank=True, choices=RULESET)
-    years_playing=models.CharField(max_length=30, null=True,blank=True, choices=YEARS_PLAYING)
-    RC_Experience=models.CharField(max_length=300, null=True,blank=True)
+    #I'm such an idiot. This should only be once, in review con.
+    # ruleset=models.CharField(max_length=30, null=True,blank=True, choices=RULESET)
+    # years_playing=models.CharField(max_length=30, null=True,blank=True, choices=YEARS_PLAYING)
+    # RC_Experience=models.CharField(max_length=300, null=True,blank=True)
 
     def __unicode__(self):
         return  "%s %s" % (self.training, self.date)
