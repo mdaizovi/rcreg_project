@@ -297,7 +297,7 @@ class ReviewConResource(resources.ModelResource):
         model = ReviewCon
         fields = ('overall_exp','onsk8s','offsk8s','seminars','competitive_events_playing','competitive_events_watching','social_events','shopping','lines',
             'fav1','fav2','rank_training','rank_competition_playing','rank_competition_watching','rank_seminars','rank_social','rank_shopping','rank_volunteer',
-            'comments_text','share_feedback','ruleset','years_playing','RC_Experience')
+            'comments_text','ruleset','years_playing','RC_Experience')
         export_order=fields
         skip_unchanged = True
         report_skipped = True
@@ -309,7 +309,7 @@ class ReviewConAdmin(ImportExportModelAdmin):
     fields = (('overall_exp'),
         ('onsk8s','offsk8s','seminars','competitive_events_playing','competitive_events_watching','social_events','shopping','lines'),
         ('fav1','fav2'),('rank_training','rank_competition_playing','rank_competition_watching','rank_seminars','rank_social','rank_shopping','rank_volunteer'),
-        ('comments_text','share_feedback'),('ruleset','years_playing','RC_Experience'))
+        ('comments_text',),('ruleset','years_playing','RC_Experience'))
 
 
 admin.site.register(Venue, VenueAdmin)

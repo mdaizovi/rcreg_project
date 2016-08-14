@@ -418,7 +418,7 @@ class ReviewConForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ReviewConForm, self).__init__(*args, **kwargs)
 
-        self.fields['overall_exp'].label ="your overall experience at RollerCon?"
+        self.fields['overall_exp'].label ="Your overall experience at RollerCon?"
         self.fields['onsk8s'].label ="ON SKATES athletic sessions?"
         self.fields['offsk8s'].label ="OFF SKATES athletic sessions?"
         self.fields['seminars'].label ="Seminars?"
@@ -482,16 +482,8 @@ class ReviewConFormOptional(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ReviewConFormOptional, self).__init__(*args, **kwargs)
         RC_EXPERIENCE=GET_RC_EXPERIENCE()
-        print "RC_EXPERIENCE",RC_EXPERIENCE
-
         initial_exp=[]
-
-
         if self.instance and self.instance.RC_Experience:
-
-            print "i ahve an instance!"
-            print self.instance.RC_Experience
-            #self.fields['RC_Experience'].initial = initial
             exp_list=self.instance.RC_Experience.split(", ") #stupid unnecessary u'
             exp_dict=dict(RC_EXPERIENCE)
             for k in exp_list:
