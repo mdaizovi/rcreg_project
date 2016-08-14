@@ -83,7 +83,7 @@ def GET_RC_EXPERIENCE():
         yearlist.append(tup)
     yearlist.sort(reverse=True)
     yeartup=tuple(yearlist)
-    return yeartup
+    return list(yeartup)
 
 
 class Venue(models.Model):
@@ -1653,24 +1653,9 @@ class ReviewCon(models.Model):
     def __unicode__(self):
         return  str(self.date)
 
-
-    def format_exp(self,exp_list):
-        #doesn't do what i want
-        print "list is ",exp_list
-
-        print "self.RC_Experience 1"
-        print self.RC_Experience
-
-        self.RC_Experience="".join(exp_list)
-
-        print "self.RC_Experience 2"
-        print self.RC_Experience
-
-        return self.RC_Experience
-
-
-
-    # def save(self, *args, **kwargs):
-    #     print "custom save ReviewCon"
-    #     print self.RC_Experience
-    #     super(ReviewCon, self).save()
+    def save(self, *args, **kwargs):
+        if self.RC_Experience:
+            new_exp1=self.RC_Experience.replace("u'", "")
+            new_exp2=new_exp1.replace("'", "")
+            self.RC_Experience=str(new_exp2)
+        super(ReviewCon, self).save()

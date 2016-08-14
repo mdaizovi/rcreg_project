@@ -481,11 +481,27 @@ class ReviewConRankForm(forms.ModelForm):
 class ReviewConFormOptional(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ReviewConFormOptional, self).__init__(*args, **kwargs)
+        RC_EXPERIENCE=GET_RC_EXPERIENCE()
+        print "RC_EXPERIENCE",RC_EXPERIENCE
 
+        initial_exp=[]
+
+
+        if self.instance and self.instance.RC_Experience:
+
+            print "i ahve an instance!"
+            print self.instance.RC_Experience
+            #self.fields['RC_Experience'].initial = initial
+            exp_list=self.instance.RC_Experience.split(", ") #stupid unnecessary u'
+            exp_dict=dict(RC_EXPERIENCE)
+            for k in exp_list:
+                if k in exp_dict:
+                    initial_exp.append(str(k))
         self.fields["ruleset"].label ="What is ruleset you mostly play under?"
         self.fields["years_playing"].label ="How many years have you been playing roller derby?"
-        self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=GET_RC_EXPERIENCE()),label ="Please check the box(es) of the year(s) you've participated in RollerCon.")
+        self.fields["RC_Experience"]=forms.CharField(widget=forms.CheckboxSelectMultiple(choices=RC_EXPERIENCE),label ="Please check the box(es) of the year(s) you've participated in RollerCon.")
         self.fields["comments_text"].label ="Do you have any other comments to add?"
+        self.initial['RC_Experience'] = initial_exp #omg finally fucking works stupid fucking selectmultiple
 
         for key in self.fields:
             self.fields[key].required = False
@@ -499,20 +515,8 @@ class ReviewConFormOptional(forms.ModelForm):
          model = ReviewCon
          fields = ('ruleset','years_playing','RC_Experience','comments_text')
 
-    # def clean(self,):
-    #     print "running optional form clean"
-    #     if self.is_valid():
-    #         experience  = self.cleaned_data["RC_Experience"]
-    #
-    #         print "experience",experience
-    #
-    #         new_exp=""
-    #         for i in experience:
-    #             new_exp+=i+","
-    #         print "pre trim ",new_exp
-    #         if len(new_exp)>1:
-    #             new_exp=new_exp[:-1]
-    #
-    #         print "post trim ",new_exp
-    #
-    #         self.cleaned_data["RC_Experience"]=new_exp
+    def clean_RC_Experience(self):
+        exp_clean = str(self.cleaned_data['RC_Experience'])
+        exp_value1=exp_clean.strip("u'")
+        exp_value2=exp_value1[1:-1]
+        return exp_value2
