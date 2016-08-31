@@ -127,7 +127,9 @@ class ChallengeModelForm(ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user')
         super(ChallengeModelForm, self).__init__(*args, **kwargs)
-        reglist=user.upcoming_registrants()
+        #reglist=user.upcoming_registrants() #idiot. This made it throw error after Con happened.
+        reglist=user.registrants()
+
         conlist=[]
         for reg in reglist:
             if  reg.can_sk8():

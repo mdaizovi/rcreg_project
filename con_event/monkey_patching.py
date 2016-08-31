@@ -87,6 +87,7 @@ def all_cons(self):
 
 
 def upcoming_registrants(self):
+    """gets user's registrants that are assosciated w/ any cons that have not occurred yet."""
     from con_event.models import Registrant,Con
 
     cons=Con.objects.upcoming_cons()
