@@ -20,6 +20,7 @@ def is_a_boss(self):
         return False
 
 def is_the_boss(self):
+    #Checks to see if user is a superuser, or in khaleesi group
     if self in list(User.objects.filter(Q(is_superuser=True)|Q(groups__name__in=[BIG_BOSS_GROUP_NAME]))):
         return True
     else:
