@@ -3,21 +3,18 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    # Examples:
-    # url(r'^$', 'rcreg_project.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
     url(r'^admin/', include(admin.site.urls)),
-    #url(r'^$', TemplateView.as_view(template_name='index.html'), name='index'),
-    url(r'^$', 'con_event.views.index',name='index'),
-    url(r'^WTFAQ/', 'con_event.views.WTFAQ',name='WTFAQ'),
-    url(r'^CheapAir/', TemplateView.as_view(template_name='CheapAirWidgetEdited.html'), name='CheapAir'),
-    url(r'^CheapAirDynamic/', 'con_event.views.CheapAirDynamic', name='CheapAirDynamic'),
-
-    url(r'^con/', include ('con_event.urls')),
-    url(r'^scheduler/', include ('scheduler.urls')),
+    url(r'^$', 'con_event.views.index', name='index'),
+    url(r'^WTFAQ/', 'con_event.views.WTFAQ', name='WTFAQ'),
+    url(r'^CheapAir/', TemplateView.as_view(
+        template_name='CheapAirWidgetEdited.html'),
+        name='CheapAir'),
+    url(r'^CheapAirDynamic/', 'con_event.views.CheapAirDynamic',
+        name='CheapAirDynamic'),
+    url(r'^con/', include('con_event.urls')),
+    url(r'^scheduler/', include('scheduler.urls')),
     url(r'^accounts/', include('registration.backends.default.urls')),
-    #url(r'^swingtime/', include('swingtime.urls')),
-    url(r'^', include('swingtime.urls')),#this will work to avoid ugly swingtime url, just make it go straight through
-    #make sure to not use 'calendar' or 'events' elsewhere, else will ocnflict with swingtime urls
-]
+    url(r'^', include('swingtime.urls')),  # Avoid ugly swingtime prefix
+    # make sure to not use 'calendar' or 'events' elsewhere,
+    # else will conflict with swingtime urls.
+    ]
