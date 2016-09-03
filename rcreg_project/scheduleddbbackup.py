@@ -19,9 +19,9 @@ if int(today) in [7, 21]:
     if not os.path.exists(datetimeBackupDir):
         os.makedirs(datetimeBackupDir)
 
-    mysqldump_cmd = "mysqldump -u " + db_User_Name + " --password='"
-    + DB_User_Password + "' -h " + DB_Host + " --databases '" + DB_Name
-    + "' > '" + datetimeBackupDir + DB_Name + ".sql'"
+    mysqldump_cmd = ("mysqldump -u " + db_User_Name + " --password='"
+                    + DB_User_Password + "' -h " + DB_Host + " --databases '"
+                    + DB_Name + "' > '" + datetimeBackupDir + DB_Name + ".sql'")
 
     os.system(mysqldump_cmd)
     print "db copied"

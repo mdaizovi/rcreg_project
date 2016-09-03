@@ -10,7 +10,8 @@ import collections
 """This whole file is for helping me compare excel files of who SHOULD BE in RollerTron
 and who ACTUALLY IS in RollerTron.
 Assumes the ACUALLY IS is re-arranged from export to look like BPT excel.
-Top funcitons copied from Basic_Data."""
+This is kind of a private mess. I didn't see the point in deleting it, but you can if you want.
+"""
 
 static_path=BASE_DIR+"/static/data/"
 import_path=static_path+'unformatted/'

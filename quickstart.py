@@ -1,3 +1,13 @@
+
+"""NOTE TO FUTURE DEVELOPERS:
+I thought I was going to need to do gcal API integration,
+but then it ended up being super easy to just import a csv of events.
+I don't think this is used anywhere,
+other than some GOOGLE APP ENGINE variables in settings.
+I'm just keeping it in case you end up using it someday.
+"""
+
+
 from __future__ import print_function
 import httplib2
 import os

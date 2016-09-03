@@ -76,9 +76,10 @@ def get_upcoming_con_context(request):
 
 
 def upcoming_days(request):
-    # I have no idea where I use this.
-    # Maybe I intended to and forgot of maybe it's buried somewhere.
-    # Maybe it's used in the swingtime/calendar?
+    """Gets most upcoming Con, then days in that con.
+    Returns list of Date objects.
+    """
+
     from con_event.models import Con  # avoid circular import
     upcoming = Con.objects.most_upcoming()
     upcoming_days = upcoming.get_date_range()
