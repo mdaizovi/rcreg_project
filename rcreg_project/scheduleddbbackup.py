@@ -3,10 +3,9 @@ import os
 import time
 from datetime import datetime
 
-db_User_Name = 'rcregsite'
-DB_User_Password = 'TRON<3s5318008'
-DB_Name = 'rcregsite$default'
-DB_Host = db_User_Name+'.mysql.pythonanywhere-services.com'
+from rcreg_project.settings import (
+    db_User_Name, DB_User_Password, DB_Name, DB_Host)
+
 backupDir = '/home/rcregsite/backup/'
 
 now = datetime.now()
@@ -29,4 +28,3 @@ if int(today) in [7, 21]:
 
 else:
     print "No Scheduled DB backup today."
-    
