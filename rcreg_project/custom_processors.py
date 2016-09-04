@@ -4,9 +4,9 @@ from rcreg_project.settings import (CUSTOM_SITE_ADMIN_EMAIL,
 
 
 def all_challenge_notifications(request):
-    """User notified via sidebar if:
-    User has unaccepted or unsubmitted challenges, or
-    submission window is closed due to too many challenges captained by User.
+    """user notified via sidebar if:
+    user has unaccepted or unsubmitted challenges, or
+    submission window is closed due to too many challenges captained by user.
     """
     from django.conf import settings  # avoid circular import
     from scheduler.models import Challenge  # avoid circular import
@@ -76,7 +76,7 @@ def get_upcoming_con_context(request):
 
 
 def upcoming_days(request):
-    """Gets most upcoming Con, then days in that con.
+    """Gets most upcoming con, then days in that con.
     Returns list of Date objects.
     """
 

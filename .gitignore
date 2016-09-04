@@ -11,3 +11,4 @@ migrations/
 #################
 rcreg_project/settings.py
 rcreg_project/static/media/
+client_secret.json

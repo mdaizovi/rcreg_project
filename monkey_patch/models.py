@@ -7,7 +7,7 @@ NEW_USERNAME_LENGTH = 100
 
 def monkey_patch_username():
     """Allows the username to be 100 chars, instead of just 30
-    for long emails, since email addy is username."""
+    for long emails, since email address is username."""
 
     username = User._meta.get_field("username")
     username.max_length = NEW_USERNAME_LENGTH

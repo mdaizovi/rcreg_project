@@ -1,24 +1,29 @@
-from django import forms
-from openpyxl import Workbook
-from con_event.models import Country, State, Con, Registrant
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import Group, User
-from django.core.exceptions import ObjectDoesNotExist,ValidationError, NON_FIELD_ERRORS
-from django.db.models import Q
-import os
-import datetime
-from rcreg_project.settings import BASE_DIR
-from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-import openpyxl
 import collections
+import datetime
+import os
+import openpyxl
+from openpyxl import Workbook
 
-static_path=BASE_DIR+"/static/data/"
-import_path=static_path+'unformatted/'
-export_path=static_path+'exported/'
+from django import forms
+from django.contrib.auth.models import Group, User
+from django.core.exceptions import (
+    ObjectDoesNotExist, ValidationError, NON_FIELD_ERRORS)
+from django.db.models import Q
+from django.utils.translation import ugettext_lazy as _
 
-data_columns=['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X',
-    'Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM','AN']
-base_header_file=os.path.join(BASE_DIR,'con_event/BPT2016Header.xlsx')
+from con_event.models import Country, State, Con, Registrant
+from rcreg_project.settings import BASE_DIR
+from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
+
+"""Logic for uploading an XLSX sheet of registrants from the view 'upload_reg'.
+XLSX must look exactly like it did in 2016."""
+
+data_columns = [
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+    'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC',
+    'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN']
+base_header_file = os.path.join(BASE_DIR, 'con_event/BPT2016Header.xlsx')
+
 
 class BPTUploadForm(forms.Form):
     def __init__(self, *args, **kwargs):
