@@ -101,7 +101,7 @@ def clean_registrant_import(sender, instance, **kwargs):
 
 
 def match_user(sender, instance, **kwargs):
-    """post_save signal from Registrant.
+    """pre_save signal from Registrant.
     Looks for user w/ registrant email as user email or username.
     If > 1 user-- which should not happen-- uses most recently created.
     If no match, makes new user with a random password.

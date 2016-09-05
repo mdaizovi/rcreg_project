@@ -10,7 +10,7 @@ from con_event.BPTExcel import BPTUploadForm
 from con_event.models import Blog, Con, Registrant, Blackout
 from swingtime.models import Occurrence
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def upload_reg(request):
     """Easy upload for uplaoding an Excel sheet into DB.
@@ -60,7 +60,7 @@ def upload_reg(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 def CheapAirDynamic(request):
     '''Looks nice to fill the flight search with upcoming con data;
     search doesn't work. Think it's their fault, not mine, though'''
@@ -73,7 +73,7 @@ def CheapAirDynamic(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 def index(request):
     most_upcoming = Con.objects.most_upcoming()
     blog = Blog.objects.latest('date')
@@ -85,7 +85,7 @@ def index(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def WTFAQ(request):
     """Private FAQ that only bosses (user.is_a_boss) can see."""
@@ -99,7 +99,7 @@ def WTFAQ(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 def announcement(request, slugname):
     """Blog by another name. Individual announcement view."""
 
@@ -116,7 +116,7 @@ def announcement(request, slugname):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 def all_announcements(request):
     """Blog by another name. All announcements view."""
     context_dict = {'blogs': Blog.objects.all()}
@@ -127,7 +127,7 @@ def all_announcements(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def registrant_profile(request):
     '''Gets all registrants for user and displays them.
@@ -310,7 +310,7 @@ def registrant_profile(request):
             context_instance=RequestContext(request))
             )
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def know_thyself(request, con_id=None):
     """Some basic Con analytics.

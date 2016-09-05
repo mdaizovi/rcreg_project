@@ -17,16 +17,16 @@ class SearchForm(forms.Form):
         super(SearchForm, self).__init__(*args, **kwargs)
 
         self.fields['search_q'] = (
-                            forms.CharField(required=False, label="Search")
-                            )
+                forms.CharField(required=False, label="Search")
+                )
         self.tooltip = ("To refine selection, search by skater name. \
-                        Otherwise, select from all eligible skaters"
-                        )
+                Otherwise, select from all eligible skaters"
+                )
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                })
+                    'class': 'form-control',
+                    })
 
     def normalize_query(self, findterms=re.compile(r'"([^"]+)"|(\S+)').findall,normspace=re.compile(r'\s{2,}').sub):
         """Splits the query string in invidual keywords, getting rid of unecessary spaces
@@ -69,14 +69,15 @@ class RegistrantProfileForm(ModelForm):
 
         instancepk = self.instance.id
         self.fields["skill"] = (forms.CharField(widget=forms.Select(
-                                choices=SKILL_LEVEL_SK8R), label='Skill Level'))
+                choices=SKILL_LEVEL_SK8R), label='Skill Level'
+                ))
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'id': '%s_for_%s' % (str(field), str(instancepk)),
-                'name': '%s_for_%s' % (str(field), str(instancepk)),
-                })
+                    'class': 'form-control',
+                    'id': '%s_for_%s' % (str(field), str(instancepk)),
+                    'name': '%s_for_%s' % (str(field), str(instancepk)),
+                    })
 
         self.fields['sk8name'].widget.attrs['disabled'] = True
         self.fields['sk8name'].required = False
@@ -129,14 +130,16 @@ class EligibleRegistrantForm(forms.Form):
             ELIGIBLE_REGISTRANTS = [((None), ("None"))]
 
         self.fields['eligible_registrant'] = (
-            forms.CharField(required=True, label="Skaters",
-                            widget=forms.Select(choices=ELIGIBLE_REGISTRANTS))
-            )
+                forms.CharField(required=True,
+                        label="Skaters",
+                        widget=forms.Select(choices=ELIGIBLE_REGISTRANTS)
+                        )
+                )
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                })
+                    'class': 'form-control',
+                    })
 
 
 class ConSchedStatusForm(ModelForm):
@@ -156,8 +159,8 @@ class ConSchedStatusForm(ModelForm):
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                })
+                    'class': 'form-control',
+                    })
 
 
 class AvailabilityForm(forms.Form):
@@ -170,22 +173,24 @@ class AvailabilityForm(forms.Form):
         super(AvailabilityForm, self).__init__(*args, **kwargs)
 
         self.fields["date"] = (
-            forms.DateField(
-                required=True, label="Date:",
-                initial=date.strftime("%a %B %d, %Y"))
+                forms.DateField(
+                        required=True,
+                        label="Date:",
+                        initial=date.strftime("%a %B %d, %Y")
+                        )
                 )
         self.fields["am"] = (
-            forms.BooleanField(label='Available AM', initial=True)
-            )
+                forms.BooleanField(label='Available AM', initial=True)
+                )
         self.fields["pm"] = (
-            forms.BooleanField(label='Available PM', initial=True)
-            )
+                forms.BooleanField(label='Available PM', initial=True)
+                )
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                 'id': str(date),
-                 'name': str(date),
-                })
+                    'id': str(date),
+                    'name': str(date),
+                    })
 
         self.fields['date'].widget.attrs['disabled'] = True
         self.fields['am'].required = False
