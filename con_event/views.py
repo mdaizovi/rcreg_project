@@ -1,193 +1,324 @@
+import datetime
+
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
-from con_event.forms import RegistrantProfileForm,AvailabilityForm
+
+from con_event.forms import RegistrantProfileForm, AvailabilityForm
 from con_event.BPTExcel import BPTUploadForm
-from con_event.models import Blog, Con, Registrant,Blackout
-import datetime
+from con_event.models import Blog, Con, Registrant, Blackout
 from swingtime.models import Occurrence
-#from openpyxl import Workbook #I thought I needed for upload_reg, doesn't seem to be needed here
-#from django.db import connection as dbconnection #for checking db hits and speed
-#print "dbc0:", len(dbconnection.queries) #syntax reminder, for checking db hits and speed 
+
 
 @login_required
 def upload_reg(request):
     """Easy upload for uplaoding an Excel sheet into DB.
-    Excel sheet must be XLSX and look exactly like BPT reports did in 2016, otherwise file will be rejected.
+    Excel sheet must be XLSX and look exactly like BPT reports did in 2016,
+    otherwise file will be rejected.
     """
-    save_attempt=False
-    save_success=False
-    reg_added=[]
+    save_attempt = False
+    save_success = False
+    reg_added = []
     if request.method == 'POST':
-        form=BPTUploadForm(request.POST, request.FILES)
-        save_attempt=True
-        if form.my_valid():#don't touch the my valid/is valid, it has to be that way
-            if form.is_valid():#don't touch the my valid/is valid, it has to be that way
-                wb=form.make_registrants()
-                save_success=True
-                filename='RollerTron Upload %s.xlsx'%(datetime.date.today().strftime("%B %d %Y"))
-                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                response['Content-Disposition'] = 'attachment; filename=%s'%(filename)
+        form = BPTUploadForm(request.POST, request.FILES)
+        save_attempt = True
+        # Don't touch the my valid/is valid, it has to be that way
+        if form.my_valid():
+            if form.is_valid():
+                wb = form.make_registrants()
+                save_success = True
+
+                filename = ('RollerTron Upload %s.xlsx'
+                        % (datetime.date.today().strftime("%B %d %Y"))
+                        )
+                response = (HttpResponse(
+                        content_type='application/vnd.openxmlformats-officedocument\
+                        .spreadsheetml.sheet')
+                        )
+                response['Content-Disposition'] = ('attachment; filename=%s'
+                        % (filename)
+                        )
+
                 wb.save(response)
                 return response
-        else:
-            form=BPTUploadForm(request.POST)
-    else:
-        form=BPTUploadForm()
+        else:  # If not my_valid
+            form = BPTUploadForm(request.POST)
+    else:  # If not POST
+        form = BPTUploadForm()
 
-    return render_to_response('upload_reg.html', {'save_attempt':save_attempt,'save_success':save_success,'reg_added':reg_added,'form':form},context_instance=RequestContext(request))
+    context_dict = {
+        'save_attempt': save_attempt,
+        'save_success': save_success,
+        'reg_added': reg_added,
+        'form': form
+        }
+
+    return (render_to_response(
+            'upload_reg.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 def CheapAirDynamic(request):
-    '''this looks nice to fill the flight search with upcoming con data, but the search doesn't work
-    I think it's their fault, not mine, though'''
-    most_upcoming=Con.objects.most_upcoming()
-    return render_to_response('CheapAirDynamic.html', {'most_upcoming':most_upcoming},context_instance=RequestContext(request))
+    '''Looks nice to fill the flight search with upcoming con data;
+    search doesn't work. Think it's their fault, not mine, though'''
+    most_upcoming = Con.objects.most_upcoming()
+    context_dict = {'most_upcoming': most_upcoming}
+
+    return (render_to_response(
+            'CheapAirDynamic.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 def index(request):
-    most_upcoming=Con.objects.most_upcoming()
-    blog=Blog.objects.latest('date')
-    return render_to_response('index.html', {'most_upcoming':most_upcoming,'blog':blog},context_instance=RequestContext(request))
+    most_upcoming = Con.objects.most_upcoming()
+    blog = Blog.objects.latest('date')
+    context_dict = {'most_upcoming': most_upcoming, 'blog': blog}
+
+    return (render_to_response(
+            'index.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 @login_required
 def WTFAQ(request):
-    user=request.user
-    return render_to_response('WTFAQ.html', {'user':user},context_instance=RequestContext(request))
+    """Private FAQ that only bosses (user.is_a_boss) can see."""
+
+    user = request.user
+    context_dict = {'user': user}
+
+    return (render_to_response(
+            'WTFAQ.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 def announcement(request, slugname):
-    blog=Blog.objects.get(slugname=slugname)
-    next_blog,previous_blog=blog.get_next_and_previous()
-    return render_to_response('announcement.html', {'previous_blog':previous_blog,'next_blog':next_blog,'blog':blog},context_instance=RequestContext(request))
+    """Blog by another name. Individual announcement view."""
+
+    blog = Blog.objects.get(slugname=slugname)
+    next_blog, previous_blog = blog.get_next_and_previous()
+    context_dict = {'previous_blog': previous_blog,
+                    'next_blog': next_blog,
+                    'blog': blog
+                    }
+
+    return (render_to_response(
+            'announcement.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 def all_announcements(request):
-    return render_to_response('all_announcements.html', {'blogs':Blog.objects.all()},context_instance=RequestContext(request))
+    """Blog by another name. All announcements view."""
+    context_dict = {'blogs': Blog.objects.all()}
+
+    return (render_to_response(
+            'all_announcements.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 @login_required
 def registrant_profile(request):
-    '''Gets all registrants for user and displays them. Only the first in the list,
-    presumably most recent, is editable--all others are disabled.
-    You can modify and change data and presumable only the most recent Registrant will be saved.
-    If Users ever need to be able to edit 2 Registrants at once, like for overlapping Cons, it will need to be rewritten.
-    form.media relates to the datetime widget. I don't know why it only works on the first tab, but I made all others disbled anyway, so no problem?
+    '''Gets all registrants for user and displays them.
+    Only the first in the list, presumably most recent, is editable--
+    all others are disabled.
+    If Users ever need to be able to edit 2 Registrants at once,
+    like for overlapping Cons, it will need to be rewritten.
+    problem_criteria / potential_conflicts / captain_conflict refers to
+    whether they are changing ther skill or gender in such a way that would make
+    them ineligible for a Challenge they're captaining or on roster for.
     '''
-    save_attempt=False
-    save_success=False
-    this_reg=None#this is the one that gets selected if you're saving something
-    user=request.user
-    upcoming=Con.objects.upcoming_cons()
-    registrant_dict_list=[]
-    problem_criteria=None
-    potential_conflicts=None
-    captain_conflict=None
+
+    save_attempt = False
+    save_success = False
+    this_reg = None  # Most recent; only one that can be edited or saved.
+    user = request.user
+    upcoming = Con.objects.upcoming_cons()
+    registrant_dict_list = []
+    problem_criteria = None
+    potential_conflicts = None
+    captain_conflict = None
 
     if request.method == 'POST':
-        save_attempt=True
-        this_reg=Registrant.objects.get(pk=request.POST['registrant_id'])
-        this_con=this_reg.con
-        #for some fucking reason couldn't get the goddamed modelform to act like a real modelform
-        #so i write hack aorund only updating the only 2 fields I want to be able to update, anyway.
-        #which is fine, I guess bc otherwise I had all kinds of shit to make sure pass type and intl didn't get changed.
-        if 'skill' in request.POST:
-            if request.POST['skill'] in [None,"None","",u'']:
-                this_reg.skill=None
-            else:
-                this_reg.skill=request.POST['skill']
-        if 'gender' in request.POST:
-            this_reg.gender=request.POST['gender']
-        if 'sk8number' in request.POST:
-            this_reg.sk8number=request.POST['sk8number']
-        problem_criteria,potential_conflicts,captain_conflict=this_reg.criteria_conflict()
+        save_attempt = True
+        this_reg = Registrant.objects.get(pk=request.POST['registrant_id'])
+        this_con = this_reg.con
 
+        # The only attributes users can edit themselves are
+        # skill, gender, and sk8number.
+        if 'skill' in request.POST:
+            if request.POST['skill'] in [None, "None", "", u'']:
+                this_reg.skill = None
+            else:
+                this_reg.skill = request.POST['skill']
+        if 'gender' in request.POST:
+            this_reg.gender = request.POST['gender']
+        if 'sk8number' in request.POST:
+            this_reg.sk8number = request.POST['sk8number']
+        problem_criteria, potential_conflicts, captain_conflict = (
+                this_reg.criteria_conflict()
+                )
+
+        # Only captains and coaches will have a blackouts box.
+        # Important because no avilability check means a blackout is made
+        # If there's no check (because no form), a blackout will be made,
+        # and then you have thousands of blackouts for people who
+        # didn't even know, didn't even see the form.
         if 'blackouts_visible' in request.POST:
-            # # 'blackouts_visible' in request.POST  is important because no avilability check means a Blackout is made.
-            # If there's no check (because no form) a blckout will be made, and then you have thousands of Blacouts for people who didn't even know, didn't even see the form.
-            bo_tup_list=[]
-            available=[]
+            bo_tup_list = []
+            available = []
             for key, value in request.POST.items():
-                if value==u'on':
+                if value == u'on':
                     available.append(key)
 
             for date in this_con.get_date_range():
-                ampmlist=[]
-                if str(date)+"-am" not in available:
-                    #If it's not checked that means a Blackout needs to be made.
-                    #If it's checked, that day is available, don't want a blackout for that day.
-                    bo_tup_list.append((date,"AM"))
-                if str(date)+"-pm" not in available:
-                    bo_tup_list.append((date,"PM"))
+                ampmlist = []
+                if str(date) + "-am" not in available:
+                    # If it's not checked, that means they de-slescted that day
+                    # and a blackout needs to be made.
+                    # If it's checked, that day is available,
+                    # don't want a blackout for that day.
+                    # A little counter-intuitive, hence comments.
+                    bo_tup_list.append((date, "AM"))
+                if str(date) + "-pm" not in available:
+                    bo_tup_list.append((date, "PM"))
             this_reg.update_blackouts(bo_tup_list)
 
+        # captain_conflict is a check to see if they are
+        # making themselves ineligible for a challenge they are captain of.
         if not captain_conflict:
+            # problem_criteria would be either 'skill' or 'gender',
+            # potential_conflicts would be a list of the ineligible challenges
             if problem_criteria or potential_conflicts:
                 if 'confirm save' in request.POST:
-                    conflict_sweep=this_reg.conflict_sweep()
+                    # conflict_sweep drops them from the roster.
+                    # captains don't have this option.
+                    conflict_sweep = this_reg.conflict_sweep()
                     this_reg.save()
                     if conflict_sweep:
-                        save_success=True
+                        save_success = True
                 else:
-                    hidden_forms=[RegistrantProfileForm(request.POST or None, instance=this_reg)]
-                    return render_to_response('conflict_warning.html',{'registrant':this_reg,'hidden_forms':hidden_forms,'problem_criteria':problem_criteria,'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
+                    hidden_forms = [
+                            (RegistrantProfileForm(
+                                    request.POST or None,
+                                    instance=this_reg)
+                                    )
+                            ]
 
-            else:#if no problem criteria
+                    context_dict = {'registrant': this_reg,
+                            'hidden_forms': hidden_forms,
+                            'problem_criteria': problem_criteria,
+                            'potential_conflicts': potential_conflicts
+                            }
+
+                    return (render_to_response(
+                            'conflict_warning.html',
+                            context_dict,
+                            context_instance=RequestContext(request))
+                            )
+
+            else:  #if no problem criteria
                 this_reg.save()
-                save_success=True
+                save_success = True
 
-    registrant_list= list(user.registrant_set.all())
+    registrant_list = list(user.registrant_set.all())
     for registrant in registrant_list:
-        bo_list=[]
-        bo_form_list=[]
-        datelist=None
+        bo_list = []
+        bo_form_list = []
+        datelist = None
         form = RegistrantProfileForm(instance=registrant)
 
-        #only runs if con hasn't happened yet, since blackouts are used for scheduling. Could also be disabled after schedule is final, I suppose.
+        # Only runs if con hasn't happened yet,
+        # since blackouts are used for scheduling.
+        # Could also be disabled after schedule is final, I suppose.
         if (registrant.con.start > datetime.date.today()):
-            if registrant.captain.all() or user.is_a_coach_this_con(registrant.con):#only collect blackouts for coaches and captains, not every registrant
-                datelist=registrant.con.get_date_range()
+            # Only collect blackouts for coaches and captains
+            if (registrant.captain.all() or
+                    user.is_a_coach_this_con(registrant.con)
+                    ):
+                datelist = registrant.con.get_date_range()
                 for bo in registrant.blackout.all():
-                    bo_list.append((bo.date,bo.ampm))
+                    bo_list.append((bo.date, bo.ampm))
 
                 for date in datelist:
-                    initial={}
-                    if (date,"AM") in bo_list:
-                        initial["am"]=False
+                    initial = {}
+                    if (date, "AM") in bo_list:
+                        initial["am"] = False
                     if (date,"PM") in bo_list:
-                        initial["pm"]=False
-                    availabilityform=AvailabilityForm(date=date,initial=initial,prefix=str(date))
+                        initial["pm"] = False
+                    availabilityform = (
+                            AvailabilityForm(
+                                    date=date,
+                                    initial=initial,
+                                    prefix=str(date)
+                                    )
+                            )
                     bo_form_list.append(availabilityform)
-        else:
-            datelist=None
-            bo_list=None
+        else:  # If con has already happened.
+            datelist = None
+            bo_list = None
 
-        registrant_dict={'bo_form_list':bo_form_list,'datelist':datelist,'con':registrant.con, 'registrant':registrant,'form':form}
+        registrant_dict = {
+                'bo_form_list': bo_form_list,
+                'datelist': datelist,
+                'con': registrant.con,
+                'registrant': registrant,
+                'form': form
+                }
         registrant_dict_list.append(registrant_dict)
 
-    upcoming_registrants=user.upcoming_registrants()
+    upcoming_registrants = user.upcoming_registrants()
+    # active tells the template which con to display first.
     if save_success:
-        active=this_reg.con
-    elif upcoming_registrants and len(upcoming_registrants)>1:
-        active=Con.objects.most_upcoming()
+        active = this_reg.con
+    elif upcoming_registrants and len(upcoming_registrants) > 1:
+        active = Con.objects.most_upcoming()
     else:
         try:
-            most_upcoming_reg=registrant_list[0]
-            active=most_upcoming_reg.con
+            most_upcoming_reg = registrant_list[0]
+            active = most_upcoming_reg.con
         except:
-            active=None
+            active = None
 
-    return render_to_response('registrant_profile.html',{'captain_conflict':captain_conflict,'this_reg':this_reg,'problem_criteria':problem_criteria, 'potential_conflicts':potential_conflicts,'upcoming':upcoming,'active':active,'save_attempt':save_attempt,'save_success':save_success,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    context_dict = {
+            'captain_conflict': captain_conflict,
+            'this_reg': this_reg,
+            'problem_criteria': problem_criteria,
+            'potential_conflicts': potential_conflicts,
+            'upcoming': upcoming,
+            'active': active,
+            'save_attempt': save_attempt,
+            'save_success': save_success,
+            'user': user,
+            'registrant_dict_list': registrant_dict_list
+            }
+
+    return (render_to_response(
+            'registrant_profile.html',
+            context_dict,
+            context_instance=RequestContext(request))
+            )
 
 
 @login_required
 def know_thyself(request, con_id=None):
     """Some basic Con analytics.
-    Hideous long code in the view because this is the one and only time this data is ever necessary,
-    no reason to write methods over it.
-    It's hard to read to cut down on DB hits; my apologies."""
+    Hideous long code in the view because this is the one and only time
+    this data is ever necessary, no reason to write methods over it.
+    It's hard to read to cut down on DB hits; my apologies.
+    I tossed it at the end of the file so no one ever has to look at it.
+    """
     if con_id:
         try:
             con=Con.objects.get(pk=con_id)
