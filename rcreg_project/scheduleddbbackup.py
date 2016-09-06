@@ -3,7 +3,7 @@ import os
 import time
 from datetime import datetime
 
-from .settings import (
+from rcreg_project.rcreg_project.settings import (
     db_User_Name, DB_User_Password, DB_Name, DB_Host)
 
 backupDir = '/home/rcregsite/backup/'
