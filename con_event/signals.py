@@ -155,9 +155,9 @@ def sync_reg_permissions(sender, instance, **kwargs):
     one can be a staff/superuser without being in a custom group.
     In case permissions are given piecemeal.
     """
-
+    
     user = instance.user
-    groups = user.groups.all()
+    groups = user.groups.values_list('name',flat=True)
 
     if (BIG_BOSS_GROUP_NAME in groups) or (LOWER_BOSS_GROUP_NAME in groups):
 

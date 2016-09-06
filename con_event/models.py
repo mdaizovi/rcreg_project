@@ -12,9 +12,7 @@ from django.utils import timezone
 from con_event.signals import (update_user_fl_name, delete_homeless_user,
         clean_registrant_import, match_user, sync_reg_permissions)
 from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
-from rcreg_project.settings import (BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,
-        BPT_Affiliate_ID
-        )
+from rcreg_project.settings import BPT_Affiliate_ID
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT
 
 # For blackouts
