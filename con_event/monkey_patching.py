@@ -54,7 +54,6 @@ def is_a_coach(self):
         from scheduler.models import Coach  # Avoid circular import
         coach = Coach.objects.get(user=self)
         return coach
-
     else:
         return False
 

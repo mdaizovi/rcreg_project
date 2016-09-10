@@ -181,6 +181,7 @@ class Roster(Matching_Criteria):
     participants=models.ManyToManyField(Registrant, blank=True)
     cap=models.IntegerField(null=True, blank=True)
 
+    #Shouldn't i delete these fields?
     registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
     auditing=models.OneToOneField("Training", related_name="auditing",null=True, blank=True)
 

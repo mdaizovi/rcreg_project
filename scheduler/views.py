@@ -298,42 +298,197 @@ def view_training(request, activity_id, o_id=None):
             context_instance=RequestContext(request)
             )
 
-
 #-------------------------------------------------------------------------------
-def trainings_home(request,con_id=None,):
-    user=request.user
-    con_list= list(Con.objects.all())
-    #con_dict_list=[]#this is from chllenges, do i need it here too?
-    if not con_id:
-        con=Con.objects.most_upcoming()
+def trainings_home(request, con_id=None):
+
+    if con_id:
+        try:
+            con=Con.objects.get(pk=con_id)
+        except ObjectDoesNotExist:
+            con = Con.objects.most_upcoming()
     else:
-        con=Con.objects.get(pk=con_id)
+        con = Con.objects.most_upcoming()
 
-    scheduled=list(Occurrence.objects.filter(training__con=con))
+    scheduled = list(Occurrence.objects.filter(
+            training__con=con)
+            )
 
-    if len(scheduled)>0 and con.sched_visible:
-        date_dict=OrderedDict()
+    if len(scheduled) > 0 and con.sched_visible:
+        date_dict = OrderedDict()
+        # a benefit of making the date_dict by con date range is
+        # a throwaway occurence can be made for volunteers to practice on
+        # but won't show on the site, as long as it's not within con date range
         for day in con.get_date_range():
-            date_dict[day]=[]
+            date_dict[day] = []
 
         for o in scheduled:
             if o.start_time.date() in date_dict:
-                temp_list=date_dict.get(o.start_time.date())
+                temp_list = date_dict.get(o.start_time.date())
                 temp_list.append(o)
-                date_dict[o.start_time.date()]=list(temp_list)
+                date_dict[o.start_time.date()] = list(temp_list)
 
         for v in date_dict.values():
             v.sort(key=lambda o: o.start_time)
     else:
-        date_dict=None
+        date_dict = None
 
-    return render_to_response('trainings_home.html', {'con':con,'con_list':con_list,'user':user,'date_dict':date_dict},context_instance=RequestContext(request))
+    context_dict = {
+            'con': con,
+            'con_list': list(Con.objects.all()),
+            'date_dict': date_dict
+            }
+
+    return render_to_response(
+            'trainings_home.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required
-def register_training(request,o_id):
-    """Registers skaters for Registered/Auditig Training Rosters for Training Occurrences.
-    Permisisons and timing checked in view"""
+def my_trainings(request):
+    """Shows submitted trainings user is listed as coach for.
+    Does not show trainings one registered to attend. Just coaching.
+    """
+
+    user = request.user
+    registrant_list = list(user.registrant_set.all())
+    most_upcoming = Con.objects.most_upcoming()
+    registrant_dict_list = []
+
+    for registrant in registrant_list:
+        coach = user.is_a_coach()
+        if coach:
+            my_trains = coach.training_set.filter(con=registrant.con)
+        else:
+            my_trains=None
+
+        registrant_dict={
+                'con': registrant.con,
+                'registrant': registrant,
+                'my_trains': my_trains
+                }
+        registrant_dict_list.append(registrant_dict)
+
+    if len(registrant_list) > 0:
+        active = registrant_list[0].con
+    else:
+        active = None
+
+    context_dict = {
+            'active': active,
+            'user': user,
+            'registrant_dict_list': registrant_dict_list
+            }
+
+    return render_to_response(
+            'my_trainings.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
+
+#-------------------------------------------------------------------------------
+@login_required
+def propose_new_training(request):
+
+    #i changed the way it handled return and context dict, think it shud still work the same
+
+
+    user = request.user
+    upcoming_registrants=user.upcoming_registrants()
+    trainings_coached = user.trainings_coached()
+    add_fail = False
+    training_made = False
+    formlist = []
+    most_upcoming_con = Con.objects.most_upcoming()
+
+    if request.method == "POST":
+
+        if 'duration' in request.POST:  # Only offered for off-skates
+            training_made = Training.objects.get(pk=request.POST['training_id'])
+            training_made.duration = request.POST['duration']
+            training_made.save()
+            template = 'propose_new_training.html'
+            context_dict = {'add_fail': add_fail, 'training_made': training_made}
+
+        elif 'clone training' in request.POST:
+            cloned = Training.objects.get(pk=request.POST['cloned_training_id'])
+            initial_training = {}
+            cloned_attrs = ['location_type', 'name', 'onsk8s', 'contact',
+                    'description', 'skill', 'sessions'
+                    ]
+            for attr in cloned_attrs:
+                initial_training[attr]=getattr(cloned, attr)
+
+            formlist = [TrainingModelForm(initial=initial_training, user=user)]
+            template = 'propose_new_training.html'
+            context_dict = {
+                    'trainings_coached': trainings_coached,
+                    'formlist': formlist,
+                    'training_made': training_made,
+                    'upcoming_registrants': upcoming_registrants
+                    }
+            #return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
+
+        else:  # If training_id not in post; if training is just being made.
+            trainingmodelform = TrainingModelForm(request.POST,user=user)
+            if trainingmodelform.is_valid():
+                training_made = trainingmodelform.save()
+                coach, c_create = Coach.objects.get_or_create(user=user)
+                if c_create:
+                    coach.save()
+                training_made.coach.add(coach)
+                training_made.save()
+
+                if training_made and not training_made.onsk8s:
+                    formlist = [DurationOnly()]
+                    template = 'new_training_made.html'
+                    #template = 'propose_new_training.html'
+                    context_dict = {
+                            'most_upcoming_con': most_upcoming_con,
+                            'trainings_coached': trainings_coached,
+                            'formlist': formlist,
+                            'training_made': training_made,
+                            'upcoming_registrants': upcoming_registrants
+                            }
+                    #return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
+            else:
+                add_fail = True
+                #template = 'new_training_made.html'
+                template = 'propose_new_training.html'
+                context_dict = {'add_fail': add_fail, 'training_made': training_made}
+
+        # #if post, if duraiton or add fail in poast?
+        # template = 'new_training_made.html'
+        # context_dict = {'add_fail': add_fail, 'training_made': training_made}
+        #return render_to_response('new_training_made.html', {'add_fail':add_fail,'training_made':training_made},context_instance=RequestContext(request))
+
+    else:  # If not post
+        template = 'propose_new_training.html'
+        context_dict = {
+                'most_upcoming_con': most_upcoming_con,
+                'trainings_coached': trainings_coached,
+                'training_made': training_made,
+                'upcoming_registrants': upcoming_registrants
+                }
+        if user.upcoming_cons():  # Otherwise will say "you don't have a pass.."
+            context_dict['formlist'] = [TrainingModelForm(user=user)]
+
+    # all end up here, regardless of post or not, or what's in post
+    return render_to_response(
+            template,
+            context_dict,
+            context_instance=RequestContext(request)
+            )
+
+
+#-------------------------------------------------------------------------------
+@login_required
+def register_training(request, o_id):
+    """Adds registrants to trainingrosters for training occurrences.
+    Permissions and timing checked in view.
+    """
+
     user=request.user
     add_fail=None
     skater_added=None
@@ -343,30 +498,40 @@ def register_training(request,o_id):
     occur=None
 
     try:
-        occur=Occurrence.objects.get(pk=int(o_id))
-        training=occur.training
-        Tos=list(Occurrence.objects.filter(training=training))
+        occur = Occurrence.objects.get(pk=int(o_id))
+        training = occur.training
+        Tos = list(Occurrence.objects.filter(training=training))
     except ObjectDoesNotExist:
-        return render_to_response('register_training.html',{},context_instance=RequestContext(request))
+        return render_to_response(
+                'register_training.html',
+                {},
+                context_instance=RequestContext(request)
+                )
 
-    if occur and user in occur.can_add_sk8ers():
+    if occur and (user in occur.can_add_sk8ers()):
 
-        registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
-        auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
+        registered, rc = TrainingRoster.objects.get_or_create(registered=occur)
+        auditing, ac = TrainingRoster.objects.get_or_create(auditing=occur)
 
-        reg_search_form=SearchForm()
-        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
-        reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
-        aud_search_form=SearchForm()
-        #aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
-        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
-        aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
+        reg_search_form = SearchForm()
+        reg_add_form = EligibleRegistrantForm(
+                my_arg=Registrant.objects.eligible_sk8ers(registered)
+                )
+        reg_remove_form = EligibleRegistrantForm(
+                my_arg=registered.participants.all()
+                )
+
+        aud_search_form = SearchForm()
+        aud_add_form = EligibleRegistrantForm(
+                my_arg=Registrant.objects.eligible_sk8ers(auditing)
+                )
+        aud_remove_form = EligibleRegistrantForm(
+                my_arg=auditing.participants.all()
+                )
 
         if request.method == "POST":
-            selection = request.POST.copy()
-            #print "selection", selection
             if 'search register' in request.POST:
-                reg_search_form=SearchForm(request.POST)
+                reg_search_form = SearchForm(request.POST)
                 if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
                     entry_query = reg_search_form.get_query(['sk8name','last_name','first_name'])
                     found_entries = Registrant.objects.filter(entry_query).filter(con=training.con, skill__in=training.skills_allowed(),intl__in=registered.intls_allowed()).order_by('sk8name','last_name','first_name')
@@ -401,6 +566,7 @@ def register_training(request,o_id):
                     reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
                 except:
                     remove_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+
             elif 'search audit' in request.POST:
                 aud_search_form=SearchForm(request.POST)
                 if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
@@ -445,49 +611,35 @@ def register_training(request,o_id):
         if not auditing.spacea():
             aud_add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
             aud_search_form.fields['search_q'].widget.attrs['disabled'] = True
-    else:
-        register_forms=[]
-        audit_forms=[]
 
-    return render_to_response('register_training.html', {'occur':occur,'roster':roster,'skater_remove':skater_remove,'remove_fail':remove_fail,'skater_added':skater_added,'add_fail':add_fail,'audit_forms':audit_forms,'register_forms':register_forms,'training':training,'user':user},context_instance=RequestContext(request))
 
-#-------------------------------------------------------------------------------
-@login_required
-def my_trainings(request):
-    user=request.user
-    registrant_list= list(user.registrant_set.all())
-    most_upcoming=Con.objects.most_upcoming()
-    #should prob do prefetch/select related, bet would cut down on db hits?
-    registrant_dict_list=[]
-    coach=user.is_a_coach()
+    else:  # if not occur or not user in occur.can_add_sk8ers()
+        register_forms = []
+        audit_forms = []
 
-    for registrant in registrant_list:
+    context_dict = {
+            'occur': occur,
+            'roster':roster,
+            'skater_remove': skater_remove,
+            'remove_fail': remove_fail,
+            'skater_added': skater_added,
+            'add_fail': add_fail,
+            'audit_forms': audit_forms,
+            'register_forms': register_forms,
+            'training': training,
+            'user': user
+            }
 
-        if coach:
-            my_trains=coach.training_set.filter(con=registrant.con)
-        else:
-            my_trains=None
-
-        registrant_dict={'con':registrant.con, 'registrant':registrant, 'my_trains':my_trains}
-        registrant_dict_list.append(registrant_dict)
-
-    upcoming_registrants=user.upcoming_registrants()
-    if upcoming_registrants and len(upcoming_registrants)>1:
-        active=Con.objects.most_upcoming()
-    else:
-        try:
-            most_upcoming_reg=registrant_list[0]
-            active=most_upcoming_reg.con
-        except:
-            active=None
-
-    return render_to_response('my_trainings.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    return render_to_response(
+            'register_training.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required
 def edit_training(request, activity_id):
-    ###TODO: this has logic to allow Users to add coaches, but i removed function from template.
-    #Awaiting final confirm from Ivanna before changing view
+
     user=request.user
     registrant_list = list(user.registrant_set.all())
     eligible_coaches=None
@@ -581,98 +733,44 @@ def edit_training(request, activity_id):
     return render_to_response('edit_training.html',{'coach_users':coach_users,'search_form':search_form,'user':user,'editable_by':editable_by,'coaches':coaches,'eligible_coaches':eligible_coaches,'skater_remove':skater_remove,'add_fail':add_fail,'skater_added':skater_added,'training':training,'training_changes_made':training_changes_made,'formlist':formlist},context_instance=RequestContext(request))
 
 #-------------------------------------------------------------------------------
-@login_required
-def propose_new_training(request):
-    user=request.user
-    upcoming_registrants=user.upcoming_registrants()
-    conlist=user.upcoming_cons()
-    trainings_coached=user.trainings_coached()
-    add_fail=False
-    training_made=False
-    formlist=[]
-    most_upcoming_con=Con.objects.most_upcoming()
+def challenges_home(request, con_id=None,):
 
-    if request.method == "POST":
-
-        if 'duration' in request.POST:
-            training_made=Training.objects.get(pk=request.POST['training_id'])
-            training_made.duration=request.POST['duration']
-            training_made.save()
-
-        elif 'clone training' in request.POST:
-            cloned=Training.objects.get(pk=request.POST['cloned_training_id'])
-            initial_training={'location_type':cloned.location_type,
-                #need to change con
-                'name':cloned.name,
-                'onsk8s':cloned.onsk8s,
-                'contact':cloned.contact,
-                'description':cloned.description,
-                'skill':cloned.skill,
-                'sessions':cloned.sessions
-                }
-            formlist=[TrainingModelForm(initial=initial_training,user=user)]
-            return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
-
-        else: #if training_id not in post, ie if training is just being made
-            trainingmodelform=TrainingModelForm(request.POST,user=user)
-            if trainingmodelform.is_valid():
-                #NOTE TO SELF:
-                #order: make training first so it can be connected to.
-                #you need to commit false on registered because a roster with no connections,captain, or name will be deleted in a post save signal
-                #then connect training to registered/auditing. then save all.
-                training_made=trainingmodelform.save()
-                coach, c_create=Coach.objects.get_or_create(user=user)
-                if c_create:
-                    coach.save()
-                training_made.coach.add(coach)
-                training_made.save()
-
-                if training_made and not training_made.onsk8s:
-                    formlist=[DurationOnly()]
-                    return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
-            else:
-                add_fail=True
-                # print "errors"
-                # if not trainingmodelform.is_valid():
-                #     print "trainingmodelform.errors"
-                #     print trainingmodelform.errors
-
-        return render_to_response('new_training_made.html', {'add_fail':add_fail,'training_made':training_made},context_instance=RequestContext(request))
-
+    if con_id:
+        try:
+            con=Con.objects.get(pk=con_id)
+        except ObjectDoesNotExist:
+            con = Con.objects.most_upcoming()
     else:
-        if conlist:
-            formlist=[TrainingModelForm(user=user)]
+        con = Con.objects.most_upcoming()
 
-    return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'formlist':formlist,'trainings_coached':trainings_coached,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
+    scheduled = list(Occurrence.objects.filter(challenge__con=con))
 
-#-------------------------------------------------------------------------------
-def challenges_home(request,con_id=None,):
-    user=request.user
-    con_list= list(Con.objects.all())
-    con_dict_list=[]
-    if not con_id:
-        con=Con.objects.most_upcoming()
-    else:
-        con=Con.objects.get(pk=con_id)
-
-    scheduled=list(Occurrence.objects.filter(challenge__con=con))
-
-    if len(scheduled)>0 and con.sched_visible:
-        date_dict=OrderedDict()
+    if len(scheduled) > 0 and con.sched_visible:
+        date_dict = OrderedDict()
         for day in con.get_date_range():
-            date_dict[day]=[]
+            date_dict[day] = []
 
         for o in scheduled:
-            temp_list=date_dict.get(o.start_time.date())
+            temp_list = date_dict.get(o.start_time.date())
             temp_list.append(o)
-            date_dict[o.start_time.date()]=list(temp_list)
+            date_dict[o.start_time.date()] = list(temp_list)
 
         for v in date_dict.values():
             v.sort(key=lambda o: o.start_time)
     else:
-        date_dict=None
+        date_dict = None
 
-    return render_to_response('challenges_home.html', {'user':user,'con':con,'con_list':con_list,'date_dict':date_dict},context_instance=RequestContext(request))
+    context_dict = {
+            'con':con,
+            'con_list': list(Con.objects.all()),
+            'date_dict': date_dict
+            }
+
+    return render_to_response(
+            'challenges_home.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -1099,47 +1197,62 @@ def view_challenge(request, activity_id):
 #-------------------------------------------------------------------------------
 @login_required
 def my_challenges(request):
-    user=request.user
-    registrant_list= list(user.registrant_set.all())
-    most_upcoming=Con.objects.most_upcoming()
-    #should prob do prefetch/select related, bet would cut down on db hits?
+
+    user = request.user
+    registrant_list = list(user.registrant_set.all())
     registrant_dict_list=[]
 
     for registrant in registrant_list:
-        #i think this is legacy, don't think I use them anymore
-        # pending=None
-        # scheduled=None
-        # unconfirmed=None
-        #####end suspected legacy
 
-        my_rosters=list(registrant.roster_set.all())
-        my_chals=list(Challenge.objects.filter(Q(roster1__in=my_rosters)|Q(roster2__in=my_rosters)|Q(roster1__captain=registrant)|Q(roster2__captain=registrant)))
+        my_rosters = list(registrant.roster_set.all())
+        my_chals = list(Challenge.objects.filter(
+                Q(roster1__in=my_rosters) |
+                Q(roster2__in=my_rosters) |
+                Q(roster1__captain=registrant) |
+                Q(roster2__captain=registrant))
+                )
 
-        can_sub_date=registrant.con.can_submit_chlg_by_date()
-        sub_full=Challenge.objects.submission_full(registrant.con)
-        #see how many times captaining a challenge, games are excluded
-        chals_cap=list(Challenge.objects.filter(Q(roster1__captain=registrant)|Q(roster2__captain=registrant)).exclude(is_a_game=True))
-        if len(chals_cap)>=MAX_CAPTAIN_LIMIT:
-            cap_exceeded=True
+        # See how many times captaining a challenge, games are excluded
+        chals_cap = list(Challenge.objects.filter(
+                Q(roster1__captain=registrant) |
+                Q(roster2__captain=registrant))
+                .exclude(is_a_game=True)
+                )
+        if len(chals_cap) >= MAX_CAPTAIN_LIMIT:
+            cap_exceeded = True
         else:
-            cap_exceeded=False
-        chals_submitted=[c for c in chals_cap if c.submitted_on]
+            cap_exceeded = False
 
-        #registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant, 'scheduled':scheduled,'pending':pending,'unconfirmed':unconfirmed}
-        registrant_dict={'my_chals':my_chals,'chals_submitted':chals_submitted,'cap_exceeded':cap_exceeded,'sub_full':sub_full,'can_sub_date':can_sub_date,'con':registrant.con, 'registrant':registrant,}
+        registrant_dict = {
+                'my_chals': my_chals,
+                'chals_submitted': [c for c in chals_cap if c.submitted_on],
+                'cap_exceeded': cap_exceeded,
+                'sub_full': Challenge.objects.submission_full(registrant.con),
+                'can_sub_date': registrant.con.can_submit_chlg_by_date(),
+                'con': registrant.con,
+                'registrant':registrant
+                }
         registrant_dict_list.append(registrant_dict)
 
-    upcoming_registrants=user.upcoming_registrants()
-    if upcoming_registrants and len(upcoming_registrants)>1:
-        active=Con.objects.most_upcoming()
+    if len(registrant_list) > 0:
+        active = registrant_list[0].con
     else:
-        try:
-            most_upcoming_reg=registrant_list[0]
-            active=most_upcoming_reg.con
-        except:
-            active=None
+        active = None
 
-    return render_to_response('my_challenges.html', {'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'CLOSE_CHAL_SUB_AT':CLOSE_CHAL_SUB_AT,'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+    context_dict = {
+            'MAX_CAPTAIN_LIMIT': MAX_CAPTAIN_LIMIT,  # Imported at top of file
+            'CLOSE_CHAL_SUB_AT': CLOSE_CHAL_SUB_AT,  # Imported at top of file
+            'active': active,
+            'registrant_list': registrant_list,
+            'user': user,
+            'registrant_dict_list': registrant_dict_list
+            }
+
+    return render_to_response(
+            'my_challenges.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -1268,8 +1381,10 @@ def propose_new_activity(request,is_a_game=False):
 #-------------------------------------------------------------------------------
 @login_required
 def challenge_submit(request):
-    """This should always be a post, from either my_challenges or maybe edit_challenge.
-    and will only accept within challenge submission window"""
+    """This should always be a post, from either my_challenges or maybe
+    from edit_challenge. Will only accept within challenge submission window.
+    """
+
     challenge=None
     is_captain=False
     submit_attempt=False
