@@ -343,12 +343,14 @@ class ScoreFormDouble(forms.Form):
             roster2name="unnamed team"
 
         self.fields["roster1_score"] = forms.IntegerField(
+                initial=challenge.roster1score,
                 label=('%s Score' % (roster1name)),
-                min_value=0,required=False
+                min_value=0
                 )
         self.fields["roster2_score"] = forms.IntegerField(
+                initial=challenge.roster2score,
                 label=('%s Score' % (roster2name)),
-                min_value=0,required=False
+                min_value=0
                 )
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({'class': 'form-control'})

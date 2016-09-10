@@ -232,7 +232,7 @@ def view_training(request, activity_id, o_id=None):
     occur = None
     rosters = []
 
-    # For NSOs and Bosses, if want to download an excel of training data.
+    # For Volunteer and Bosses, if want to download an excel of training data.
     if 'download_excel' in request.POST:
         downo = Occurrence.objects.get(pk=int(request.POST['downo_id']))
         wb, xlfilename = downo.excel_backup()
@@ -391,9 +391,6 @@ def my_trainings(request):
 @login_required
 def propose_new_training(request):
 
-    #i changed the way it handled return and context dict, think it shud still work the same
-
-
     user = request.user
     upcoming_registrants=user.upcoming_registrants()
     trainings_coached = user.trainings_coached()
@@ -412,6 +409,8 @@ def propose_new_training(request):
             context_dict = {'add_fail': add_fail, 'training_made': training_made}
 
         elif 'clone training' in request.POST:
+            # Fills form w/ initial details from cloned training,
+            # Registrant has a chance to change things before proposing
             cloned = Training.objects.get(pk=request.POST['cloned_training_id'])
             initial_training = {}
             cloned_attrs = ['location_type', 'name', 'onsk8s', 'contact',
@@ -428,7 +427,6 @@ def propose_new_training(request):
                     'training_made': training_made,
                     'upcoming_registrants': upcoming_registrants
                     }
-            #return render_to_response('propose_new_training.html', {'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 
         else:  # If training_id not in post; if training is just being made.
             trainingmodelform = TrainingModelForm(request.POST,user=user)
@@ -443,7 +441,6 @@ def propose_new_training(request):
                 if training_made and not training_made.onsk8s:
                     formlist = [DurationOnly()]
                     template = 'new_training_made.html'
-                    #template = 'propose_new_training.html'
                     context_dict = {
                             'most_upcoming_con': most_upcoming_con,
                             'trainings_coached': trainings_coached,
@@ -451,17 +448,10 @@ def propose_new_training(request):
                             'training_made': training_made,
                             'upcoming_registrants': upcoming_registrants
                             }
-                    #return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'trainings_coached':trainings_coached,'formlist':formlist,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
-            else:
+            else:  # I not valid
                 add_fail = True
-                #template = 'new_training_made.html'
                 template = 'propose_new_training.html'
                 context_dict = {'add_fail': add_fail, 'training_made': training_made}
-
-        # #if post, if duraiton or add fail in poast?
-        # template = 'new_training_made.html'
-        # context_dict = {'add_fail': add_fail, 'training_made': training_made}
-        #return render_to_response('new_training_made.html', {'add_fail':add_fail,'training_made':training_made},context_instance=RequestContext(request))
 
     else:  # If not post
         template = 'propose_new_training.html'
@@ -1120,79 +1110,214 @@ def challenge_respond(request):
     else:#this should never happen, should always be post
         return redirect('/')
 
+
+
+
+
 #-------------------------------------------------------------------------------
 def view_challenge(request, activity_id):
-    participating=False
-    can_edit=False
-    score_form=None
-    communication_form=None
-    communication_saved=False
-    user=request.user
-    #r1data=[]
-    #r2data=[]
-    try:
-        registrant_list=list(user.registrant_set.all())
-    except:
-        registrant_list=None
+
+    user = request.user
+    reg_list = list(user.registrant_set.all())
+    score_form = None
+    communication_saved = False
 
     try:
-        challenge=Challenge.objects.get(pk=int(activity_id))
-        rosters=[challenge.roster1, challenge.roster2]
+        challenge = Challenge.objects.get(pk=int(activity_id))
+        rosters = [challenge.roster1, challenge.roster2]
     except ObjectDoesNotExist:
-        challenge=None
-        rosters=None
+        challenge = None
+        rosters = None
 
-    if challenge and registrant_list:
+    if challenge:
+        if user in challenge.editable_by() or user.can_edit_score():
+            can_edit = True
+        else:
+            can_edit = False
 
-        if len( set(challenge.participating_in()).intersection(registrant_list) ) > 0:
-            participating=True
+        # user could have many registrants, any 1 in participating in will do.
+        cparts = set(challenge.participating_in())
+        if len(cparts.intersection(reg_list)) > 0 or can_edit:
+            # Roster participants and NSOs
+            participating = True
+        else:
+            participating = False
+            comm_form = None
 
-        if user.can_edit_score() or (user in challenge.editable_by()) or participating:
-            #these are all the people that can see communication
-            participating=True#before adding this NSOs couldn't see communication. Oops.
-            if not request.method == "POST":
-                communication_form=CommunicationForm(initial={'communication':challenge.communication})
-
-            if user.can_edit_score() or (user in challenge.editable_by()):
-                can_edit=True
-                if request.method == "POST":
-                    communication_form=CommunicationForm(request.POST)
-                    if ('communication' in request.POST) and communication_form.is_valid():
-                        communication_form=CommunicationForm(request.POST)
-                        challenge.communication=request.POST['communication']
+        if participating:
+            # Bosses & NSOs can edit score, challenge is editable by captains,
+            # all registrants on roster participants are participating.
+            # all of them can see communication, only NSO, Boss, captain, edit.
+            if user.can_edit_score():
+                if request.method == "POST" and "save_score" in request.POST:
+                    score_form = ScoreFormDouble(
+                            request.POST,
+                            my_arg=challenge
+                            )
+                    if score_form.is_valid():
+                        challenge.roster1score=request.POST['roster1_score']
+                        challenge.roster2score=request.POST['roster2_score']
                         challenge.save()
-                        communication_saved=True
-                    else:
-                        communication_form=CommunicationForm(initial={'communication':challenge.communication})
+                else:
+                    score_form = ScoreFormDouble(my_arg=challenge)
 
-                    if 'download_excel' in request.POST:
-                        try:
-                            occur=Occurrence.objects.get(challenge=challenge)
-                            wb,xlfilename=occur.excel_backup()
-                            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                            response['Content-Disposition'] = 'attachment; filename=%s'%(xlfilename)
-                            wb.save(response)
-                            return response
-                        except:
-                            pass #I'm drunk. I don't care. The NSO shouldn't be here if it's not scheduled anyway.
+            if can_edit:  # NSOs, Boss Ladies, or Captains can get excel
+                if 'download_excel' in request.POST:
+                    occur = Occurrence.objects.get(challenge=challenge)
+                    wb, xlfilename = occur.excel_backup()
+                    response = HttpResponse(
+                            content_type='application/vnd.openxmlformats-\
+                                    officedocument.spreadsheetml.sheet'
+                                    )
+                    response['Content-Disposition'] = (
+                            'attachment; filename=%s' % (xlfilename)
+                            )
+                    wb.save(response)
+                    return response
 
-            else:#if just a skater
-                communication_form.fields['communication'].widget.attrs['readonly'] = True
-                communication_form.fields['communication'].widget.attrs.update({'style' : 'background-color:white;'})
+                # Still in if can edit
+                if 'communication' in request.POST:
+                    comm_form = CommunicationForm(request.POST)
+                    if comm_form.is_valid():
+                        challenge.communication = request.POST['communication']
+                        challenge.save()
+                        communication_saved = True
+                else:
+                    comm_form = CommunicationForm(
+                            initial={'communication': challenge.communication}
+                            )
+            else:#if just a skater, not can_edit
+                comm_form = CommunicationForm(
+                        initial={'communication': challenge.communication}
+                        )
+                comm_form.fields['communication'].widget.attrs['readonly'] = True
+                comm_form.fields['communication'].widget.attrs.update(
+                        {'style' : 'background-color:white;'}
+                        )
 
-        if user.can_edit_score():
-            score_form=ScoreFormDouble(request.POST or None,my_arg=challenge)
-            if request.method == "POST" and score_form.is_valid():
-                if 'roster1_score' in request.POST and (request.POST['roster1_score'] not in [u'',"",None,"None"]):
-                    challenge.roster1score=request.POST['roster1_score']
-                if 'roster2_score' in request.POST and (request.POST['roster2_score'] not in [u'',"",None,"None"]):
-                    challenge.roster2score=request.POST['roster2_score']
-                challenge.save()
-            else:
-                pass
+    context_dict = {
+            'communication_saved': communication_saved,
+            'participating': participating,
+            'comm_form': comm_form,
+            'reg_list': reg_list,
+            'score_form': score_form,
+            'can_edit': can_edit,
+            'user': user,
+            'challenge': challenge,
+            'rosters': rosters
+            }
 
-    return render_to_response('view_challenge.html',{"communication_saved":communication_saved,"can_edit":can_edit,'participating':participating,'communication_form':communication_form,'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
+    return render_to_response(
+            'view_challenge.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
+
+
+
+
+
+
+
+
+
+# #-------------------------------------------------------------------------------
+# def view_challenge(request, activity_id):
+#
+#     participating = False
+#     can_edit = False
+#     score_form = None
+#     communication_form = None
+#     communication_saved = False
+#     user = request.user
+#     reg_list = list(user.registrant_set.all())
+#
+#     try:
+#         challenge = Challenge.objects.get(pk=int(activity_id))
+#         rosters = [challenge.roster1, challenge.roster2]
+#     except ObjectDoesNotExist:
+#         challenge = None
+#         rosters = None
+#
+#     if challenge:
+#         # user could have many registrants, any 1 in participating in will do.
+#         cparts = set(challenge.participating_in())
+#         if len(cparts).intersection(reg_list)) > 0 or user.can_edit_score():
+#             # Roster participants and NSOs
+#             participating = True
+#
+#         if (user.can_edit_score() or (user in challenge.editable_by()) or participating):
+#             # Bosses & NSOs can edit score, challenge is editable by captains,
+#             # all registrants on roster participants are participating.
+#             # all of them can see communication, only NSO, Boss, captain, edit.
+#             if not request.method == "POST":
+#                 communication_form = CommunicationForm(
+#                         initial={'communication': challenge.communication}
+#                         )
+#
+#             if user.can_edit_score() or (user in challenge.editable_by()):
+#                 can_edit = True
+#                 if request.method == "POST":
+#                     #communication_form = CommunicationForm(request.POST)
+#                     if ('communication' in request.POST and
+#                             communication_form.is_valid()
+#                             ):
+#                         #communication_form = CommunicationForm(request.POST)
+#                         challenge.communication = request.POST['communication']
+#                         challenge.save()
+#                         communication_saved = True
+#                     else:
+#                         communication_form = CommunicationForm(
+#                                 initial={'communication': challenge.communication
+#                                 })
+#
+#                     # For NSOs and Bosses, if want to download an excel of data.
+#                     if 'download_excel' in request.POST:
+#                         occur = Occurrence.objects.get(challenge=challenge)
+#                         wb, xlfilename = occur.excel_backup()
+#                         response = HttpResponse(
+#                                 content_type='application/vnd.openxmlformats-\
+#                                         officedocument.spreadsheetml.sheet'
+#                                         )
+#                         response['Content-Disposition'] = (
+#                                 'attachment; filename=%s' % (xlfilename)
+#                                 )
+#                         wb.save(response)
+#                         return response
+#
+#             else:#if just a skater
+#                 communication_form.fields['communication'].widget.attrs['readonly'] = True
+#                 communication_form.fields['communication'].widget.attrs.update({'style' : 'background-color:white;'})
+#
+#         if user.can_edit_score():
+#             score_form = ScoreFormDouble(request.POST or None, my_arg=challenge)
+#             if request.method == "POST" and score_form.is_valid():
+#                 if 'roster1_score' in request.POST and (request.POST['roster1_score'] not in no_list):
+#                     challenge.roster1score=request.POST['roster1_score']
+#                 if 'roster2_score' in request.POST and (request.POST['roster2_score'] not in no_list):
+#                     challenge.roster2score=request.POST['roster2_score']
+#                 challenge.save()
+#             else:
+#                 pass
+#
+#     context_dict = {
+#             'communication_saved': communication_saved,
+#             'participating': participating,
+#             'communication_form': communication_form,
+#             'reg_list': reg_list,
+#             'score_form': score_form,
+#             'can_edit': can_edit,
+#             'user': user,
+#             'challenge': challenge,
+#             'rosters': rosters
+#             }
+#
+#     return render_to_response(
+#             'view_challenge.html',
+#             context_dict,
+#             context_instance=RequestContext(request)
+#             )
 
 #-------------------------------------------------------------------------------
 @login_required
