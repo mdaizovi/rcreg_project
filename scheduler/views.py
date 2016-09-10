@@ -9,11 +9,13 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 #print "dbc0:", len(dbconnection.queries)
 from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from scheduler.forms import ReviewConRankForm,ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+#from scheduler.forms import ReviewConRankForm,ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
-from scheduler.models import ReviewCon,ReviewTraining,Coach,Roster, Challenge, Training,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION,GAMETYPE
-from scheduler.app_settings import MAX_CAPTAIN_LIMIT,CLOSE_CHAL_SUB_AT
+from scheduler.models import ReviewCon,ReviewTraining,Coach,Roster, Challenge, Training, GAMETYPE
+from scheduler.app_settings import MAX_CAPTAIN_LIMIT, CLOSE_CHAL_SUB_AT,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION
 from django.forms.models import model_to_dict
 from datetime import timedelta, date
 import collections
@@ -35,113 +37,113 @@ no_list=["",u'',None,"None"]
             #print "selectiondict: ",selectiondict
             #selectiondict=dict(selection.lists())
 
-@login_required
-def review_con(request,con_id):
-    user=request.user
-    con=Con.objects.get(pk=int(con_id))
-    try:
-        registrant=Registrant.objects.get(user=user, con=con)
-    except ObjectDoesNotExist:
-        registrant=None
-    save_attempt=False
-    save_success=False
-    myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
-    form1=None
-    form2=None
-
-    if registrant:
-        #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
-        try:
-            myreview=ReviewCon.objects.get(registrant=registrant)
-        except:
-            myreview=ReviewCon()
-
-        form1=ReviewConForm(request.POST or None, instance=myreview)
-        form2=ReviewConFormOptional(request.POST or None, instance=myreview)
-        form3=ReviewConRankForm(request.POST or None, instance=myreview)
-
-        if request.method == "POST":
-            save_attempt=True
-            if form1.is_valid() and form2.is_valid() and form3.is_valid():
-                myreview.registrant=registrant#in case is new
-                myreview.save()
-                save_success=True
-
-    return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"form3":form3,"registrant":registrant,"con":con},context_instance=RequestContext(request))
-
-@login_required
-def review_training(request,training_id):
-    user=request.user
-    try:
-        training=Training.objects.get(pk=int(training_id))
-        try:
-            registrant=Registrant.objects.get(user=user, con=training.con)
-        except ObjectDoesNotExist:
-            registrant=None
-    except ObjectDoesNotExist:
-        training=None
-        registrant=None
-
-    save_attempt=False
-    save_success=False
-    myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
-    form1=None
-    form2=None
-
-    if training and registrant:
-
-        #make sure registrant was actually IN training
-        trainings=registrant.get_trainings_attended()
-        if training in trainings:
-            #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
-            try:
-                myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
-            except:
-                myreview=ReviewTraining()
-
-        form1=ReviewTrainingForm(request.POST or None, instance=myreview)
-        form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
-        if request.method == "POST":
-            save_attempt=True
-            if form1.is_valid() and form2.is_valid():
-                myreview.training=training #in case is new
-                myreview.registrant=registrant#in case is new
-                myreview.save()
-                save_success=True
-
-    return render_to_response('review_training.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
-
-
-
-
-
-@login_required
-def my_reviews(request):
-    user=request.user
-    registrant_list= list(user.registrant_set.all())
-    today=datetime.date.today()
-
-    registrant_dict_list=[]
-
-    for registrant in registrant_list:
-        if today > registrant.con.end:
-            conpassed=True
-        else:
-            conpassed=False
-
-        trainings=registrant.get_trainings_attended()
-
-        registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
-        registrant_dict_list.append(registrant_dict)
-
-    if len(registrant_list)>1:
-        most_recent_reg=registrant_list[0]
-        active=most_recent_reg.con
-    else:
-        active=None
-
-    return render_to_response('my_reviews.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
-
+# @login_required
+# def review_con(request,con_id):
+#     user=request.user
+#     con=Con.objects.get(pk=int(con_id))
+#     try:
+#         registrant=Registrant.objects.get(user=user, con=con)
+#     except ObjectDoesNotExist:
+#         registrant=None
+#     save_attempt=False
+#     save_success=False
+#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+#     form1=None
+#     form2=None
+#
+#     if registrant:
+#         #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+#         try:
+#             myreview=ReviewCon.objects.get(registrant=registrant)
+#         except:
+#             myreview=ReviewCon()
+#
+#         form1=ReviewConForm(request.POST or None, instance=myreview)
+#         form2=ReviewConFormOptional(request.POST or None, instance=myreview)
+#         form3=ReviewConRankForm(request.POST or None, instance=myreview)
+#
+#         if request.method == "POST":
+#             save_attempt=True
+#             if form1.is_valid() and form2.is_valid() and form3.is_valid():
+#                 myreview.registrant=registrant#in case is new
+#                 myreview.save()
+#                 save_success=True
+#
+#     return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"form3":form3,"registrant":registrant,"con":con},context_instance=RequestContext(request))
+#
+# @login_required
+# def review_training(request,training_id):
+#     user=request.user
+#     try:
+#         training=Training.objects.get(pk=int(training_id))
+#         try:
+#             registrant=Registrant.objects.get(user=user, con=training.con)
+#         except ObjectDoesNotExist:
+#             registrant=None
+#     except ObjectDoesNotExist:
+#         training=None
+#         registrant=None
+#
+#     save_attempt=False
+#     save_success=False
+#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+#     form1=None
+#     form2=None
+#
+#     if training and registrant:
+#
+#         #make sure registrant was actually IN training
+#         trainings=registrant.get_trainings_attended()
+#         if training in trainings:
+#             #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+#             try:
+#                 myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
+#             except:
+#                 myreview=ReviewTraining()
+#
+#         form1=ReviewTrainingForm(request.POST or None, instance=myreview)
+#         form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
+#         if request.method == "POST":
+#             save_attempt=True
+#             if form1.is_valid() and form2.is_valid():
+#                 myreview.training=training #in case is new
+#                 myreview.registrant=registrant#in case is new
+#                 myreview.save()
+#                 save_success=True
+#
+#     return render_to_response('review_training.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
+#
+#
+#
+#
+#
+# @login_required
+# def my_reviews(request):
+#     user=request.user
+#     registrant_list= list(user.registrant_set.all())
+#     today=datetime.date.today()
+#
+#     registrant_dict_list=[]
+#
+#     for registrant in registrant_list:
+#         if today > registrant.con.end:
+#             conpassed=True
+#         else:
+#             conpassed=False
+#
+#         trainings=registrant.get_trainings_attended()
+#
+#         registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
+#         registrant_dict_list.append(registrant_dict)
+#
+#     if len(registrant_list)>1:
+#         most_recent_reg=registrant_list[0]
+#         active=most_recent_reg.con
+#     else:
+#         active=None
+#
+#     return render_to_response('my_reviews.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+#
 
 @login_required
 def my_schedule(request):

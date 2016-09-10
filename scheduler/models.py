@@ -17,7 +17,7 @@ from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,L
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
 from scheduler.signals import challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
-from scheduler.app_settings import CLOSE_CHAL_SUB_AT
+from scheduler.app_settings import CLOSE_CHAL_SUB_AT, DEFAULT_ONSK8S_DURATION,DEFAULT_OFFSK8S_DURATION
 from copy import deepcopy
 from swingtime.conf.swingtime_settings import TIMESLOT_INTERVAL,TIMESLOT_START_TIME,TIMESLOT_END_TIME_DURATION
 
@@ -31,13 +31,6 @@ RULESET=(('WFTDA','WFTDA'),('MRDA','MRDA'),('RDCL','RDCL'),('USARS','USARS'),('O
 INTEREST_RATING=((0,'NA'),(1, '1: Very Low Interest'), (2, '2: Somewhat Low Interest'),(3, '3: Medium'), (4,'4: Somewhat High Interest'), (5, '5: Very High Interest'))
 SESSIONS_TR=((1,1),(2,2),(3,3),(4,4),(5,5))
 DURATION=(('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
-DEFAULT_ONSK8S_DURATION='2'
-DEFAULT_OFFSK8S_DURATION='1'
-DEFAULT_CHALLENGE_DURATION='0.75'
-DEFAULT_SANCTIONED_DURATION='1.5'
-GAME_CAP = 20
-DEFAULT_REG_CAP=60
-DEFAULT_AUD_CAP=10
 SKILL_INTEREST_DICT={'AO':5, 'AB':4,'BO':3,'BC':2,'CO':1,'ABC':1,'A':5,'B':3,"C":2,"D":1}
 
 #for reviews:
@@ -107,7 +100,7 @@ class Location(models.Model):
 
     def is_free(self, start_time,end_time):
         """Checks to see if Location has any Occurrences for the time between start and end provided."""
-        from swingtime.models import Occurrence
+        from swingtime.models import Occurrence  #  Avoid parallel import
         qs = list(Occurrence.objects.filter(
             start_time__lt=end_time,
             end_time__gt=start_time,
@@ -123,7 +116,7 @@ class Location(models.Model):
         not even empty occurrence, for time period.
         returns list of DateTime tuples: (start time, end time)"""
         ###this can probably be used to significantly speed up make dumy occurrences
-        from swingtime.models import Occurrence
+        from swingtime.models import Occurrence  # Avoid parallel import
         dur_delta=int(float(duration)*60)
 
         if len(date_list)<=0:
@@ -202,6 +195,21 @@ class Roster(Matching_Criteria):
             return "%s %s" %(self.name, self.con)
         else:
             return "unnamed team"
+
+    @property
+    def challenge_name(self):
+        """Returns name of Challenge Roster is attached to.
+        Should only be 1, but is possible to be more.
+        """
+
+        names = ""
+        chals = list(self.roster1.all()) + list(self.roster2.all())
+        for c in chals:
+            names += str(c.name)+" , "
+        if len(names)>2:
+            names=names[:-2]  # to get rid of trailing comma
+
+        return names
 
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names, colors'''
@@ -627,6 +635,21 @@ class Activity(models.Model):
 
         return desc
 
+    @property
+    def figurehead_display(self):
+        """Returns string of both captains, or all coaches."""
+
+        fs = self.get_figurehead_registrants()
+        fstr = ""
+        index = 1
+        for f in fs:
+            if index >1:
+                fstr += " & "
+            fstr += f.name
+
+            index += 1
+
+        return fstr
 
     def get_default_interest(self):
         """if chal, gets average of teams skill.
@@ -680,6 +703,7 @@ class Activity(models.Model):
         return figureheads
 
     def get_figurehead_display(self):
+        ###eventually shoft to only figurehead display property. toss this.
         fs=self.get_figurehead_registrants()
         fstr=""
         index=1
@@ -695,7 +719,7 @@ class Activity(models.Model):
 
     def get_figurehead_blackouts(self):
         """Gets Blackouts for activity, from all coaches or captains, but not participants."""
-        from con_event.models import Blackout
+        from con_event.models import Blackout  # Avoid parallel import
         figureheads=self.get_figurehead_registrants()
         b_outs=list(Blackout.objects.filter(registrant__in=figureheads))
         return b_outs
@@ -769,7 +793,7 @@ class Activity(models.Model):
         """Makes unsaved Occurrence objects for all possible location time combos for activity
         EDIT April 22 2016: also gathers possible empty occurrances"""
         #this works, but it makes about 2500 on my first test run.
-        from swingtime.models import Occurrence
+        from swingtime.models import Occurrence  # Avoid parallel import
         print("dummy occurrences, level ",level)
         #empties=[]
         dummies=[]
@@ -950,7 +974,7 @@ class Activity(models.Model):
         Differs from manual schedule levels slighty in that all levels here require right duration"""
         print "running find_level_slots"
 
-        from swingtime.models import Occurrence
+        from swingtime.models import Occurrence  # Avoid parallel import
         if self.interest:
             proxy_interest=self.interest
         else:
@@ -1103,16 +1127,16 @@ class Activity(models.Model):
 #maybe i should rename this to get absolute url so view on site is easier?
     def get_view_url(self):
         if self.is_a_training():#if this is a training
-            from scheduler.views import view_training
+            from scheduler.views import view_training  # Avoid parallel import
             return reverse('scheduler.views.view_training', args=[str(self.pk)])
 
         elif self.is_a_challenge():
-            from scheduler.views import view_challenge
+            from scheduler.views import view_challenge  # Avoid parallel import
             return reverse('scheduler.views.view_challenge', args=[str(self.pk)])
 
     def get_edit_url(self):
         if self.is_a_training():
-            from scheduler.views import edit_training
+            from scheduler.views import edit_training  # Avoid parallel import
             return reverse('scheduler.views.edit_training', args=[str(self.pk)])
 
         elif self.is_a_challenge():
@@ -1122,10 +1146,10 @@ class Activity(models.Model):
 
     def get_sched_assist_url(self):
         if self.is_a_training():
-            from swingtime.views import sched_assist_tr
+            from swingtime.views import sched_assist_tr  # Avoid parallel import
             return reverse('swingtime.views.sched_assist_tr', args=[str(self.pk)])
         elif self.is_a_challenge():
-            from swingtime.views import sched_assist_ch
+            from swingtime.views import sched_assist_ch  # Avoid parallel import
             return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 
     class Meta:
@@ -1562,13 +1586,13 @@ class Coach(models.Model):
 
     def get_my_schedule_url(self):
         """Used for bosses to check coach's schedule"""
-        from con_event.monkey_patching import get_my_schedule_url
+        from con_event.monkey_patching import get_my_schedule_url  # Avoid parallel import
         return self.user.get_my_schedule_url()
 
     def unconfirmed_trainings(self):
         '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
         This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''
-        from scheduler.models import Training #put here to avoid import error with Matching_Criteria
+        from scheduler.models import Training  # Avoid parallel import
         unconfirmed=list(self.training_set.filter(RCaccepted=False))#this only returns if coach, since registraiton m2m is attached to roster object.
         return unconfirmed
 

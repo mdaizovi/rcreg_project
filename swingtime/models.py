@@ -18,7 +18,9 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 #from con_event.models import Con
-from scheduler.models import Location, Challenge, Training,INTEREST_RATING,DEFAULT_REG_CAP,DEFAULT_AUD_CAP
+from scheduler.models import Location, Challenge, Training,INTEREST_RATING
+from scheduler.app_settings import DEFAULT_REG_CAP, DEFAULT_AUD_CAP
+
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from rcreg_project.extras import ascii_only_no_punct

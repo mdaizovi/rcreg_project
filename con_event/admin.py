@@ -11,21 +11,21 @@ from con_event.models import (Con, Registrant, Blackout, Country,
                             State, Blog, SKILL_LEVEL, SKILL_LEVEL_SK8R)
 
 
-"""State and Country are not here; no need to edit from the Admin"""
-
-
+#===============================================================================
 class CountryAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'slugname')
     fields = ('name', 'slugname')
 
 
+#===============================================================================
 class StateAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'slugname', 'country')
     fields = ('name', 'slugname', 'country')
 
 
+#===============================================================================
 class ConAdmin(admin.ModelAdmin):
 
     list_display = ('city', 'start', 'end')
@@ -36,8 +36,10 @@ class ConAdmin(admin.ModelAdmin):
             ('BPT_event_id', 'ticket_link', 'hotel_book_link'))
 
 
+#===============================================================================
 class RegistrantResource(resources.ModelResource):
 
+    #---------------------------------------------------------------------------
     class Meta:
 
         model = Registrant
@@ -54,6 +56,7 @@ class RegistrantResource(resources.ModelResource):
         report_skipped = True
 
 
+#===============================================================================
 class RegistrantAdmin(ImportExportModelAdmin):
 
     list_display = ('con', 'first_name', 'last_name', 'sk8name', 'sk8number',
@@ -70,6 +73,7 @@ class RegistrantAdmin(ImportExportModelAdmin):
     list_filter = ('con', 'pass_type', 'gender')
     resource_class = RegistrantResource
 
+    #---------------------------------------------------------------------------
     def formfield_for_choice_field(self, db_field, request, **kwargs):
         """Limits skill choices to those appropriate for registrants"""
 
@@ -80,8 +84,10 @@ class RegistrantAdmin(ImportExportModelAdmin):
                 )
 
 
+#===============================================================================
 class BlackoutResource(resources.ModelResource):
 
+    #---------------------------------------------------------------------------
     class Meta:
 
         model = Blackout
@@ -91,14 +97,17 @@ class BlackoutResource(resources.ModelResource):
         report_skipped = True
 
 
+#===============================================================================
 class BlackoutAdmin(ImportExportModelAdmin):
 
     list_display = ('registrant', 'date', 'ampm')
     fields = ('registrant', 'date', 'ampm')
 
 
+#===============================================================================
 class BlogResource(resources.ModelResource):
 
+    #---------------------------------------------------------------------------
     class Meta:
 
         model = Blog
@@ -109,12 +118,14 @@ class BlogResource(resources.ModelResource):
         report_skipped = True
 
 
+#===============================================================================
 class BlogAdmin(ImportExportModelAdmin):
 
     list_display = ('headline', 'date')
     exclude = ('slugname',)
     view_on_site = True
 
+    #---------------------------------------------------------------------------
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
 
         try:  # So will still work when making a new blog via Admin
@@ -132,7 +143,7 @@ class BlogAdmin(ImportExportModelAdmin):
         except:
             pass
 
-
+#===============================================================================
 admin.site.register(State, StateAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Con, ConAdmin)

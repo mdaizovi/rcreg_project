@@ -33,8 +33,8 @@ def upload_reg(request):
                         % (datetime.date.today().strftime("%B %d %Y"))
                         )
                 response = (HttpResponse(
-                        content_type='application/vnd.openxmlformats-officedocument\
-                        .spreadsheetml.sheet')
+                        content_type='application/vnd.openxmlformats-\
+                        officedocument.spreadsheetml.sheet')
                         )
                 response['Content-Disposition'] = ('attachment; filename=%s'
                         % (filename)
