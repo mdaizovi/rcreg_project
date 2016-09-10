@@ -222,56 +222,82 @@ def view_coach(request, coach_id):
             )
 
 #-------------------------------------------------------------------------------
-def view_training(request, activity_id,o_id=None):
-    """If no Occurrence, jst the training and coach data. if schedule is visible and there is an Occurrence, that info will be available."""
-    user=request.user
-    single=False
-    visible=False
-    occur=None
-    rosters=[]
-    can_register_at=None
+def view_training(request, activity_id, o_id=None):
+    """If no Occurrence, just displays the training and coach data.
+    If schedule is visible and there is an Occurrence,
+    that info will be available.
+    """
+
+    user = request.user
+    occur = None
+    rosters = []
+
+    # For NSOs and Bosses, if want to download an excel of training data.
+    if 'download_excel' in request.POST:
+        downo = Occurrence.objects.get(pk=int(request.POST['downo_id']))
+        wb, xlfilename = downo.excel_backup()
+        response = HttpResponse(
+                content_type='application/vnd.openxmlformats\
+                        -officedocument.spreadsheetml.sheet'
+                )
+        response['Content-Disposition'] = (
+                'attachment; filename=%s' % (xlfilename)
+                )
+        wb.save(response)
+        return response
+
+    # Otherwise, if not downloading excel
     try:
-        training=Training.objects.get(pk=int(activity_id))
-        if o_id:
-            try:
-                occur=Occurrence.objects.get(training=training, pk=int(o_id))
-                registered, rcreated=TrainingRoster.objects.get_or_create(registered=occur)
-                auditing, acreated=TrainingRoster.objects.get_or_create(auditing=occur)
-                rosters=[registered,auditing]
-                if 'download_excel' in request.POST:
-                    wb,xlfilename=occur.excel_backup()
-                    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                    response['Content-Disposition'] = 'attachment; filename=%s'%(xlfilename)
-                    wb.save(response)
-                    return response
-
-            except:
-                #If I do it thi way, it says "try back later" until registraiton stats, no time
-                #so moved to except, probably will never run
-                occur=Occurrence.objects.get(training=training, pk=int(o_id))
-                if hasattr(occur, 'registered'):
-                    rosters.append(occur.registered)
-                else:
-                    rosters.append(True)#so that the Registered/Auditing order in template will still work
-
-                if hasattr(occur, 'auditing'):
-                    rosters.append(occur.auditing)
-                else:
-                    rosters.append(True)#so that the Registered/Auditing order in template will still work
-
-        Tos=list(Occurrence.objects.filter(training=training))
-
-        if training.con.sched_visible:
-            visible=True
-            occurrences=list(Occurrence.objects.filter(training=training))
-            if len(occurrences)==1:
-                single=occurrences[0]
-        else:
-            occurrences=[]
-
-        return render_to_response('view_training.html',{'occur':occur,'Tos':Tos,'single':single,'occurrences':occurrences,'visible':visible,'user':user, 'training':training, 'rosters':rosters}, context_instance=RequestContext(request))
+        training = Training.objects.get(pk=int(activity_id))
     except ObjectDoesNotExist:
-        return render_to_response('view_training.html',{},context_instance=RequestContext(request))
+        training = None
+
+    if training:
+        visible = training.con.sched_visible
+        if visible:
+            if o_id:
+                try:
+                    occur = Occurrence.objects.get(
+                            training=training,
+                            pk=int(o_id)
+                            )
+                except ObjectDoesNotExist:
+                    occur = None
+
+            Tos = list(Occurrence.objects.filter(training=training))
+            # If there's only 1 ocurrence, it's same as if o_id were supplied
+            if not occur and len(Tos) == 1:
+                occur = Tos[0]
+
+            if occur:
+                registered, rcreated = TrainingRoster.objects.get_or_create(
+                        registered=occur
+                        )
+                auditing, acreated = TrainingRoster.objects.get_or_create(
+                        auditing=occur
+                        )
+                rosters = [registered, auditing]
+
+        else:
+            Tos = []  # If schedule not visible, occurrenece list empty.
+
+        context_dict = {
+                'occur': occur,
+                'Tos': Tos,
+                'visible': visible,
+                'user': user,
+                'training': training,
+                'rosters': rosters
+                }
+    else:  # if no training
+        context_dict = {}
+
+    return render_to_response(
+            'view_training.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
+
 
 #-------------------------------------------------------------------------------
 def trainings_home(request,con_id=None,):

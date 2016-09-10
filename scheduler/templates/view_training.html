@@ -72,21 +72,22 @@
       <li role="separator" class="divider"></li>
       <li role="presentation" class="text-center">
         <form method="POST" class="post-form">{% csrf_token %}
+        <input type="hidden" name="downo_id" value="{{ o.id }}" />
         <button type="submit" class="btn btn-success btn-xs" name="download_excel">Download Excel</button></form></li>
-      {%endif%}
+      {%endif%}<!-- end is user in o.can_add_sk8ers -->
     </ul>
-      {%endfor%}
+      {%endfor%} <!-- end for o in Tos -->
   </div></td>
 </tr></table>
 </div>
-  {%endif%}
+  {%endif%}<!-- end if Tos -->
 
 
 {%if occur %}<hr><h3 class="text-center">
 {{ occur.start_time|date:"D d M" }} <b>{{ occur.start_time|date:"f a" }} to {{ occur.end_time|date:"f a" }}</b>
 <small>{{occur.location.name}}</small></h3>
-{%elif not occurrences%}<h3 class="text-center"><small><i>This event has not been scheduled or the schedule has not yet been made public.</i></small></h3>
-{%endif%}
+{%elif not Tos %}<h3 class="text-center"><small><i>This event has not been scheduled or the schedule has not yet been made public.</i></small></h3>
+{%endif%}<!-- end if occur -->
 
 {%for roster in rosters %}
 <div class="col-sm-6 margin-top-15">
