@@ -13,7 +13,7 @@
 
 {%if coach.can_email%}
     <h3>Email {{coach.user.first_name}}</h3>
-    {%if form %}
+      {%if not email_attempt %}
     <p><i>Please note that this is <b>not</b> an anonymous email. Coach will receive a message including your name and email address.</i></p>
   <p><i><a href="{{coach.get_absolute_url}}">Return to Coach page </a></i></p>
 <div class="col-sm-6">

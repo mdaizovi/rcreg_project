@@ -54,11 +54,12 @@ def upload_reg(request):
         'form': form
         }
 
-    return (render_to_response(
+    return render_to_response(
             'upload_reg.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
+
 
 #-------------------------------------------------------------------------------
 def CheapAirDynamic(request):
@@ -67,10 +68,10 @@ def CheapAirDynamic(request):
     most_upcoming = Con.objects.most_upcoming()
     context_dict = {'most_upcoming': most_upcoming}
 
-    return (render_to_response(
+    return render_to_response(
             'CheapAirDynamic.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------
@@ -79,10 +80,10 @@ def index(request):
     blog = Blog.objects.latest('date')
     context_dict = {'most_upcoming': most_upcoming, 'blog': blog}
 
-    return (render_to_response(
+    return render_to_response(
             'index.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------
@@ -93,10 +94,10 @@ def WTFAQ(request):
     user = request.user
     context_dict = {'user': user}
 
-    return (render_to_response(
+    return render_to_response(
             'WTFAQ.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------
@@ -110,10 +111,10 @@ def announcement(request, slugname):
                     'blog': blog
                     }
 
-    return (render_to_response(
+    return render_to_response(
             'announcement.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------
@@ -121,10 +122,10 @@ def all_announcements(request):
     """Blog by another name. All announcements view."""
     context_dict = {'blogs': Blog.objects.all()}
 
-    return (render_to_response(
+    return render_to_response(
             'all_announcements.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------
@@ -304,10 +305,10 @@ def registrant_profile(request):
             'registrant_dict_list': registrant_dict_list
             }
 
-    return (render_to_response(
+    return render_to_response(
             'registrant_profile.html',
             context_dict,
-            context_instance=RequestContext(request))
+            context_instance=RequestContext(request)
             )
 
 #-------------------------------------------------------------------------------

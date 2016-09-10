@@ -1,311 +1,227 @@
-#scheduler.views
-from django.shortcuts import render,render_to_response, redirect
-from django.template import RequestContext
+from collections import OrderedDict
+#import datetime
+from datetime import timedelta, date
+
 from django.contrib.auth.decorators import login_required
-from django.db import connection as dbconnection
-from django.db.models import Q
-from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+#from django.db import connection as dbconnection
+from django.db.models import Q
 from django.http import HttpResponse
-#print "dbc0:", len(dbconnection.queries)
-from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-#from scheduler.forms import ReviewConRankForm,ReviewConFormOptional,ReviewConForm, ReviewTrainingForm,ReviewTrainingFormOptional,CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
-from scheduler.forms import CommunicationForm,MyRosterSelectForm,GameRosterCreateModelForm,GameModelForm,CoachProfileForm,SendEmail,ChallengeModelForm,ChallengeRosterModelForm,TrainingModelForm,DurationOnly, ScoreFormDouble
+#from django.shortcuts import render, render_to_response, redirect
+from django.shortcuts import render_to_response, redirect
+from django.template import RequestContext
+from django.utils import timezone
 
 from con_event.forms import EligibleRegistrantForm,SearchForm
 from con_event.models import Con, Registrant
-from scheduler.models import ReviewCon,ReviewTraining,Coach,Roster, Challenge, Training, GAMETYPE
-from scheduler.app_settings import MAX_CAPTAIN_LIMIT, CLOSE_CHAL_SUB_AT,DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION
-from django.forms.models import model_to_dict
-from datetime import timedelta, date
-import collections
-from django.core.mail import EmailMessage, send_mail
-from django.core.exceptions import ObjectDoesNotExist
-from rcreg_project.settings import SECOND_CHOICE_EMAIL,SECOND_CHOICE_PW
-from swingtime.models import Occurrence,TrainingRoster
-import datetime
-
 import django_tables2 as tables
-from django_tables2  import RequestConfig
+#from django_tables2 import RequestConfig
+from rcreg_project.extras import remove_punct, ascii_only ,ascii_only_no_punct
+from scheduler.app_settings import (MAX_CAPTAIN_LIMIT, CLOSE_CHAL_SUB_AT,
+        DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION,
+        DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION
+        )
+from scheduler.forms import (CommunicationForm, MyRosterSelectForm,
+        GameRosterCreateModelForm, GameModelForm, CoachProfileForm, SendEmail,
+        ChallengeModelForm, ChallengeRosterModelForm, TrainingModelForm,
+        DurationOnly, ScoreFormDouble
+        )
+#from scheduler.models import ReviewCon, ReviewTraining, Coach, Roster, Challenge, Training, GAMETYPE
+from scheduler.models import Coach, Roster, Challenge, Training, GAMETYPE
 from scheduler.tables import RosterTable
-no_list=["",u'',None,"None"]
-#syntx reference:
-            #selection = request.POST.copy()
-            #print "selection", selection
-            #session_id = request.POST['session_id']
-            #mvp_id_list= selection.getlist('mvpid')
-            #print "selectiondict: ",selectiondict
-            #selectiondict=dict(selection.lists())
+from swingtime.models import Occurrence,TrainingRoster
 
-# @login_required
-# def review_con(request,con_id):
-#     user=request.user
-#     con=Con.objects.get(pk=int(con_id))
-#     try:
-#         registrant=Registrant.objects.get(user=user, con=con)
-#     except ObjectDoesNotExist:
-#         registrant=None
-#     save_attempt=False
-#     save_success=False
-#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
-#     form1=None
-#     form2=None
-#
-#     if registrant:
-#         #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
-#         try:
-#             myreview=ReviewCon.objects.get(registrant=registrant)
-#         except:
-#             myreview=ReviewCon()
-#
-#         form1=ReviewConForm(request.POST or None, instance=myreview)
-#         form2=ReviewConFormOptional(request.POST or None, instance=myreview)
-#         form3=ReviewConRankForm(request.POST or None, instance=myreview)
-#
-#         if request.method == "POST":
-#             save_attempt=True
-#             if form1.is_valid() and form2.is_valid() and form3.is_valid():
-#                 myreview.registrant=registrant#in case is new
-#                 myreview.save()
-#                 save_success=True
-#
-#     return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"form3":form3,"registrant":registrant,"con":con},context_instance=RequestContext(request))
-#
-# @login_required
-# def review_training(request,training_id):
-#     user=request.user
-#     try:
-#         training=Training.objects.get(pk=int(training_id))
-#         try:
-#             registrant=Registrant.objects.get(user=user, con=training.con)
-#         except ObjectDoesNotExist:
-#             registrant=None
-#     except ObjectDoesNotExist:
-#         training=None
-#         registrant=None
-#
-#     save_attempt=False
-#     save_success=False
-#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
-#     form1=None
-#     form2=None
-#
-#     if training and registrant:
-#
-#         #make sure registrant was actually IN training
-#         trainings=registrant.get_trainings_attended()
-#         if training in trainings:
-#             #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
-#             try:
-#                 myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
-#             except:
-#                 myreview=ReviewTraining()
-#
-#         form1=ReviewTrainingForm(request.POST or None, instance=myreview)
-#         form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
-#         if request.method == "POST":
-#             save_attempt=True
-#             if form1.is_valid() and form2.is_valid():
-#                 myreview.training=training #in case is new
-#                 myreview.registrant=registrant#in case is new
-#                 myreview.save()
-#                 save_success=True
-#
-#     return render_to_response('review_training.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
-#
-#
-#
-#
-#
-# @login_required
-# def my_reviews(request):
-#     user=request.user
-#     registrant_list= list(user.registrant_set.all())
-#     today=datetime.date.today()
-#
-#     registrant_dict_list=[]
-#
-#     for registrant in registrant_list:
-#         if today > registrant.con.end:
-#             conpassed=True
-#         else:
-#             conpassed=False
-#
-#         trainings=registrant.get_trainings_attended()
-#
-#         registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
-#         registrant_dict_list.append(registrant_dict)
-#
-#     if len(registrant_list)>1:
-#         most_recent_reg=registrant_list[0]
-#         active=most_recent_reg.con
-#     else:
-#         active=None
-#
-#     return render_to_response('my_reviews.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
-#
 
+no_list = ["" ,u'', None, "None"]
+
+#-------------------------------------------------------------------------------
 @login_required
 def my_schedule(request):
     """Used for Registrants to see My Schedule.
-    If registrant or user in get and User is a boss, can also be hijacked to see other people's schedules.
-    If not the boss, ignores and shows you your own."""
-    user=request.user
-    most_upcoming=Con.objects.most_upcoming()
-    registrant_dict_list=[]
-    me_coach=None
-    spoof_reg=None
-    spoof_user=None
-    spoof_error=False
+    If registrant or user in get and User is a boss, can also be used to see
+    other people's schedules. If not the boss, ignores and shows you your own.
+    """
 
-    if user.is_the_boss() and ("registrant" in request.GET or "user" in request.GET): #and is a boss
+    user = request.user
+    spoof_reg = None
+    spoof_user = None
+    spoof_error = False
+    registrant_dict_list = []
 
-        if "user" in request.GET: #and is a boss
+    if user.is_the_boss() and (
+            "registrant" in request.GET or "user" in request.GET
+            ):
+
+        if "user" in request.GET:  # and is the boss
             try:
-                spoof_user=User.objects.get(pk=request.GET['user'])
-                registrant_list=list(spoof_user.registrant_set.all())
-                upcoming_registrants=spoof_user.upcoming_registrants()
-                reg_coach=spoof_user.is_a_coach()
+                spoof_user = User.objects.get(pk=request.GET['user'])
+                registrant_list = list(spoof_user.registrant_set.all())
             except ObjectDoesNotExist:
-                spoof_error=True
-                registrant_list= list(user.registrant_set.all())
-                upcoming_registrants=user.upcoming_registrants()
-                reg_coach=user.is_a_coach()
-                #return render_to_response('my_schedule.html',{'spoof_error':True},context_instance=RequestContext(request))
+                spoof_error = True
+                registrant_list = list(user.registrant_set.all())
 
-        elif "registrant" in request.GET: #and is a boss
+        elif "registrant" in request.GET:  # and is the boss
             try:
-                spoof_reg=Registrant.objects.get(pk=request.GET['registrant'])
-                registrant_list=[spoof_reg]
-                upcoming_registrants=[spoof_reg]
-                reg_coach=spoof_reg.user.is_a_coach()
+                spoof_reg = Registrant.objects.get(pk=request.GET['registrant'])
+                registrant_list = [spoof_reg]
             except ObjectDoesNotExist:
-                spoof_error=True
-                registrant_list= list(user.registrant_set.all())
-                upcoming_registrants=user.upcoming_registrants()
-                reg_coach=user.is_a_coach()
-                #return render_to_response('my_schedule.html',{'spoof_error':True},context_instance=RequestContext(request))
+                spoof_error = True
+                registrant_list = list(user.registrant_set.all())
     else:
-        #if not a boss, will always return own my schedule
-        registrant_list= list(user.registrant_set.all())
-        upcoming_registrants=user.upcoming_registrants()
-        reg_coach=user.is_a_coach()
+        # If not the boss, will always return user's own schedule
+        registrant_list = list(user.registrant_set.all())
 
-    #happens whether is reg checking thier own scheudle or Boss spoofing it
+    # Happens whether is registrant checking own schedule or boss spoofs others'
     if not spoof_error:
+        active = registrant_list[0].con  # Most recent/upcoming registrant con
         for registrant in registrant_list:
-            registrant_dict={'con':registrant.con, 'registrant':registrant, 'reg_os':registrant.get_occurrences()}
+            registrant_dict = {
+                    'con': registrant.con,
+                    'registrant': registrant,
+                    'reg_os': registrant.get_occurrences()
+                    }
             registrant_dict_list.append(registrant_dict)
 
-    if upcoming_registrants and len(upcoming_registrants)>1:
-        active=Con.objects.most_upcoming()
-    else:
-        try:
-            most_upcoming_reg=registrant_list[0]
-            active=most_upcoming_reg.con
-        except:
-            active=None
+    context_dict = {
+            'spoof_error': spoof_error,
+            'spoof_user': spoof_user,
+            'spoof_reg': spoof_reg,
+            'active': active,
+            'registrant_dict_list': registrant_dict_list,
+            }
 
+    return render_to_response(
+            'my_schedule.html',
+            context_dict ,
+            context_instance=RequestContext(request)
+            )
 
-    return render_to_response('my_schedule.html',{'spoof_error':spoof_error,'spoof_user':spoof_user,'spoof_reg':spoof_reg,'active':active,'registrant_dict_list':registrant_dict_list,'registrant_list':registrant_list}, context_instance=RequestContext(request))
-
+#-------------------------------------------------------------------------------
 @login_required
 def email_captain(request, roster_id):
-    """This form will only show if captain has agreed to accept emails and has a user with an email address"""
-    user=request.user
-    roster=Roster.objects.get(pk=roster_id)
-    captain=roster.captain
-    email_success=False
+    """Form will only show if captain has agreed to accept emails and
+    has a user and user has an email address.
+    By default all registrant should have users and email addresses.
+    But who knows, maybe one will get deleted.
+    """
+
+    user = request.user
+    roster = Roster.objects.get(pk=roster_id)
+    form = SendEmail(request.POST or None)
 
     if request.method == "POST":
-        form=None
         message=request.POST['message']
-        if roster.can_email and roster.captain.user and roster.captain.user.email:
-            subject=captain.user.first_name+", "+user.first_name+" has sent you a message through the RollerTron site!"
-            message_body = ''.join(["Message below. Please respond to "+user.email+", not to us.\n\n\n",message])
-            email = EmailMessage(subject=subject, body=message_body, to=[captain.user.email], reply_to=[user.email])
-            try:
-                email.send(fail_silently=False)
-                email_success=True
-            except:
-                try:
-                    #note that send_mail does not include reply to
-                    send_mail(subject, message_body, from_email=SECOND_CHOICE_EMAIL, recipient_list=[captain.user.email],
-                        fail_silently=False,auth_user=SECOND_CHOICE_EMAIL,auth_password=SECOND_CHOICE_PW)
-                    email_success=True
-                except:
-                    email_success=False
+        email_attempt = True
+        email_success = roster.email_captain(user, message)
     else:
-        form=SendEmail()
+        email_attempt = False
+        email_success = False
 
-    return render_to_response('email_captain.html',{'email_success':email_success,'form':form,'roster':roster}, context_instance=RequestContext(request))
+    context_dict = {
+            'email_attempt': email_attempt,
+            'email_success': email_success,
+            'form': form,
+            'roster': roster
+            }
+    return render_to_response(
+            'email_captain.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def coach_profile(request):
-    save_attempt=False
-    save_success=False
-    user=request.user
+    """For coaches to see and edit own profile.
+    Other users can view coach data via 'view_coach'.
+    """
+
+    save_attempt = False
+    save_success = False
+    user = request.user
+
     try:
-        coach=Coach.objects.get(user=user)
+        coach = Coach.objects.get(user=user)
     except ObjectDoesNotExist:
-        return render_to_response('coach_profile.html',{},context_instance=RequestContext(request))
+        coach = None
+
+    form = CoachProfileForm(request.POST or None, instance=coach)
 
     if request.method == 'POST':
-        form=CoachProfileForm(request.POST,instance=coach)
-        save_attempt=True
+        save_attempt = True
         if form.is_valid():
             form.save()
-            save_success=True
-        else:
-            #i should prob put errors in template. don't think i have.
-            form=CoachProfileForm(request.POST,instance=coach)
-    else:
-        form=CoachProfileForm(instance=coach)
+            save_success = True
 
-    return render_to_response('coach_profile.html',{'coach':coach,'form':form,'save_attempt':save_attempt,'save_success':save_success,'user':user},context_instance=RequestContext(request))
+    context_dict = {
+            'coach': coach,
+            'form': form,
+            'save_attempt': save_attempt,
+            'save_success': save_success,
+            'user':user
+            }
 
+    return render_to_response(
+            'coach_profile.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
+#-------------------------------------------------------------------------------
 @login_required
 def email_coach(request, coach_id):
-    """This assumes that coach has a user and a user email address.
-    I think it's important coaches supply an email address, how can you rely on someone you can't get in touch with?"""
-    user=request.user
-    coach=Coach.objects.get(pk=coach_id)
-    email_success=False
+    """Form will only show if coach has agreed to accept emails and
+    has a user and user has an email address.
+    By default all registrant should have users and email addresses.
+    But who knows, maybe one will get deleted.
+    """
+
+    user = request.user
+    form = SendEmail(request.POST or None)
+    try:
+        coach = Coach.objects.get(pk=int(coach_id))
+    except ObjectDoesNotExist:
+        coach = None
 
     if request.method == "POST":
-        form=None
         message=request.POST['message']
-        if coach.can_email:
-            subject=coach.user.first_name+", "+user.first_name+" has sent you a message through the RollerTron site!"
-            message_body = ''.join(["Message below. Please respond to "+user.email+", not to us.\n\n\n",message])
-            email = EmailMessage(subject=subject, body=message_body, to=[coach.user.email], reply_to=[user.email])
-            try:
-                email.send(fail_silently=False)
-                email_success=True
-            except:
-                try:
-                 #note that send_mail does not include reply to
-                    send_mail(subject, message_body, from_email=SECOND_CHOICE_EMAIL, recipient_list=[coach.user.email],
-                        fail_silently=False,auth_user=SECOND_CHOICE_EMAIL,auth_password=SECOND_CHOICE_PW)
-                    email_success=True
-                except:
-                    email_success=False
+        email_attempt = True
+        email_success = coach.email_coach(user, message)
     else:
-        form=SendEmail()
+        email_attempt = False
+        email_success = False
 
-    return render_to_response('email_coach.html',{'email_success':email_success,'form':form,'coach':coach}, context_instance=RequestContext(request))
+    context_dict = {
+            'email_attempt': email_attempt,
+            'email_success': email_success,
+            'form': form,
+            'coach':coach
+            }
+    return render_to_response(
+            'email_coach.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
-
+#-------------------------------------------------------------------------------
 def view_coach(request, coach_id):
+    """For anyone to view coach description, trainings, and possibly email."""
+
     try:
-        coach=Coach.objects.get(pk=coach_id)
-        return render_to_response('view_coach.html',{'coach':coach}, context_instance=RequestContext(request))
+        coach = Coach.objects.get(pk=coach_id)
     except ObjectDoesNotExist:
-        return render_to_response('view_coach.html',{},context_instance=RequestContext(request))
+        coach = None
 
+    context_dict = {'coach': coach}
 
+    return render_to_response(
+            'view_coach.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
+
+#-------------------------------------------------------------------------------
 def view_training(request, activity_id,o_id=None):
     """If no Occurrence, jst the training and coach data. if schedule is visible and there is an Occurrence, that info will be available."""
     user=request.user
@@ -357,7 +273,7 @@ def view_training(request, activity_id,o_id=None):
     except ObjectDoesNotExist:
         return render_to_response('view_training.html',{},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 def trainings_home(request,con_id=None,):
     user=request.user
     con_list= list(Con.objects.all())
@@ -370,7 +286,7 @@ def trainings_home(request,con_id=None,):
     scheduled=list(Occurrence.objects.filter(training__con=con))
 
     if len(scheduled)>0 and con.sched_visible:
-        date_dict=collections.OrderedDict()
+        date_dict=OrderedDict()
         for day in con.get_date_range():
             date_dict[day]=[]
 
@@ -387,7 +303,7 @@ def trainings_home(request,con_id=None,):
 
     return render_to_response('trainings_home.html', {'con':con,'con_list':con_list,'user':user,'date_dict':date_dict},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def register_training(request,o_id):
     """Registers skaters for Registered/Auditig Training Rosters for Training Occurrences.
@@ -509,7 +425,7 @@ def register_training(request,o_id):
 
     return render_to_response('register_training.html', {'occur':occur,'roster':roster,'skater_remove':skater_remove,'remove_fail':remove_fail,'skater_added':skater_added,'add_fail':add_fail,'audit_forms':audit_forms,'register_forms':register_forms,'training':training,'user':user},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def my_trainings(request):
     user=request.user
@@ -541,7 +457,7 @@ def my_trainings(request):
 
     return render_to_response('my_trainings.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def edit_training(request, activity_id):
     ###TODO: this has logic to allow Users to add coaches, but i removed function from template.
@@ -638,6 +554,7 @@ def edit_training(request, activity_id):
 
     return render_to_response('edit_training.html',{'coach_users':coach_users,'search_form':search_form,'user':user,'editable_by':editable_by,'coaches':coaches,'eligible_coaches':eligible_coaches,'skater_remove':skater_remove,'add_fail':add_fail,'skater_added':skater_added,'training':training,'training_changes_made':training_changes_made,'formlist':formlist},context_instance=RequestContext(request))
 
+#-------------------------------------------------------------------------------
 @login_required
 def propose_new_training(request):
     user=request.user
@@ -702,7 +619,7 @@ def propose_new_training(request):
 
     return render_to_response('propose_new_training.html', {'most_upcoming_con':most_upcoming_con,'formlist':formlist,'trainings_coached':trainings_coached,'training_made':training_made,'upcoming_registrants':upcoming_registrants},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 def challenges_home(request,con_id=None,):
     user=request.user
     con_list= list(Con.objects.all())
@@ -715,7 +632,7 @@ def challenges_home(request,con_id=None,):
     scheduled=list(Occurrence.objects.filter(challenge__con=con))
 
     if len(scheduled)>0 and con.sched_visible:
-        date_dict=collections.OrderedDict()
+        date_dict=OrderedDict()
         for day in con.get_date_range():
             date_dict[day]=[]
 
@@ -731,7 +648,7 @@ def challenges_home(request,con_id=None,):
 
     return render_to_response('challenges_home.html', {'user':user,'con':con,'con_list':con_list,'date_dict':date_dict},context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def edit_roster(request, roster_id):
         #This is for NSOs and Boss Ladies, not captains. Captains are meant to use edit_challenge
@@ -788,7 +705,7 @@ def edit_roster(request, roster_id):
     return render_to_response('edit_roster.html',{'challenge':challenge,'skater_search_form':skater_search_form,'participants':participants,'eligible_participants':eligible_participants,'add_fail_reason':add_fail_reason,'add_fail':add_fail,'skater_added':skater_added,'user':user,
         'skater_remove':skater_remove,'remove_fail':remove_fail,'roster':roster}, context_instance=RequestContext(request))
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def edit_challenge(request, activity_id):
     user=request.user
@@ -1011,6 +928,7 @@ def edit_challenge(request, activity_id):
 
     return render_to_response('edit_challenge.html',big_dict,context_instance=RequestContext(request))
 
+#-------------------------------------------------------------------------------
 @login_required
 def challenge_respond(request):
     '''This should always be post from Edit Challange, if not post jsut goes to index
@@ -1078,7 +996,7 @@ def challenge_respond(request):
     else:#this should never happen, should always be post
         return redirect('/')
 
-
+#-------------------------------------------------------------------------------
 def view_challenge(request, activity_id):
     participating=False
     can_edit=False
@@ -1152,7 +1070,7 @@ def view_challenge(request, activity_id):
     return render_to_response('view_challenge.html',{"communication_saved":communication_saved,"can_edit":can_edit,'participating':participating,'communication_form':communication_form,'registrant_list':registrant_list,'score_form':score_form,'user':user,'challenge':challenge,'rosters':rosters}, context_instance=RequestContext(request))
 
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def my_challenges(request):
     user=request.user
@@ -1197,16 +1115,18 @@ def my_challenges(request):
 
     return render_to_response('my_challenges.html', {'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'CLOSE_CHAL_SUB_AT':CLOSE_CHAL_SUB_AT,'active':active,'registrant_list':registrant_list,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
 
+#-------------------------------------------------------------------------------
 @login_required
 def propose_new_game(request):
     """propose_new_game and propose_new_challenge are mostly the same, with mild differences sorted out in propose_new_activity"""
     return propose_new_activity(request,is_a_game=True)
 
+#-------------------------------------------------------------------------------
 @login_required
 def propose_new_challenge(request):
     return propose_new_activity(request)
 
-
+#-------------------------------------------------------------------------------
 @login_required
 def propose_new_activity(request,is_a_game=False):
     #reminder: challenge.is_a_game and is_a_game both exist. is_a_game exists for when the chalenge hasn't been made yet, to know user intention.
@@ -1319,6 +1239,7 @@ def propose_new_activity(request,is_a_game=False):
 
     return render_to_response('propose_new_challenge.html', {'problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
 
+#-------------------------------------------------------------------------------
 @login_required
 def challenge_submit(request):
     """This should always be a post, from either my_challenges or maybe edit_challenge.
@@ -1356,3 +1277,108 @@ def challenge_submit(request):
             unsubmit_attempt=True
 
     return render_to_response('challenge_submit.html', {'unsubmit_attempt':unsubmit_attempt,'submit_attempt':submit_attempt,'can_submit_chlg':can_submit_chlg,'is_captain':is_captain,'challenge':challenge},context_instance=RequestContext(request))
+
+
+# @login_required
+# def review_con(request,con_id):
+#     user=request.user
+#     con=Con.objects.get(pk=int(con_id))
+#     try:
+#         registrant=Registrant.objects.get(user=user, con=con)
+#     except ObjectDoesNotExist:
+#         registrant=None
+#     save_attempt=False
+#     save_success=False
+#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+#     form1=None
+#     form2=None
+#
+#     if registrant:
+#         #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+#         try:
+#             myreview=ReviewCon.objects.get(registrant=registrant)
+#         except:
+#             myreview=ReviewCon()
+#
+#         form1=ReviewConForm(request.POST or None, instance=myreview)
+#         form2=ReviewConFormOptional(request.POST or None, instance=myreview)
+#         form3=ReviewConRankForm(request.POST or None, instance=myreview)
+#
+#         if request.method == "POST":
+#             save_attempt=True
+#             if form1.is_valid() and form2.is_valid() and form3.is_valid():
+#                 myreview.registrant=registrant#in case is new
+#                 myreview.save()
+#                 save_success=True
+#
+#     return render_to_response('review_con.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"form3":form3,"registrant":registrant,"con":con},context_instance=RequestContext(request))
+#
+# @login_required
+# def review_training(request,training_id):
+#     user=request.user
+#     try:
+#         training=Training.objects.get(pk=int(training_id))
+#         try:
+#             registrant=Registrant.objects.get(user=user, con=training.con)
+#         except ObjectDoesNotExist:
+#             registrant=None
+#     except ObjectDoesNotExist:
+#         training=None
+#         registrant=None
+#
+#     save_attempt=False
+#     save_success=False
+#     myreview=None#needs to be here in case training and registrant exist, but reg wasn't signed up for training
+#     form1=None
+#     form2=None
+#
+#     if training and registrant:
+#
+#         #make sure registrant was actually IN training
+#         trainings=registrant.get_trainings_attended()
+#         if training in trainings:
+#             #I didn't use get or create here so it wouldn't be saved and incorporated into stats if they changed their mind.
+#             try:
+#                 myreview=ReviewTraining.objects.get(training=training, registrant=registrant)
+#             except:
+#                 myreview=ReviewTraining()
+#
+#         form1=ReviewTrainingForm(request.POST or None, instance=myreview)
+#         form2=ReviewTrainingFormOptional(request.POST or None, instance=myreview)
+#         if request.method == "POST":
+#             save_attempt=True
+#             if form1.is_valid() and form2.is_valid():
+#                 myreview.training=training #in case is new
+#                 myreview.registrant=registrant#in case is new
+#                 myreview.save()
+#                 save_success=True
+#
+#     return render_to_response('review_training.html',{"myreview":myreview,"save_attempt":save_attempt,"save_success":save_success,"form1":form1,"form2":form2,"training":training,"registrant":registrant},context_instance=RequestContext(request))
+#
+# @login_required
+# def my_reviews(request):
+#     user=request.user
+#     registrant_list= list(user.registrant_set.all())
+#     today=datetime.date.today()
+#
+#     registrant_dict_list=[]
+#
+#     for registrant in registrant_list:
+#         if today > registrant.con.end:
+#             conpassed=True
+#         else:
+#             conpassed=False
+#
+#         trainings=registrant.get_trainings_attended()
+#
+#         registrant_dict={'con':registrant.con, 'registrant':registrant,'conpassed':conpassed,'trainings':trainings}
+#         registrant_dict_list.append(registrant_dict)
+#
+#     if len(registrant_list)>1:
+#         most_recent_reg=registrant_list[0]
+#         active=most_recent_reg.con
+#     else:
+#         active=None
+#
+#     return render_to_response('my_reviews.html', {'active':active,'user':user,'registrant_dict_list':registrant_dict_list},context_instance=RequestContext(request))
+#

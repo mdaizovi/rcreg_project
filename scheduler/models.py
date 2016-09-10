@@ -20,6 +20,8 @@ from scheduler.signals import challenge_defaults,delete_homeless_roster_chg,dele
 from scheduler.app_settings import CLOSE_CHAL_SUB_AT, DEFAULT_ONSK8S_DURATION,DEFAULT_OFFSK8S_DURATION
 from copy import deepcopy
 from swingtime.conf.swingtime_settings import TIMESLOT_INTERVAL,TIMESLOT_START_TIME,TIMESLOT_END_TIME_DURATION
+from rcreg_project.settings import SECOND_CHOICE_EMAIL, SECOND_CHOICE_PW
+from django.core.mail import EmailMessage, send_mail
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
@@ -573,6 +575,50 @@ class Roster(Matching_Criteria):
 
     def get_edit_url(self):
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
+
+    def email_captain(self, sending_user, message):
+        """if captain has agreed to accept emails and has a user and user has an
+        email address. By default all registrant should have users and email
+        addresses. But who knows, maybe one will get deleted.
+        Takes user that wants to email, tries to email.
+        Returns True if successful.
+        """
+
+        email_success = False
+        captain=self.captain.user
+
+        if (self.can_email and captain and captain.email):
+            subject = ("%s, %s has sent you a message through the RollerTron \
+                    site!" % (captain.first_name, sending_user.first_name)
+                    )
+            message_body = ("Message below. Please respond to %s, not to us.\
+                    \n\n\n%s" % (sending_user.email, message)
+                    )
+            email = EmailMessage(
+                    subject=subject,
+                    body=message_body,
+                    to=[captain.email],
+                    reply_to=[sending_user.email]
+                    )
+            try:
+                email.send(fail_silently=False)
+                email_success = True
+            except:
+                try:
+                    send_mail(
+                            subject,
+                            message_body,
+                            from_email=SECOND_CHOICE_EMAIL,
+                            recipient_list=[captain.email],
+                            fail_silently=False,
+                            auth_user=SECOND_CHOICE_EMAIL,
+                            auth_password=SECOND_CHOICE_PW
+                            )
+                    email_success = True
+                except:
+                    email_success = False
+
+        return email_success
 
     class Meta:
         ordering=("-con__start",'name','captain')
@@ -1579,6 +1625,51 @@ class Coach(models.Model):
                 setattr(self, item, cleaned_att)
 
         super(Coach, self).save()
+
+
+    def email_coach(self, sending_user, message):
+        """if coach has agreed to accept emails and has a user and user has an
+        email address. By default all registrant should have users and email
+        addresses. But who knows, maybe one will get deleted.
+        Takes user that wants to email, message, tries to email.
+        Returns True if successful.
+        """
+
+        email_success = False
+
+        if (self.can_email):
+            subject = ("%s, %s has sent you a message through the RollerTron \
+                    site!" % (self.user.first_name, sending_user.first_name)
+                    )
+            message_body = ("Message below. Please respond to %s, not to us.\
+                    \n\n\n%s" % (sending_user.email, message)
+                    )
+            email = EmailMessage(
+                    subject=subject,
+                    body=message_body,
+                    to=[self.user.email],
+                    reply_to=[sending_user.email]
+                    )
+            try:
+                email.send(fail_silently=False)
+                email_success = True
+            except:
+                try:
+                    send_mail(
+                            subject,
+                            message_body,
+                            from_email=SECOND_CHOICE_EMAIL,
+                            recipient_list=[self.user.email],
+                            fail_silently=False,
+                            auth_user=SECOND_CHOICE_EMAIL,
+                            auth_password=SECOND_CHOICE_PW
+                            )
+                    email_success = True
+                except:
+                    email_success = False
+
+        return email_success
+
 
     def get_absolute_url(self):#https://docs.djangoproject.com/en/1.7/ref/urlresolvers/#django.core.urlresolvers.reverse
         from scheduler.views import view_coach
