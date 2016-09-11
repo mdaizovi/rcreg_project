@@ -94,16 +94,9 @@ def can_edit_score(self):
 
 def registrants(self):
     """Returns list of registrants associated w/user, or None."""
-    print "running registrants"
 
     from con_event.models import Registrant  # Avoid circular import
-    try:
-        print "try"
-        registrant_list = list(self.registrant_set.all())
-    except:
-        print "except"
-        # not logged-in AnonymousUser has no registrant set.
-        registrant_list = []
+    registrant_list = list(self.registrant_set.all())
 
     return registrant_list
 

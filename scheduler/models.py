@@ -47,8 +47,7 @@ COLORS = (("Black", "Black"), ("Beige or tan", "Beige or tan"),
         )
 GAMETYPE = (('3CHAL', '30 minute Challenge'), ('6CHAL', '60 minute Challenge'),
         ('36CHAL', '30 or 60 minute Challenge'),
-        ('6GAME','60 min REGULATION or SANCTIONED Game (between two existing\
-                WFTDA/MRDA/RCDL/USARS teams)')
+        ('6GAME','60 min REGULATION or SANCTIONED Game (between two existing WFTDA/MRDA/RCDL/USARS teams)')
         )
 RULESET = (('WFTDA', 'WFTDA'), ('MRDA', 'MRDA'), ('RDCL', 'RDCL'),
         ('USARS', 'USARS'), ('Other', 'Other')
