@@ -1,8 +1,4 @@
-
-#from datetime import datetime, date, timedelta
-#this import might fuck up oyhr things?
 import datetime
-#this import might fuck up oyhr things?
 from dateutil import rrule
 from django.contrib.auth.models import User,Group
 from django.utils import timezone
@@ -12,19 +8,17 @@ from django.utils.dateparse import parse_datetime,parse_time
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q,F
-from django.db import connection as dbconnection
-#print "dbc0:", len(dbconnection.queries)
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
-#from con_event.models import Con
+
 from scheduler.models import Location, Challenge, Training,INTEREST_RATING
 from scheduler.app_settings import DEFAULT_REG_CAP, DEFAULT_AUD_CAP
 
 from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from rcreg_project.extras import ascii_only_no_punct
-#import datetime #why did I dd this? it broke the calendar daily view
+
 from random import choice
 import openpyxl
 from openpyxl.styles import PatternFill

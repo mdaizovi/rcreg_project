@@ -1,22 +1,17 @@
-'''
-Convenience forms for adding and updating ``Event`` and ``Occurrence``s.
-
-'''
 from __future__ import print_function, unicode_literals
 from datetime import datetime, date, time, timedelta
+
 from django import VERSION
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.forms.extras.widgets import SelectDateWidget
 
+from con_event.models import Con
 from dateutil import rrule
+from scheduler.models import Challenge, Training, INTEREST_RATING
 from swingtime.conf import settings as swingtime_settings
-#from swingtime.models import *
 from swingtime.models import Occurrence, Event
 from swingtime import utils
-
-from con_event.models import Con
-from scheduler.models import Challenge, Training, INTEREST_RATING
 
 FIELDS_REQUIRED = (VERSION[:2] >= (1, 6))
 
@@ -207,184 +202,6 @@ class SplitDateTimeWidget(forms.MultiWidget):
 
         return [None, None]
 
-
-#===============================================================================
-# class MultipleOccurrenceForm(forms.Form):
-#     day = forms.DateField(
-#         label=_('Date'),
-#         initial=date.today,
-#         widget=SelectDateWidget()
-#     )
-#
-#     start_time_delta = forms.IntegerField(
-#         label=_('Start time'),
-#         widget=forms.Select(choices=default_timeslot_offset_options)
-#     )
-#
-#     end_time_delta = forms.IntegerField(
-#         label=_('End time'),
-#         widget=forms.Select(choices=default_timeslot_offset_options)
-#     )
-#
-#     # recurrence options
-#     repeats = forms.ChoiceField(
-#         choices=REPEAT_CHOICES,
-#         initial='count',
-#         label=_('Occurrences'),
-#         widget=forms.RadioSelect()
-#     )
-#
-#     count = forms.IntegerField(
-#         label=_('Total Occurrences'),
-#         initial=1,
-#         required=False,
-#         widget=forms.TextInput(attrs=dict(size=2, max_length=2))
-#     )
-#
-#     until = forms.DateField(
-#         required=False,
-#         initial=date.today,
-#         widget=SelectDateWidget()
-#     )
-#
-#     freq = forms.IntegerField(
-#         label=_('Frequency'),
-#         initial=rrule.WEEKLY,
-#         widget=forms.RadioSelect(choices=FREQUENCY_CHOICES),
-#     )
-#
-#     interval = forms.IntegerField(
-#         required=False,
-#         initial='1',
-#         widget=forms.TextInput(attrs=dict(size=3, max_length=3))
-#     )
-#
-#     # weekly options
-#     week_days = MultipleIntegerField(
-#         WEEKDAY_SHORT,
-#         label=_('Weekly options'),
-#         widget=forms.CheckboxSelectMultiple
-#     )
-#
-#     # monthly  options
-#     month_option = forms.ChoiceField(
-#         choices=(('on',_('On the')), ('each',_('Each:'))),
-#         initial='each',
-#         widget=forms.RadioSelect(),
-#         label=_('Monthly options')
-#     )
-#
-#     month_ordinal = forms.IntegerField(widget=forms.Select(choices=ORDINAL), required=False)
-#     month_ordinal_day = forms.IntegerField(widget=forms.Select(choices=WEEKDAY_LONG), required=False)
-#     each_month_day = MultipleIntegerField(
-#         [(i,i) for i in range(1,32)],
-#         widget=forms.CheckboxSelectMultiple
-#     )
-#
-#     # yearly options
-#     year_months = MultipleIntegerField(
-#         MONTH_SHORT,
-#         label=_('Yearly options'),
-#         widget=forms.CheckboxSelectMultiple
-#     )
-#
-#     is_year_month_ordinal = forms.BooleanField(required=False)
-#     year_month_ordinal = forms.IntegerField(widget=forms.Select(choices=ORDINAL), required=False)
-#     year_month_ordinal_day = forms.IntegerField(widget=forms.Select(choices=WEEKDAY_LONG), required=False)
-#
-#     #---------------------------------------------------------------------------
-#     def __init__(self, *args, **kws):
-#         super(MultipleOccurrenceForm, self).__init__(*args, **kws)
-#         dtstart = self.initial.get('dtstart', None)
-#         if dtstart:
-#             dtstart = dtstart.replace(
-#                 minute=((dtstart.minute // MINUTES_INTERVAL) * MINUTES_INTERVAL),
-#                 second=0,
-#                 microsecond=0
-#             )
-#
-#             weekday = dtstart.isoweekday()
-#             ordinal = dtstart.day // 7
-#             ordinal = '%d' % (-1 if ordinal > 3 else ordinal + 1,)
-#             offset = (dtstart - datetime.combine(dtstart.date(), time(0, tzinfo=dtstart.tzinfo))).seconds
-#
-#             self.initial.setdefault('day', dtstart)
-#             self.initial.setdefault('week_days', '%d' % weekday)
-#             self.initial.setdefault('month_ordinal', ordinal)
-#             self.initial.setdefault('month_ordinal_day', '%d' % weekday)
-#             self.initial.setdefault('each_month_day', ['%d' % dtstart.day])
-#             self.initial.setdefault('year_months', ['%d' % dtstart.month])
-#             self.initial.setdefault('year_month_ordinal', ordinal)
-#             self.initial.setdefault('year_month_ordinal_day', '%d' % weekday)
-#             self.initial.setdefault('start_time_delta', '%d' % offset)
-#             self.initial.setdefault('end_time_delta', '%d' % (offset + SECONDS_INTERVAL,))
-#
-#     #---------------------------------------------------------------------------
-#     def clean(self):
-#         day = datetime.combine(self.cleaned_data['day'], time(0))
-#         self.cleaned_data['start_time'] = day + timedelta(
-#             seconds=self.cleaned_data['start_time_delta']
-#         )
-#
-#         self.cleaned_data['end_time'] = day + timedelta(
-#             seconds=self.cleaned_data['end_time_delta']
-#         )
-#
-#         return self.cleaned_data
-#
-#     #---------------------------------------------------------------------------
-#     def save(self, event):
-#         if self.cleaned_data['repeats'] == 'count' and self.cleaned_data['count'] == 1:
-#             params = {}
-#         else:
-#             params = self._build_rrule_params()
-#
-#         event.add_occurrences(
-#             self.cleaned_data['start_time'],
-#             self.cleaned_data['end_time'],
-#             **params
-#         )
-#
-#         return event
-
-    #---------------------------------------------------------------------------
-    # def _build_rrule_params(self):
-    #     iso = ISO_WEEKDAYS_MAP
-    #     data = self.cleaned_data
-    #     params = dict(
-    #         freq=data['freq'],
-    #         interval=data['interval'] or 1
-    #     )
-    #
-    #     if data['repeats'] == 'until':
-    #         params['until'] = data['until']
-    #     else:
-    #         params['count'] = data.get('count', 1)
-    #
-    #     if params['freq'] == rrule.WEEKLY:
-    #         params['byweekday'] = [iso[n] for n in data['week_days']]
-    #
-    #     elif params['freq'] == rrule.MONTHLY:
-    #         if 'on' == data['month_option']:
-    #             ordinal = data['month_ordinal']
-    #             day = iso[data['month_ordinal_day']]
-    #             params.update(byweekday=day, bysetpos=ordinal)
-    #         else:
-    #             params['bymonthday'] = data['each_month_day']
-    #
-    #     elif params['freq'] == rrule.YEARLY:
-    #         params['bymonth'] = data['year_months']
-    #         if data['is_year_month_ordinal']:
-    #             ordinal = data['year_month_ordinal']
-    #             day = iso[data['year_month_ordinal_day']]
-    #             params['byweekday'] = day(ordinal)
-    #
-    #     elif params['freq'] != rrule.DAILY:
-    #         raise NotImplementedError(_('Unknown interval rule ' + params['freq']))
-    #
-    #     return params
-
-
 #===============================================================================
 class EventForm(forms.ModelForm):
     '''
@@ -395,10 +212,7 @@ class EventForm(forms.ModelForm):
     #===========================================================================
     class Meta:
         model = Event
-        fields = ['challenge','training']
-        # if FIELDS_REQUIRED:
-        #     fields = "__all__"
-
+        fields = ['challenge', 'training']
     #---------------------------------------------------------------------------
     def __init__(self, *args, **kws):
         #there's gott be a better way to do this. after i catch all times it's called mabe I can get rid of this
@@ -406,32 +220,30 @@ class EventForm(forms.ModelForm):
             date = kws.pop('date')
         else:
             date = None
-            #########
+
         super(EventForm, self).__init__(*args, **kws)
+
         self.fields['challenge'].required = False
         self.fields['training'].required = False
+
         if date:
             try:
-                con=Con.objects.get(start__lte=date, end__gte=date)
-                #works, doesn't let me filter out ones w/ a event attached
-                # self.fields["challenge"].queryset =Challenge.objects.filter(con=con,RCaccepted=True)
-                # self.fields["training"].queryset =Training.objects.filter(con=con,RCaccepted=True)
-                ########to filter out c/t that have events attached ot them
-                cs=Challenge.objects.filter(con=con,RCaccepted=True)
-                ts=Training.objects.filter(con=con,RCaccepted=True)
-                CnoE=[]
-                TnoE=[]
+                con = Con.objects.get(start__lte=date, end__gte=date)
+                cs = Challenge.objects.filter(con=con,RCaccepted=True)
+                ts = Training.objects.filter(con=con,RCaccepted=True)
+                CnoE = []
+                TnoE = []
                 for c in cs:
-                    if len(c.event_set.all())==0:
+                    if len(c.event_set.all()) == 0:
                         CnoE.append(c.pk)
                 for t in ts:
-                    if len(t.event_set.all())==0:
+                    if len(t.event_set.all()) == 0:
                         TnoE.append(t.pk)
-                self.fields["challenge"].queryset =Challenge.objects.filter(pk__in=CnoE)
-                self.fields["training"].queryset =Training.objects.filter(pk__in=TnoE)
+                self.fields["challenge"].queryset = Challenge.objects.filter(pk__in=CnoE)
+                self.fields["training"].queryset = Training.objects.filter(pk__in=TnoE)
             except:
-                self.fields["challenge"].queryset =Challenge.objects.filter(RCaccepted=True)
-                self.fields["training"].queryset =Training.objects.filter(RCaccepted=True)
+                self.fields["challenge"].queryset = Challenge.objects.filter(RCaccepted=True)
+                self.fields["training"].queryset = Training.objects.filter(RCaccepted=True)
 
 
 #===============================================================================
@@ -441,7 +253,7 @@ class SingleOccurrenceForm(forms.ModelForm):
 
     '''
     def __init__(self, *args, **kws):
-        #there's gott be a better way to do this. after i catch all times it's called mabe I can get rid of this
+
         if 'date' in kws:
             date = kws.pop('date')
         else:
@@ -451,84 +263,124 @@ class SingleOccurrenceForm(forms.ModelForm):
         if not date and self.instance and self.instance.start_time:
             date=self.instance.start_time.date()
 
-        self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget)
-        self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget,required=False)
-        #self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest')
-        self.fields["interest"]=forms.CharField(widget=forms.Select(choices=INTEREST_RATING),required=False, label='Interest', initial=self.instance.interest or 3)
+        self.fields["start_time"] = forms.DateTimeField(widget=SplitDateTimeWidget)
+        self.fields["end_time"] = forms.DateTimeField(
+                widget=SplitDateTimeWidget,
+                required=False
+                )
+        self.fields["interest"] = forms.CharField(
+                widget=forms.Select(choices=INTEREST_RATING),
+                required=False,
+                label='Interest',
+                initial=self.instance.interest or 3
+                )
+
         try:
-            con=Con.objects.get(start__lte=date, end__gte=date)
-            cs=Challenge.objects.filter(con=con,RCaccepted=True)
-            ts=Training.objects.filter(con=con,RCaccepted=True)
-            CnoE=[]
-            TnoE=[]
+            con = Con.objects.get(start__lte=date, end__gte=date)
+            cs = Challenge.objects.filter(con=con,RCaccepted=True)
+            ts = Training.objects.filter(con=con,RCaccepted=True)
+            CnoE = []
+            TnoE = []
             for c in cs:
-                if len(c.occurrence_set.all())==0:
+                if len(c.occurrence_set.all()) == 0:
                     CnoE.append(c.pk)
             if self.instance and self.instance.challenge:
                 CnoE.append(self.instance.challenge.pk)
             for t in ts:
-                if len(t.occurrence_set.all())==0 or (t.sessions and t.sessions > len(t.occurrence_set.all())):
+                if len(t.occurrence_set.all()) == 0 or (t.sessions and t.sessions > len(t.occurrence_set.all())):
                     TnoE.append(t.pk)
             if self.instance and self.instance.training:
                 TnoE.append(self.instance.training.pk)
-            self.fields["challenge"].queryset =Challenge.objects.filter(pk__in=CnoE)
-            self.fields["training"].queryset =Training.objects.filter(pk__in=TnoE)
+            self.fields["challenge"].queryset = Challenge.objects.filter(pk__in=CnoE)
+            self.fields["training"].queryset = Training.objects.filter(pk__in=TnoE)
         except:
             if date:
-                self.fields["start_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, initial=date)
-                self.fields["end_time"]=forms.DateTimeField(widget=SplitDateTimeWidget, required=False,initial=date)
+                self.fields["start_time"] = forms.DateTimeField(
+                        widget=SplitDateTimeWidget,
+                        initial=date
+                        )
+                self.fields["end_time"] = forms.DateTimeField(
+                        widget=SplitDateTimeWidget,
+                        required=False,initial=date
+                        )
             else:
-                self.fields["challenge"].queryset =Challenge.objects.filter(RCaccepted=True)
-                self.fields["training"].queryset =Training.objects.filter(RCaccepted=True)
+                self.fields["challenge"].queryset = Challenge.objects.filter(RCaccepted=True)
+                self.fields["training"].queryset = Training.objects.filter(RCaccepted=True)
 
     #===========================================================================
     class Meta:
+
         model = Occurrence
-        fields=["start_time","end_time","training","challenge","location","interest"]
-        # if FIELDS_REQUIRED:
-        #     fields = "__all__"
+        fields=["start_time", "end_time", "training", "challenge", "location", "interest"]
 
 class DLCloneForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         loc_list = kwargs.pop('loc_list')
-        LOC_OPTIONS=[]
+        LOC_OPTIONS = []
         for l in loc_list:
-            ltup=(l.pk, l.name)
+            ltup = (l.pk, l.name)
             LOC_OPTIONS.append(ltup)
         date_list = kwargs.pop('date_list')
-        DATE_OPTIONS=[]
+        DATE_OPTIONS = []
         for d in date_list:
-            dtup=(d.strftime("%m-%d-%Y"),d.strftime("%a %B %d, %Y"))
+            dtup = (d.strftime("%m-%d-%Y"),d.strftime("%a %B %d, %Y"))
             DATE_OPTIONS.append(dtup)
         super(DLCloneForm, self).__init__(*args, **kwargs)
 
-        self.fields["fromdate"]=forms.CharField(widget=forms.Select(choices=DATE_OPTIONS),required=True, label='From Date')
-        self.fields["fromlocation"]=forms.CharField(widget=forms.Select(choices=LOC_OPTIONS),required=True, label='From Location')
-        self.fields["todate"]=forms.CharField(widget=forms.Select(choices=DATE_OPTIONS),required=True, label='To Date')
-        self.fields["tolocation"]=forms.CharField(widget=forms.Select(choices=LOC_OPTIONS),required=True, label='To Location')
+        self.fields["fromdate"] = forms.CharField(
+                widget=forms.Select(choices=DATE_OPTIONS),
+                required=True,
+                label='From Date'
+                )
+        self.fields["fromlocation"] = forms.CharField(
+                widget=forms.Select(choices=LOC_OPTIONS),
+                required=True,
+                label='From Location'
+                )
+        self.fields["todate"] = forms.CharField(
+                widget=forms.Select(choices=DATE_OPTIONS),
+                required=True,
+                label='To Date'
+                )
+        self.fields["tolocation"] = forms.CharField(
+                widget=forms.Select(choices=LOC_OPTIONS),
+                required=True,
+                label='To Location'
+                )
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
-                'style': 'width:100%;',
-                })
+                    'style': 'width:100%;',
+                    })
 
 class SlotCreate(forms.Form):
     def __init__(self, *args, **kwargs):
         super(SlotCreate, self).__init__(*args, **kwargs)
-        self.fields["slot_create"]=forms.BooleanField(widget=forms.CheckboxInput,initial=False,required=False)
+        self.fields["slot_create"] = forms.BooleanField(
+                widget=forms.CheckboxInput,
+                initial=False,
+                required=False
+                )
 
         for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})
+            self.fields[field].widget.attrs.update({
+                    'style': 'height: 15px; width: 15px; text-align:center;margin: 0 auto;',
+                    'class': 'form-control'
+                    })
 
 class L1Check(forms.Form):
     def __init__(self, *args, **kwargs):
-        # chal = kwargs.pop('chal')
-        # train = kwargs.pop('train')
-        # occurr = kwargs.pop('occurr')
         super(L1Check, self).__init__(*args, **kwargs)
 
-        self.fields["add2sched"]=forms.BooleanField(widget=forms.CheckboxInput,initial=True,required=False)
+        self.fields["add2sched"] = forms.BooleanField(
+                widget=forms.CheckboxInput,
+                initial=True,
+                required=False
+                )
 
         for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({'style':'height: 15px; width: 15px; text-align:center;margin: 0 auto;','class':'form-control'})
+            self.fields[field].widget.attrs.update({
+                    'style': 'height: 15px; width: 15px; text-align:center;margin: 0 auto;',
+                    'class': 'form-control'
+                    })

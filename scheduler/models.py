@@ -1,4 +1,4 @@
-import collections import OrderedDict
+from collections import OrderedDict
 from copy import deepcopy
 #from datetime import datetime, timedelta
 import datetime
@@ -132,7 +132,7 @@ class Location(models.Model):
     location_type = models.CharField(max_length=50, choices=LOCATION_TYPE)
     location_category = (models.CharField(
             max_length=50,null=True, blank=True, choices=LOCATION_CATEGORY
-            )
+            ))
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
@@ -644,7 +644,7 @@ class Roster(Matching_Criteria):
     #---------------------------------------------------------------------------
     def is_homeless(self):
         """Returns True if roster has no challenges."""
-'
+
         r1 = list(self.roster1.all())
         r2 = list(self.roster2.all())
         rs = r1 + r2
