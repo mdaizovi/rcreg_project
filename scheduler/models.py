@@ -1,39 +1,69 @@
-#scheduler.models
-from django.db import models
-from django.db.models import Q,F
-from django.db import connection as dbconnection
-#print "dbc0:", len(dbconnection.queries)
-from django.contrib.auth.models import User
-from django.utils import timezone
-from django.core.urlresolvers import reverse#for absolute url #https://docs.djangoproject.com/en/1.8/ref/urlresolvers/#django.core.urlresolvers.reverse
+import collections import OrderedDict
+from copy import deepcopy
 #from datetime import datetime, timedelta
 import datetime
 from datetime import timedelta
 import string
-import collections
-#from django.db.models.signals import pre_save, post_save,post_delete
-from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
-from con_event.models import Matching_Criteria, Con, Registrant, LOCATION_TYPE,LOCATION_CATEGORY,GENDER,SKILL_LEVEL_CHG, SKILL_LEVEL_TNG,SKILL_LEVEL,SKILL_LEVEL_GAME
-from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
-from django.db.models.signals import pre_save, post_save,post_delete,pre_delete
-from scheduler.signals import challenge_defaults,delete_homeless_roster_chg,delete_homeless_roster_ros,delete_homeless_chg
-from scheduler.app_settings import CLOSE_CHAL_SUB_AT, DEFAULT_ONSK8S_DURATION,DEFAULT_OFFSK8S_DURATION
-from copy import deepcopy
-from swingtime.conf.swingtime_settings import TIMESLOT_INTERVAL,TIMESLOT_START_TIME,TIMESLOT_END_TIME_DURATION
-from rcreg_project.settings import SECOND_CHOICE_EMAIL, SECOND_CHOICE_PW
+
+from django.contrib.auth.models import User
 from django.core.mail import EmailMessage, send_mail
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models import Q, F
+from django.db.models.signals import pre_save, post_save, pre_delete
+from django.utils import timezone
+
+from con_event.models import (Matching_Criteria, Con, Registrant,
+        LOCATION_TYPE, LOCATION_CATEGORY, GENDER,SKILL_LEVEL_CHG,
+        SKILL_LEVEL_TNG, SKILL_LEVEL,SKILL_LEVEL_GAME
+        )
+from rcreg_project.extras import remove_punct,ascii_only, ascii_only_no_punct
+from rcreg_project.settings import (BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,
+        SECOND_CHOICE_EMAIL, SECOND_CHOICE_PW
+        )
+from scheduler.app_settings import (CLOSE_CHAL_SUB_AT,
+        DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION
+        )
+from scheduler.signals import (challenge_defaults, delete_homeless_roster_chg,
+        delete_homeless_roster_ros, delete_homeless_chg
+        )
+from swingtime.conf.swingtime_settings import (TIMESLOT_INTERVAL,
+        TIMESLOT_START_TIME, TIMESLOT_END_TIME_DURATION
+        )
+
 
 #not to self: will have to make ivanna choose 30/60 when scheduling
-COLORS=(("Black","Black"),("Beige or tan","Beige or tan"),("Blue (aqua or turquoise)","Blue (aqua or turquoise)"),("Blue (dark)","Blue (dark)"),("Blue (light)","Blue (light)"),("Blue (royal)","Blue (royal)"),
-    ("Brown","Brown"),("Burgundy","Burgundy"),("Gray/Silver","Gray/Silver"),("Green (dark)","Green (dark)"),("Green (grass)","Green (grass)"),("Green (lime)","Green (lime)"),("Green (olive or camo pattern)","Green (olive or camo pattern)"),
-    ("Orange","Orange"),("Pink (hot)","Pink (hot)"),("Pink (light)","Pink (light)"),("Purple","Purple"),("Red","Red"),("White","White"),("Yellow/gold","Yellow/gold"))
-GAMETYPE=(('3CHAL','30 minute Challenge'),('6CHAL','60 minute Challenge'),('36CHAL','30 or 60 minute Challenge'),('6GAME','60 min REGULATION or SANCTIONED Game (between two existing WFTDA/MRDA/RCDL/USARS teams)'))
-#GAMETYPE=(('3CHAL','30 minute Challenge'),('6CHAL','60 minute Challenge'),('36CHAL','30 or 60 minute Challenge'))
-RULESET=(('WFTDA','WFTDA'),('MRDA','MRDA'),('RDCL','RDCL'),('USARS','USARS'),('Other','Other'))
-INTEREST_RATING=((0,'NA'),(1, '1: Very Low Interest'), (2, '2: Somewhat Low Interest'),(3, '3: Medium'), (4,'4: Somewhat High Interest'), (5, '5: Very High Interest'))
-SESSIONS_TR=((1,1),(2,2),(3,3),(4,4),(5,5))
-DURATION=(('0.75','45 minutes'),('1','1 Hour'),('1.5', 'Hour and a Half (90 minutes)'),('2','2 Hours (120 minutes)'))
-SKILL_INTEREST_DICT={'AO':5, 'AB':4,'BO':3,'BC':2,'CO':1,'ABC':1,'A':5,'B':3,"C":2,"D":1}
+COLORS = (("Black", "Black"), ("Beige or tan", "Beige or tan"),
+        ("Blue (aqua or turquoise)", "Blue (aqua or turquoise)"),
+        ("Blue (dark)", "Blue (dark)"), ("Blue (light)", "Blue (light)"),
+        ("Blue (royal)", "Blue (royal)"), ("Brown", "Brown"),
+        ("Burgundy", "Burgundy"), ("Gray/Silver", "Gray/Silver"),
+        ("Green (dark)", "Green (dark)"), ("Green (grass)", "Green (grass)"),
+        ("Green (lime)", "Green (lime)"),
+        ("Green (olive or camo pattern)", "Green (olive or camo pattern)"),
+        ("Orange", "Orange"), ("Pink (hot)", "Pink (hot)"),
+        ("Pink (light)", "Pink (light)"), ("Purple", "Purple"), ("Red", "Red"),
+        ("White", "White"), ("Yellow/gold", "Yellow/gold")
+        )
+GAMETYPE = (('3CHAL', '30 minute Challenge'), ('6CHAL', '60 minute Challenge'),
+        ('36CHAL', '30 or 60 minute Challenge'),
+        ('6GAME','60 min REGULATION or SANCTIONED Game (between two existing\
+                WFTDA/MRDA/RCDL/USARS teams)')
+        )
+RULESET = (('WFTDA', 'WFTDA'), ('MRDA', 'MRDA'), ('RDCL', 'RDCL'),
+        ('USARS', 'USARS'), ('Other', 'Other')
+        )
+INTEREST_RATING = ((0, 'NA'), (1, '1: Very Low Interest'),
+        (2, '2: Somewhat Low Interest'), (3, '3: Medium'),
+        (4, '4: Somewhat High Interest'), (5, '5: Very High Interest')
+        )
+SESSIONS_TR = ((1, 1), (2, 2), (3, 3), (4, 4), (5, 5))
+DURATION=(('0.75', '45 minutes'), ('1', '1 Hour'),
+        ('1.5', 'Hour and a Half (90 minutes)'), ('2', '2 Hours (120 minutes)')
+        )
+SKILL_INTEREST_DICT = {'AO': 5, 'AB': 4, 'BO': 3, 'BC': 2, 'CO': 1, 'ABC': 1,
+        'A': 5, 'B': 3,'C': 2, 'D': 1
+        }
 
 #for reviews:
 RULESET=(('W', 'WFTDA'), ('U', 'USARS'),('M', 'MRDA'), ('J', 'JRDA'), ('R', 'RDCL'),('O', 'OTHER'))
@@ -80,48 +110,71 @@ def GET_RC_EXPERIENCE():
     yeartup=tuple(yearlist)
     return list(yeartup)
 
-
+#===============================================================================
 class Venue(models.Model):
-    name=models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
+    #---------------------------------------------------------------------------
     def __unicode__(self):
        return self.name
 
+    #---------------------------------------------------------------------------
     class Meta:
-        ordering=('name',)
+        ordering = ('name',)
 
+
+#===============================================================================
 class Location(models.Model):
-    venue=models.ForeignKey(Venue,on_delete=models.PROTECT)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
-    name=models.CharField(max_length=50)
-    abbrv=models.CharField(max_length=50, null=True, blank=True)
-    location_type=models.CharField(max_length=50, choices=LOCATION_TYPE)
-    location_category=models.CharField(max_length=50, null=True, blank=True,choices=LOCATION_CATEGORY)
 
+    venue = models.ForeignKey(Venue, on_delete=models.PROTECT)
+    name = models.CharField(max_length=50)
+    abbrv = models.CharField(max_length=50, null=True, blank=True)
+    location_type = models.CharField(max_length=50, choices=LOCATION_TYPE)
+    location_category = (models.CharField(
+            max_length=50,null=True, blank=True, choices=LOCATION_CATEGORY
+            )
+
+    #---------------------------------------------------------------------------
     def __unicode__(self):
+
        return "%s, %s" % (self.name, self.venue.name)
 
+    #---------------------------------------------------------------------------
     def is_free(self, start_time,end_time):
-        """Checks to see if Location has any Occurrences for the time between start and end provided."""
-        from swingtime.models import Occurrence  #  Avoid parallel import
-        qs = list(Occurrence.objects.filter(
-            start_time__lt=end_time,
-            end_time__gt=start_time,
-            location=self))
+        """Checks to see if location has any occurrences for the time between
+        start and end provided. Returns True if no occurrences, else False.
+        """
 
-        if len(qs)>0:
+        from swingtime.models import Occurrence  #  Avoid parallel import
+
+        qs = list(Occurrence.objects.filter(
+                start_time__lt=end_time,
+                end_time__gt=start_time,
+                location=self)
+                )
+
+        if len(qs) > 0:
             return False
         else:
             return True
 
-    def empty_times(self,date_list,duration):
-        """Checks to see when during a date range, probably con date range, in which there is nothing going on,
-        not even empty occurrence, for time period.
-        returns list of DateTime tuples: (start time, end time)"""
-        ###this can probably be used to significantly speed up make dumy occurrences
+    #---------------------------------------------------------------------------
+    def empty_times(self, date_list, duration):
+        """Checks to see when during a date range, probably con date range,
+        in which there is nothing going on, not even empty occurrence, for time
+        period. Returns list of DateTime tuples: (start time, end time).
+        """
+
+########### i think i never use this, it looks like nonsens.
+#will probably delete, leavig here for now.
+
+
         from swingtime.models import Occurrence  # Avoid parallel import
-        dur_delta=int(float(duration)*60)
+
+        dur_delta = int(float(duration) * 60)
 
         if len(date_list)<=0:
+            ####WHAT?!? retusn itsef? wtf?
             return empty_times
         else:
             d1=date_list[0]
@@ -161,44 +214,46 @@ class Location(models.Model):
                     this_set.append(time_tup)
                     ce+=TIMESLOT_INTERVAL
                     cs+=TIMESLOT_INTERVAL
-                #print("this_set: ",this_set)
+
                 for t in this_set:
                     if t in possible_times:
-                        #print("about to remove ",t)
                         possible_times.remove(t)
-                #print("O Round: possible_times len",len(possible_times))
 
-        #print("possible_times len",len(possible_times))
         return possible_times
 
+    #---------------------------------------------------------------------------
     class Meta:
-        #ordering=('abbrv','venue','name')
-        ordering=('venue','name')
-        unique_together = ('name','venue')
+
+        ordering = ('venue', 'name')
+        unique_together = ('name', 'venue')
 
 
+#===============================================================================
 class Roster(Matching_Criteria):
-    participants=models.ManyToManyField(Registrant, blank=True)
-    cap=models.IntegerField(null=True, blank=True)
+    participants = models.ManyToManyField(Registrant, blank=True)
+    cap = models.IntegerField(null=True, blank=True)
+
+    name = models.CharField(max_length=200, null=True, blank=True)
+    captain = (models.ForeignKey(Registrant, related_name="captain", null=True,
+            blank=True, on_delete=models.SET_NULL)
+            )
+    color = models.CharField(max_length=100, null=True, blank=True, choices=COLORS)
+    can_email = models.BooleanField(default=True)
+    internal_notes = models.TextField(null=True, blank=True)
 
     #Shouldn't i delete these fields?
     registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
     auditing=models.OneToOneField("Training", related_name="auditing",null=True, blank=True)
 
-    #only for challenges
-    name=models.CharField(max_length=200,null=True, blank=True)
-    captain=models.ForeignKey(Registrant,related_name="captain",null=True, blank=True,on_delete=models.SET_NULL)#maybe I should allow this to be deleted if registrant is deleted?
-    color=models.CharField(max_length=100,null=True, blank=True, choices=COLORS)
-    can_email=models.BooleanField(default=True)
-
-    internal_notes= models.TextField(null=True,blank=True)
-
+    #---------------------------------------------------------------------------
     def __unicode__(self):
+
         if self.name:
-            return "%s %s" %(self.name, self.con)
+            return "%s %s" %( self.name, self.con)
         else:
             return "unnamed team"
 
+    #---------------------------------------------------------------------------
     @property
     def challenge_name(self):
         """Returns name of Challenge Roster is attached to.
@@ -214,224 +269,298 @@ class Roster(Matching_Criteria):
 
         return names
 
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        '''custom functions: removes non-ascii chars and punctuation from names, colors'''
-        string_fields=['name']
+
+        # Remove non-ascii, puncuation, from name.
+        string_fields = ['name']
         for item in string_fields:
-            att_unclean=getattr(self, item)
+            att_unclean = getattr(self, item)
             if att_unclean:
-                cleaned_att=ascii_only_no_punct(att_unclean)
+                cleaned_att = ascii_only_no_punct(att_unclean)
                 setattr(self, item, cleaned_att)
 
+        # Keep punctuation, but make ascii only.
         if self.internal_notes:
-            cleaned_notes=ascii_only(self.internal_notes)
-            self.internal_notes=cleaned_notes
+            cleaned_notes = ascii_only(self.internal_notes)
+            self.internal_notes = cleaned_notes
 
+        # Make sure captain is on the roster.
         if self.captain:
-            try:#so it won't freal out the first time, before first save
+            try:  # So won't have problem with first save
                 if self.captain not in self.participants.all():
                     self.participants.add(self.captain)
             except:
                 pass
         super(Roster, self).save()
 
+    #---------------------------------------------------------------------------
     def criteria_conflict(self):
-        '''nearly identical to Registrant method of the same name, jsut w/ skater/roster roles reversed'''
-        problem_criteria=[]
-        potential_conflicts=[]
-        captain_conflict=False
-        genders_allowed=self.genders_allowed()
-        skills_allowed=self.skills_allowed()
-        def capt_confl(problem_criteria,potential_conflicts,captain_conflict):
+        """Checks to see if roster skill or gender causes conflict
+        with any skaters signed up for it. If so, returns
+        list of problem criteria (ex: ["gender"]),
+        list of registrants in conflict (ex: [Ivanna S Pankin]),
+        and boolean of whether this is a captain conflict.
+        Nearly identical to Registrant method of the same name, just
+        with registrant:roster roles reversed.
+        """
+
+        problem_criteria = []
+        potential_conflicts = []
+        captain_conflict = False
+        genders_allowed = self.genders_allowed()
+        skills_allowed = self.skills_allowed()
+
+        def capt_confl(problem_criteria, potential_conflicts, captain_conflict):
+            """Captain conlict check on its own for when roster is created.
+            At that point there is no such thing as roster.participants,
+            but still need to make sure captain is not trying to make a roster
+            for which they would be ineligible.
+            """
+
             if self.captain and (self.captain.gender not in genders_allowed):
-                captain_conflict=True
+                captain_conflict = True
                 if "gender" not in problem_criteria:
                     problem_criteria.append("gender")
                     if self.captain not in potential_conflicts:
                         potential_conflicts.append(self.captain)
             if self.captain and (self.captain.skill not in skills_allowed):
-                captain_conflict=True
+                captain_conflict = True
                 if "skill" not in problem_criteria:
                     problem_criteria.append("skill")
                 if self.captain not in potential_conflicts:
                     potential_conflicts.append(self.captain)
-            return problem_criteria,potential_conflicts,captain_conflict
+
+            return problem_criteria, potential_conflicts, captain_conflict
 
         try:
-            participants=list(self.participants.all())
-            if len(participants)>0:
+            participants = list(self.participants.all())
+            if len(participants) > 0:
                 for skater in list(self.participants.all()):
                     if skater.gender not in genders_allowed:
                         if "gender" not in problem_criteria:
                             problem_criteria.append("gender")
                         if skater not in potential_conflicts:
                             potential_conflicts.append(skater)
-                        if self.captain and skater==self.captain:
+                        if self.captain and skater == self.captain:
                             captain_conflict=True
                     if skater.skill not in skills_allowed:
                         if "skill" not in problem_criteria:
                             problem_criteria.append("skill")
                         if skater not in potential_conflicts:
                             potential_conflicts.append(skater)
-                        if self.captain and skater==self.captain:
+                        if self.captain and skater == self.captain:
                             captain_conflict=True
             else:
-                problem_criteria,potential_conflicts,captain_conflict=capt_confl(problem_criteria,potential_conflicts,captain_conflict)
-        except:#if no such thing as self.participants.all()
-            problem_criteria,potential_conflicts,captain_conflict=capt_confl(problem_criteria,potential_conflicts,captain_conflict)
+                problem_criteria, potential_conflicts, captain_conflict = (
+                        capt_confl(problem_criteria, potential_conflicts,
+                        captain_conflict)
+                        )
+        except:  # If roster not saved yet, can't use m2m yet.
+            problem_criteria, potential_conflicts, captain_conflict = (
+                    capt_confl(problem_criteria, potential_conflicts,
+                    captain_conflict)
+                    )
 
-        if len(potential_conflicts)>0:
-            return problem_criteria,potential_conflicts,captain_conflict
+        if len(potential_conflicts) > 0:
+            return problem_criteria, potential_conflicts, captain_conflict
         else:
-            return None,None,captain_conflict
+            return None, None, captain_conflict
 
+    #---------------------------------------------------------------------------
     def conflict_sweep(self):
-        '''nearly identical to Registrant method of the same name, jsut w/ skater/roster roles reversed
-        calls criteria_conflict, removes from any rosters that have conflicts,
-        including removing self as captain, making challenges unconfirmed
-        ONLY WRITTEN FOR CHALLENGE, NOT TRAINING, DO LATER'''
-        problem_criteria,potential_conflicts,captain_conflict=self.criteria_conflict()
+        """Calls criteria_conflict, dropping from roster participants any
+        registrants that have conflicts, except captain.
+        """
+
+        problem_criteria, potential_conflicts, captain_conflict = (
+                self.criteria_conflict()
+                )
+
         if not captain_conflict:
             if potential_conflicts:
                 for skater in potential_conflicts:
                     self.participants.remove(skater)
             return True
+
         else:
             return False
 
-
+    #---------------------------------------------------------------------------
     def has_number_dupes(self):
-        '''checks to see if same sk8number is in roster twice. Checks stirng, not int.
-        So as written right now, 03 is different from 3 is different from <3
-        But I don't like how written because it will run 20x per roster. rewrite or don't use?'''
-        numbers=[]
-        dupes=[]
+        """Checks to see if same sk8number is in roster twice. Checks string.
+        Returns list of dupes, or False"""
+
+        numbers = []
+        dupes = []
+
         for s in self.participants.all():
             if s.sk8number in numbers:
                 dupes.append(s.sk8number)
             numbers.append(s.sk8number)
 
-        if len(dupes)>0:#because an empty list still returns True
-            number_dupes=dupes
+        if len(dupes) > 0:
+            number_dupes = dupes
         else:
-            number_dupes=False
+            number_dupes = False
 
         return number_dupes
 
+    #---------------------------------------------------------------------------
     def get_maxcap(self):
-        '''checks is roster has a cap cap. If not, supplies defaults listed at top of file'''
+        """checks if roster has max cap specified. If not, supplies default."""
         if self.cap:
-            maxcap=self.cap
+            maxcap = self.cap
         else:
             maxcap = GAME_CAP
 
         return maxcap
 
+    #---------------------------------------------------------------------------
     def spacea(self):
-        '''gets maxcap (see above), checks is participants are fewer'''
-        maxcap=self.get_maxcap()
-        spacea=maxcap-self.participants.count()
+        """Gets maxcap, checks if participants are fewer. Returns number of
+        spacea available, or False.
+        """
 
-        if spacea>0:
+        maxcap = self.get_maxcap()
+        spacea = maxcap - self.participants.count()
+
+        if spacea > 0:
             return spacea
         else:
             return False
 
+    #---------------------------------------------------------------------------
     def add_sk8er_challenge(self, skater_pk):
-        add_fail_reason=False
-        is_free=True
-        skater_added=None
-        add_fail=None
+        """Ads registrant to roster, saves roster.
+        Ivanna special request-- if registrant is bus coaching in a scheduled
+        training, can't be added to roster.
+        If successful, returns skater, None, False. If unsucessful, returns
+        None, skater, and string explaining why unsuccessful.
+        """
+
+        add_fail_reason = False
+        is_free = True
+        skater_added = None
+        add_fail = None
+
         if self.spacea():
             try:
-                skater_added=Registrant.objects.get(pk=skater_pk)
-                my_cs=list(self.roster1.all()) + list(self.roster2.all()) #should only be 1, but i suck and made it fk instead of 1:1
-                my_os=[]
-                concurrent=[]
+                skater_added = Registrant.objects.get(pk=skater_pk)
+                my_cs = list(self.roster1.all()) + list(self.roster2.all())
+                my_os = []
+                concurrent = []
                 for c in my_cs:
-                    my_os+=list(c.occurrence_set.all())
+                    my_os += list(c.occurrence_set.all())
 
-                for o in my_os:#there should only be 1, but just ot be safe
-                    #occupied=skater_added.is_occupied(o) this is occupied in general
-                    occupied=skater_added.is_occupied_coaching(o) #this only applies to coaches
+                for o in my_os:
+                    occupied = skater_added.is_occupied_coaching(o)
                     if occupied:
-                        concurrent+=occupied
+                        concurrent += occupied
 
-                if len(concurrent)>0:
-                    add_fail=skater_added
-                    add_fail_reason=" because %s is busy with "%(skater_added.name)
-                    ci=0
+                if len(concurrent) > 0:
+                    add_fail = skater_added
+                    add_fail_reason = (" because %s is busy with "
+                            % (skater_added.name)
+                            )
+                    ci = 0
                     for c in concurrent:
-                        ci+=1
-                        if ci>1:
-                            if ci==len(concurrent):
-                                add_fail_reason+=", & "+c.name
+                        ci += 1
+                        if ci > 1:
+                            if ci == len(concurrent):
+                                add_fail_reason += ", & "+c.name
                             else:
-                                add_fail_reason+=", "+c.name
+                                add_fail_reason += ", "+c.name
                         else:
-                            add_fail_reason+=c.name
+                            add_fail_reason += c.name
 
                 if not add_fail:
                     self.participants.add(skater_added)
                     self.save()
-            except:
+            except:  # Not expecting any failures, just in case.
                 try:
-                    add_fail=Registrant.objects.get(pk=skater_pk)
+                    add_fail = Registrant.objects.get(pk=skater_pk)
                 except:
-                    add_fail=True
-                    add_fail_reason="Error selecting skater, please try again"
-        else:
-            add_fail=Registrant.objects.get(pk=skater_pk)
-            add_fail_reason=" because the roster is full."
+                    add_fail = True
+                    add_fail_reason = "Error selecting skater, please try again"
 
-        return skater_added,add_fail,add_fail_reason
+        else:  # If not spacea
+            add_fail = Registrant.objects.get(pk=skater_pk)
+            add_fail_reason = " because the roster is full."
 
+        return skater_added, add_fail, add_fail_reason
+
+    #---------------------------------------------------------------------------
     def remove_sk8er_challenge(self, skater_pk):
-        skater_remove=None
-        remove_fail=None
+        """Removes skater from roster, saves roster. If succeessful, returns
+        skater and None. If failure, returns None and skater.
+        """
+
+        skater_remove = None
+        remove_fail = None
         try:
             try:
-                skater_remove=Registrant.objects.get(pk=skater_pk)
+                skater_remove = Registrant.objects.get(pk=skater_pk)
                 if skater_remove != self.captain:
                     self.participants.remove(skater_remove)
                     self.save()
                 else:
-                    remove_fail=skater_remove
+                    remove_fail = skater_remove
             except:
-                remove_fail=Registrant.objects.get(pk=skater_pk)
+                remove_fail = Registrant.objects.get(pk=skater_pk)
         except:
             pass
 
-        return skater_remove,remove_fail
+        return skater_remove, remove_fail
 
+    #---------------------------------------------------------------------------
     def opponent_skills_allowed(self):
-        allowed=[]
-        skillphabet=["A","AB","B","BC","C"]
+        """Non-game rosters can only play oppoenents within 1 skill level of
+        themselves. Returns  list of permissible opponents skill level, as
+        determiend by own skill.
+        """
+
+        allowed = []
+        skillphabet = ["A", "AB", "B", "BC", "C"]
+
         if self.skill:
-            #print self, self.skill
-            skill_index=skillphabet.index(self.skill_display())
-            for i in range(skill_index-1,skill_index+2):
-                if i>=0 and i<len(skillphabet):
+            skill_index = skillphabet.index(self.skill_display())
+            for i in range(skill_index - 1, skill_index + 2):
+                if i >= 0 and i < len(skillphabet):
                     allowed.append(skillphabet[i])
         else:
-            allowed.append( self.skill_display() )
-        #print self, allowed
+            allowed.append(self.skill_display())
+
         return allowed
 
+    #---------------------------------------------------------------------------
     def genders_allowed(self):
-        if self.gender=='NA/Coed':
-            allowed=["Female","Male","NA/Coed"]
+        """Coed teams can have registrants of any gender. Otherwise needs to
+        match, but registrants who select na/coed can play on any team.
+        Returns list of which genders are allowed on the roster.
+        """
+
+        if self.gender == 'NA/Coed':
+            allowed = ["Female", "Male", "NA/Coed"]
         else:
-            allowed=["NA/Coed",self.gender]
+            allowed = ["NA/Coed", self.gender]
+
         return allowed
 
+    #---------------------------------------------------------------------------
     def intls_allowed(self):
-        if self.intl is True:
-            allowed=[True]
+        """If roster is INTL, only INTL registrants can be added.
+        Returns list of which INTL statuses can be added to roster.
+        """
+
+        if self.intl:
+            allowed = [True]
         else:
-            allowed=[True,False,None]
+            allowed = [True, False, None]
+
         return allowed
 
+    #---------------------------------------------------------------------------
     def passes_allowed(self):
 
         #this shouldn't be here anymore, w' new trainingroster strucutre
@@ -451,20 +580,22 @@ class Roster(Matching_Criteria):
         #     allowed=['MVP','Skater']
 
         #return allowed
-        return ['MVP','Skater']
+        return ['MVP' ,'Skater']
 
+    #---------------------------------------------------------------------------
     def passes_tooltip_title(self):
-        pass_list=self.passes_allowed()
-        pass_string=""
-        if len(pass_list)>1:
-            if len(pass_list)>2:
+
+        pass_list = self.passes_allowed()
+        pass_string = ""
+        if len(pass_list) > 1:
+            if len(pass_list) > 2:
                 for item in pass_list[:-1]:
-                    pass_string+=item+", "
+                    pass_string+=item + ", "
             else:
-                pass_string+=pass_list[0]
-            pass_string+=" or "+pass_list[-1]
+                pass_string += pass_list[0]
+            pass_string += " or " + pass_list[-1]
         else:
-            pass_string=pass_list[0]
+            pass_string = pass_list[0]
 
         # if self.registered:
         #     base_str=self.registered.onsk8s_tooltip_title()
@@ -473,60 +604,86 @@ class Roster(Matching_Criteria):
         # else:
         #     base_str=""
 
-        tooltip_title = base_str+(" Registrant must have %s pass in order to register"%(pass_string))
+        tooltip_title = base_str + (" Registrant must have %s pass in order to\
+                register"%(pass_string)
+                )
         return tooltip_title
 
+    #---------------------------------------------------------------------------
     def editable_by(self):
-        '''returns list of Users that can edit Roster
-        this is for adding/removing roster participants, so coaches actually don't have this permission,
-        they are only true in activity.editable_by'''
+        """Returns list of users that can edit Roster. For adding/removing
+        roster participants. Editors: Bosses, NSOs, captain.
+        """
 
-        allowed_editors=list(User.objects.filter(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        allowed_editors=list(User.objects.filter(groups__name__in=[
+                BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,'NSO'
+                ]))
 
-        if self.captain:#this is so NSOs can't edit training rosters. COULD BE PROBLEM is captain freaks out and leaves challenge? unlikely, and boss ladies will still be able to fix
+        if self.captain:
             allowed_editors.append(self.captain.user)
-            allowed_editors+=list(User.objects.filter(groups__name__in=['NSO']))
 
         return allowed_editors
 
+    #---------------------------------------------------------------------------
     def nearly_homeless(self):
-        '''This is for reject warning, to check if rejecting this challenge will delete roster.
-        Mostly for Game rosters, kinda ovbious for Challenge Rosters'''
-        r1=list(self.roster1.all())
-        r2=list(self.roster2.all())
-        rs=r1+r2
-        if len(rs)<=1:
+        """This is for reject warning, to check if rejecting this challenge will
+        delete roster. Mostly for Game rosters, obvious for Challenge Rosters.
+        Returns True if roster has no other challenges and will be deleted if
+        challenge is rejected.
+        """
+
+        r1 = list(self.roster1.all())
+        r2 = list(self.roster2.all())
+        rs = r1 + r2
+
+        if len(rs) <= 1:
             return True
         else:
             return False
 
+    #---------------------------------------------------------------------------
     def is_homeless(self):
-        '''This is for reject warning, to check if rejecting this challenge will delete roster.
-        Mostly for Game rosters, kinda ovbious for Challenge Rosters'''
-        r1=list(self.roster1.all())
-        r2=list(self.roster2.all())
-        rs=r1+r2
-        if len(rs)<=0:
+        """Returns True if roster has no challenges."""
+'
+        r1 = list(self.roster1.all())
+        r2 = list(self.roster2.all())
+        rs = r1 + r2
+
+        if len(rs) <= 0:
             return True
         else:
             return False
 
+    #---------------------------------------------------------------------------
     def coed_beginner(self):
-        #maybe write something simialr for minimum contact skills?
-        if self.gender=='NA/Coed':
-            forbidden_skills=[None,False,'C','CO','BC','ABC']
+        """Not allowed to have a roster that is coed nd beginner. If this is
+        attempted, tries to move skill up. If captain is not skilled enough,
+        matches captain gender. If captain is coed beginner,
+        Does not run for Games, as all Games are essentially coed-beginner.
+        """
+
+        if self.gender == 'NA/Coed':
+            forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
+
             if self.skill in forbidden_skills:
-                coed_int_str="Coed teams have a minimum skill level of Intermediate."
-                if self.captain and self.captain.skill and self.captain.skill in ["B","BO","A","BO"]:#if captain is intermediate or above
-                    self.skill="BO"
-                    coed_int_str+=" In order to remain coed, the skill level has been raised to Intermediate. If you'd like to include a lower skill level, please change team gender first."
+                coed_int_str = ("Coed teams have a minimum skill level of \
+                        Intermediate."
+                        )
+                if (self.captain and self.captain.skill and
+                        self.captain.skill in ["A", "B"]
+                        ):  # If captain is Intermediate or above
+                    self.skill = self.captain.skill + "O"
+                    coed_int_str += (" In order to remain coed, the skill level\
+                            has been raised. If you'd like to include a lower \
+                            skill level, please change team gender first."
+                            )
                 else:
                     if self.captain.gender:
-                        self.gender=self.captain.gender
+                        self.gender = self.captain.gender
                     else:
-                        self.gender="Female"
-                    coed_int_str+=" Because your skill is not Intermediate, team Gender has been assigned."
-                #self.save()
+                        self.gender = "Female"
+                    coed_int_str += (" Because your skill is not Intermediate,\
+                            team gender has been assigned.")
                 return coed_int_str
 
             else:
@@ -534,39 +691,53 @@ class Roster(Matching_Criteria):
         else:
             return False
 
+    #---------------------------------------------------------------------------
     def restore_defaults(self):
-        self.captain=None
-        self.participants.clear()
-        self.name=None
-        self.color=None
-        self.can_email=True
-        self.save() #save here, or elsewhere?
+        """Makes the roster blank, after having been rejected."""
 
+        self.captain = None
+        self.participants.clear()
+        self.name = None
+        self.color = None
+        self.can_email = True
+        self.save()
+
+    #---------------------------------------------------------------------------
     def defaults_match_captain(self):
+        """Roster defaults changed to match captain. Used when first created."""
+
         if self.captain:
-            self.gender=self.captain.gender
-            cap_skill=str(self.captain.skill)
-            self.skill=cap_skill+"O"
-            self.con=self.captain.con
+            self.gender = self.captain.gender
+            cap_skill = str(self.captain.skill)
+            # roster skills are a little different that registrant skills.
+            self.skill = cap_skill + "O"
+            self.con = self.captain.con
             self.save()
         else:
-            self.restore_defaults()#saved internally
+            self.restore_defaults()
 
+    #---------------------------------------------------------------------------
     def clone_roster(self):
         """Clones team, including roster. Not meant for trainings, just challenge rosters.
         Makes a new one, whcih might be inapporpriate for purposes. To make existing roster mimic other, see mimic_roster"""
+
+
+#############leaving these sloppy because I don't know the difference between the 2, need to fogre it out
+
         clone=deepcopy(self)
         clone.pk=None
         clone.id=None
         clone.internal_notes=None
         clone.save()
-        clone.participants.add(*self.participants.all())#strange note: before save, clone has self's participants. but after save, loses them.
-        #http://stackoverflow.com/questions/6346600/duplicate-django-objects-with-manytomanyfields
+        clone.participants.add(*self.participants.all())
         clone.save()
         return clone
 
+    #---------------------------------------------------------------------------
     def mimic_roster(self,original):
         """makes self look just like original roster, except for pk, of course."""
+#############leaving these sloppy because I don't know the difference between the 2, need to fogre it out
+
         for attr in ['cap','name','captain','color','can_email']:
             value=getattr(original,attr)
             setattr(self, attr, value)
@@ -574,9 +745,12 @@ class Roster(Matching_Criteria):
         self.participants.add(*original.participants.all())
         self.save()
 
+    #---------------------------------------------------------------------------
     def get_edit_url(self):
+
         return reverse('scheduler.views.edit_roster', args=[str(self.pk)])
 
+    #---------------------------------------------------------------------------
     def email_captain(self, sending_user, message):
         """if captain has agreed to accept emails and has a user and user has an
         email address. By default all registrant should have users and email
@@ -621,67 +795,82 @@ class Roster(Matching_Criteria):
 
         return email_success
 
+    #---------------------------------------------------------------------------
     class Meta:
-        ordering=("-con__start",'name','captain')
-        #unique_together = ('name','con','captain')#I think this is my original sin. fuck me.
+
+        ordering = ("-con__start", 'name', 'captain')
 
 post_save.connect(delete_homeless_roster_ros, sender=Roster)
 
+
+#===============================================================================
 class Activity(models.Model):
-    #fields that are shared between challenge and training
-    name=models.CharField(max_length=200)
-    con = models.ForeignKey(Con,on_delete=models.PROTECT)#https://docs.djangoproject.com/en/1.8/ref/models/fields/#django.db.models.ForeignKey.on_delete
-    location_type=models.CharField(max_length=30, choices=LOCATION_TYPE)
-    RCaccepted=models.BooleanField(default=False)
-    RCrejected=models.BooleanField(default=False)
-    created_on=models.DateTimeField(default=timezone.now)
-    #because durationfileds are buggy in 1.8
-    duration=models.CharField(max_length=30,choices=DURATION,null=True, blank=True)
-    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING)
+    # Inherited by challenge and training
+    name = models.CharField(max_length=200)
+    con = models.ForeignKey(Con,on_delete=models.PROTECT)
+    location_type = models.CharField(max_length=30, choices=LOCATION_TYPE)
+    RCaccepted = models.BooleanField(default=False)
+    RCrejected = models.BooleanField(default=False)
+    created_on = models.DateTimeField(default=timezone.now)
+    # because duration fields are reputably buggy in 1.8
+    duration = models.CharField(max_length=30, choices=DURATION, null=True, blank=True)
+    interest = models.IntegerField(null=True, blank=True, choices=INTEREST_RATING)
 
-    internal_notes= models.TextField(null=True,blank=True)
-    communication = models.TextField(null=True,blank=True)
+    internal_notes = models.TextField(null=True, blank=True)
+    communication = models.TextField(null=True, blank=True)
 
+    #---------------------------------------------------------------------------
     def is_a_challenge(self):
-        """ Tests to see if is Challenge. If else, probably a Training.
-        Just wanted to stop repeating self w/ hasattr, in case I ever change fields that dictate which it is"""
+        """Tests to see if is Challenge. If else, probably a Training.
+        Just wanted to stop repeating self w/ hasattr, in case ever change
+        fields that dictate which it is.
+        """
+
         if hasattr(self, 'roster1') or hasattr(self, 'roster2'):
+
             return True
         else:
             return False
 
+    #---------------------------------------------------------------------------
     def is_a_training(self):
-        """ Tests to see if is Training If else, probably a Challenge.
-        Just wanted to stop repeating self w/ hasattr, in case I ever change fields that dictate which it is"""
+        """Tests to see if is Training If else, probably a Challenge.
+        Just wanted to stop repeating self w/ hasattr, in case ever change
+        fields that dictate which it is.
+        """
+
         if hasattr(self, 'coach'):
+
             return True
         else:
             return False
 
-
+    #---------------------------------------------------------------------------
     @property
     def data_title(self):
-        """Takes info from Challenge/Training, returns title in format RC Ladies are accustomed to.
-        MOSTLY. I can't include INTL unless I know which Occurrence it is, which I don't at this point."""
+        """Takes info from Challenge/Training, returns title in format
+        RC Ladies are accustomed to, MOSTLY. Can't include INTL.
+        """
 
-        desc=""
-        skill_text=self.skill_display().replace("ABCD", "ALL")
+        desc = ""
+        skill_text = self.skill_display().replace("ABCD", "ALL")
 
         if self.is_a_training():
-            desc+=self.name
+            desc += self.name
 
             if self.onsk8s:
-                desc+=" (%s"%(skill_text)
+                desc += " (%s" % (skill_text)
                 if not self.contact:
-                    desc+=" [NO Contact]"
-                desc+=")"
+                    desc += " [NO Contact]"
+                desc += ")"
 
         elif self.is_a_challenge():
-            gender_display=self.gender_display().replace("NA/Coed", "Co-ed")
-            desc+="%s (%s [%s])"%(self.name,skill_text,gender_display)
+            gender_display = self.gender_display().replace("NA/Coed", "Co-ed")
+            desc += "%s (%s [%s])" % (self.name, skill_text, gender_display)
 
         return desc
 
+    #---------------------------------------------------------------------------
     @property
     def figurehead_display(self):
         """Returns string of both captains, or all coaches."""
@@ -698,8 +887,9 @@ class Activity(models.Model):
 
         return fstr
 
+    #---------------------------------------------------------------------------
     def get_default_interest(self):
-        """if chal, gets average of teams skill.
+        """if challenge, gets average of teams skill.
         if training, gerts average of coach skill
         to estimate interest my skill"""
         skill_list=[]
@@ -733,7 +923,7 @@ class Activity(models.Model):
             def_skill=3
         return def_skill
 
-
+    #---------------------------------------------------------------------------
     def get_figurehead_registrants(self):
         """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""
         #select/prefetch brought it form 5 db hits to 3 on trainings
@@ -749,6 +939,7 @@ class Activity(models.Model):
                     figureheads.append(r.captain)
         return figureheads
 
+    #---------------------------------------------------------------------------
     def get_figurehead_display(self):
         ###eventually shoft to only figurehead display property. toss this.
         fs=self.get_figurehead_registrants()
@@ -764,6 +955,7 @@ class Activity(models.Model):
             index+=1
         return fstr
 
+    #---------------------------------------------------------------------------
     def get_figurehead_blackouts(self):
         """Gets Blackouts for activity, from all coaches or captains, but not participants."""
         from con_event.models import Blackout  # Avoid parallel import
@@ -771,6 +963,7 @@ class Activity(models.Model):
         b_outs=list(Blackout.objects.filter(registrant__in=figureheads))
         return b_outs
 
+    #---------------------------------------------------------------------------
     def editable_by(self):
         '''returns list of Users that can edit Activity
         keep in mind being captain of EITHER team makes this True
@@ -783,23 +976,17 @@ class Activity(models.Model):
 
         return allowed_editors
 
+    #---------------------------------------------------------------------------
     def participating_in(self):
         '''returns list of Registrants that are on either skating/participating roster, or are Coach
         For use in Scheduling as well as seeing Communication between NSO/skaters'''
         #no prefetch/select is 7 db hits for a training, trimmed it down to 4
         participating=[]
-        #print "dbcP:", len(dbconnection.queries)
         if self.is_a_training():
             for c in self.coach.select_related('user').all():
                 for reg in c.user.registrant_set.select_related('con').all():
                     if reg.con==self.con:
                         participating.append(reg)
-
-            #doesn't work anymore, not sure if can reconfigure w/ new trainingroster structure
-            # for ros in [self.registered, self.auditing]:
-            #     if ros:
-            #         for sk8 in ros.participants.all():
-            #             participating.append(sk8)
 
         elif self.is_a_challenge():
             for ros in [self.roster1,self.roster2]:
@@ -808,9 +995,10 @@ class Activity(models.Model):
                         participating.append(sk8)
                     if ros.captain and ros.captain not in participating:
                         participating.append(ros.captain)
-        #print "dbcP6:", len(dbconnection.queries)
+
         return participating
 
+    #---------------------------------------------------------------------------
     def possible_locations(self):
         """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
         Will prob need to write anoter further refining, splitting up competition and training tracks"""
@@ -835,7 +1023,7 @@ class Activity(models.Model):
         else:
             return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
 
-
+    #---------------------------------------------------------------------------
     def dummy_occurrences(self,level,makedummies):
         """Makes unsaved Occurrence objects for all possible location time combos for activity
         EDIT April 22 2016: also gathers possible empty occurrances"""
@@ -893,47 +1081,10 @@ class Activity(models.Model):
 
                     slot_start+=TIMESLOT_INTERVAL
                     slot_end+=TIMESLOT_INTERVAL
-                    ###################
-        # # I thought this would be faster, but actually seems slower. 11 secs tuens to 14, 60 to 80.
-        # if makedummies:
-        #     for l in pls:
-        #         possibles=l.empty_times(date_range,duration)
-        #         for p in possibles:
-        #             o=Occurrence(start_time=p[0],end_time=p[1],location=l,challenge=challenge,training=training)
-        #             dummies.append(o)
 
         return [empties,dummies]
 
-    # def sched_conflict_split(self):
-    #     """Makes dict of smaller dicts, smaller dict has occurrence as k, conflicts and v.
-    #     Later look for the k,v pair that is an occurrence and an empty dict to find ones w/ no conflict."""
-    #     print "about to start sched_conflict_split"
-    #     occurrences=self.dummy_occurrences()
-    #     conflict={"blackout_conflict":[],"figurehead_conflict":[],"participant_conflict":[],"no_conflict":[]}
-    #
-    #     for o in occurrences:
-    #         blackout_conflict=o.blackout_conflict()
-    #         if blackout_conflict:
-    #             temp_list=conflict.get("blackout_conflict")
-    #             temp_list.append(o)
-    #             conflict["blackout_conflict"]=list(temp_list)
-    #         figurehead_conflict=o.figurehead_conflict()
-    #         if figurehead_conflict:
-    #             temp_list=conflict.get("figurehead_conflict")
-    #             temp_list.append(o)
-    #             conflict["figurehead_conflict"]=list(temp_list)
-    #         participant_conflict=o.participant_conflict()
-    #         if participant_conflict:
-    #             temp_list=conflict.get("blackout_conflict")
-    #             temp_list.append(o)
-    #             conflict["participant_conflict"]=list(temp_list)
-    #         if not blackout_conflict and not figurehead_conflict and not participant_conflict:
-    #             temp_list=conflict.get("no_conflict")
-    #             temp_list.append(o)
-    #             conflict["no_conflict"]=list(temp_list)
-    #     print "finished sched_conflict_split"
-    #     return conflict
-
+    #---------------------------------------------------------------------------
     def sched_conflict_score(self,level,makedummies):
         """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
         scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
@@ -1004,7 +1155,7 @@ class Activity(models.Model):
 
             score_list=list(conflict.keys())
             score_list.sort()
-            odict  = collections.OrderedDict()
+            odict  = OrderedDict()
 
             for score in score_list:
                 if score<=max_score:
@@ -1015,6 +1166,7 @@ class Activity(models.Model):
 
         return odict_list
 
+    #---------------------------------------------------------------------------
     def find_level_slots(self):
         """Experimental function to find or make matching occurrences for auto scheduler.
         Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
@@ -1128,10 +1280,13 @@ class Activity(models.Model):
 
         return level1find,level1halffind,level2find,level3find
 
+    #---------------------------------------------------------------------------
     def scheduled(self):
-        os=list(self.occurrence_set.all())
+
+        os = list(self.occurrence_set.all())
         return os
 
+    #---------------------------------------------------------------------------
     def get_activity_type(self):
         """Written so can easily see if is snctioned game/chal in templates.
         Might as well throw in some training data too,
@@ -1172,6 +1327,7 @@ class Activity(models.Model):
 
 
 #maybe i should rename this to get absolute url so view on site is easier?
+    #---------------------------------------------------------------------------
     def get_view_url(self):
         if self.is_a_training():#if this is a training
             from scheduler.views import view_training  # Avoid parallel import
@@ -1181,6 +1337,7 @@ class Activity(models.Model):
             from scheduler.views import view_challenge  # Avoid parallel import
             return reverse('scheduler.views.view_challenge', args=[str(self.pk)])
 
+    #---------------------------------------------------------------------------
     def get_edit_url(self):
         if self.is_a_training():
             from scheduler.views import edit_training  # Avoid parallel import
@@ -1191,6 +1348,7 @@ class Activity(models.Model):
             from scheduler.views import edit_challenge
             return reverse('scheduler.views.edit_challenge', args=[str(self.pk)])
 
+    #---------------------------------------------------------------------------
     def get_sched_assist_url(self):
         if self.is_a_training():
             from swingtime.views import sched_assist_tr  # Avoid parallel import
@@ -1199,12 +1357,16 @@ class Activity(models.Model):
             from swingtime.views import sched_assist_ch  # Avoid parallel import
             return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 
+    #---------------------------------------------------------------------------
     class Meta:
-        #ordering=('-created_on',)#not sure if abstract can be ordered?
+
         abstract = True
 
+
+#===============================================================================
 class ChallengeManager(models.Manager):
 
+    #---------------------------------------------------------------------------
     def submission_full(self,con):
         """If we have too many challenges submitted this year, returns true. Else, false
         Excludes Games from count"""
@@ -1214,9 +1376,17 @@ class ChallengeManager(models.Manager):
         else:
             return True
 
+
+#===============================================================================
 class Challenge(Activity):
+
     roster1=models.ForeignKey(Roster, related_name="roster1", null=True,blank=True,on_delete=models.SET_NULL)
     roster2=models.ForeignKey(Roster, related_name="roster2", null=True,blank=True,on_delete=models.SET_NULL)
+    # note:
+    # Once upon a time I let the same roster be used for multiple
+    # challenges, but that ended up confusing everyone.
+    # So that's why roster:challenge is essentially a 1:1, but
+    # I have to write awkward stuff around it really being fk
     captain1accepted=models.BooleanField(default=True)
     captain2accepted=models.BooleanField(default=False)
     roster1score=models.IntegerField(null=True, blank=True)
@@ -1227,9 +1397,11 @@ class Challenge(Activity):
     is_a_game=models.BooleanField(default=False)
     objects = ChallengeManager()
 
+    #---------------------------------------------------------------------------
     def __unicode__(self):
        return "%s: %s" %(self.name, self.con)
 
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
 
         string_fields=['internal_notes','communication']
@@ -1256,6 +1428,7 @@ class Challenge(Activity):
 
         super(Challenge, self).save()
 
+    #---------------------------------------------------------------------------
     def roster4registrant(self,registrant):
         """takes in registrant, returns which team they're on"""
         if registrant in self.roster1.participants.all():
@@ -1265,6 +1438,7 @@ class Challenge(Activity):
         else:
             return None
 
+    #---------------------------------------------------------------------------
     def rosterreject(self,roster):
         """takes in roster, rejects challenge. if both have rejected, deletes challenge."""
         opposing_cap=None
@@ -1298,7 +1472,7 @@ class Challenge(Activity):
             roster.restore_defaults()
             self.save()#make sure after naked roster is saved, so chal name will include ? again
 
-
+    #---------------------------------------------------------------------------
     def my_team_status(self, registrant_list):
         '''takes in registrant list, tells you which team you're captaining, whether you've accepte, who your opponent is, and if they'e accepted'''
         if self.roster1 and self.roster1.captain and (self.roster1.captain in registrant_list):
@@ -1319,6 +1493,7 @@ class Challenge(Activity):
 
         return my_team,opponent,my_acceptance,opponent_acceptance
 
+    #---------------------------------------------------------------------------
     def replace_team(self,old_team,selected_team):
         """for changing from disposable team to Game team. Finds the team te registrant is a captain of, removes that team, puts given team in it place."""
         if self.roster1 and self.roster1==old_team:
@@ -1329,6 +1504,7 @@ class Challenge(Activity):
         #self.save()
         return old_team,selected_team
 
+    #---------------------------------------------------------------------------
     def can_submit_chlg(self):
         """
         first checks to see if both captains have accepted.
@@ -1345,6 +1521,7 @@ class Challenge(Activity):
 
         return can_sub
 
+    #---------------------------------------------------------------------------
     def skill_display(self):
         """Like method of same name for Roster, makes it so I don't see A0, just A, or AB, or something more understandable
         If different for 2 rosters, returns both. otehrwise if same, 1."""
@@ -1367,6 +1544,7 @@ class Challenge(Activity):
 
         return display
 
+    #---------------------------------------------------------------------------
     def skills_match(self):
         match=False
         if self.roster1 and self.roster2:
@@ -1374,7 +1552,7 @@ class Challenge(Activity):
 
         return match
 
-
+    #---------------------------------------------------------------------------
     def gender_display(self):
         """Like skill display above but w/ gender."""
         r1gen=r2gen=display=None
@@ -1396,15 +1574,17 @@ class Challenge(Activity):
 
         return display
 
+    #---------------------------------------------------------------------------
     class Meta:
-        #insted should i make a save method that makes roster1 name v roster2 name as the name?
-        ordering=('-con__start','name')
-        unique_together = ('con','name','roster1','roster2')
+        ordering=('-con__start', 'name')
+        unique_together = ('con', 'name', 'roster1', 'roster2')
 
 pre_save.connect(challenge_defaults, sender=Challenge)
 post_save.connect(delete_homeless_chg, sender=Challenge)
 pre_delete.connect(delete_homeless_roster_chg, sender=Challenge)
 
+
+#===============================================================================
 class Training(Activity):
     #activity has fields: name,con,location_type,RCaccepted, created_on,duration
     coach = models.ManyToManyField('Coach', blank=True)#can't be ForeignKey bc can be multiple coaches
@@ -1419,10 +1599,11 @@ class Training(Activity):
 
     sessions = models.IntegerField(default=1, choices=SESSIONS_TR)
 
+    #---------------------------------------------------------------------------
     def __unicode__(self):
        return "%s  (%s)" %(self.name, self.con)
 
-
+    #---------------------------------------------------------------------------
     def display_coach_names(self):
       #this seems to create an infinite loop somewhere
         if self.coach and self.coach.count()>0:
@@ -1434,6 +1615,7 @@ class Training(Activity):
         else:
             return None
 
+    #---------------------------------------------------------------------------
     def get_coach_registrants(self):
         """Gets all registrants for Coach, since Coach is tied to User and not a specific year"""
         registrants=[]
@@ -1444,6 +1626,7 @@ class Training(Activity):
                 pass
         return registrants
 
+    #---------------------------------------------------------------------------
     def skills_allowed(self):
         if self.skill:
             allowed=list(self.skill)
@@ -1453,11 +1636,13 @@ class Training(Activity):
             allowed=["A","B","C","D"]
         return allowed
 
+    #---------------------------------------------------------------------------
     def skill_display(self):
         """This makes it so I don't see A0, just A, or AB, or something more understandable"""
         prettify=''.join(self.skills_allowed())
         return prettify
 
+    #---------------------------------------------------------------------------
     def skill_tooltip_title(self):
         if self.skill:
             allowed=self.skills_allowed()
@@ -1479,10 +1664,12 @@ class Training(Activity):
         else:
             return "No skill restrictions for registration"
 
+    #---------------------------------------------------------------------------
     def skill_icon(self):
         if not self.skill:
             return "glyphicon icon-universal-access"
 
+    #---------------------------------------------------------------------------
     def intl_icon(self):
         if self.intl:
             #return "glyphicon icon-passportbig"
@@ -1491,30 +1678,35 @@ class Training(Activity):
         else:
             return "glyphicon icon-universal-access"
 
+    #---------------------------------------------------------------------------
     def intl_text(self):
         if self.intl:
             return "International"
         else:
             return None
 
+    #---------------------------------------------------------------------------
     def intl_tooltip_title(self):
         if self.intl:
             return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
         else:
             return "No location restrictions for registration"
 
+    #---------------------------------------------------------------------------
     def onsk8s_icon(self):
         if self.onsk8s:
             return "glyphicon icon-onskates"
         else:
             return "glyphicon icon-shoes"
 
+    #---------------------------------------------------------------------------
     def onsk8s_tooltip_title(self):
         if self.onsk8s:
             return "This is an On-Skates Training."
         else:
             return "This is an Off-Skates Training."
 
+    #---------------------------------------------------------------------------
     def passes_allowed(self):
         if self.onsk8s:
             allowed=['MVP']
@@ -1523,6 +1715,7 @@ class Training(Activity):
 
         return allowed
 
+    #---------------------------------------------------------------------------
     def passes_str(self):
         allowed=self.passes_allowed()
         passstr=""
@@ -1531,6 +1724,7 @@ class Training(Activity):
         passstr=passstr[:-2]
         return passstr
 
+    #---------------------------------------------------------------------------
     def passes_tooltip_title(self):
         pass_list=self.passes_allowed()
         pass_string=""
@@ -1549,22 +1743,25 @@ class Training(Activity):
         tooltip_title = base_str+(" Registrant must have %s pass in order to register"%(pass_string))
         return tooltip_title
 
+    #---------------------------------------------------------------------------
     def contact_icon(self):
         if self.contact:
             return "glyphicon icon-helmet"
         else:
             return "glyphicon icon-nocontact"
 
+    #---------------------------------------------------------------------------
     def contact_text(self):
             return "Contact: "
 
+    #---------------------------------------------------------------------------
     def contact_tooltip_title(self):
         if self.contact:
             return "This training includes Contact"
         else:
             return "This training does not include Contact"
 
-
+    #---------------------------------------------------------------------------
     def full_description(self):
         """returns training description, than coach description for each coach. or empty quotes"""
         des=""
@@ -1575,6 +1772,7 @@ class Training(Activity):
                 des+="\n\n"+c.description
         return des
 
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
         '''custom functions: removes non-ascii chars and punctuation from names, colors'''
         string_fields=['name','description','communication']
@@ -1598,36 +1796,45 @@ class Training(Activity):
 
         super(Training, self).save()
 
+    #---------------------------------------------------------------------------
     class Meta:
-        ordering=('-con__start','name')
 
+        ordering = ('-con__start', 'name')
+
+
+#===============================================================================
 class Coach(models.Model):
-    user = models.OneToOneField(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+    user = models.OneToOneField(
+            User, null=True, blank=True, on_delete=models.SET_NULL
+            )
     description = models.TextField(null=True, blank=True)
     can_email=models.BooleanField(default=True)
 
     internal_notes= models.TextField(null=True,blank=True)
 
+    #---------------------------------------------------------------------------
     def __unicode__(self):
+
         try:
             return "Coach %s" % (self.user.first_name)
         except:
             return self.id
 
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        '''custom functions: removes non-ascii chars'''
-        string_fields=['description','internal_notes']
+        """Removes non-ascii chars from description, internal notes"""
+
+        string_fields = ['description', 'internal_notes']
         for item in string_fields:
-            att_unclean=getattr(self, item)
+            att_unclean = getattr(self, item)
             if att_unclean:
-                #NOTEE: I'm allowing punctuation in notes and description, hope this doesn't bite me
-                #usualy I strip all punctuation
-                cleaned_att=ascii_only(att_unclean)
+                cleaned_att = ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
         super(Coach, self).save()
 
-
+    #---------------------------------------------------------------------------
     def email_coach(self, sending_user, message):
         """if coach has agreed to accept emails and has a user and user has an
         email address. By default all registrant should have users and email
@@ -1671,28 +1878,40 @@ class Coach(models.Model):
 
         return email_success
 
+    #---------------------------------------------------------------------------
+    def get_absolute_url(self):
 
-    def get_absolute_url(self):#https://docs.djangoproject.com/en/1.7/ref/urlresolvers/#django.core.urlresolvers.reverse
         from scheduler.views import view_coach
+
         return reverse('scheduler.views.view_coach', args=[str(self.pk)])
 
+    #---------------------------------------------------------------------------
     def get_my_schedule_url(self):
         """Used for bosses to check coach's schedule"""
-        from con_event.monkey_patching import get_my_schedule_url  # Avoid parallel import
+
+        from con_event.monkey_patching import get_my_schedule_url
+
         return self.user.get_my_schedule_url()
 
-    def unconfirmed_trainings(self):
-        '''Returns a list of all trainings in which have been submitted,but is not accepted by RC.
-        This only matters for coaches, bc you can only register to attend trainigns that have been approved.'''
-        from scheduler.models import Training  # Avoid parallel import
-        unconfirmed=list(self.training_set.filter(RCaccepted=False))#this only returns if coach, since registraiton m2m is attached to roster object.
-        return unconfirmed
+    #---------------------------------------------------------------------------
+    # def unconfirmed_trainings(self):
+    #     """Returns a list of all trainings in which have been submitted,but is
+    #     not accepted by RC. Only matters for coaches, bc you can only register
+    #     to attend trainigns that have been approved.
+    #     """
+    #     #Do i ever use this?
+    #     from scheduler.models import Training  # Avoid parallel import
+    #
+    #     unconfirmed = list(self.training_set.filter(RCaccepted=False))
+    #
+    #     return unconfirmed
 
-
+    #---------------------------------------------------------------------------
     class Meta:
-        ordering=('user',)
 
+        ordering = ('user',)
 
+#===============================================================================
 class ReviewTraining(models.Model):
     date=models.DateField(auto_now=True, null=True)
     training=models.ForeignKey(Training)
@@ -1722,6 +1941,8 @@ class ReviewTraining(models.Model):
     def __unicode__(self):
         return  "%s %s" % (self.training, self.date)
 
+
+#===============================================================================
 class ReviewCon(models.Model):
     date=models.DateField(auto_now=True, null=True)
     #DON'T SHARE REGISTRANT WITH ANYONE, INCLUDING CONFERENCE ORGANIZERS.

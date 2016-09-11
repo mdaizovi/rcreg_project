@@ -49,7 +49,6 @@ LOCATION_CATEGORY_FILTER = (
             )
         )
 
-
 # For matching criteria
 GENDER = (('Female', 'Female'), ('Male', 'Male'), ('NA/Coed','NA/Coed'))
 SKILL_LEVEL_SK8R = (
@@ -67,7 +66,7 @@ SKILL_LEVEL_ACT = (
         )
 
 # This weirdness below is neccesary, don't touch it.
-#Unless you're smarter than me.
+# Unless you're smarter than I am, which you may very well be.
 SKILL_LEVEL_TNG = tuple(list(SKILL_LEVEL_ACT[:2])
         + [tuple(SKILL_LEVEL_ACT[-2])])
 SKILL_LEVEL_CHG = tuple([tuple(SKILL_LEVEL_ACT[0])]
@@ -801,12 +800,14 @@ class Registrant(Matching_Criteria):
         list of rosters in conflict (ex: [Tomboys]),
         and boolean of whether this is a captain conflict.
         Primarily used when users are making changes to their own profile.
+        Nearly identical to Roster method of the same name, just
+        with registrant:roster roles reversed.
         """
 
         problem_criteria = []
         potential_conflicts = []
         captain_conflict = False
-
+        
         for roster in list(self.roster_set.all()):
             if self.gender not in roster.genders_allowed():
                 if "gender" not in problem_criteria:
