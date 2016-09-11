@@ -202,49 +202,6 @@ class SplitDateTimeWidget(forms.MultiWidget):
 
         return [None, None]
 
-#===============================================================================
-# class EventForm(forms.ModelForm):
-#     '''
-#     A simple form for adding and updating Event attributes
-#
-#     '''
-#
-#     #===========================================================================
-#     class Meta:
-#         model = Event
-#         fields = ['challenge', 'training']
-#     #---------------------------------------------------------------------------
-#     def __init__(self, *args, **kws):
-#         #there's gott be a better way to do this. after i catch all times it's called mabe I can get rid of this
-#         if 'date' in kws:
-#             date = kws.pop('date')
-#         else:
-#             date = None
-#
-#         super(EventForm, self).__init__(*args, **kws)
-#
-#         self.fields['challenge'].required = False
-#         self.fields['training'].required = False
-#
-#         if date:
-#             try:
-#                 con = Con.objects.get(start__lte=date, end__gte=date)
-#                 cs = Challenge.objects.filter(con=con,RCaccepted=True)
-#                 ts = Training.objects.filter(con=con,RCaccepted=True)
-#                 CnoE = []
-#                 TnoE = []
-#                 for c in cs:
-#                     if len(c.event_set.all()) == 0:
-#                         CnoE.append(c.pk)
-#                 for t in ts:
-#                     if len(t.event_set.all()) == 0:
-#                         TnoE.append(t.pk)
-#                 self.fields["challenge"].queryset = Challenge.objects.filter(pk__in=CnoE)
-#                 self.fields["training"].queryset = Training.objects.filter(pk__in=TnoE)
-#             except:
-#                 self.fields["challenge"].queryset = Challenge.objects.filter(RCaccepted=True)
-#                 self.fields["training"].queryset = Training.objects.filter(RCaccepted=True)
-
 
 #===============================================================================
 class SingleOccurrenceForm(forms.ModelForm):

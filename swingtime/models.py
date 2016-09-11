@@ -30,72 +30,6 @@ except ImportError:
 from swingtime.conf import settings as swingtime_settings
 
 
-#####NOTE to self (Dahmer):
-#temporarily got rid of Note, description field.
-#am thinking of getitng rid of title and Event type.
-#title is probably okay as long as I keep funciton to return chal or training
-#only get rid of event type if you know you'll never want to use the css helper function.
-#either way, need to resolve either of these in utils if get rid of them/
-
-#===============================================================================
-@python_2_unicode_compatible
-class EventType(models.Model):
-    '''
-    Simple ``Event`` classifcation.
-    '''
-    abbr = models.CharField(_('abbreviation'), max_length=4, unique=True)
-    label = models.CharField(_('label'), max_length=50)
-
-    #===========================================================================
-    class Meta:
-        verbose_name = _('event type')
-        verbose_name_plural = _('event types')
-
-    #---------------------------------------------------------------------------
-    def __str__(self):
-        return self.label
-
-
-#===============================================================================
-@python_2_unicode_compatible
-class Event(models.Model):
-    '''
-    Container model for general metadata and associated ``Occurrence`` entries.
-    '''
-    #title = models.CharField(_('title'), max_length=32,null=True,blank=True)
-    #event_type = models.ForeignKey(EventType, verbose_name=_('event type'),null=True,blank=True)
-
-    training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
-    challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
-
-    #===========================================================================
-    class Meta:
-        verbose_name = _('event')
-        verbose_name_plural = _('events')
-        #ordering = ('title', )
-
-    #---------------------------------------------------------------------------
-    def get_activity(self):
-        '''
-        Dahmer custom. Returns training or activity related to Event.
-        '''
-        if self.training:
-            activity=self.training
-        elif self.challenge:
-            activity=self.challenge
-        else:
-            activity=None
-        return activity
-
-    #---------------------------------------------------------------------------
-    def __str__(self):
-        activity=self.get_activity()
-        if activity:
-            return activity.name
-        else:
-            return "no challenge or training yet"
-
-
 #===============================================================================
 class OccurrenceManager(models.Manager):
 
@@ -568,9 +502,9 @@ class Occurrence(models.Model):
 
         return activity
     #---------------------------------------------------------------------------
-#######eventually I want this to replace event model, just being cautious######################
     @property
     def activity(self):
+
         return self.get_activity()
 
 
