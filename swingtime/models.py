@@ -37,15 +37,6 @@ from swingtime.conf import settings as swingtime_settings
 #only get rid of event type if you know you'll never want to use the css helper function.
 #either way, need to resolve either of these in utils if get rid of them/
 
-
-__all__ = (
-    #'EventType',
-    'Event',
-    'Occurrence',
-    #'create_event'
-)
-
-
 #===============================================================================
 @python_2_unicode_compatible
 class EventType(models.Model):
@@ -112,7 +103,6 @@ class OccurrenceManager(models.Manager):
 
     #---------------------------------------------------------------------------
     def daily_occurrences(self, dt=None):
-    #def daily_occurrences(self, dt=None, event=None):
         '''
         Returns a queryset of for instances that have any overlap with a
         particular day.
@@ -120,7 +110,6 @@ class OccurrenceManager(models.Manager):
         * ``dt`` may be either a datetime.datetime, datetime.date object, or
           ``None``. If ``None``, default to the current day.
 
-        * ``event`` can be an ``Event`` instance for further filtering.
         '''
         dt = dt or datetime.datetime.now()
         start = datetime.datetime(dt.year, dt.month, dt.day)
@@ -140,7 +129,6 @@ class OccurrenceManager(models.Manager):
             )
         )
 
-        #return qs.filter(event=event) if event else qs
         return qs
 
     #---------------------------------------------------------------------------
@@ -534,8 +522,6 @@ class Occurrence(models.Model):
     '''
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
-    #delete field eventually, when it feels safe
-    event = models.ForeignKey(Event, verbose_name=_('event'),null=True, blank=True,on_delete=models.SET_NULL)
     #Why did i say null=true for locaiton? prob so occurrance doesn't get deleted if locaiton does
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
     interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING, default=3)
@@ -573,23 +559,18 @@ class Occurrence(models.Model):
         Currently written to ease the transition to not having Event as a model
         '''
         activity=None
-        if hasattr(self, 'event'):
-            if self.event:
-                activity=self.event.get_activity()
-        if not activity:#either bc no attr, or no activity
 
-            if self.training or self.challenge:
-                if self.training:
-                    activity=self.training
-                elif self.challenge:
-                    activity=self.challenge
+        if self.training or self.challenge:
+            if self.training:
+                activity=self.training
+            elif self.challenge:
+                activity=self.challenge
 
         return activity
     #---------------------------------------------------------------------------
 #######eventually I want this to replace event model, just being cautious######################
     @property
     def activity(self):
-    #def event(self): #change to this somedaty?
         return self.get_activity()
 
 

@@ -16,7 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.forms.models import model_to_dict
 #from django.forms import modelformset_factory
 
-from swingtime.models import Event, Occurrence
+from swingtime.models import Occurrence
 #from swingtime.models import Occurrence
 from swingtime import utils, forms
 from swingtime.conf import settings as swingtime_settings

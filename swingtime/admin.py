@@ -213,7 +213,6 @@ class OccurrenceResource(resources.ModelResource):
                 'description', 'gcal_location'
                 )
         export_order = fields
-        import_id_fields = ('event',)
         skip_unchanged = True
         report_skipped = True
 
