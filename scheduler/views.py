@@ -5,7 +5,6 @@ from datetime import timedelta, date
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-#from django.db import connection as dbconnection
 from django.db.models import Q
 from django.http import HttpResponse
 #from django.shortcuts import render, render_to_response, redirect
@@ -27,7 +26,7 @@ from scheduler.forms import (CommunicationForm, MyRosterSelectForm,
         ChallengeModelForm, ChallengeRosterModelForm, TrainingModelForm,
         DurationOnly, ScoreFormDouble
         )
-#from scheduler.models import ReviewCon, ReviewTraining, Coach, Roster, Challenge, Training, GAMETYPE
+
 from scheduler.models import Coach, Roster, Challenge, Training, GAMETYPE
 from scheduler.tables import RosterTable
 from swingtime.models import Occurrence,TrainingRoster
@@ -303,7 +302,7 @@ def trainings_home(request, con_id=None):
 
     if con_id:
         try:
-            con=Con.objects.get(pk=con_id)
+            con = Con.objects.get(pk=con_id)
         except ObjectDoesNotExist:
             con = Con.objects.most_upcoming()
     else:
@@ -451,7 +450,10 @@ def propose_new_training(request):
             else:  # I not valid
                 add_fail = True
                 template = 'propose_new_training.html'
-                context_dict = {'add_fail': add_fail, 'training_made': training_made}
+                context_dict = {
+                        'add_fail': add_fail,
+                        'training_made': training_made
+                        }
 
     else:  # If not post
         template = 'propose_new_training.html'
@@ -1137,7 +1139,7 @@ def view_challenge(request, activity_id):
                 can_edit = True
             else:
                 can_edit = False
-            # user could have many registrants, any 1 in participating in will do.
+            # user could have many registrants, any in participating in will do.
             cparts = set(challenge.participating_in())
             if len(cparts.intersection(reg_list)) > 0 or can_edit:
                 # Roster participants and NSOs
@@ -1414,39 +1416,54 @@ def challenge_submit(request):
     from edit_challenge. Will only accept within challenge submission window.
     """
 
-    challenge=None
-    is_captain=False
-    submit_attempt=False
-    can_submit_chlg=False
-    unsubmit_attempt=False
+    challenge = None
+    is_captain = False
+    submit_attempt = False
+    can_submit_chlg = False
+    unsubmit_attempt = False
 
-    if request.method == "POST":
-        challenge=Challenge.objects.get(pk=request.POST['activity_id'])
-        user=request.user
-        registrant_list= list(user.registrant_set.all())
+    if request.method == "POST":  # should always be true
+        challenge = Challenge.objects.get(pk=request.POST['activity_id'])
+        user = request.user
+        registrant_list = list(user.registrant_set.all())
 
-        if challenge.roster1 and challenge.roster1.captain and challenge.roster1.captain in registrant_list:
+        if (challenge.roster1 and challenge.roster1.captain and
+                challenge.roster1.captain in registrant_list
+                ):
             is_captain=True
-        elif challenge.roster2 and challenge.roster2.captain and challenge.roster2.captain in registrant_list:
+        elif (challenge.roster2 and challenge.roster2.captain and
+                challenge.roster2.captain in registrant_list
+                ):
             is_captain=True
 
         if 'submit_challenge' in request.POST:
-            submit_attempt=True
-            can_submit_chlg=challenge.can_submit_chlg()
+            submit_attempt = True
+            can_submit_chlg = challenge.can_submit_chlg()
             if can_submit_chlg:
-                challenge.submitted_on=timezone.now()
+                challenge.submitted_on = timezone.now()
                 challenge.save()
-        #word order intentionally non-parallel to avoid confusion, having submit count as part of unsubmit
         elif 'confirm unsubmit' in request.POST:
-            unsubmit_attempt=True
+            unsubmit_attempt = True
             if not challenge.con.schedule_final():
-                challenge.submitted_on=None
+                challenge.submitted_on = None
                 challenge.save()
 
         elif 'challenge unsubmit' in request.POST:
-            unsubmit_attempt=True
+            unsubmit_attempt = True
 
-    return render_to_response('challenge_submit.html', {'unsubmit_attempt':unsubmit_attempt,'submit_attempt':submit_attempt,'can_submit_chlg':can_submit_chlg,'is_captain':is_captain,'challenge':challenge},context_instance=RequestContext(request))
+    context_dict = {
+            'unsubmit_attempt': unsubmit_attempt,
+            'submit_attempt': submit_attempt,
+            'can_submit_chlg': can_submit_chlg,
+            'is_captain': is_captain,
+            'challenge':challenge
+            }
+
+    return render_to_response(
+            'challenge_submit.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 
 # @login_required
