@@ -1396,7 +1396,6 @@ class Challenge(Activity):
     ruleset=models.CharField(max_length=30, choices=RULESET, default=RULESET[0][0])
     gametype=models.CharField(max_length=250, choices=GAMETYPE, default=GAMETYPE[0][0])
     submitted_on=models.DateTimeField(null=True, blank=True)
-    is_a_game=models.BooleanField(default=False)
     objects = ChallengeManager()
 
     #---------------------------------------------------------------------------
