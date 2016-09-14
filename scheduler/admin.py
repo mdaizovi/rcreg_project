@@ -161,11 +161,11 @@ class ChallengeResource(resources.ModelResource):
                 'gametype_display', 'skill_display', 'gender_display',
                 'roster1__captain__sk8name', 'communication',
                 'captain1accepted', 'roster2', 'roster2__captain__sk8name',
-                'captain2accepted', 'is_a_game', 'location_type', 'RCaccepted',
+                'captain2accepted', 'location_type', 'RCaccepted',
                 'ruleset', 'submitted_on', 'con__year'
                 )
         export_order = ('id', 'name', 'skill_display', 'gender_display',
-                'is_a_game', 'duration_display', 'gametype_display',
+                'duration_display', 'gametype_display',
                 'location_type', 'RCaccepted', 'submitted_on', 'ruleset',
                 'communication', 'captain1accepted', 'captain2accepted',
                 'roster1', 'roster1__captain__sk8name', 'roster2',
@@ -195,7 +195,7 @@ class ChallengeAdmin(ImportExportModelAdmin):
             ('roster2', 'captain2accepted', 'roster2score'),
             'internal_notes', 'communication'
             )
-    list_filter = ('con', 'location_type', 'is_a_game')
+    list_filter = ('con', 'location_type', 'gametype')
     resource_class = ChallengeResource
 
     #---------------------------------------------------------------------------

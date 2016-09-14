@@ -55,10 +55,10 @@ def challenge_defaults(sender, instance, **kwargs):
     from scheduler.models import GAMETYPE
 
     if instance.gametype == "6GAME":
-        instance.is_a_game = True
+        #instance.is_a_game = True
         instance.duration = DEFAULT_SANCTIONED_DURATION
     else:
-        instance.is_a_game = False
+        #instance.is_a_game = False
         if instance.gametype == "6CHAL":
             instance.duration = DEFAULT_SANCTIONED_DURATION
         elif instance.gametype in ["3CHAL", "36CHAL"]:
@@ -67,7 +67,8 @@ def challenge_defaults(sender, instance, **kwargs):
     for r in [instance.roster1, instance.roster2]:
         if r and not r.cap:
             r.cap = GAME_CAP
-            if instance.is_a_game:
+            #if instance.is_a_game:
+            if instance.gametype == "6GAME":
                 for k,v in GAME_DEFAULTS.iteritems():
                     setattr(r, k, v)
             r.save()

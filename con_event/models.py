@@ -783,7 +783,8 @@ class Registrant(Matching_Criteria):
         from scheduler.models import Challenge  # Avoid circular import
 
         my_challenges=(list(Challenge.objects
-                .filter(is_a_game=False)
+                .exclude(gametype="6GAME")
+                #.filter(is_a_game=False)
                 .filter(Q(roster1__captain=self) | Q(roster2__captain=self)
                 )))
 
@@ -807,7 +808,7 @@ class Registrant(Matching_Criteria):
         problem_criteria = []
         potential_conflicts = []
         captain_conflict = False
-        
+
         for roster in list(self.roster_set.all()):
             if self.gender not in roster.genders_allowed():
                 if "gender" not in problem_criteria:
@@ -1097,7 +1098,9 @@ class Registrant(Matching_Criteria):
             self.con = upcoming
 
         if self.is_a_captain():
-            self.captaining = len(self.is_a_captain().exclude(is_a_game=True))
+            #self.captaining = len(self.is_a_captain().exclude(is_a_game=True))
+            self.captaining = len(self.is_a_captain().exclude(gametype="6GAME"))
+
         else:
             self.captaining = 0
 

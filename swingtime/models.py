@@ -95,7 +95,8 @@ class OccurrenceManager(models.Manager):
                     act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Training")
 
                 elif act.is_a_challenge():
-                    if act.is_a_game or float(act.duration)>=1:#has to be in C1
+                    #if act.is_a_game or float(act.duration)>=1:#has to be in C1
+                    if act.gametype=="6GAME" or float(act.duration)>=1:#has to be in C1
                         act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length")
                     else:#can be n C1 or C2
                         act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"])

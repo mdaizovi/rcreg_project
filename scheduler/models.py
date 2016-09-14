@@ -894,7 +894,8 @@ class Activity(models.Model):
         skill_list=[]
         #print self
         if self.is_a_challenge():
-            if self.is_a_game:
+            #if self.is_a_game:
+            if self.gametype == "6GAME":
                 skill_list.append(5)
             else:
                 for r in [self.roster1,self.roster2]:
@@ -1008,7 +1009,8 @@ class Activity(models.Model):
             if self.is_a_training():#if this is a training
                 return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
             elif self.is_a_challenge():
-                if self.is_a_game or float(self.duration)>=1:#has to be in C1
+                #if self.is_a_game or float(self.duration)>=1:#has to be in C1
+                if self.gametype == "6GAME" or float(self.duration)>=1:#has to be in C1
                 #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
                     return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
                 else:#can be n C1 or C2
@@ -1319,7 +1321,8 @@ class Activity(models.Model):
                 elif self.gametype=='36CHAL':
                     loc_str+="30 or 60m"
                 loc_str+=" Challenge"
-            elif self.is_a_game or self.gametype=="6GAME":
+            #elif self.is_a_game or self.gametype=="6GAME":
+            elif self.gametype=="6GAME":
                 loc_str+="60m Reg/San Game"
 
         return loc_str
@@ -1369,7 +1372,7 @@ class ChallengeManager(models.Manager):
     def submission_full(self,con):
         """If we have too many challenges submitted this year, returns true. Else, false
         Excludes Games from count"""
-        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None,is_a_game=True))
+        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None,gametype="6GAME"))
         if len(submissions)<CLOSE_CHAL_SUB_AT:
             return False
         else:
@@ -1513,9 +1516,11 @@ class Challenge(Activity):
         can_sub=False
         if self.roster1 and self.captain1accepted and self.roster2 and self.captain2accepted:
             if self.con.can_submit_chlg_by_date():
-                if self.is_a_game and not self.con.sched_final:
+                #if self.is_a_game and not self.con.sched_final:
+                if self.gametype=="6GAME" and not self.con.sched_final:
                     can_sub= True
-                elif not self.is_a_game and self.con.can_submit_chlg():
+                #elif not self.is_a_game and self.con.can_submit_chlg():
+            elif self.gametype != "6GAME" and self.con.can_submit_chlg():
                     can_sub= True
 
         return can_sub

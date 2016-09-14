@@ -7,23 +7,60 @@ import openpyxl
 import collections
 
 
+
+########temporary toget rid of is a Game
+
+from scheduler.models import Challenge
+
+def sift_games():
+    chals=list(Challenge.objects.all())
+    gametype=[]
+    isagame=[]
+    both=[]
+    neither=[]
+    other=[]
+    print len(chals)," Challenges total"
+    for c in chals:
+        if c.is_a_game or c.gametype=="6GAME":
+            if c.is_a_game and c.gametype=="6GAME":
+                both.append(c)
+            elif c.is_a_game:
+                isagame.append(c)
+            elif c.gametype=="6GAME":
+                gametype.append(c)
+            else:
+                print "this shouldn't happen"
+                other.append(c)
+        else:
+            neither.append(c)
+
+    print "end of sorting challenges"
+    print "both: ",len(both)
+    print "gametype: ",len(gametype)
+    print "isagame: ",len(isagame)
+    print "other (should be 0) : ",len(other)
+    print "neither: ",len(neither)
+
+    return gametype, isagame, both, other
+
+
+####################################
+
 """This whole file is for helping me compare excel files of who SHOULD BE in RollerTron
 and who ACTUALLY IS in RollerTron.
 Assumes the ACUALLY IS is re-arranged from export to look like BPT excel.
 This is kind of a private mess. I didn't see the point in deleting it, but you can if you want.
 """
 
-static_path=BASE_DIR+"/static/data/"
-import_path=static_path+'unformatted/'
-export_path=static_path+'exported/'
+staticdata_path=BASE_DIR+"/static/data/"
 date_str=datetime.date.today().strftime("%B %d %Y")
 
 ########If you want to run data comparison to see if all people who SHOULD be in the database ARE.
 
 #python manage.py shell
 #from compare_data import*
-#db_xlfile=(import_path+'Registrant-2016-06-12 REORDERED copy.xlsx')
-#bpt_xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
+#db_xlfile=(staticdata_path+'Registrant-2016-06-12 REORDERED copy.xlsx')
+#bpt_xlfile=(staticdata_path+'RollerTron MASTER @ 060316 copy.xlsx')
 #sort_it_out(db_xlfile,bpt_xlfile)
 
 
@@ -31,7 +68,7 @@ date_str=datetime.date.today().strftime("%B %d %Y")
 
 #python manage.py shell
 #from compare_data import*
-#xlfile=(import_path+'RollerTron MASTER @ 060316 copy.xlsx')
+#xlfile=(staticdata_path+'RollerTron MASTER @ 060316 copy.xlsx')
 #all_data=make_excel_odict_list(xlfile)
 #same_name(all_data)
 
@@ -122,25 +159,25 @@ def find_incompletes(xlfile):
         if sk8name and first_name and last_name:
             complete_entries.append(od)
 
-    header=get_header((static_path+'BPTheader.xlsx'))
+    header=get_header((staticdata_path+'BPTheader.xlsx'))
     #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
     #global vairable, look at top of file
 
     if len(no_sk8name)>0:
         name_str='NoSk8NameReg '+ date_str +'.xlsx'
-        no_sk8name_file=write_wb(export_path,name_str,no_sk8name,header)
+        no_sk8name_file=write_wb(staticdata_path,name_str,no_sk8name,header)
     else:
         no_sk8name_file=None
 
     if len(no_real_name)>0:
         name_str='NoRealNameReg '+ date_str +'.xlsx'
-        no_real_name_file=write_wb(export_path,name_str,no_real_name,header)
+        no_real_name_file=write_wb(staticdata_path,name_str,no_real_name,header)
     else:
         no_real_name_file=None
 
     if len(complete_entries)>0:
         name_str='CompleteReg '+ date_str +'.xlsx'
-        complete_entries_file=write_wb(export_path,name_str,complete_entries,header)
+        complete_entries_file=write_wb(staticdata_path,name_str,complete_entries,header)
     else:
         complete_entries_file=None
 
@@ -170,31 +207,31 @@ def email_dupes(xlfile):
         else:
             good_emails.append(od)
 
-    header=get_header((static_path+'BPTheader.xlsx'))
+    header=get_header((staticdata_path+'BPTheader.xlsx'))
     #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
     #global vairable, look at top of file
 
     if len(good_emails)>0:
         name_str='SingleEmailRegistrants '+ date_str +'.xlsx'
-        single_file=write_wb(export_path,name_str,good_emails,header)
+        single_file=write_wb(staticdata_path,name_str,good_emails,header)
     else:
         single_file=None
 
     if len(bad_emails)>0:
         name_str='EmailDupeRegistrants '+ date_str +'.xlsx'
-        dupe_file=write_wb(export_path,name_str,bad_emails,header)
+        dupe_file=write_wb(staticdata_path,name_str,bad_emails,header)
     else:
         dupe_file=None
 
     if len(long_emails)>0:
         name_str='LONGEmailRegistrants '+ date_str +'.xlsx'
-        dupe_file=write_wb(export_path,name_str,long_emails,header)
+        dupe_file=write_wb(staticdata_path,name_str,long_emails,header)
 
     return single_file,dupe_file
 
 def sort_BPT_excel(target_file):
     """aggregates the cleaner funcitons, so i can enter the big BPT excel and shit out: good/bad emails, 2 incomplete name files, 1 complete name file"""
-    BPT_header = get_header((static_path+'BPTheader.xlsx'))
+    BPT_header = get_header((staticdata_path+'BPTheader.xlsx'))
     single_file,dupe_file=email_dupes(target_file)
 
     no_sk8name_file,no_real_name_file,complete_entries_file=find_incompletes(single_file)
@@ -298,9 +335,9 @@ def same_name(od_list):
                 sortedods.append(od)
 
     if len(dupes)>0:
-        header=get_header((static_path+'BPTheader.xlsx'))
+        header=get_header((staticdata_path+'BPTheader.xlsx'))
         name_str='Doppelsk8ers '+ date_str +'.xlsx'
-        write_wb(export_path,name_str,dupes,header)
+        write_wb(staticdata_path,name_str,dupes,header)
         print "Doppelsk8ers written"
     else:
         print "no dupes"
@@ -433,15 +470,15 @@ def sort_it_out(db_xlfile,bpt_xlfile):
         if od:
             not_found_yet.append(od)
 
-    header=get_header((static_path+'BPTheader.xlsx'))
+    header=get_header((staticdata_path+'BPTheader.xlsx'))
     #date_str=datetime.date.today().strftime("%B %d %Y")#eg 'July 23 2010'
     #global vairable, look at top of file
 
     if len(in_db)>0:
         name_str='BPT IN RollerTron '+ date_str +'.xlsx'
-        write_wb(export_path,name_str,in_db,header)
+        write_wb(staticdata_path,name_str,in_db,header)
         print "in db list written"
     if len(not_found_yet)>0:
         name_str='BPT NOT IN RollerTron '+ date_str +'.xlsx'
-        write_wb(export_path,name_str,not_found_yet,header)
+        write_wb(staticdata_path,name_str,not_found_yet,header)
         print "not db list written"

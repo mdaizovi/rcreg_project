@@ -95,7 +95,7 @@ event{{ NOTIFY_UNACCEPTED_CHALLENGES|pluralize }} which {%if NOTIFY_UNACCEPTED_C
 
               <input class="btn btn-danger btn-block" type="submit" method="post"name="submit_challenge" value="Submit Challenge"
               {%if not item.can_submit_chlg %}disabled
-              {%elif dict.chals_submitted|length >= MAX_CAPTAIN_LIMIT and not item.is_a_game %}
+              {%elif dict.chals_submitted|length >= MAX_CAPTAIN_LIMIT and not item.gametype == '6GAME' %}
               disabled
               {%endif%}>{%endif%}
               </form>

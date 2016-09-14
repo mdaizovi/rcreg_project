@@ -864,7 +864,8 @@ def edit_challenge(request, activity_id):
             save_attempt=True
             pre_save_gender=my_team.gender
             pre_save_skill=my_team.skill
-            if challenge.is_a_game:
+            #if challenge.is_a_game:
+            if challenge.gametype=="6GAME":
                 roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
                 challenge_form=GameModelForm(request.POST,user=user, instance=challenge)
                 my_team=roster_form.save(commit=False)#without this, criteria conflict was running off old gender/skill.
@@ -891,7 +892,8 @@ def edit_challenge(request, activity_id):
                 #this should run regardless of save team or confirm save, assuming it doesn't jump to conflict warning
                 #this is only if just updating team, not creating new or swapping captains or anything
                 roster=roster_form.save()
-                if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
+                #if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
+                if not challenge.gametype=="6GAME":
                     coed_beginner =roster.coed_beginner()
                     if coed_beginner:
                         roster.save()
@@ -989,7 +991,8 @@ def edit_challenge(request, activity_id):
 
     if my_team:
         if my_acceptance:
-            if challenge.is_a_game:
+            #if challenge.is_a_game:
+            if challenge.gametype=="6GAME":
                 roster_form=GameRosterCreateModelForm(instance=my_team)
                 challenge_form=GameModelForm(user=user,instance=challenge)
 
@@ -1247,7 +1250,8 @@ def my_challenges(request):
         chals_cap = list(Challenge.objects.filter(
                 Q(roster1__captain=registrant) |
                 Q(roster2__captain=registrant))
-                .exclude(is_a_game=True)
+                .exclude(gametype="6GAME")
+                #.exclude(is_a_game=True)
                 )
         if len(chals_cap) >= MAX_CAPTAIN_LIMIT:
             cap_exceeded = True
@@ -1365,7 +1369,8 @@ def propose_new_activity(request,is_a_game=False):
                         formlist=[]
                         if is_a_game:
                             coed_beginner=False
-                            challenge.is_a_game=True
+                            challenge.gametype="6GAME"
+                            #challenge.is_a_game=True
                         else:
                             coed_beginner=my_team.coed_beginner()
 

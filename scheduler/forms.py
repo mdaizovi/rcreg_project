@@ -113,7 +113,8 @@ class ChallengeRosterModelForm(ModelForm):
                     ))
             if len(clist) > 0:
                 c = clist[0]
-                if c.is_a_game:
+                if c.gametype == "6GAME":
+                #if c.is_a_game:
                     choices = SKILL_LEVEL_GAME
 
         #  Defining fields
