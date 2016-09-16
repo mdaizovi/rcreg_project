@@ -978,7 +978,7 @@ class Activity(models.Model):
                         participating.append(reg)
 
         elif self.is_a_challenge():
-            for ros in [self.roster1,self.roster2]:
+            for ros in [self.roster1, self.roster2]:
                 if ros:
                     for sk8 in ros.participants.all():
                         participating.append(sk8)

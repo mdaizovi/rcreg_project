@@ -620,16 +620,27 @@ class MatchingCriteria(models.Model):
 class RegistrantManager(models.Manager):
 
     #---------------------------------------------------------------------------
+    def basic_eligible(self, roster):
+        """Returns list of bare minimu eligible skaters for Roster.
+        Meant for Boss ladies to add people regardless of skill, gender, etc.
+        Just makes sure not already rostered.
+        """
+        already_registered = list(roster.participants.all())
+        reg_q = (Registrant.objects.filter(
+            con=roster.con,
+            pass_type__in=['MVP','Skater'])
+            .exclude(id__in=[o.id for o in already_registered ])
+            )
 
-    ######wha tthe fuck is this doing here? thi looks like it shoud be for roster.
+        return reg_q
 
+    #---------------------------------------------------------------------------
     def eligible_sk8ers(self, roster):
         """roster relates to training or challenge roster.
         Returns list of eligible registrants. Checks gender, intl, skill, & con.
         In retrospect I don't know why this is here and not MatchingCriteria.
         Too late to change, I guess.
         """
-
         from scheduler.models import Challenge  # Avoid circular import
 
         # Works regardless of Roster or TrainingRoster
@@ -648,7 +659,6 @@ class RegistrantManager(models.Manager):
                             opposing_skaters.append(skater)
             already_registered += opposing_skaters
 
-        if hasattr(roster, 'captain'):#if is challenge roster
             eligibles = (Registrant.objects.filter(
                     pass_type__in=roster.passes_allowed(),
                     con=roster.con,
@@ -805,7 +815,6 @@ class Registrant(MatchingCriteria):
 
         my_challenges=(list(Challenge.objects
                 .exclude(gametype="6GAME")
-                #.filter(is_a_game=False)
                 .filter(Q(roster1__captain=self) | Q(roster2__captain=self)
                 )))
 
@@ -1119,7 +1128,6 @@ class Registrant(MatchingCriteria):
             self.con = upcoming
 
         if self.is_a_captain():
-            #self.captaining = len(self.is_a_captain().exclude(is_a_game=True))
             self.captaining = len(self.is_a_captain().exclude(gametype="6GAME"))
 
         else:

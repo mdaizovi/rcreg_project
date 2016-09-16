@@ -23,16 +23,16 @@
 
 
     {%if add_fail %}
-    <div class="alert alert-danger" role="alert">{%if add_fail.sk8name%}{{add_fail.sk8name}} NOT added to {{my_team.name}} {%endif%}{%if add_fail_reason%}{{add_fail_reason}}{% endif %}</div>
+    <div class="alert alert-danger" role="alert">{{add_fail.name}} NOT added to {{my_team.name}} {%if add_fail_reason%}{{add_fail_reason}}{% endif %}</div>
     {%elif skater_added %}
-    <div class="alert alert-success" role="alert">{{skater_added.sk8name}} added to {{roster.name}}</div>
+    <div class="alert alert-success" role="alert">{{skater_added.name}} added to {{roster.name}}</div>
     {%endif%}
 
 
     {% if remove_fail %}
-    <div class="alert alert-danger" role="alert">{{remove_fail.sk8name}} NOT removed from {{roster.name}}</div>
+    <div class="alert alert-danger" role="alert">{{remove_fail.name}} NOT removed from {{roster.name}}</div>
     {% elif skater_remove %}
-    <div class="alert alert-success" role="alert">{{skater_remove.sk8name}} removed from {{roster.name}}</div>
+    <div class="alert alert-success" role="alert">{{skater_remove.name}} removed from {{roster.name}}</div>
     {%endif%}
 
     <div class="well well-md">

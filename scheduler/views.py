@@ -728,59 +728,75 @@ def challenges_home(request, con_id=None,):
 #-------------------------------------------------------------------------------
 @login_required
 def edit_roster(request, roster_id):
-        #This is for NSOs and Boss Ladies, not captains. Captains are meant to use edit_challenge
-        #right now only shows you eligible skaters. Should I let NSOs and boss ladies register anyone?
-    user=request.user
+    """For NSOs and Boss Ladies, not captains. Only lets you add/remove
+    skaters, only is sk8er is eligible by skil, gender, etc.
+    Captains are meant to use edit_challenge.
+    """
+
     try:
-        roster=Roster.objects.get(pk=roster_id)
+        roster = Roster.objects.get(pk=roster_id)
     except ObjectDoesNotExist:
         return render_to_response('edit_roster.html',{},context_instance=RequestContext(request))
-
-    #make sure this works with Game rosters tht can have several challenges attached to it
     try:
-        challenge=Challenge.objects.get(Q(roster1=roster)|Q(roster2=roster))
+        challenge = Challenge.objects.get(Q(roster1=roster) | Q(roster2=roster))
     except:
-        challenge=None
+        challenge = None
 
-    add_fail=False
-    skater_added=False
-    skater_remove=False
-    remove_fail=False
-    add_fail_reason=None
+    user=request.user
+    add_fail = False
+    skater_added = False
+    skater_remove = False
+    remove_fail = False
+    add_fail_reason = None
+    participating_in = []
 
     if request.method == "POST":
         if 'add skater' in request.POST:
-            skater_added,add_fail,add_fail_reason=roster.add_sk8er_challenge(request.POST['eligible_registrant'])
+            skater_added, add_fail, add_fail_reason = (
+                    roster.add_sk8er_challenge(request.POST['eligible_registrant'])
+                    )
 
         elif 'remove skater' in request.POST:
-            skater_remove,remove_fail=roster.remove_sk8er_challenge(request.POST['eligible_registrant'])
-
-    participants=EligibleRegistrantForm(my_arg=roster.participants.all())
+            skater_remove, remove_fail = (
+                    roster.remove_sk8er_challenge(request.POST['eligible_registrant'])
+                    )
+    # Done after, to make sure ater add/remove, so is up to date
+    participants = EligibleRegistrantForm(my_arg=roster.participants.all())
     participants.fields['eligible_registrant'].label = "Rostered Skaters"
+    participating_in = challenge.participating_in()
+
     if request.method == "POST" and 'search skater' in request.POST:
         skater_search_form=SearchForm(request.POST or None)
         skater_search_form.fields['search_q'].label = "Skater Name"
         entry_query = skater_search_form.get_query(['sk8name','last_name','first_name'])
         if entry_query:
-            #found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query) #this is only eligible skaters
-            found_entries = Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']).filter(entry_query) #this is all skaters
-            eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
+            found_entries = Registrant.objects.basic_eligible(roster).filter(entry_query)
+            eligible_participants = EligibleRegistrantForm(my_arg=found_entries)
             eligible_participants.fields['eligible_registrant'].label = "Found Eligible Skaters"
         else:
-            #found_entries = Registrant.objects.eligible_sk8ers(roster).order_by('sk8name','last_name','first_name') #this is only eligible skaters
-            found_entries = Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']).order_by('sk8name','last_name','first_name') #this is all skaters
-            eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
+            found_entries = Registrant.objects.basic_eligible(roster)
+            eligible_participants = EligibleRegistrantForm(my_arg=found_entries)
             eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
-    else:
-        skater_search_form=SearchForm()
+
+    else:  # not post or not searching for skater
+        skater_search_form = SearchForm()
         skater_search_form.fields['search_q'].label = "Skater Name"
-        #eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(roster)) #this is all skaters
-        eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=roster.con, pass_type__in=['MVP','Skater']))
+        found_entries = Registrant.objects.basic_eligible(roster)
+        eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
         eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
 
+    context_dict = {'challenge': challenge, 'skater_search_form': skater_search_form,
+            'participants': participants,'eligible_participants': eligible_participants,
+            'add_fail_reason': add_fail_reason, 'add_fail': add_fail,
+            'skater_added': skater_added, 'user': user, 'skater_remove': skater_remove,
+            'remove_fail': remove_fail, 'roster': roster
+            }
 
-    return render_to_response('edit_roster.html',{'challenge':challenge,'skater_search_form':skater_search_form,'participants':participants,'eligible_participants':eligible_participants,'add_fail_reason':add_fail_reason,'add_fail':add_fail,'skater_added':skater_added,'user':user,
-        'skater_remove':skater_remove,'remove_fail':remove_fail,'roster':roster}, context_instance=RequestContext(request))
+    return render_to_response(
+            'edit_roster.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required
