@@ -717,16 +717,15 @@ class Roster(Matching_Criteria):
 
     #---------------------------------------------------------------------------
     def clone_roster(self):
-        """Clones team, including roster. Not meant for trainings, just challenge rosters.
-        Makes a new one, whcih might be inapporpriate for purposes. To make existing roster mimic other, see mimic_roster"""
+        """Clones roster, including participants, so can only used for same Con.
+        Not meant for trainings, just challenge rosters.
+        Makes a new one, which might be inapporpriate for some purposes.
+        To make existing roster mimic other, see mimic_roster"""
 
-
-#############leaving these sloppy because I don't know the difference between the 2, need to fogre it out
-
-        clone=deepcopy(self)
-        clone.pk=None
-        clone.id=None
-        clone.internal_notes=None
+        clone = deepcopy(self)
+        clone.pk = None
+        clone.id = None
+        clone.internal_notes = None
         clone.save()
         clone.participants.add(*self.participants.all())
         clone.save()
@@ -734,8 +733,8 @@ class Roster(Matching_Criteria):
 
     #---------------------------------------------------------------------------
     def mimic_roster(self,original):
-        """makes self look just like original roster, except for pk, of course."""
-#############leaving these sloppy because I don't know the difference between the 2, need to fogre it out
+        """makes (existing) self look just like original roster, except for pk, of course.
+        Tomake new roster, use clone"""
 
         for attr in ['cap','name','captain','color','can_email']:
             value=getattr(original,attr)
@@ -892,15 +891,13 @@ class Activity(models.Model):
         if training, gerts average of coach skill
         to estimate interest my skill"""
         skill_list=[]
-        #print self
+
         if self.is_a_challenge():
-            #if self.is_a_game:
             if self.gametype == "6GAME":
                 skill_list.append(5)
             else:
                 for r in [self.roster1,self.roster2]:
                     if r and r.skill:
-                        #print r , r.skill
                         thisskill=SKILL_INTEREST_DICT.get(r.skill)
                         if thisskill:
                             skill_list.append(thisskill)
@@ -1009,7 +1006,6 @@ class Activity(models.Model):
             if self.is_a_training():#if this is a training
                 return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
             elif self.is_a_challenge():
-                #if self.is_a_game or float(self.duration)>=1:#has to be in C1
                 if self.gametype == "6GAME" or float(self.duration)>=1:#has to be in C1
                 #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
                     return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
@@ -1321,8 +1317,7 @@ class Activity(models.Model):
                 elif self.gametype=='36CHAL':
                     loc_str+="30 or 60m"
                 loc_str+=" Challenge"
-            #elif self.is_a_game or self.gametype=="6GAME":
-            elif self.gametype=="6GAME":
+            elif self.gametype == "6GAME":
                 loc_str+="60m Reg/San Game"
 
         return loc_str
@@ -1515,10 +1510,8 @@ class Challenge(Activity):
         can_sub=False
         if self.roster1 and self.captain1accepted and self.roster2 and self.captain2accepted:
             if self.con.can_submit_chlg_by_date():
-                #if self.is_a_game and not self.con.sched_final:
-                if self.gametype=="6GAME" and not self.con.sched_final:
+                if self.gametype == "6GAME" and not self.con.sched_final:
                     can_sub= True
-                #elif not self.is_a_game and self.con.can_submit_chlg():
             elif self.gametype != "6GAME" and self.con.can_submit_chlg():
                     can_sub= True
 

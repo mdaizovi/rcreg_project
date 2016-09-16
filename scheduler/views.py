@@ -24,7 +24,7 @@ from scheduler.app_settings import (MAX_CAPTAIN_LIMIT, CLOSE_CHAL_SUB_AT,
 from scheduler.forms import (CommunicationForm, MyRosterSelectForm,
         GameRosterCreateModelForm, GameModelForm, CoachProfileForm, SendEmail,
         ChallengeModelForm, ChallengeRosterModelForm, TrainingModelForm,
-        DurationOnly, ScoreFormDouble
+        DurationOnly, ScoreFormDouble, GenderSkillForm
         )
 
 from scheduler.models import Coach, Roster, Challenge, Training, GAMETYPE
@@ -864,7 +864,6 @@ def edit_challenge(request, activity_id):
             save_attempt=True
             pre_save_gender=my_team.gender
             pre_save_skill=my_team.skill
-            #if challenge.is_a_game:
             if challenge.gametype=="6GAME":
                 roster_form=GameRosterCreateModelForm(request.POST, instance=my_team)
                 challenge_form=GameModelForm(request.POST,user=user, instance=challenge)
@@ -892,7 +891,7 @@ def edit_challenge(request, activity_id):
                 #this should run regardless of save team or confirm save, assuming it doesn't jump to conflict warning
                 #this is only if just updating team, not creating new or swapping captains or anything
                 roster=roster_form.save()
-                #if not challenge.is_a_game:#I only want this to run for challenges. games are automatically any skill any gender.
+                #I only want this to run for challenges. games are automatically any skill any gender.
                 if not challenge.gametype=="6GAME":
                     coed_beginner =roster.coed_beginner()
                     if coed_beginner:
@@ -991,7 +990,6 @@ def edit_challenge(request, activity_id):
 
     if my_team:
         if my_acceptance:
-            #if challenge.is_a_game:
             if challenge.gametype=="6GAME":
                 roster_form=GameRosterCreateModelForm(instance=my_team)
                 challenge_form=GameModelForm(user=user,instance=challenge)
@@ -1251,7 +1249,6 @@ def my_challenges(request):
                 Q(roster1__captain=registrant) |
                 Q(roster2__captain=registrant))
                 .exclude(gametype="6GAME")
-                #.exclude(is_a_game=True)
                 )
         if len(chals_cap) >= MAX_CAPTAIN_LIMIT:
             cap_exceeded = True
@@ -1291,128 +1288,119 @@ def my_challenges(request):
 
 #-------------------------------------------------------------------------------
 @login_required
-def propose_new_game(request):
-    """propose_new_game and propose_new_challenge are mostly the same, with mild differences sorted out in propose_new_activity"""
-    return propose_new_activity(request,is_a_game=True)
-
-#-------------------------------------------------------------------------------
-@login_required
 def propose_new_challenge(request):
-    return propose_new_activity(request)
+    """If you have pass, lets you propose Challenge/Game.
+    If Challenge, after asks you to choose gender/skill.
+    If successful, redirects to edit challenge.
+    """
 
-#-------------------------------------------------------------------------------
-@login_required
-def propose_new_activity(request,is_a_game=False):
-    #reminder: challenge.is_a_game and is_a_game both exist. is_a_game exists for when the chalenge hasn't been made yet, to know user intention.
-    user=request.user
-    cansk8=False
-    cancaptain=False
-    formlist=None
-    coed_beginner=None
-    my_teams_as_cap=None
-    captain_conflict=None
-    problem_criteria=None
-    my_team=None
-    challenge=None
-    roster_form=None
+    # If creation success, these 6 Nones/[] get replaced.
+    # Don't want to repeat w/ every possible failure
+    challenge = None
+    challenge_id = None
+    my_team = None
+    roster_id = None
+    formlist = []
+    my_teams_as_cap = []
 
-    upcoming_registrants=user.upcoming_registrants()
+    user = request.user
+    upcoming_registrants = user.upcoming_registrants()
+    cansk8 = False
     if upcoming_registrants:
         for reg in upcoming_registrants:
-            #if more than 1 registrant, only 1 of these needs to be true
+            # if more than 1 registrant, only 1 of these needs to be true
             if reg.can_sk8():
-                cansk8=True
-            if reg.can_captain() or is_a_game:
-                cancaptain=True
+                cansk8 = True
 
-        if request.method == "POST":
+    if request.method == "POST":
 
-            if 'is_a_game' in request.POST:
-                is_a_game=True
-                challenge_form=GameModelForm(request.POST or None,user=user)
-            else:
-                challenge_form=ChallengeModelForm(request.POST or None,user=user)
+        if 'gender' in request.POST or 'clone roster' in request.POST:
+            if 'gender' in request.POST:
+                my_team = Roster.objects.get(pk=int(request.POST["roster_id"]))
+                challenge = Challenge.objects.get(pk=int(request.POST["challenge_id"]))
 
-            #where i figure out or make my team
-            if 'clone roster' in request.POST:
-                old_team=Roster.objects.get(pk=request.POST['roster_to_clone_id'])
-                my_team=old_team.clone_roster()
-                if is_a_game:
-                    roster_form=GameRosterCreateModelForm(instance=my_team)
-                else:
-                    roster_form=ChallengeRosterModelForm(user=user,instance=my_team)
-                challenge=Challenge(roster1=my_team,con=my_team.con)
+                gsf = GenderSkillForm(request.POST, captain=my_team.captain)
+                if gsf.is_valid():
+                    my_team.gender = request.POST["gender"]
+                    my_team.skill = request.POST["skill"]
+                    my_team.save()
+
+            elif 'clone roster' in request.POST:
+                old_team = Roster.objects.get(pk=request.POST['roster_to_clone_id'])
+                my_team = old_team.clone_roster()
+                challenge = Challenge(roster1=my_team,con=my_team.con)
+                try:
+                    old_chal = Challenge.objects.get(
+                            Q(roster1=old_team) |
+                            Q(roster2=old_team)
+                            )
+                    challenge.location_type = old_chal.location_type
+                except:
+                    location_type = "Flat Track"  # Easy default
+
+            # Runs if either gender or clone is successful
+            if my_team and challenge:
                 challenge.save()
-                my_team.captain.save()#to adjust captaining number
+                my_team.captain.save()  # to adjust captaining number
 
-            else:
-                if is_a_game:
-                    roster_form=GameRosterCreateModelForm(request.POST)
-                else:
-                    roster_form=ChallengeRosterModelForm(request.POST,user=user)
+        else: # If not cloning roster, not saving gender/skill, first make
+            challenge_form = GameModelForm(request.POST or None, user=user)
+            roster_form = GameRosterCreateModelForm(request.POST)
+            if roster_form.is_valid() and challenge_form.is_valid():
+                my_team=roster_form.save(commit=False)
+                my_team.captain = Registrant.objects.get(
+                        user=user, con__id=request.POST['con']
+                        )
+                my_team.con = my_team.captain.con
+                my_team.save()
+                my_team.save()  # To put self on roster
+                challenge=challenge_form.save(commit=False)
+                challenge.roster1 = my_team
+                challenge.save()
+                my_team.captain.save()  # To adjust captaining number
 
-                if roster_form.is_valid():
-                    my_team=roster_form.save(commit=False)
-                    try:
-                        my_team.captain=Registrant.objects.get(user=user, con__id=request.POST['con'])
-                        my_team.con=my_team.captain.con
-                        problem_criteria,potential_conflicts,captain_conflict=my_team.criteria_conflict()
-                    except:
-                        pass#if can't get registrant
+                if challenge.gametype != "6GAME":
+                # Only need these 2 if need to specify gender/skill, or failure
+                    roster_id = my_team.pk
+                    challenge_id = challenge.pk
+                    formlist = [GenderSkillForm(captain=my_team.captain)]
 
-                    if my_team and not captain_conflict and challenge_form.is_valid():
-                        my_team.save()
-                        my_team.save()#put self on roster
-                        challenge=challenge_form.save(commit=False)
-                        challenge.roster1=my_team
-                        challenge.captain1accepted=True
-                        formlist=[]
-                        if is_a_game:
-                            coed_beginner=False
-                            challenge.gametype="6GAME"
-                            #challenge.is_a_game=True
-                        else:
-                            coed_beginner=my_team.coed_beginner()
+        # Regardless of whether cloned or made by post,
+        # if new challenge has been born
+        if challenge and my_team and not formlist:
+            return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
 
-                        challenge.save()
-                        my_team.captain.save()#to adjust captaining number
-                    else:
-                        if captain_conflict:
-                            print "captain conflict"
-                        if not challenge_form.is_valid():
-                            print "challenge_form not valid"
-                            print challenge_form.errors
-                else:
-                    print "roster form errors"
-                    print roster_form.errors
+    # This is where not request.post starts
+    elif cansk8:
+        for r in upcoming_registrants:
+            rosters = list(Roster.objects.filter(captain=r))
+            for r in rosters:
+            # I don't know why have to do it this way.
+            # .exclude name=None excludes all, for some reason
+                if not r.name:
+                    rosters.remove(r)
+            my_teams_as_cap += list(rosters)
 
+        formlist = [
+                GameRosterCreateModelForm(request.POST or None),
+                GameModelForm(request.POST or None, user=user)
+                ]
 
-            #regardless of whether cloned or made by post, if bew challenge has been born
-            if challenge and my_team and not captain_conflict:
-                return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
+    # Runs if not post, if posts and errors, or if need to get gender/skill
+    context_dict = {
+            'challenge_id': challenge_id,
+            'roster_id': roster_id,
+            'my_teams_as_cap': my_teams_as_cap,
+            'cansk8': cansk8,
+            'upcoming_registrants': upcoming_registrants,
+            'formlist':formlist
+            }
 
-        #this is where not request.post starts
-        if cansk8:
-            formlist=[]
-            my_teams_as_cap=[]
-            for r in upcoming_registrants:
-                #my_teams_as_cap+=list(r.captain.exclude(name=None))
-                rosters=list(Roster.objects.filter(captain=r))
-                for r in rosters:#I don't know why i ahve to do it this way. .exclude name=None ecludes all, for osme reason
-                    if not r.name:
-                        rosters.remove(r)
-                my_teams_as_cap+=list(rosters)
-
-            if is_a_game:
-                if not roster_form:
-                    roster_form=GameRosterCreateModelForm(request.POST or None)
-                formlist=[roster_form,GameModelForm(request.POST or None,user=user)]
-            elif cancaptain:#I'm not sure why tis has request post but challenge does not...?
-                if not roster_form:
-                    roster_form=ChallengeRosterModelForm(user=user)
-                formlist=[roster_form,ChallengeModelForm(request.POST or None,user=user)]
-
-    return render_to_response('propose_new_challenge.html', {'problem_criteria':problem_criteria,'captain_conflict':captain_conflict,'my_teams_as_cap':my_teams_as_cap,'is_a_game':is_a_game,'cancaptain':cancaptain,'cansk8':cansk8,'upcoming_registrants':upcoming_registrants,'MAX_CAPTAIN_LIMIT':MAX_CAPTAIN_LIMIT,'formlist':formlist},context_instance=RequestContext(request))
+    return render_to_response(
+            'propose_new_challenge.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 @login_required

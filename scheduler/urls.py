@@ -24,10 +24,6 @@ urlpatterns = patterns('',
             'scheduler.views.propose_new_challenge',
             name='propose_new_challenge'
             ),
-    url(r'^propose_new_game/',
-            'scheduler.views.propose_new_game',
-            name='propose_new_game'
-            ),
     url(r'^captain/email/(?P<roster_id>\d+)/$',
             'scheduler.views.email_captain',
             name='email_captain'

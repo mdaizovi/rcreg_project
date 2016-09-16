@@ -196,7 +196,7 @@ class ChallengeModelForm(ModelForm):
         self.fields["con"].queryset = Con.objects.filter(
                 id__in=[o.id for o in conlist]
                 )
-        self.fields["con"].initial = conlist[-1]
+        self.fields["con"].initial = conlist[0]
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
@@ -292,6 +292,11 @@ class GameModelForm(ModelForm):
                 initial=LOCATION_TYPE[0][0],
                 label='Location Type'
                 )
+        self.fields["gametype"] = forms.CharField(
+                widget=forms.Select(choices=GAMETYPE),
+                initial=GAMETYPE[0][0],
+                label='Type'
+                )
         self.fields["ruleset"] = forms.CharField(
                 widget=forms.Select(choices=RULESET),
                 initial=RULESET[0][0],
@@ -308,7 +313,7 @@ class GameModelForm(ModelForm):
         self.fields["con"].queryset = Con.objects.filter(
                 id__in=[o.id for o in conlist]
                 )
-        self.fields["con"].initial = conlist[-1]
+        self.fields["con"].initial = conlist[0]
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({
@@ -319,8 +324,41 @@ class GameModelForm(ModelForm):
     class Meta:
 
         model = Challenge
-        fields = ['con', 'location_type', 'ruleset', 'communication']
+        fields = ['con', 'location_type', 'gametype', 'ruleset', 'communication']
 
+
+#===============================================================================
+class GenderSkillForm(forms.Form):
+
+    #---------------------------------------------------------------------------
+    def __init__(self, *args, **kwargs):
+        captain = kwargs.pop('captain')
+        super(GenderSkillForm, self).__init__(*args, **kwargs)
+
+        # Try to only include skills captain is eligible for
+        skill_options = []
+        if captain.skill:
+            for s in SKILL_LEVEL_CHG[1:]:
+                if captain.skill in s[0]:
+                    skill_options.append(s)
+        else:
+            # So won't be problem if captain didn't specify skill
+            skill_options = SKILL_LEVEL_CHG[1:]
+
+        #  Defining fields
+        self.fields["skill"] = (forms.CharField(
+                widget=forms.Select(choices=skill_options),
+                initial=captain.skill+"O",
+                label='Skill Level')
+                )
+        self.fields["gender"] = (forms.CharField(
+                widget=forms.Select(choices=GENDER),
+                initial=captain.gender,
+                label='Restrict Participant Gender?')
+                )
+
+        for field in iter(self.fields):
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
 
 
 #===============================================================================
@@ -356,6 +394,8 @@ class ScoreFormDouble(forms.Form):
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({'class': 'form-control'})
 
+
+#===============================================================================
 class CommunicationForm(forms.Form):
 
     #---------------------------------------------------------------------------

@@ -7,45 +7,6 @@ import openpyxl
 import collections
 
 
-
-########temporary toget rid of is a Game
-
-from scheduler.models import Challenge
-
-def sift_games():
-    chals=list(Challenge.objects.all())
-    gametype=[]
-    isagame=[]
-    both=[]
-    neither=[]
-    other=[]
-    print len(chals)," Challenges total"
-    for c in chals:
-        if c.is_a_game or c.gametype=="6GAME":
-            if c.is_a_game and c.gametype=="6GAME":
-                both.append(c)
-            elif c.is_a_game:
-                isagame.append(c)
-            elif c.gametype=="6GAME":
-                gametype.append(c)
-            else:
-                print "this shouldn't happen"
-                other.append(c)
-        else:
-            neither.append(c)
-
-    print "end of sorting challenges"
-    print "both: ",len(both)
-    print "gametype: ",len(gametype)
-    print "isagame: ",len(isagame)
-    print "other (should be 0) : ",len(other)
-    print "neither: ",len(neither)
-
-    return gametype, isagame, both, other
-
-
-####################################
-
 """This whole file is for helping me compare excel files of who SHOULD BE in RollerTron
 and who ACTUALLY IS in RollerTron.
 Assumes the ACUALLY IS is re-arranged from export to look like BPT excel.

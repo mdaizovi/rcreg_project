@@ -11,20 +11,9 @@
 
 <div class="row" id="moreInfo">
   <div class="col-sm-12">
-    <h3>Propose a New Challenge or Game<br>
-      <small>Choose "Challenge" for unaffiliated, non-chartered teams <i>(Example: Vagine Regime, Team SeXY, Yellow Fever, etc.)</i>
-        <br>Choose "Game" for official teams of existing leagues <i>(Example: San Diego Derby Dolls Wildfires)</i></small></h3>
-
-
-          {% if captain_conflict %}
-            <div class="alert alert-danger" role="alert">Selecting this criteria for
-              {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
-              would make you ineligible for this team and would leave it without a captain. Team not made.
-            </div>{%endif%}
-
+    <h3>Propose a New Challenge or Game</h3>
 
 {%if upcoming_registrants and cansk8 %}
-{%if cancaptain %}
   <p class="margin-top-15"><b>{%if my_teams_as_cap%}Clone one of your existing teams or c{%else%}C{%endif%}reate new team</b></p>
 
 {%if formlist %}
@@ -57,9 +46,10 @@
 <form method="POST" class="post-form">
       {% csrf_token %}
 
-{%if is_a_game %}<input type="hidden" name="is_a_game" value="{{ is_a_game }}" />{%endif%}
+<input type="hidden" name="roster_id" value="{{ roster_id }}" />
+<input type="hidden" name="challenge_id" value="{{ challenge_id }}" />
 
-  {%for form in formlist %}
+{%for form in formlist %}
 {%for field in form %}
 {%if field.errors%}{{field.errors}}{%endif%}
 <div class="form-group">{{ field.label }} {{ field }}
@@ -70,12 +60,6 @@
 </div>
 {%endif%}
 
-
-
-{%else%} <!-- if upcoming registrants but no cancaptain-->
-<div class="alert alert-danger" role="alert">You are already captaining the maximum number of challenges ({{MAX_CAPTAIN_LIMIT}}) for RollerCon: {{registrant.con}}.<br>
-Please contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is an error.</div>
-{%endif%}
 
 {%else%} <!--if not upcoming_registrants or not can sk8-->
 <div class="alert alert-danger" role="alert">In order to propose a Challenge, you need have a Skater or MVP pass for an upcoming RollerCon, which you do not.<br>
