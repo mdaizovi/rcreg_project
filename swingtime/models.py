@@ -15,7 +15,7 @@ from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from scheduler.models import Location, Challenge, Training,INTEREST_RATING
 from scheduler.app_settings import DEFAULT_REG_CAP, DEFAULT_AUD_CAP
 
-from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG
+from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG, MatchingCriteria
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
 from rcreg_project.extras import ascii_only_no_punct
 
@@ -895,20 +895,20 @@ class Occurrence(models.Model):
         return wb,xlfilename
 
 #-------------------------------------------------------------------------------
-class TrainingRoster(models.Model):
+class TrainingRoster(MatchingCriteria):
     """Used for Registration and Auditing roster for training Occurrences.
-    Can be made in the Admin if made INTL, or made using get_or_create in register_training view.
-    Otherwise, not necessary yet."""
+    Can be made in the Admin if made INTL, or made using get_or_create in
+    register_training view. Otherwise, not necessary yet.
+    """
 
-    #gender=models.CharField(max_length=30, choices=GENDER, default=GENDER[0][0])
-    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)#make this so that it cn be same as training or not, or maube just get rid of it
-    intl=models.NullBooleanField(default=False)
-    participants=models.ManyToManyField(Registrant, blank=True)
-    cap=models.IntegerField(null=True, blank=True)
+    # From Matching_criteria: gender, con, intl, skill
+    # To override skill choices defined in matching_criteria
+    #nevermind, doesn't work, need to limit choices elsewhere.
+    #skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)#make this so that it cn be same as training or not, or maube just get rid of it
+    cap = models.IntegerField(null=True, blank=True)
+    participants = models.ManyToManyField(Registrant, blank=True)
 
     #Reminder: can have 1 of these but not both.
-      #why did i decide to do it this way, instead of occurrence linking to TrainingRoster?
-      #maybe so i don't bog down every non-training occurrence w/2 empty fields.
     registered=models.OneToOneField("Occurrence", null=True,blank=True,related_name="registered")
     auditing=models.OneToOneField("Occurrence", null=True,blank=True,related_name="auditing")
 
@@ -916,87 +916,92 @@ class TrainingRoster(models.Model):
         return self.name
 
     class Meta:
-        ordering=('registered__start_time','auditing__start_time','registered__training__name','auditing__training__name')
+        ordering=('registered__start_time', 'auditing__start_time',
+                'registered__training__name', 'auditing__training__name'
+                )
 
     @property
     def name(self):
-        basename=""
+        basename = ""
         if self.registered:
             if self.intl:
-                basename+="INTL "
-            basename+=("%s %s (REGISTERED)"%(self.registered.name,self.registered.start_time.strftime("%a %B %d %I:%-M %p")))
+                basename += "INTL "
+            basename += ("%s %s (REGISTERED)" %
+                    (self.registered.name,
+                    self.registered.start_time.strftime("%a %B %d %I:%-M %p")
+                    ))
         elif self.auditing:
-            basename+=("%s %s (AUDITING)"%(self.auditing.name, self.auditing.start_time.strftime("%a %B %d %I:%-M %p")))
+            basename += ("%s %s (AUDITING)" %
+                    (self.auditing.name,
+                    self.auditing.start_time.strftime("%a %B %d %I:%-M %p")
+                    ))
         else:
-            basename+="Training Roster sans Training"
+            basename += "Error. Training Roster without a Training"
 
         return basename
     #---------------------------------------------------------------------------
     def validate_unique(self, *args, **kwargs):
         super(TrainingRoster, self).validate_unique(*args, **kwargs)
+
         if self.registered and self.auditing:
             raise ValidationError({
-                NON_FIELD_ERRORS: ["Roster cannot be both Registered and Auditing",],})
+                NON_FIELD_ERRORS: ["Roster cannot be both Registered & Auditing",],})
 
         if not self.registered and not self.auditing:
             raise ValidationError({
                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
 
-    def intl_icon(self):
-        if self.intl:
-            #return "glyphicon icon-passportbig"
-            #return "glyphicon icon-plane-outline"
-            return "glyphicon icon-globe-alt"
-        else:
-            return "glyphicon icon-universal-access"
-
-    def intl_text(self):
-        if self.intl:
-            return "International"
-        else:
-            return None
-
-    def intl_tooltip_title(self):
-        if self.intl:
-            return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
-        else:
-            return "No location restrictions for registration"
-
     def intls_allowed(self):
         if self.intl is True:
-            allowed=[True]
+            allowed = [True]
         else:
-            allowed=[True,False,None]
+            allowed = [True,False,None]
         return allowed
 
     def can_register_at(self):
         """Returns datetime registration for class starts
         both for displaying that time and checking if now is past that time"""
 
-        can_reg=None
-        regtimes=[]
+        can_reg = None
+        regtimes = []
 
         if self.registered or self.auditing:
             if self.registered:
-                o=self.registered
+                o = self.registered
             elif self.auditing:
-                o=self.auditing
-            con=o.training.con
+                o = self.auditing
+            con = o.training.con
 
-            ostart=datetime.time(hour=o.start_time.hour,minute=o.start_time.minute)
-            if ostart<=con.morning_class_cutoff:#if class starts early enough in the morning
+            ostart = datetime.time(hour=o.start_time.hour,minute=o.start_time.minute)
+            if ostart <= con.morning_class_cutoff:
+                # if class starts early enough in the morning
                 yday = datetime.timedelta(days=1)
-                startday=o.start_time.date()-yday
-                regtimes.append(datetime.datetime(year=startday.year, month=startday.month, day=startday.day, hour=con.dayb4signup_start.hour, minute=con.dayb4signup_start.minute))
+                startday = o.start_time.date() - yday
+                tempdt = datetime.datetime(
+                        year=startday.year,
+                        month=startday.month,
+                        day=startday.day,
+                        hour=con.dayb4signup_start.hour,
+                        minute=con.dayb4signup_start.minute
+                        )
+                regtimes.append(tempdt )
 
-            #otherwise this is time-hoursb4signup
-            #it calculates both just in case timezone doesn't work and they do something like 48 hours before class time or something
+            # otherwise this is time - hoursb4signup
+            # calculates both just in case timezone doesn't work
+            # and they do something like 48 hours before class time or something
             b4signup = datetime.timedelta(hours=float(con.hoursb4signup))
-            regtime=o.start_time-b4signup
-            regtimes.append(datetime.datetime(year=o.start_time.year, month=o.start_time.month, day=o.start_time.day, hour=regtime.hour, minute=regtime.minute))
+            regtime = o.start_time - b4signup
+            tempdt2 = datetime.datetime(
+                    year=o.start_time.year,
+                    month=o.start_time.month,
+                    day=o.start_time.day,
+                    hour=regtime.hour,
+                    minute=regtime.minute
+                    )
+            regtimes.append(tempdt2)
 
-            if len(regtimes)>0:
-                can_reg=min(regtimes)
+            if len(regtimes) > 0:
+                can_reg = min(regtimes)
 
         return can_reg
 
@@ -1013,141 +1018,121 @@ class TrainingRoster(models.Model):
             return False
 
     def get_maxcap(self):
-        '''checks is roster has a cap. If not, supplies defaults listed at top of file.
-        PRIORITY: self.cap for TrainingRoster, then if Training specifically has a regcap or audcap, then if not, general default cap listed in Scheduler.models.
-        If this is the auditing roster of an INTL training, it allows the audit cap to be
-        general training defaults-number of people registered. Tht is so coaches can have a larger audit roster in empty INTL classes.
-        LOOPHOLE: people w/out an MVP pass can sign up to audit an INTL class and then be allowed in to participate.
-        I think it'll take people a long time to figure tha tout, if they ever do.'''
-        intl=False
+        """Gets maximum number of participants for triningroster.
+        PRIORITY ORDER: self.cap for TrainingRoster, use that.
+        If not, then if Training specifically has a regcap or audcap.
+        If not, general default cap listed in Scheduler.models.
+        If this is the auditing roster of an INTL training, allows the audit cap
+        to be general training defaults-number of people registered.
+        That is so coaches can have a larger audit roster in empty INTL classes.
+        LOOPHOLE: people w/out an MVP pass can sign up to audit an INTL class
+        and then be allowed in to participate.
+        I think it'll take people a long time to figure that out, if they ever do.
+        """
+
+        intl = False
 
         if self.registered and self.registered.training:
             #If this is a registration training roster
 
             #get regcap
             if self.cap:
-                regcap=self.cap
+                regcap = self.cap
             elif self.registered.training.regcap:
-                regcap=self.registered.training.regcap
+                regcap = self.registered.training.regcap
             else:
-                regcap=DEFAULT_REG_CAP
+                regcap = DEFAULT_REG_CAP
 
             if self.intl:
-                intl=True
+                intl = True
 
                 #get audcap. Only need if is intl
-                audcap=DEFAULT_AUD_CAP #might get overwritten, jsut here so I don't need ot do 2 elses
+                audcap = DEFAULT_AUD_CAP
+                # audcap might get overwritten, just here so I don't need to do 2 elses
                 if self.registered.auditing and self.registered.auditing.cap:
-                    audcap=self.registered.auditing.cap
+                    audcap = self.registered.auditing.cap
                 elif self.registered.training and self.registered.training.audcap:
-                    audcap=self.registered.training.audcap
-            else:#if not intl
-                maxcap=regcap
+                    audcap = self.registered.training.audcap
+            else:  # If not intl
+                maxcap = regcap
 
         elif self.auditing and self.auditing.training:
-            #if this is the auditing trainingroster
-            #need to get audcap even if is INTL and gets overridden, bc is used in equation
+            # If this is the auditing trainingroster
+            # Need to get audcap even if is INTL and gets overridden, bc is used in equation
             if self.cap:
-                audcap=self.cap
+                audcap = self.cap
             elif self.auditing.training.audcap:
-                audcap=self.auditing.training.audcap
+                audcap = self.auditing.training.audcap
             else:
-                audcap=DEFAULT_AUD_CAP
+                audcap = DEFAULT_AUD_CAP
 
             if self.auditing.registered.intl:
-                intl=True
+                intl = True
 
-                regcap=DEFAULT_REG_CAP#might get overwritten, jsut here so I don't need ot do 2 elses
+                regcap = DEFAULT_REG_CAP
+                # regcap might get overwritten, just here so I don't need ot do 2 elses
                 if self.auditing.registered and self.auditing.registered.cap:
-                    regcap=self.auditing.registered.cap
+                    regcap = self.auditing.registered.cap
                 elif self.auditing.training and self.auditing.training.regcap:
-                    regcap=self.auditingtraining.regcap
+                    regcap = self.auditingtraining.regcap
             else:
-                maxcap=audcap
+                maxcap = audcap
 
         if intl:
-            if self.registered and self.registered.training:#If this is a registration training roster
+            if self.registered and self.registered.training:
+            #If this is a registration training roster
+
             #what to do if is registration
                 if self.registered.auditing:
-                    audsk8=self.registered.auditing.participants.count()
+                    audsk8 = self.registered.auditing.participants.count()
                 else:
-                    audsk8=0
+                    audsk8 = 0
 
-                intlborrow=audsk8-audcap #how mant people were borrowed from unfulfilled regcap?
-                if intlborrow>0:
-                    maxcap=regcap-intlborrow #how many people are allowed minus people borroed from reg roster for audit
+                intlborrow = audsk8-audcap
+                # How mant people were borrowed from unfulfilled regcap?
+                if intlborrow > 0:
+                    #How many people are allowed minus people borrowed from reg roster for audit
+                    maxcap = regcap - intlborrow
                 else:
-                    maxcap=regcap
+                    maxcap = regcap
 
-            elif self.auditing and self.auditing.training:#if this is the auditing trainingroster
+            elif self.auditing and self.auditing.training:
+                # If this is the auditing trainingroster
                 if self.auditing.registered:
-                    regsk8=self.auditing.registered.participants.count()
+                    regsk8 = self.auditing.registered.participants.count()
                 else:
-                    regsk8=0
+                    regsk8 = 0
 
-                maxcap=((regcap-regsk8)+audcap)
+                maxcap = ((regcap - regsk8) + audcap)
 
         return maxcap
 
 
     def spacea(self):
-        '''gets maxcap (see above), checks is participants are fewer'''
-        #print "starting spacea for ",self
-        maxcap=self.get_maxcap()
-        #print "maxcap ",maxcap
-        spacea=maxcap-self.participants.count()
-        #print "spacea ",spacea
+        """gets maxcap (see above), checks is participants are fewer"""
+        maxcap = self.get_maxcap()
+        spacea = maxcap - self.participants.count()
 
-        if spacea>0:
+        if spacea > 0:
             return spacea
         else:
             return False
 
     def editable_by(self):
-        '''returns list of Users that can edit Roster
-        this is for adding/removing roster participants, so coaches actually don't have this permission,
-        they are only true in activity.editable_by. This is Bosses and Volunteers.'''
-        allowed_editors=list(User.objects.filter(groups__name__in=['Volunteer',BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        """Returns list of Users that can edit Roster.
+        For adding/removing roster participants, so coaches actually don't have
+        this permission,coaches are only true in activity.editable_by.
+        This is Bosses and Volunteers."""
+
+        allowed_editors = list(User.objects.filter(
+                groups__name__in=[
+                        'Volunteer', BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
+                        ]
+                ))
+
         return allowed_editors
 
-    def skills_allowed(self):
-        if self.skill:
-            allowed=list(self.skill)
-            if "O" in allowed:
-                allowed.remove("O")
-        else:
-            allowed=["A","B","C","D"]
-        return allowed
 
-    def skill_display(self):
-        """This makes it so I don't see A0, just A, or AB, or something more understandable"""
-        prettify=''.join(self.skills_allowed())
-        return prettify
-
-    def skill_tooltip_title(self):
-        if self.skill:
-            allowed=self.skills_allowed()
-            allowed.sort(reverse=True)
-            skill_dict=dict(SKILL_LEVEL)
-            str_base="Registrant must identify skill as"
-            str_end= " in Profile in order to register"
-            str_mid=""
-            for item in allowed:
-                if item:
-                    displayable=skill_dict.get(item)
-                    if item==allowed[-1]:
-                        item_str=" or "+displayable
-                    else:
-                        item_str=" "+displayable+","
-
-                str_mid+=item_str
-            return str_base+str_mid+str_end
-        else:
-            return "No skill restrictions for registration"
-
-    def skill_icon(self):
-        if not self.skill:
-            return "glyphicon icon-universal-access"
 
     # def save(self, *args, **kwargs):
     #     if self.registered and self.registered.training:

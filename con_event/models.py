@@ -441,7 +441,7 @@ class Blackout(models.Model):
 
 
 #===============================================================================
-class Matching_Criteria(models.Model):
+class MatchingCriteria(models.Model):
     """"Used to match registrants to activities.
     Registrant and Roster inherit from it.
     """
@@ -459,7 +459,9 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def skills_allowed(self):
-        """Used for rosters to indicate which skill can be registered."""
+        """Used for Rosters/TrainingRosters to indicate
+        which skill can be registered.
+        """
 
         if self.skill:
             allowed = list(self.skill)
@@ -472,7 +474,9 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def skill_display(self):
-        """Makes it so don't see A0, just A, or AB, etc. """
+        """Used for Rosters/TrainingRosters.
+        Makes it so don't see A0, just A, or AB, etc.
+        """
 
         prettify = ''.join(self.skills_allowed())
 
@@ -480,7 +484,9 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def skill_tooltip_title(self):
-        """Used in templates to tell people with words what the symbols mean."""
+        """Used for Rosters/TrainingRosters.
+        Used in templates to tell people with words what the symbols mean.
+        """
 
         if self.skill:
             allowed = self.skills_allowed()
@@ -504,7 +510,8 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def skill_icon(self):
-        """Returns icon. Localized here so only have to change once, if ever."""
+        """Returns icon. Localized here so only have to change once, if ever.
+        Used for Rosters/TrainingRosters """
 
         if not self.skill:
 
@@ -512,7 +519,9 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def intl_icon(self):
-        """Returns icon. Localized here so only have to change once, if ever."""
+        """Returns icon. Localized here so only have to change once, if ever.
+        Used for Roster and TrainingRoster.
+        """
 
         if self.intl:
             return "glyphicon icon-globe-alt"
@@ -521,7 +530,9 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def intl_text(self):
-        """Localized here so only have to change once, if ever."""
+        """Localized here so only have to change once, if ever.
+        Used for Roster and TrainingRoster.
+        """
 
         if self.intl:
             return "International"
@@ -530,7 +541,8 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def intl_tooltip_title(self):
-        """Localized here so only have to change once, if ever."""
+        """Localized here so only have to change once, if ever.
+        Used for Rosters/TrainingRosters"""
 
         if self.intl:
             intl_text = ("Registrant must qualify as 'International' in order \
@@ -544,7 +556,8 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def gender_icon(self):
-        """Localized here so only have to change once, if ever."""
+        """Localized here so only have to change once, if ever.
+        Used for Rosters/TrainingRosters."""
 
         if self.gender == GENDER[0][0]:  #If Female
             return "fa fa-venus"
@@ -556,7 +569,8 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def gender_text(self):
-        """Localized here so only have to change once, if ever."""
+        """Localized here so only have to change once, if ever.
+        Used for Rosters/TrainingRosters """
 
         if self.gender == GENDER[0][0]:  # If Female
             return "Female"
@@ -567,7 +581,8 @@ class Matching_Criteria(models.Model):
 
     #---------------------------------------------------------------------------
     def gender_tooltip_title(self):
-        """Localized here so only have to change once, if ever."""
+        """Localized here so only have to change once, if ever.
+        Used for Rosters/TrainingRosters."""
 
         if self.gender == GENDER[0][0]:  # If Female
             gender_tt = ("Registrant must identify as 'Female' in Profile \
@@ -581,13 +596,19 @@ class Matching_Criteria(models.Model):
         return gender_tt
 
     #---------------------------------------------------------------------------
+
+
+
+
+
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
 
         if not self.intl:
             # I don't like None, I just leave it for default select widget
             self.intl = False
 
-        super(Matching_Criteria, self).save()
+        super(MatchingCriteria, self).save()
 
     #---------------------------------------------------------------------------
     class Meta:
@@ -657,7 +678,7 @@ class RegistrantManager(models.Manager):
         return eligibles
 
 #===============================================================================
-class Registrant(Matching_Criteria):
+class Registrant(MatchingCriteria):
 
     # First the necessary fields
     user = (models.ForeignKey(

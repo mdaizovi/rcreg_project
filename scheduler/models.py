@@ -13,7 +13,7 @@ from django.db.models import Q, F
 from django.db.models.signals import pre_save, post_save, pre_delete
 from django.utils import timezone
 
-from con_event.models import (Matching_Criteria, Con, Registrant,
+from con_event.models import (MatchingCriteria, Con, Registrant,
         LOCATION_TYPE, LOCATION_CATEGORY, GENDER,SKILL_LEVEL_CHG,
         SKILL_LEVEL_TNG, SKILL_LEVEL,SKILL_LEVEL_GAME
         )
@@ -228,10 +228,10 @@ class Location(models.Model):
 
 
 #===============================================================================
-class Roster(Matching_Criteria):
-    participants = models.ManyToManyField(Registrant, blank=True)
-    cap = models.IntegerField(null=True, blank=True)
+class Roster(MatchingCriteria):
+    """Chalenges/Games only"""
 
+    cap = models.IntegerField(null=True, blank=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     captain = (models.ForeignKey(Registrant, related_name="captain", null=True,
             blank=True, on_delete=models.SET_NULL)
@@ -239,6 +239,7 @@ class Roster(Matching_Criteria):
     color = models.CharField(max_length=100, null=True, blank=True, choices=COLORS)
     can_email = models.BooleanField(default=True)
     internal_notes = models.TextField(null=True, blank=True)
+    participants = models.ManyToManyField(Registrant, blank=True)
 
     #Shouldn't i delete these fields?
     registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
