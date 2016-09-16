@@ -64,7 +64,7 @@ class OccurrenceResource(resources.ModelResource):
         activity = occurrence.get_activity()
         loc = ""
         if activity and activity.is_a_training():
-            loc = activity.display_coach_names()
+            loc = activity.figurehead_display
         elif activity and activity.is_a_challenge():
             loc = occurrence.location.name
 
@@ -150,7 +150,7 @@ class OccurrenceResource(resources.ModelResource):
 
         activity = occurrence.activity
         if activity:
-            return activity.get_figurehead_display()
+            return activity.figurehead_display
         else:
             return ""
 

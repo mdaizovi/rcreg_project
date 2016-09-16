@@ -75,7 +75,10 @@ RC_REVIEW_RANIKING_DICT={1:'Most Important',2: '2nd Most Important',3:'3rd Most 
 
 
 def FAV_PART_EXPANDED(FAV_PART):
-    NEW_FAV_PART=[("OFL","Officiating Learning Opportunities"),("AWE","It was all awesome")]
+    NEW_FAV_PART=[
+            ("OFL","Officiating Learning Opportunities"),
+            ("AWE","It was all awesome")
+            ]
     for tup in FAV_PART:
         if tup not in [('1st', 'This is my first Rollercon!')]:
             NEW_FAV_PART.append(tup)
@@ -156,69 +159,6 @@ class Location(models.Model):
             return False
         else:
             return True
-
-    #---------------------------------------------------------------------------
-    def empty_times(self, date_list, duration):
-        """Checks to see when during a date range, probably con date range,
-        in which there is nothing going on, not even empty occurrence, for time
-        period. Returns list of DateTime tuples: (start time, end time).
-        """
-
-########### i think i never use this, it looks like nonsens.
-#will probably delete, leavig here for now.
-
-
-        from swingtime.models import Occurrence  # Avoid parallel import
-
-        dur_delta = int(float(duration) * 60)
-
-        if len(date_list)<=0:
-            ####WHAT?!? retusn itsef? wtf?
-            return empty_times
-        else:
-            d1=date_list[0]
-            d2=date_list[-1]
-            period_start=datetime.datetime(year=d1.year, month=d1.month, day=d1.day,hour=TIMESLOT_START_TIME.hour)
-            period_end=datetime.datetime(year=d2.year, month=d2.month, day=d2.day,hour=TIMESLOT_START_TIME.hour)+TIMESLOT_END_TIME_DURATION
-            possible_times=[]
-
-            current_start=period_start
-            current_end=period_start+datetime.timedelta(minutes=dur_delta)
-            while current_end<=period_end:
-                potential_slot=(current_start,current_end)
-                #print("potential: ",potential_slot)
-                possible_times.append(potential_slot)
-                current_start+=TIMESLOT_INTERVAL
-                current_end+=TIMESLOT_INTERVAL
-
-            #print("possible_times len",len(possible_times))
-
-            all_os=list(Occurrence.objects.filter(start_time__gte=period_start, end_time__lte=period_end,location=self))
-            all_os.sort(key=lambda x: x.start_time)
-            #print("all_os len",len(all_os))
-            taken_times=[]
-
-            for o in all_os:
-                #print("o: ",o)
-                this_set=[]
-                blockstart=o.start_time+TIMESLOT_INTERVAL-datetime.timedelta(minutes=dur_delta)
-                blockend=o.end_time
-                #print("blockstart",blockstart)
-                cs=blockstart
-                ce=blockstart+datetime.timedelta(minutes=dur_delta)
-
-                while (cs<blockend):
-                    time_tup=(cs,ce)
-                    #print("time_tup: ",time_tup)
-                    this_set.append(time_tup)
-                    ce+=TIMESLOT_INTERVAL
-                    cs+=TIMESLOT_INTERVAL
-
-                for t in this_set:
-                    if t in possible_times:
-                        possible_times.remove(t)
-
-        return possible_times
 
     #---------------------------------------------------------------------------
     class Meta:
@@ -408,7 +348,7 @@ class Roster(MatchingCriteria):
 
     #---------------------------------------------------------------------------
     def get_maxcap(self):
-        """checks if roster has max cap specified. If not, supplies default."""
+        """checks if Roster has max cap specified. If not, supplies default."""
         if self.cap:
             maxcap = self.cap
         else:
@@ -559,28 +499,6 @@ class Roster(MatchingCriteria):
             allowed = [True, False, None]
 
         return allowed
-
-    #---------------------------------------------------------------------------
-    def passes_allowed(self):
-
-        #this shouldn't be here anymore, w' new trainingroster strucutre
-        # if self.registered or self.auditing:#this is a training
-        #     if self.registered:
-        #         training=self.registered
-        #     elif self.auditing:
-        #         training=self.auditing
-        #
-        #     if training.onsk8s:
-        #         allowed=['MVP']
-        #     else:
-        #         allowed=['MVP','Skater','Offskate']
-        #
-        # #elif self.captain or self.color:#this is a challenge
-        # else:#this is a challenge
-        #     allowed=['MVP','Skater']
-
-        #return allowed
-        return ['MVP' ,'Skater']
 
     #---------------------------------------------------------------------------
     def passes_tooltip_title(self):
@@ -914,52 +832,49 @@ class Activity(models.Model):
 
     #---------------------------------------------------------------------------
     def get_figurehead_registrants(self):
-        """Determines if is Training or Challange. If former, gets coaches. If latter, gets captains."""
+        """Determines if is Training or Challange.
+        If former, gets coaches. If latter, gets captains.
+        Returns list of registrants.
+        """
         #select/prefetch brought it form 5 db hits to 3 on trainings
-        figureheads=[]
+        figureheads = []
         if self.is_a_training():
-            for c in self.coach.select_related('user').prefetch_related('user__registrant_set').all():
+            for c in (self.coach.select_related('user')
+                    .prefetch_related('user__registrant_set')
+                    .all()
+                    ):
                 for r in c.user.registrant_set.select_related('con').all():
-                    if r.con==self.con:
+                    if r.con == self.con:
                         figureheads.append(r)
         elif self.is_a_challenge():
-            for r in [self.roster1,self.roster2]:
+            for r in [self.roster1, self.roster2]:
                 if r and r.captain:
                     figureheads.append(r.captain)
+
         return figureheads
 
     #---------------------------------------------------------------------------
-    def get_figurehead_display(self):
-        ###eventually shoft to only figurehead display property. toss this.
-        fs=self.get_figurehead_registrants()
-        fstr=""
-        index=1
-        for f in fs:
-            if index>1:
-                fstr+=" & "
-            if f.sk8name:
-                fstr+=f.sk8name
-            else:
-                fstr+=f.name
-            index+=1
-        return fstr
-
-    #---------------------------------------------------------------------------
     def get_figurehead_blackouts(self):
-        """Gets Blackouts for activity, from all coaches or captains, but not participants."""
+        """Gets Blackouts for activity, from all coaches or captains,
+        but not participants.
+        """
         from con_event.models import Blackout  # Avoid parallel import
-        figureheads=self.get_figurehead_registrants()
-        b_outs=list(Blackout.objects.filter(registrant__in=figureheads))
+        figureheads = self.get_figurehead_registrants()
+        b_outs = list(Blackout.objects.filter(registrant__in=figureheads))
+
         return b_outs
 
     #---------------------------------------------------------------------------
     def editable_by(self):
-        '''returns list of Users that can edit Activity
+        """Returns list of Users that can edit activity
         keep in mind being captain of EITHER team makes this True
-        Also, boss ladies, but no NSOs or Volunteers'''
-        allowed_editors=list(User.objects.filter(groups__name__in=[BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        Also, boss ladies, but no NSOs or Volunteers"""
 
-        figureheads=self.get_figurehead_registrants()#see above. Registrants of captains and coaches.
+        allowed_editors = list(User.objects.filter(groups__name__in=[
+                BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
+                ]))
+
+        figureheads = self.get_figurehead_registrants()
         for f in figureheads:
             allowed_editors.append(f.user)
 
@@ -967,14 +882,16 @@ class Activity(models.Model):
 
     #---------------------------------------------------------------------------
     def participating_in(self):
-        '''returns list of Registrants that are on either skating/participating roster, or are Coach
-        For use in Scheduling as well as seeing Communication between NSO/skaters'''
+        """Returns list of Registrants that are on either participating roster,
+        or are Coach.
+        For use in Scheduling as well as seeing Communication between NSO/skaters
+        """
         #no prefetch/select is 7 db hits for a training, trimmed it down to 4
-        participating=[]
+        participating = []
         if self.is_a_training():
             for c in self.coach.select_related('user').all():
                 for reg in c.user.registrant_set.select_related('con').all():
-                    if reg.con==self.con:
+                    if reg.con == self.con:
                         participating.append(reg)
 
         elif self.is_a_challenge():
@@ -989,16 +906,17 @@ class Activity(models.Model):
 
     #---------------------------------------------------------------------------
     def possible_locations(self):
-        """Gets locaiton type of activity, returns list of specific locations it can be in, for that Con
-        Will prob need to write anoter further refining, splitting up competition and training tracks"""
+        """Gets location type of activity, returns list of specific locations
+        it can be in, for that Con.
+        """
 
-        venues=self.con.venue.prefetch_related('location').all()
+        venues = self.con.venue.prefetch_related('location').all()
 
         if self.location_type =='Flat Track':
             if self.is_a_training():#if this is a training
                 return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
             elif self.is_a_challenge():
-                if self.gametype == "6GAME" or float(self.duration)>=1:#has to be in C1
+                if self.gametype == "6GAME" or float(self.duration) >= 1:  # has to be in C1
                 #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
                     return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
                 else:#can be n C1 or C2
@@ -1178,9 +1096,6 @@ class Activity(models.Model):
         dur_delta=int(float(self.duration)*60)
         pls=self.possible_locations()
 
-        #print "proxy interest is ",proxy_interest
-        #could get  possible_times=l.empty_times(date_list,duration)   for l in pls
-
         #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
         base_q=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,end_time=F('start_time') + timedelta(minutes=dur_delta)))
         level1find=[]
@@ -1261,17 +1176,10 @@ class Activity(models.Model):
                 o.challenge=None#back to blank
                 o.training=None#backto blank
 
-        # print self
-        # print len(level1find)
-        # print len(level1halffind)
-        # print len(level2find)
-        # print len(level3find)
-
         return level1find,level1halffind,level2find,level3find
 
     #---------------------------------------------------------------------------
     def scheduled(self):
-
         os = list(self.occurrence_set.all())
         return os
 
@@ -1396,12 +1304,12 @@ class Challenge(Activity):
         for item in string_fields:
             att_unclean=getattr(self, item)
             if att_unclean:
-                #NOTEE: I'm allowing punctuation in name and description, hope this doesn't bite me
-                #usualy I strip all punctuation
+                # I'm allowing punctuation in name and description
+                # usually I strip all punctuation
                 cleaned_att=ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
-        #I should ave made the name a property. This is stupid. Maybe change later?
+        #I should have made the name a property. This is stupid. Maybe change later?
         if self.roster1 and self.roster1.name:
             name1=self.roster1.name
         else:
@@ -1412,12 +1320,10 @@ class Challenge(Activity):
             name2="?"
         self.name= "%s vs %s" % (name1,name2)
 
-        #moved duration and gametype to presave challenge_defaults signalF
-
         super(Challenge, self).save()
 
     #---------------------------------------------------------------------------
-    def roster4registrant(self,registrant):
+    def roster4registrant(self, registrant):
         """takes in registrant, returns which team they're on"""
         if registrant in self.roster1.participants.all():
             return roster1
@@ -1574,12 +1480,12 @@ pre_delete.connect(delete_homeless_roster_chg, sender=Challenge)
 
 #===============================================================================
 class Training(Activity):
-    #activity has fields: name,con,location_type,RCaccepted, created_on,duration
-    coach = models.ManyToManyField('Coach', blank=True)#can't be ForeignKey bc can be multiple coaches
-
-    skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
-    onsk8s=models.BooleanField(default=True)
-    contact=models.BooleanField(default=True)
+    #activity has: name, con, location_type, RCaccepted, created_on, duration
+    coach = models.ManyToManyField('Coach', blank=True)
+    # coach can't be ForeignKey bc can be multiple coaches
+    skill = models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)
+    onsk8s = models.BooleanField(default=True)
+    contact = models.BooleanField(default=True)
     description = models.TextField(null=True, blank=True)
 
     regcap = models.IntegerField(null=True, blank=True)
@@ -1589,66 +1495,60 @@ class Training(Activity):
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
-       return "%s  (%s)" %(self.name, self.con)
-
-    #---------------------------------------------------------------------------
-    def display_coach_names(self):
-      #this seems to create an infinite loop somewhere
-        if self.coach and self.coach.count()>0:
-            coach_names=""
-            for coach in self.coach.all():
-                coach_names+=coach.user.first_name+", "
-                cut_coach_names=coach_names[0:-2]
-            return cut_coach_names
-        else:
-            return None
+       return "%s  (%s)"  % (self.name, self.con)
 
     #---------------------------------------------------------------------------
     def get_coach_registrants(self):
-        """Gets all registrants for Coach, since Coach is tied to User and not a specific year"""
-        registrants=[]
+        """Gets all registrants for Coach,
+        (remember Coach is tied to User and not a specific year)
+        """
+
+        registrants = []
         for c in self.coach.all():
             try:
                 registrants.append(Registrant.objects.get(con=self.con, user=c.user))
             except:
                 pass
+
         return registrants
 
     #---------------------------------------------------------------------------
     def skills_allowed(self):
         if self.skill:
-            allowed=list(self.skill)
+            allowed = list(self.skill)
             if "O" in allowed:
                 allowed.remove("O")
         else:
-            allowed=["A","B","C","D"]
+            allowed = ["A", "B", "C", "D"]
+
         return allowed
 
     #---------------------------------------------------------------------------
     def skill_display(self):
-        """This makes it so I don't see A0, just A, or AB, or something more understandable"""
-        prettify=''.join(self.skills_allowed())
+        """Makes it so don't see A0, just A, or AB, etc. """
+        prettify = ''.join(self.skills_allowed())
         return prettify
 
     #---------------------------------------------------------------------------
     def skill_tooltip_title(self):
+
         if self.skill:
-            allowed=self.skills_allowed()
+            allowed = self.skills_allowed()
             allowed.sort(reverse=True)
             skill_dict=dict(SKILL_LEVEL)
-            str_base="Registrant must identify skill as"
-            str_end= " in Profile in order to register"
-            str_mid=""
+            str_base = "Registrant must identify skill as"
+            str_end = " in Profile in order to register"
+            str_mid = ""
             for item in allowed:
                 if item:
-                    displayable=skill_dict.get(item)
-                    if item==allowed[-1]:
-                        item_str=" or "+displayable
+                    displayable = skill_dict.get(item)
+                    if item == allowed[-1]:
+                        item_str = " or " + displayable
                     else:
-                        item_str=" "+displayable+","
+                        item_str = " " + displayable + ","
 
-                str_mid+=item_str
-            return str_base+str_mid+str_end
+                str_mid += item_str
+            return str_base + str_mid + str_end
         else:
             return "No skill restrictions for registration"
 
@@ -1660,8 +1560,6 @@ class Training(Activity):
     #---------------------------------------------------------------------------
     def intl_icon(self):
         if self.intl:
-            #return "glyphicon icon-passportbig"
-            #return "glyphicon icon-plane-outline"
             return "glyphicon icon-globe-alt"
         else:
             return "glyphicon icon-universal-access"
@@ -1676,7 +1574,12 @@ class Training(Activity):
     #---------------------------------------------------------------------------
     def intl_tooltip_title(self):
         if self.intl:
-            return "Registrant must qualify as 'International' in order to register. Any MVP can audit and non-INTL auditing skaters MIGHT be allowed to participate as if registered if space is available."
+            return (
+                    "Registrant must qualify as 'International' in order to"
+                    "register. Any MVP can audit and non-INTL auditing skaters"
+                    "MIGHT be allowed to participate as if registered if space"
+                    "is available."
+                    )
         else:
             return "No location restrictions for registration"
 
@@ -1697,38 +1600,45 @@ class Training(Activity):
     #---------------------------------------------------------------------------
     def passes_allowed(self):
         if self.onsk8s:
-            allowed=['MVP']
+            allowed = ['MVP']
         else:
-            allowed=['MVP','Skater','Offskate']
+            allowed = ['MVP','Skater','Offskate']
 
         return allowed
 
     #---------------------------------------------------------------------------
     def passes_str(self):
-        allowed=self.passes_allowed()
-        passstr=""
+
+        allowed = self.passes_allowed()
+        passstr = ""
         for s in allowed:
-            passstr+=(s+", ")
-        passstr=passstr[:-2]
+            passstr += (s + ", ")
+        passstr = passstr[:-2]
+
         return passstr
 
     #---------------------------------------------------------------------------
     def passes_tooltip_title(self):
-        pass_list=self.passes_allowed()
-        pass_string=""
-        if len(pass_list)>1:
-            if len(pass_list)>2:
+
+        pass_list = self.passes_allowed()
+        pass_string = ""
+        if len(pass_list) > 1:
+            if len(pass_list) > 2:
                 for item in pass_list[:-1]:
-                    pass_string+=item+", "
+                    pass_string += item + ", "
             else:
-                pass_string+=pass_list[0]
-            pass_string+=" or "+pass_list[-1]
+                pass_string += pass_list[0]
+            pass_string += " or " + pass_list[-1]
         else:
-            pass_string=pass_list[0]
+            pass_string = pass_list[0]
 
-        base_str=self.onsk8s_tooltip_title()
+        base_str = self.onsk8s_tooltip_title()
 
-        tooltip_title = base_str+(" Registrant must have %s pass in order to register"%(pass_string))
+        tooltip_title = (base_str +
+                (" Registrant must have %s pass in order to register" % (pass_string))
+                )
+
+
         return tooltip_title
 
     #---------------------------------------------------------------------------
@@ -1751,36 +1661,38 @@ class Training(Activity):
 
     #---------------------------------------------------------------------------
     def full_description(self):
-        """returns training description, than coach description for each coach. or empty quotes"""
-        des=""
+        """Returns training description, then coach description for each coach.
+        Or empty quotes.
+        """
+
+        des = ""
         if self.description:
-            des+=self.description
+            des += self.description
         for c in self.coach.all():
             if c.description:
-                des+="\n\n"+c.description
+                des += "\n\n" + c.description
+
         return des
 
     #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
-        '''custom functions: removes non-ascii chars and punctuation from names, colors'''
-        string_fields=['name','description','communication']
+
+        string_fields = ['name', 'description', 'communication']
         for item in string_fields:
-            att_unclean=getattr(self, item)
+            att_unclean = getattr(self, item)
             if att_unclean:
-                #NOTEE: I'm allowing punctuation in name and description, hope this doesn't bite me
-                #usualy I strip all punctuation
-                cleaned_att=ascii_only(att_unclean)
+                cleaned_att = ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
         if self.internal_notes:
-            cleaned_notes=ascii_only(self.internal_notes)
-            self.internal_notes=cleaned_notes
+            cleaned_notes = ascii_only(self.internal_notes)
+            self.internal_notes = cleaned_notes
 
         if not self.duration:
             if self.onsk8s:
-                self.duration=DEFAULT_ONSK8S_DURATION
+                self.duration = DEFAULT_ONSK8S_DURATION
             else:
-                self.duration=DEFAULT_OFFSK8S_DURATION
+                self.duration = DEFAULT_OFFSK8S_DURATION
 
         super(Training, self).save()
 

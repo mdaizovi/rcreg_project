@@ -762,7 +762,7 @@ class Occurrence(models.Model):
 
                 sheet["E3"].value = "Printed: %s"%(timezone.now().strftime('%m %d %Y'))
                 sheet["A1"].value = self.training.name
-                sheet["A2"].value = self.training.display_coach_names()
+                sheet["A2"].value = self.training.figurehead_display
                 sheet["A3"].value = self.start_time.strftime('%H %M %p, %m-%d-%Y')
                 sheet["A4"].value = self.location.name
 

@@ -404,7 +404,9 @@ def propose_new_training(request):
             training_made = Training.objects.get(pk=request.POST['training_id'])
             training_made.duration = request.POST['duration']
             training_made.save()
-            context_dict = {'add_fail': add_fail, 'training_made': training_made,'upcoming_registrants': upcoming_registrants}
+            context_dict = {'add_fail': add_fail, 'training_made': training_made,
+                    'upcoming_registrants': upcoming_registrants
+                    }
 
         elif 'clone training' in request.POST:
             # Fills form w/ initial details from cloned training,
@@ -807,15 +809,21 @@ def edit_roster(request, roster_id):
 #-------------------------------------------------------------------------------
 @login_required
 def edit_challenge(request, activity_id):
-    user=request.user
+    user = request.user
     registrant_list = list(user.registrant_set.all())
     try:
-        challenge=Challenge.objects.get(pk=int(activity_id))
-        registrant=Registrant.objects.get(con=challenge.con, user=user)
-        my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+        challenge = Challenge.objects.get(pk=int(activity_id))
+        registrant = Registrant.objects.get(con=challenge.con, user=user)
+        my_team, opponent, my_acceptance, opponent_acceptance = (
+                challenge.my_team_status([registrant])
+                )
     except ObjectDoesNotExist:
-        challenge=None
-        return render_to_response('edit_challenge.html',{},context_instance=RequestContext(request))
+        challenge = None
+        return render_to_response(
+                'edit_challenge.html',
+                {},
+                context_instance=RequestContext(request)
+                )
 
     opponent_form_list=None
     participants=None

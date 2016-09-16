@@ -35,7 +35,7 @@
     {%if a.challenge%}<a href="{{a.challenge.get_view_url}}">
     {%elif a.training%}<a href="{{a.training.get_view_url}}">{%endif%}
     {{a.name}}</a></td>
-    <td>{{ a.activity.get_figurehead_display}}</a></td>
+    <td>{{ a.activity.figurehead_display}}</a></td>
   <td><a href="{{a.get_absolute_url}}">{{ a.start_time|date:"D M d f a" }}</a></td>
   <td>{%if a.location.abbrv%}{{a.location.abbrv}}{%else%}{{a.location}}{%endif%}</td></tr>
 {%endfor%}

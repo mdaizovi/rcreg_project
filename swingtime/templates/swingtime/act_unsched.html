@@ -67,7 +67,7 @@
 <tr>
 <td style="width:15px;">{{od.check_form.act}}</td>
   <td style="min-width:50px; max-width:75px;"><a href="{{od.act.get_view_url}}">{{od.act.name}}</a></td>
-    <td style="min-width:50px;max-width:75px;">{{ od.act.get_figurehead_display }}</td>
+    <td style="min-width:50px;max-width:75px;">{{ od.act.figurehead_display }}</td>
     <td style="width:45px;">{{ od.act.get_activity_type }}{%if od.act.is_a_challenge %}, {{od.act.skill_display}}, {{od.act.gender_display}}{%endif%}</td>
       <td style="width:15px;text-align: center;">{%if od.act.interest %}{{ od.act.interest }}{%else%}?{%endif%}</td>
   <td style="text-align: center; width:15px;"><a href="{{od.act.get_sched_assist_url}}">{{od.score}}</a></td>

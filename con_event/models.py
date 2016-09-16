@@ -545,10 +545,10 @@ class MatchingCriteria(models.Model):
         Used for Rosters/TrainingRosters"""
 
         if self.intl:
-            intl_text = ("Registrant must qualify as 'International' in order \
-                    to register. Any MVP can audit and non-INTL auditing \
-                    skaters MIGHT be allowed to participate as if registered \
-                    if space is available.")
+            intl_text = ("Registrant must qualify as 'International' in order "
+                    "to register. Any MVP can audit and non-INTL auditing "
+                    "skaters MIGHT be allowed to participate as if registered "
+                    "if space is available.")
         else:
             intl_text = "No location restrictions for registration"
 
@@ -597,9 +597,20 @@ class MatchingCriteria(models.Model):
 
     #---------------------------------------------------------------------------
 
+    def passes_allowed(self):
+        """Used for Rosters/TrainingRosters."""
 
+        if hasattr(self, 'captain'):  # If is for challenge/game
+            allowed = ['MVP','Skater']
+        else:
+            allowed = ['MVP', 'Skater', 'Offskate']
 
+            if self.registered:
+                training = self.registered.training
+                if training.onsk8s:
+                    allowed = ['MVP']
 
+        return allowed
 
     #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
@@ -684,7 +695,7 @@ class RegistrantManager(models.Manager):
                         con=training.con)
                         .exclude(id__in=[o.id for o in already_registered])
                         )
-                        
+
         return eligibles
 
 #===============================================================================
