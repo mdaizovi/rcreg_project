@@ -716,32 +716,23 @@ class Roster(Matching_Criteria):
             self.restore_defaults()
 
     #---------------------------------------------------------------------------
-    def clone_roster(self):
-        """Clones roster, including participants, so can only used for same Con.
-        Not meant for trainings, just challenge rosters.
-        Makes a new one, which might be inapporpriate for some purposes.
-        To make existing roster mimic other, see mimic_roster"""
+    def clone_roster(self, recipient=None):
+        """Makes (existing) self look just like original roster, including
+        participants. Does not clone internal_notes.
+        Returns new roster after having saved it.
+        """
+        if not recipient:
+            recipient = Roster()
+        for attr in ['cap', 'name', 'gender', 'intl', 'skill', 'captain',
+                'color', 'can_email'
+                ]:
+            value=getattr(self, attr)
+            setattr(recipient, attr, value)
+        recipient.save()
+        recipient.participants.add(*self.participants.all())
+        recipient.save()
 
-        clone = deepcopy(self)
-        clone.pk = None
-        clone.id = None
-        clone.internal_notes = None
-        clone.save()
-        clone.participants.add(*self.participants.all())
-        clone.save()
-        return clone
-
-    #---------------------------------------------------------------------------
-    def mimic_roster(self,original):
-        """makes (existing) self look just like original roster, except for pk, of course.
-        Tomake new roster, use clone"""
-
-        for attr in ['cap','name','captain','color','can_email']:
-            value=getattr(original,attr)
-            setattr(self, attr, value)
-        self.save()
-        self.participants.add(*original.participants.all())
-        self.save()
+        return recipient
 
     #---------------------------------------------------------------------------
     def get_edit_url(self):

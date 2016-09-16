@@ -1048,74 +1048,91 @@ def edit_challenge(request, activity_id):
 #-------------------------------------------------------------------------------
 @login_required
 def challenge_respond(request):
-    '''This should always be post from Edit Challange, if not post jsut goes to index
+    """Should always be post from Edit Challange, if not post, goes to index.
     takes in which challenge, who captain is, saves whether accepted or rejected,
-    redrects to my challenges if rejected, edit challenge if accepted'''
-    user=request.user
+    redrects to my challenges if rejected, edit challenge if accepted.
+    """
+    user = request.user
     if request.method == "POST":
 
-        challenge=Challenge.objects.get(pk=request.POST['activity_id'])
-        registrant=Registrant.objects.get(pk=request.POST['registrant_id'])
-        my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+        challenge = Challenge.objects.get(pk=request.POST['activity_id'])
+        registrant = Registrant.objects.get(pk=request.POST['registrant_id'])
+        my_team, opponent, my_acceptance, opponent_acceptance = (
+                challenge.my_team_status([registrant])
+                )
 
         if 'reject' in request.POST  or 'reject_confirm' in request.POST:
             if 'reject_confirm' in request.POST:
-                challenge.rosterreject(my_team)#has to be first to reject properly, otherwise is still accepted
-                if challenge.pk:#if challenge has not just been deleted
-                    challenge.save()#this is necessary
+                # Has to be first to reject properly, otherwise is still accepted
+                challenge.rosterreject(my_team)
+                if challenge.pk:  # If challenge has not just been deleted
+                    challenge.save()  # Necessary
 
-                registrant.save()#this is important to reset captain number
+                registrant.save()  # reset captain number
                 return redirect('/scheduler/my_challenges/')
-            else:#if just 'reject' in post, need to confirm first
-                return render_to_response('confirm_challenge_reject.html',{'opponent_acceptance':opponent_acceptance,'my_team':my_team, 'challenge':challenge,'opponent':opponent}, context_instance=RequestContext(request))
+            else:  # If just 'reject' in post, need to confirm first
+                context_dict = {
+                        'opponent_acceptance': opponent_acceptance,
+                        'my_team': my_team,
+                        'challenge': challenge,
+                        'opponent': opponent
+                        }
+                return render_to_response(
+                        'confirm_challenge_reject.html',
+                        context_dict,
+                        context_instance=RequestContext(request)
+                        )
 
         elif "accept" in request.POST:
             if 'clone_existing_team' in request.POST:
-                ###I couldn't decide whether it would be better to clone a rostr and delete old one, or use existing roster to make just like one to be clones.
-                #I decided to mimic, keeping in mind I'd hav to update if i ever change relevant attributes that need to be mimicked
-                team2mimic=Roster.objects.get(pk=request.POST['game_team'])
-                my_team.mimic_roster(team2mimic)
-
-                if my_team.con!=registrant.con:#This is not necessary, I only look for teams this year. Didn't know that when I wrot eit, decided to keep it as safeguard in case i ever let it look at old teams as well.
-                    my_team.participants.clear()
-                    my_team.con=registrant.con
-                    my_team.save()#captain should be added here
-
-                registrant.save()#reset captian #
+                team2mimic = Roster.objects.get(pk=request.POST['game_team'])
+                my_team = team2mimic.clone_roster(recipient=my_team)
+                registrant.save()#reset captain #
 
             elif 'create_new_team' in request.POST:
-                skill_str=registrant.skill+"O"
-                #I don't want these to run f game team
-                my_team.gender=registrant.gender#to avoid weird save errors w/ eligibility
-                my_team.skill=skill_str#to avoid weird save errors w/ eligibility
-                my_team.name=None
+                my_team.gender = registrant.gender
+                my_team.skill = registrant.skill + "O"
+                my_team.name = None
                 my_team.save()
 
-            else:#if just accepting, from edit chal
-                my_teams_as_cap=list(registrant.captain.exclude(name=None))
-                if len(my_teams_as_cap)>0:
-                    form=MyRosterSelectForm(team_list=my_teams_as_cap)
+            else:  # If just accepting, from edit challenge
+                my_teams_as_cap = list(registrant.captain.exclude(name=None))
+                if len(my_teams_as_cap) > 0:
+                    form = MyRosterSelectForm(team_list=my_teams_as_cap)
                     if my_team in my_teams_as_cap:
-                        form=MyRosterSelectForm(team_list=my_teams_as_cap)
-                        form.fields["game_team"].initial =str(my_team.pk)
+                        form = MyRosterSelectForm(team_list=my_teams_as_cap)
+                        form.fields["game_team"].initial = str(my_team.pk)
                     else:
-                         form=MyRosterSelectForm(team_list=my_teams_as_cap)
+                         form = MyRosterSelectForm(team_list=my_teams_as_cap)
 
-                    return render_to_response('challenge_respond.html',{'form':form,'opponent':opponent,'my_team':my_team, 'challenge':challenge,'registrant':registrant}, context_instance=RequestContext(request))
+                    context_dict = {
+                            'form': form,
+                            'opponent': opponent,
+                            'my_team': my_team,
+                            'challenge': challenge,
+                            'registrant':registrant
+                            }
+                    return render_to_response(
+                            'challenge_respond.html',
+                            context_dict,
+                            context_instance=RequestContext(request)
+                            )
 
-            #technically i could put this after i initialy accept, but wanted to wait until maybe give team a name.
-            if challenge.roster1 and challenge.roster1.captain and challenge.roster1.captain==registrant:
+            # Could put this after initialy accept,
+            # but wanted to wait until maybe give team a name first.
+            if (challenge.roster1 and challenge.roster1.captain and
+                    challenge.roster1.captain==registrant
+                    ):
                 challenge.captain1accepted=True
-            elif challenge.roster2 and challenge.roster2.captain and challenge.roster2.captain==registrant:
+            elif (challenge.roster2 and challenge.roster2.captain and
+                    challenge.roster2.captain==registrant
+                    ):
                 challenge.captain2accepted=True
             challenge.save()
             return redirect('/scheduler/challenge/edit/'+str(challenge.id)+'/')
-    else:#this should never happen, should always be post
+
+    else:  # Should never happen, should always be post
         return redirect('/')
-
-
-
-
 
 #-------------------------------------------------------------------------------
 def view_challenge(request, activity_id):
@@ -1373,12 +1390,7 @@ def propose_new_challenge(request):
     # This is where not request.post starts
     elif cansk8:
         for r in upcoming_registrants:
-            rosters = list(Roster.objects.filter(captain=r))
-            for r in rosters:
-            # I don't know why have to do it this way.
-            # .exclude name=None excludes all, for some reason
-                if not r.name:
-                    rosters.remove(r)
+            rosters = list(r.captain.exclude(name=None))
             my_teams_as_cap += list(rosters)
 
         formlist = [
