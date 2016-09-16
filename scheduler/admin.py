@@ -241,7 +241,7 @@ class TrainingResource(resources.ModelResource):
 #===============================================================================
 class TrainingAdmin(ImportExportModelAdmin):
 
-    list_display = ('name', 'con')
+    list_display = ('name', 'con', 'figurehead_display')
     search_fields = ('name', 'con__year')
     filter_horizontal = ('coach', )
     list_filter = ('con', 'RCaccepted', 'onsk8s', 'registered__skill',

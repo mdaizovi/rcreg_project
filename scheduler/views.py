@@ -404,8 +404,7 @@ def propose_new_training(request):
             training_made = Training.objects.get(pk=request.POST['training_id'])
             training_made.duration = request.POST['duration']
             training_made.save()
-            template = 'propose_new_training.html'
-            context_dict = {'add_fail': add_fail, 'training_made': training_made}
+            context_dict = {'add_fail': add_fail, 'training_made': training_made,'upcoming_registrants': upcoming_registrants}
 
         elif 'clone training' in request.POST:
             # Fills form w/ initial details from cloned training,
@@ -419,7 +418,6 @@ def propose_new_training(request):
                 initial_training[attr]=getattr(cloned, attr)
 
             formlist = [TrainingModelForm(initial=initial_training, user=user)]
-            template = 'propose_new_training.html'
             context_dict = {
                     'trainings_coached': trainings_coached,
                     'formlist': formlist,
@@ -437,9 +435,10 @@ def propose_new_training(request):
                 training_made.coach.add(coach)
                 training_made.save()
 
-                if training_made and not training_made.onsk8s:
-                    formlist = [DurationOnly()]
-                    template = 'new_training_made.html'
+                if training_made:
+                    if not training_made.onsk8s:
+                        formlist = [DurationOnly()]
+
                     context_dict = {
                             'most_upcoming_con': most_upcoming_con,
                             'trainings_coached': trainings_coached,
@@ -447,16 +446,14 @@ def propose_new_training(request):
                             'training_made': training_made,
                             'upcoming_registrants': upcoming_registrants
                             }
-            else:  # I not valid
+            else:  # If not valid
                 add_fail = True
-                template = 'propose_new_training.html'
                 context_dict = {
                         'add_fail': add_fail,
                         'training_made': training_made
                         }
 
     else:  # If not post
-        template = 'propose_new_training.html'
         context_dict = {
                 'most_upcoming_con': most_upcoming_con,
                 'trainings_coached': trainings_coached,
@@ -468,11 +465,10 @@ def propose_new_training(request):
 
     # all end up here, regardless of post or not, or what's in post
     return render_to_response(
-            template,
+            'propose_new_training.html',
             context_dict,
             context_instance=RequestContext(request)
             )
-
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -631,98 +627,63 @@ def register_training(request, o_id):
 #-------------------------------------------------------------------------------
 @login_required
 def edit_training(request, activity_id):
+    """Coaches and Boss Ladies can edit Training. Not NSOs or anyone else."""
 
-    user=request.user
-    registrant_list = list(user.registrant_set.all())
-    eligible_coaches=None
-    coaches=None
-    add_fail=False
-    skater_added=False
-    skater_remove=False
-    training_changes_made=False
-    formlist=[]
-    eligible_coaches=None
-    search_form=SearchForm()
-    coach_users=[]
+    user = request.user
+    save_attept = False
+    save_success = False
+    formlist = []
 
     try:
-        training=Training.objects.get(pk=int(activity_id))
-        editable_by=training.editable_by()
+        training = Training.objects.get(pk=int(activity_id))
+        editable_by = training.editable_by()
     except ObjectDoesNotExist:
         return render_to_response('edit_training.html',{},context_instance=RequestContext(request))
 
     if request.method == "POST":
 
-        if 'delete' in request.POST or 'remove coach' in request.POST:
-            if 'remove coach' in request.POST:
-                if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
-                    skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-
-            if 'delete' in request.POST or int( training.coach.count() ) == 1:
-                return render_to_response('confirm_training_delete.html',{'skater_remove':skater_remove,'training':training},context_instance=RequestContext(request))
-            else:
-                #had to monkey patch this way bc coach is legacy, but registrants vary by the year
-                if skater_remove:
-                    coach, created=Coach.objects.get_or_create(user=skater_remove.user)
-                    training.coach.remove(coach)
-                    training.save()
-                    coach.save()
-
-        elif 'confirm delete' in request.POST:
+        if 'confirm delete' in request.POST:
             training.coach.clear()
             training.delete()
             return redirect('/scheduler/my_trainings/')
 
-        elif 'add coach' in request.POST:
-            if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
-                skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                coach, created=Coach.objects.get_or_create(user=skater_added.user)
-                training.coach.add(coach)
+        elif 'delete' in request.POST :
+            return render_to_response(
+                    'confirm_training_delete.html',
+                    {'training':training},
+                    context_instance=RequestContext(request)
+                    )
+
+        elif 'save training' in request.POST:
+            save_attept = True
+            form = TrainingModelForm(request.POST, instance=training,user=user)
+            if form.is_valid():
+                form.save()
+                save_success = True
+            if 'duration' in request.POST:  # If off skates, can choose duration
+                training.duration = request.POST['duration']
                 training.save()
-                coach.save()
 
-        elif 'save training' in request.POST:#save training details
-            if 'duration' in request.POST:#if off skates, can choose duratio
-                training.duration=request.POST['duration']
-                training.save()
-            formlist=[TrainingModelForm(request.POST, instance=training,user=user)]
-
-            for form in formlist:#formlist used to have 2, when i separated skill and had it in the roster.
-                if form.is_valid():#this should run regardless of save team or conriem save, assuming it doesn't jump to conflict warning
-                    form.save()
-                    save_success=True
-                    training_changes_made=True
-                else:
-                    print "ERRORS: ",form.errors
-
+    # Happens regardless of POST or not
     if user in editable_by:
-        formlist=[TrainingModelForm(instance=training,user=user)]
+        formlist = [TrainingModelForm(instance=training,user=user)]
+        if not training.onsk8s:
+            formlist.append(DurationOnly(initial={'duration':training.duration}))
     else:
-        formlist=None
+        formlist = None
 
-    if request.method == "POST" and 'search_q' in request.POST:
-        search_form=SearchForm(request.POST)
-        entry_query = search_form.get_query(['sk8name','last_name','first_name'])
-        if entry_query:
-            found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).exclude(id__in=[o.id for o in registrant_list]).order_by('sk8name','last_name','first_name')
-            eligible_coaches=EligibleRegistrantForm(my_arg=found_entries)
-            eligible_coaches.fields['eligible_registrant'].label = "Found Skaters"
-        else:
-            eligible_coaches=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con).exclude(id__in=[o.id for o in registrant_list]))
-            eligible_coaches.fields['eligible_registrant'].label = "All Skaters"
-    else:
-        eligible_coaches=EligibleRegistrantForm(my_arg=Registrant.objects.filter(con=training.con))
-        eligible_coaches.fields['eligible_registrant'].label = "All Skaters"
+    context_dict = {
+            'training': training,
+            'save_attept': save_attept,
+            'save_success': save_success,
+            'formlist': formlist
+            }
 
-    coach_registrants=training.get_coach_registrants()
-    coaches=EligibleRegistrantForm(my_arg=coach_registrants)
-    for c in coach_registrants:
-        coach_users.append(c.user)
-    coaches.fields['eligible_registrant'].label = "Coaches"
-    if formlist and not training.onsk8s:
-        formlist.append(DurationOnly(initial={'duration':training.duration}))
-
-    return render_to_response('edit_training.html',{'coach_users':coach_users,'search_form':search_form,'user':user,'editable_by':editable_by,'coaches':coaches,'eligible_coaches':eligible_coaches,'skater_remove':skater_remove,'add_fail':add_fail,'skater_added':skater_added,'training':training,'training_changes_made':training_changes_made,'formlist':formlist},context_instance=RequestContext(request))
+    return render_to_response(
+            'edit_training.html',
+            context_dict,
+            context_instance=RequestContext(request)
+            )
 
 #-------------------------------------------------------------------------------
 def challenges_home(request, con_id=None,):

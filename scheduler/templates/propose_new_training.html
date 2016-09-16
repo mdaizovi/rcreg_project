@@ -14,15 +14,14 @@
 
 
 {%if upcoming_registrants %}
-
 {%if most_upcoming_con and not most_upcoming_con.can_submit_trng_by_date %}
 <div class="alert alert-warning" role="alert">
 Please note that the Training Proposal deadline for {{most_upcoming_con}}  has passed, but you're welcome to add more sessions.<br>
 If you are proposing a Training for {{most_upcoming_con}} after we begin scheduling, it is less likely to be added to the schedule.</div>
 {%endif%}
 
+{%if formlist %}
 <div class="col-sm-6">
-
       {%if trainings_coached and not training_made %}
         <div class="list-group">
         <div class="dropdown">
@@ -43,7 +42,7 @@ If you are proposing a Training for {{most_upcoming_con}} after we begin schedul
           </ul></div></div>
       {%endif%}
 
-{%if formlist %}
+
 <form method="POST" class="post-form">
       {% csrf_token %}
       {%for form in formlist%}
@@ -67,9 +66,23 @@ Save Training</button>
 <button type="submit" class="btn btn-primary margin-top-10" >Propose</button>
 {%endif%}
 </form>
-</div>
-{%endif%}<!--<end if form -->
 
+
+{%else%}<!-- if not formlist -->
+{% if add_fail %}
+<h3>Error Making New Training</h3>
+<div class="alert alert-danger" role="alert">Training not made. Please try again later and contact the<a href="mailto:{{CUSTOM_SITE_ADMIN_EMAIL}}" class="alert-link"> site administrator </a>or<a href="mailto:{{RC_GENERAL_ADMIN_EMAIL}}" class="alert-link"> RollerCon administrator </a>if you believe this is in error, or require further assistance.</div>
+{%else%}
+{%if training_made %}
+<div class="alert alert-success" role="alert">Training {{ training_made.name}} Sucessfully proposed! Please see <a href="{%url 'my_trainings'%}" class="alert-link"> My Trainings</a> to edit
+and update your <a href="{% url 'coach_profile' %}" class="alert-link">Coaching Profile</a> if you haven't already.
+</div>
+{%endif%}<!--<end if training made, -->
+{%endif%}<!--<end if add_fail -->
+
+
+{%endif%}<!--<end if form -->
+</div>
 
 {%else%} <!--if not upcoming_registrants -->
 <div class="alert alert-danger" role="alert">In order to propose a training, you need have a Skater, MVP, or Off-Skates pass for an upcoming RollerCon, which you do not.<br>

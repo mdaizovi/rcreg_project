@@ -26,8 +26,10 @@
       <div class="col-sm-6">
         <h3 class="text-center">Edit Training Details</h3>
 
-        {%if training_changes_made %}
+        {%if save_attept %}
+          {%if save_success %}
         <div class="alert alert-success" role="alert">{{training}} successfully saved!</div>
+        {%else%}<div class="alert alert-danger" role="alert">Error. {{training}} NOT saved</div>{%endif%}
         {%endif%}
 
         <form method="POST" class="post-form">
