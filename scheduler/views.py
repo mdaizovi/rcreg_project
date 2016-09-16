@@ -480,7 +480,7 @@ def register_training(request, o_id):
     user=request.user
     add_fail=None
     skater_added=None
-    remove_fail=None
+    remove_fail= False
     skater_remove=None
     roster=None
     occur=None
@@ -501,104 +501,110 @@ def register_training(request, o_id):
         registered, rc = TrainingRoster.objects.get_or_create(registered=occur)
         auditing, ac = TrainingRoster.objects.get_or_create(auditing=occur)
 
-        reg_search_form = SearchForm()
-        reg_add_form = EligibleRegistrantForm(
-                my_arg=Registrant.objects.eligible_sk8ers(registered)
-                )
-        reg_remove_form = EligibleRegistrantForm(
-                my_arg=registered.participants.all()
-                )
-
-        aud_search_form = SearchForm()
-        aud_add_form = EligibleRegistrantForm(
-                my_arg=Registrant.objects.eligible_sk8ers(auditing)
-                )
-        aud_remove_form = EligibleRegistrantForm(
-                my_arg=auditing.participants.all()
-                )
+        # Make initial respectiv forms for each trainingroster
+        roster_dict = {}
+        for roster in [registered, auditing]:
+            form_dict = {
+                'search_form': SearchForm(),
+                'add_form': EligibleRegistrantForm(
+                        my_arg=Registrant.objects.eligible_sk8ers(roster)
+                        ),
+                'remove_form': EligibleRegistrantForm(
+                        my_arg=roster.participants.all()
+                        )
+                }
+            roster_dict[roster] = form_dict
 
         if request.method == "POST":
-            if 'search register' in request.POST:
-                reg_search_form = SearchForm(request.POST)
-                if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
-                    entry_query = reg_search_form.get_query(['sk8name','last_name','first_name'])
-                    found_entries = Registrant.objects.filter(entry_query).filter(con=training.con, skill__in=training.skills_allowed(),intl__in=registered.intls_allowed()).order_by('sk8name','last_name','first_name')
+            if 'add register' in request.POST or 'add audit' in request.POST:
+                if 'add register' in request.POST:
+                    roster = registered
                 else:
-                    found_entries=Registrant.objects.eligible_sk8ers(registered)
-                reg_add_form=EligibleRegistrantForm(my_arg=found_entries)
-
-            elif 'add register' in request.POST:
-                try:
-                    roster=registered
-                    if registered.spacea():
-                        skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        registered.participants.add(skater_added)
-                        registered.save()
-                        reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
-                        reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
-                    else:
-                        add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                except:
-                    add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-
-            elif 'remove register' in request.POST:
-                try:
-                    roster=registered
-                    if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
-                        skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        registered.participants.remove(skater_remove)
-                        registered.save()
-                    else:
-                        remove_fail=True
-                    reg_remove_form=EligibleRegistrantForm(my_arg=registered.participants.all())
-                    reg_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(registered))
-                except:
-                    remove_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-
-            elif 'search audit' in request.POST:
-                aud_search_form=SearchForm(request.POST)
-                if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
-                    entry_query = aud_search_form.get_query(['sk8name','last_name','first_name'])
-                    found_entries = Registrant.objects.filter(entry_query).filter(con=training.con).order_by('sk8name','last_name','first_name')
+                    roster = auditing
+                if roster.spacea():
+                    try:
+                        skater_added = Registrant.objects.get(
+                                pk=request.POST['eligible_registrant']
+                                )
+                        roster.participants.add(skater_added)
+                        roster.save()
+                    except:
+                        add_fail = Registrant.objects.get(
+                                pk=request.POST['eligible_registrant']
+                                )
+                    # Update forms
+                    form_dict = roster_dict.get(roster)
+                    form_dict['remove_form'] = EligibleRegistrantForm(
+                            my_arg=roster.participants.all()
+                            )
+                    form_dict['add_form'] = EligibleRegistrantForm(
+                            my_arg=Registrant.objects.eligible_sk8ers(roster)
+                            )
                 else:
-                    found_entries=Registrant.objects.eligible_sk8ers(auditing)
-                aud_add_form=EligibleRegistrantForm(my_arg=found_entries)
-            elif 'add audit' in request.POST:
-                try:
-                    roster=auditing
-                    if auditing.spacea():
-                        skater_added=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        auditing.participants.add(skater_added)
-                        auditing.save()
-                        aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
-                        aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
-                    else:
-                        add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                except:
-                    add_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-            elif 'remove audit' in request.POST:
-                try:
-                    roster=auditing
-                    if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
-                        skater_remove=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                        auditing.participants.remove(skater_remove)
-                        auditing.save()
-                    else:
-                        remove_fail=True
-                    aud_remove_form=EligibleRegistrantForm(my_arg=auditing.participants.all())
-                    aud_add_form=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(auditing))
-                except:
-                    remove_fail=Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                    add_fail = Registrant.objects.get(
+                            pk=request.POST['eligible_registrant']
+                            )
 
-        register_forms=[reg_search_form,reg_add_form,reg_remove_form]
-        audit_forms=[aud_search_form,aud_add_form,aud_remove_form]
+            elif 'remove register' in request.POST or 'remove audit' in request.POST:
+                if 'remove register' in request.POST:
+                    roster = registered
+                else:
+                    roster = auditing
+                if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
+                    try:
+                        skater_remove = Registrant.objects.get(
+                                pk=request.POST['eligible_registrant']
+                                )
+                        roster.participants.remove(skater_remove)
+                        roster.save()
+                    except:
+                        remove_fail = True
+                else:
+                    remove_fail = True
+                # Update forms
+                form_dict = roster_dict.get(roster)
+                form_dict['remove_form'] = EligibleRegistrantForm(
+                        my_arg=roster.participants.all()
+                        )
+                form_dict['add_form'] = EligibleRegistrantForm(
+                        my_arg=Registrant.objects.eligible_sk8ers(roster)
+                        )
 
-        if not registered.spacea():
-            reg_add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
-            reg_search_form.fields['search_q'].widget.attrs['disabled'] = True
-        if not auditing.spacea():
-            aud_add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
-            aud_search_form.fields['search_q'].widget.attrs['disabled'] = True
+            elif 'search register' in request.POST or 'search audit' in request.POST:
+                if 'search register' in request.POST:
+                    roster = registered
+                else:
+                    roster = auditing
+
+                search_form = SearchForm(request.POST)
+                if 'search_q' in request.POST and request.POST['search_q'] not in no_list:
+                    entry_query = search_form.get_query(['sk8name','last_name','first_name'])
+                    found_entries = Registrant.objects.eligible_sk8ers(roster).filter(entry_query)
+                else:
+                    found_entries=Registrant.objects.eligible_sk8ers(roster)
+                    form_dict = roster_dict.get(roster)
+                # Update forms
+                form_dict = roster_dict.get(roster)
+                form_dict['search_form'] = search_form
+                form_dict['add_form'] = EligibleRegistrantForm(my_arg=found_entries)
+
+
+        #  Regardless of if POST or not
+        formlist = []
+        for r in [registered, auditing]:  # so r won't get confused with roster
+            form_dict = roster_dict.get(r)
+            if not r.spacea():
+                add_form = form_dict.get("add_form")
+                add_form.fields['eligible_registrant'].widget.attrs['disabled'] = True
+                search_form = form_dict.get("search_form")
+                search_form.fields['search_q'].widget.attrs['disabled'] = True
+            formlist.append([
+                    form_dict.get("search_form"),
+                    form_dict.get("add_form"),
+                    form_dict.get("remove_form")
+                    ])
+        register_forms = formlist[0]
+        audit_forms = formlist[1]
 
 
     else:  # if not occur or not user in occur.can_add_sk8ers()

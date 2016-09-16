@@ -684,7 +684,7 @@ class RegistrantManager(models.Manager):
                         con=training.con)
                         .exclude(id__in=[o.id for o in already_registered])
                         )
-
+                        
         return eligibles
 
 #===============================================================================
