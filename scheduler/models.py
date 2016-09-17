@@ -671,11 +671,11 @@ class Roster(MatchingCriteria):
         captain=self.captain.user
 
         if (self.can_email and captain and captain.email):
-            subject = ("%s, %s has sent you a message through the RollerTron \
-                    site!" % (captain.first_name, sending_user.first_name)
+            subject = ("%s, %s has sent you a message through the RollerTron "
+                    "site!" % (captain.first_name, sending_user.first_name)
                     )
-            message_body = ("Message below. Please respond to %s, not to us.\
-                    \n\n\n%s" % (sending_user.email, message)
+            message_body = ("Message below. Please respond to %s, not to us. "
+                    "\n\n\n%s" % (sending_user.email, message)
                     )
             email = EmailMessage(
                     subject=subject,
@@ -907,167 +907,204 @@ class Activity(models.Model):
     #---------------------------------------------------------------------------
     def possible_locations(self):
         """Gets location type of activity, returns list of specific locations
-        it can be in, for that Con.
+        it can be in, for that Con. Based on Ivanna's specifications.
         """
 
         venues = self.con.venue.prefetch_related('location').all()
 
         if self.location_type =='Flat Track':
-            if self.is_a_training():#if this is a training
-                return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Training"))
+            if self.is_a_training():
+                return list(Location.objects.filter(
+                        venue__in=venues,
+                        location_type='Flat Track',
+                        location_category="Training")
+                        )
             elif self.is_a_challenge():
-                if self.gametype == "6GAME" or float(self.duration) >= 1:  # has to be in C1
-                #should I hard-code 60 min only goes to C1, or should I jsut let it be? or figer out a better way?
-                    return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length"))
-                else:#can be n C1 or C2
-                    return list(Location.objects.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"]))
+                 # Games have to be in C1
+                if self.gametype == "6GAME" or float(self.duration) >= 1:
+                    return list(Location.objects.filter(
+                            venue__in=venues,
+                            location_type='Flat Track',
+                            location_category="Competition Any Length")
+                            )
+                else:  # Can be n C1 or C2
+                    return list(Location.objects.filter(
+                            venue__in=venues,
+                            location_type='Flat Track',
+                            location_category__in=[
+                                    "Competition Half Length Only",
+                                    "Competition Any Length"
+                                    ]
+                            ))
 
         elif self.location_type == 'EITHER Flat or Banked Track':
-            if self.is_a_training():#if this is a training
-                return list(Location.objects.filter(location_category__in=["Training","Training or Competition"], venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+            if self.is_a_training():
+                return list(Location.objects.filter(
+                        location_category__in=["Training","Training or Competition"],
+                        venue__in=venues,
+                        location_type__in=['Flat Track','Banked Track']
+                        ))
             elif self.is_a_challenge():
-                return list(Location.objects.filter(location_category__in=["Training or Competition","Competition Half Length Only","Competition Any Length"],venue__in=venues, location_type__in=['Flat Track','Banked Track']))
+                return list(Location.objects.filter(
+                        location_category__in=["Training or Competition",
+                                "Competition Half Length Only",
+                                "Competition Any Length"
+                                ],
+                        venue__in=venues,
+                        location_type__in=['Flat Track','Banked Track']
+                        ))
         else:
-            return list(Location.objects.filter(venue__in=venues, location_type=self.location_type))
+            return list(Location.objects.filter(
+                    venue__in=venues,
+                    location_type=self.location_type)
+                    )
 
     #---------------------------------------------------------------------------
     def dummy_occurrences(self,level,makedummies):
-        """Makes unsaved Occurrence objects for all possible location time combos for activity
-        EDIT April 22 2016: also gathers possible empty occurrances"""
-        #this works, but it makes about 2500 on my first test run.
+        """Makes unsaved Occurrence objects for all possible location time
+        combinations for activity. Also gathers possible empty occurrances.
+        """
+        # This works, but it makes about 2500 on my first test run. Not Plan A.
+
         from swingtime.models import Occurrence  # Avoid parallel import
-        print("dummy occurrences, level ",level)
-        #empties=[]
-        dummies=[]
-        pls=self.possible_locations()
+
+        dummies = []
+        pls = self.possible_locations()
         if self.interest:
-            proxy_interest=self.interest
+            proxy_interest = self.interest
         else:
-            proxy_interest=self.get_default_interest()
+            proxy_interest = self.get_default_interest()
 
-        #print("proxy_interest 1",proxy_interest)
-        #print "possible locations: ",pls
-        if self.is_a_training():#if this is a training
-            proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
-            challenge=None
-            training=self
+        if self.is_a_training():
+            # Make high demand classes in low interest timeslots and vice versa
+            proxy_interest = abs(6 - proxy_interest)
+            challenge = None
+            training = self
         elif self.is_a_challenge():
-            challenge=self
-            training=None
-        #print("proxy_interest 2",proxy_interest)
-        duration=float(self.duration)
-        dur_delta=int(duration*60)
+            challenge = self
+            training = None
+        duration = float(self.duration)
+        dur_delta = int(duration * 60)
 
-        #print "duration",duration
-        #print "dur_delta",dur_delta
+        date_range = self.con.get_date_range()
+        base_q = Occurrence.objects.filter(
+                challenge=None,
+                training=None,
+                location__in=pls,
+                start_time__gte=self.con.start,
+                end_time__lte=self.con.end
+                )
 
-        date_range=self.con.get_date_range()
-        base_q=Occurrence.objects.filter(challenge=None,training=None,location__in=pls,start_time__gte=self.con.start, end_time__lte=self.con.end)
-
-        if level==1:
-            base_q=base_q.filter(interest=proxy_interest).filter(end_time=F('start_time') + timedelta(minutes=dur_delta))
-        elif level==2:
-            ilist=[int(proxy_interest)-1,int(proxy_interest),int(proxy_interest)+1]
-            base_q=base_q.filter(interest__in=ilist).filter(end_time=F('start_time') + timedelta(minutes=dur_delta))
-        #else if is 3 or, no extra filter
+        if level == 1:
+            base_q = base_q.filter(interest=proxy_interest).filter(
+                    end_time=F('start_time') + timedelta(minutes=dur_delta)
+                    )
+        elif level == 2:
+            ilist = [int(proxy_interest) - 1, int(proxy_interest), int(proxy_interest) + 1]
+            base_q = base_q.filter(interest__in=ilist).filter(
+                    end_time=F('start_time') + timedelta(minutes=dur_delta)
+                    )
 
         empties=list(base_q)
-# ##########works, but is time consuming. But don't want to optimize if Ivanna doesn't care and never uses
+        # Works, but is time consuming.
+        # don't want to optimize if Ivanna doesn't care and never uses
         if makedummies:
             for d in date_range:
-                day_start=datetime.datetime(year=d.year, month=d.month, day=d.day,hour=TIMESLOT_START_TIME.hour)
-                day_end=day_start+TIMESLOT_END_TIME_DURATION
-                slot_start=day_start
-                slot_end=slot_start+datetime.timedelta(minutes=dur_delta)
+                day_start = datetime.datetime(
+                        year=d.year,
+                        month=d.month,
+                        day=d.day,
+                        hour=TIMESLOT_START_TIME.hour
+                        )
+                day_end = day_start + TIMESLOT_END_TIME_DURATION
+                slot_start = day_start
+                slot_end = slot_start+datetime.timedelta(minutes=dur_delta)
 
-                while slot_end<day_end:
+                while slot_end < day_end:
                     for l in pls:
-                        if l.is_free(slot_start,slot_end):
-                            o=Occurrence(start_time=slot_start,end_time=slot_end,location=l,challenge=challenge,training=training)
+                        if l.is_free(slot_start, slot_end):
+                            o = Occurrence(
+                                    start_time=slot_start,
+                                    end_time=slot_end,
+                                    location=l,
+                                    challenge=challenge,
+                                    training=training
+                                    )
                             dummies.append(o)
 
-                    slot_start+=TIMESLOT_INTERVAL
-                    slot_end+=TIMESLOT_INTERVAL
+                    slot_start += TIMESLOT_INTERVAL
+                    slot_end += TIMESLOT_INTERVAL
 
-        return [empties,dummies]
+        return [empties, dummies]
 
     #---------------------------------------------------------------------------
-    def sched_conflict_score(self,level,makedummies):
-        """Takes in activity, makes list of dummy occurrances. checks each one for schedule conflicts,
-        scores them so that each Blackout is worth 100 pts, Figurehead 10, Participant 1.
-        Returns ordered dict, w/ key as score, v as list of occurrences that match score, sorted 0-highest
+    def sched_conflict_score(self, level, makedummies):
+        """Takes in activity, makes list of dummy occurrances.
+        Checks each one for schedule conflicts, scores them so that
+        each blackout is worth 100 pts, Figurehead 10, Participant 1.
+        Returns ordered dict, w/ key as score, v as list of occurrences that
+        match score, sorted 0-highest.
         NEW: may remove Os depending on level"""
-        print "about to start sched_conflict_score"
-        odict_list=[]
+
+        odict_list = []
         if self.is_a_training():
-            training=self
+            training = self
         else:
-            training=None
+            training = None
         if self.is_a_challenge():
-            challenge=self
+            challenge = self
         else:
-            challenge=None
-        #print("sched_conflict_score ",training,challenge)
+            challenge = None
 
-        if int(level)<2:
-            max_score=0
-        elif int(level)==2:
-            max_score=99
+        if int(level) < 2:
+            max_score = 0
+        elif int(level) == 2:
+            max_score = 99
         else:
-            max_score=999999999999999999 #arbitrary relaly big number
+            max_score = 999999999999999999  # Arbitrary really big number
 
-        #for o in dummy_occurrences:
-        #print("sched_conflict_score level is ",level)
-
-        for olist in list(self.dummy_occurrences(level=level,makedummies=makedummies)):
-            if len(olist)>0:
-                #print "more than 1!"
-                conflict={}
-                #print "olist: ",olist
+        for olist in list(self.dummy_occurrences(level=level, makedummies=makedummies)):
+            if len(olist) > 0:
+                conflict = {}
                 for o in olist:
-                    #don't save, this is to make figruehead registrants work
-                    o.training=training
-                    o.challenge=challenge
-                    score=0
+                    # Don't save, this is to make figurehead registrants work
+                    o.training = training
+                    o.challenge = challenge
+                    score = 0
 
-                    blackout_conflict=o.blackout_conflict()
+                    blackout_conflict = o.blackout_conflict()
                     if blackout_conflict:
-                        #print "blackout_conflict: ",len(blackout_conflict),blackout_conflict
-                        this_score=len(blackout_conflict)*100
-                        #print "blackout score: ",this_score
-                        score+=this_score
+                        this_score = len(blackout_conflict) * 100
+                        score += this_score
 
-                    figurehead_conflict=o.figurehead_conflict()
+                    figurehead_conflict = o.figurehead_conflict()
                     if figurehead_conflict:
-                        #print "figurehead_conflict: ",len(figurehead_conflict),figurehead_conflict
-                        this_score=len(figurehead_conflict)*10
-                        #print "figurehead score: ",this_score
-                        score+=this_score
+                        this_score = len(figurehead_conflict) * 10
+                        score += this_score
 
-                    participant_conflict=o.participant_conflict()
+                    participant_conflict = o.participant_conflict()
                     if participant_conflict:
-                        #print "participant_conflict: ",len(participant_conflict),participant_conflict
-                        this_score=len(participant_conflict)*1
-                        #print "participant score: ",this_score
-                        score+=this_score
+                        this_score = len(participant_conflict) * 1
+                        score += this_score
 
                     if score not in conflict:
-                        conflict[score]=[o]
+                        conflict[score] = [o]
                     else:
-                        this_list=conflict.get(score)
+                        this_list = conflict.get(score)
                         this_list.append(o)
-                        conflict[score]=list(this_list)
-            else:#if empty list, otherwise uses last conflict and returns wrond occurrence
-                conflict={}
+                        conflict[score] = list(this_list)
+            else:
+            # If empty list, otherwise uses last conflict and return wrong occurrence
+                conflict = {}
 
-            score_list=list(conflict.keys())
+            score_list = list(conflict.keys())
             score_list.sort()
             odict  = OrderedDict()
 
             for score in score_list:
-                if score<=max_score:
-                    temp_list=conflict.get(score)
-                    odict[score]=list(temp_list)
+                if score <= max_score:
+                    temp_list = conflict.get(score)
+                    odict[score] = list(temp_list)
 
             odict_list.append(odict)
 
@@ -1075,108 +1112,99 @@ class Activity(models.Model):
 
     #---------------------------------------------------------------------------
     def find_level_slots(self):
-        """Experimental function to find or make matching occurrences for auto scheduler.
-        Precedence: 1-try to FIND Level 1 match, if not, try to MAKE Level 1 match, if not, find Level 2, so on...
-        Differs from manual schedule levels slighty in that all levels here require right duration"""
-        print "running find_level_slots"
+        """Find or make matching occurrences for auto scheduler.
+        Precedence: 1-try to FIND Level 1 match, if not,
+        try to MAKE Level 1 match, if not, find Level 2, so on...
+        Differs from manual schedule levels slighty in that
+        all levels here require right duration.
+        """
 
         from swingtime.models import Occurrence  # Avoid parallel import
+
         if self.interest:
-            proxy_interest=self.interest
+            proxy_interest = self.interest
         else:
-            proxy_interest=self.get_default_interest()
-        if self.is_a_training():#if this is a training
-            proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
-            challenge=None
-            training=self
+            proxy_interest = self.get_default_interest()
+        if self.is_a_training():
+            proxy_interest = abs(6 - proxy_interest)
+            # Make high demand classes in low interest timeslots and vice versa
+            challenge = None
+            training = self
         elif self.is_a_challenge():
-            challenge=self
-            training=None
+            challenge = self
+            training = None
 
-        dur_delta=int(float(self.duration)*60)
-        pls=self.possible_locations()
+        dur_delta = int(float(self.duration) * 60)
+        pls = self.possible_locations()
 
-        #base_q is base level requirements: made but empty, right time, right location Don't know about interest or conflicts.
-        base_q=list(Occurrence.objects.filter(challenge=None,training=None,location__in=pls,end_time=F('start_time') + timedelta(minutes=dur_delta)))
-        level1find=[]
-        level1halffind=[]#this is for if the interest doesn't quite match but still no conflicts
-        level2find=[]
-        level3find=[]
+        #base_q is base level requirements:
+        # made but empty, right time, right location
+        # don't know about interest or conflicts.
+        base_q = list(Occurrence.objects.filter(
+                challenge=None,
+                training=None,
+                location__in=pls,
+                end_time=F('start_time') + timedelta(minutes=dur_delta)
+                ))
+        level1find = []
+        level1halffind = []  # If interest doesn't quite match but no conflicts
+        level2find = []
+        level3find = []
 
-        for o in base_q:#sor list rather than multiple queries
-            #print o.start_time,o.end_time, o.interest,o.location
+        for o in base_q:  # Sort list rather than multiple queries
 
-            if o.interest and (abs( float(o.interest)-float(proxy_interest) )<1):
-            #if o.interest and float(o.interest)==float(proxy_interest): #i think this causes problems w/ apprxiamted decimal nterest
+            if o.interest and (abs(float(o.interest) - float(proxy_interest)) < 1):
+            # Need abs, otherwise causes problems w/ apprxiamted decimal interest
                 level1find.append(o)
-                #print"putting in level1"
-            elif o.interest and (abs( float(o.interest)-float(proxy_interest) )<2):
+            elif o.interest and (abs(float(o.interest) - float(proxy_interest)) < 2):
                 level2find.append(o)
-                #print"putting in level2"
             else:
                 level3find.append(o)
-                #print"putting in level3"
 
-        #print self, "level1find len ",len(level1find),"level2find len ",len(level2find),"level3find len ",len(level3find)
-
-        #still need conflict sort
-        for l in [level1find,level2find]:
+        # Still need conflict sort
+        for l in [level1find, level2find]:
             for o in l:
-                o.challenge=challenge#don't save!
-                o.training=training#DON'T SAVE!
-                score=0
-                blackout_conflict=o.blackout_conflict()
+                o.challenge = challenge  # Don't save!
+                o.training = training  # DON'T SAVE!
+                score = 0
+                blackout_conflict = o.blackout_conflict()
                 if blackout_conflict:
-                    #print "blackout_conflict: ",len(blackout_conflict),blackout_conflict
-                    this_score=len(blackout_conflict)*100
-                    #print "blackout score: ",this_score
-                    score+=this_score
+                    this_score = len(blackout_conflict) * 100
+                    score += this_score
 
-                figurehead_conflict=o.figurehead_conflict()
+                figurehead_conflict = o.figurehead_conflict()
                 if figurehead_conflict:
-                    #print "figurehead_conflict: ",len(figurehead_conflict),figurehead_conflict
-                    this_score=len(figurehead_conflict)*10
-                    #print "figurehead score: ",this_score
-                    score+=this_score
+                    this_score = len(figurehead_conflict) * 10
+                    score += this_score
 
-                participant_conflict=o.participant_conflict()
+                participant_conflict = o.participant_conflict()
                 if participant_conflict:
-                    #print "participant_conflict: ",len(participant_conflict),participant_conflict
-                    this_score=len(participant_conflict)*1
-                    #print "participant score: ",this_score
-                    score+=this_score
+                    this_score = len(participant_conflict) * 1
+                    score += this_score
 
-                #print"Score:  ",score,o.start_time,o.end_time, o.interest,o.location
                 if score > 99:
                     if o in level1find:
-                        #print "removing from level1"
                         level1find.remove(o)
                     if o in level2find:
-                        #print "removing from level2"
                         level2find.remove(o)
                     level3find.append(o)
-                    #print "put in level3"
                 elif score <= 99 and score > 0:
                     if o in level1find:
-                        #print "removing from level1"
                         level1find.remove(o)
 
                     if o not in level2find:
-                        #print "putting in level3"
                         level2find.append(o)
 
-                elif score <=0: #if there's no ocnflict but it's still a +/- 1 interest match
-                    #print "no conflict but still a maybe +/- interest match"
+                # If there's no conflict but it's still a +/- 1 interest match
+                elif score <= 0:
                     if o in level2find:
                         level2find.remove(o)
-                        #print"remvoed form l2"
                     level1halffind.append(o)
-                    #print"put in level half"
 
-                o.challenge=None#back to blank
-                o.training=None#backto blank
+                o.challenge = None  # Back to blank
+                o.training = None  # Backto blank
 
-        return level1find,level1halffind,level2find,level3find
+        return level1find, level1halffind, level2find, level3find
 
     #---------------------------------------------------------------------------
     def scheduled(self):
@@ -1185,48 +1213,45 @@ class Activity(models.Model):
 
     #---------------------------------------------------------------------------
     def get_activity_type(self):
-        """Written so can easily see if is snctioned game/chal in templates.
-        Might as well throw in some training data too,
-        but this was mostly written so can use Cycle template tag for both chal and train"""
+        """Written so can easily see if is sanctioned game/chal in templates.
+        Written so can use cycle template tag for both challenges & trainings.
+        """
 
-        loc_str=""
+        loc_str = ""
 
-        #both have location_type
-        if self.location_type=='EITHER Flat or Banked Track':
-            loc_str="FT or BT "
-        elif self.location_type=="Flat Track":
-            loc_str="FT "
-        elif self.location_type=='Banked Track':
-            loc_str="BT "
-        elif self.location_type=='Off Skates Athletic Training':
-            loc_str="Xsk8 Athletic "
-        elif self.location_type=='Seminar/Conference Room':
-            loc_str="Xsk8  "
+        # Both have location_type
+        if self.location_type == 'EITHER Flat or Banked Track':
+            loc_str = "FT or BT "
+        elif self.location_type == "Flat Track":
+            loc_str = "FT "
+        elif self.location_type == 'Banked Track':
+            loc_str = "BT "
+        elif self.location_type == 'Off Skates Athletic Training':
+            loc_str = "Xsk8 Athletic "
+        elif self.location_type == 'Seminar/Conference Room':
+            loc_str = "Xsk8  "
 
 
-        if self.is_a_training():#if this is a training
-            #loc_str+=self.get_duration_display()
-            loc_str+=("("+self.duration+" Hrs)")
+        if self.is_a_training():
+            loc_str += ("(" + self.duration +" Hrs)")
 
         elif self.is_a_challenge():
-            if self.gametype in ['3CHAL','6CHAL','36CHAL']:
-                if self.gametype=='3CHAL':
-                    loc_str+="30m"
-                elif self.gametype=='6CHAL':
-                    loc_str+="60m"
-                elif self.gametype=='36CHAL':
-                    loc_str+="30 or 60m"
-                loc_str+=" Challenge"
+            if self.gametype in ['3CHAL', '6CHAL', '36CHAL']:
+                if self.gametype == '3CHAL':
+                    loc_str += "30m"
+                elif self.gametype == '6CHAL':
+                    loc_str += "60m"
+                elif self.gametype == '36CHAL':
+                    loc_str += "30 or 60m"
+                loc_str += " Challenge"
             elif self.gametype == "6GAME":
-                loc_str+="60m Reg/San Game"
+                loc_str += "60m Reg/San Game"
 
         return loc_str
 
-
-#maybe i should rename this to get absolute url so view on site is easier?
     #---------------------------------------------------------------------------
     def get_view_url(self):
-        if self.is_a_training():#if this is a training
+        if self.is_a_training():
             from scheduler.views import view_training  # Avoid parallel import
             return reverse('scheduler.views.view_training', args=[str(self.pk)])
 
@@ -1264,11 +1289,17 @@ class Activity(models.Model):
 class ChallengeManager(models.Manager):
 
     #---------------------------------------------------------------------------
-    def submission_full(self,con):
-        """If we have too many challenges submitted this year, returns true. Else, false
-        Excludes Games from count"""
-        submissions=list(Challenge.objects.filter(con=con).exclude(submitted_on=None,gametype="6GAME"))
-        if len(submissions)<CLOSE_CHAL_SUB_AT:
+    def submission_full(self, con):
+        """If too many challenges submitted for con, returns true. Else, false.
+        Excludes Games from count.
+        """
+
+        submissions = list(Challenge.objects
+                .filter(con=con)
+                .exclude(submitted_on=None,gametype="6GAME")
+                )
+
+        if len(submissions) < CLOSE_CHAL_SUB_AT:
             return False
         else:
             return True
@@ -1277,54 +1308,60 @@ class ChallengeManager(models.Manager):
 #===============================================================================
 class Challenge(Activity):
 
-    roster1=models.ForeignKey(Roster, related_name="roster1", null=True,blank=True,on_delete=models.SET_NULL)
-    roster2=models.ForeignKey(Roster, related_name="roster2", null=True,blank=True,on_delete=models.SET_NULL)
+    roster1 = (models.ForeignKey(
+            Roster, related_name="roster1", null=True, blank=True,
+            on_delete=models.SET_NULL)
+            )
+    roster2 = (models.ForeignKey(
+            Roster, related_name="roster2", null=True, blank=True,
+            on_delete=models.SET_NULL)
+            )
     # note:
     # Once upon a time I let the same roster be used for multiple
     # challenges, but that ended up confusing everyone.
     # So that's why roster:challenge is essentially a 1:1, but
     # I have to write awkward stuff around it really being fk
-    captain1accepted=models.BooleanField(default=True)
-    captain2accepted=models.BooleanField(default=False)
-    roster1score=models.IntegerField(null=True, blank=True)
-    roster2score=models.IntegerField(null=True, blank=True)
-    ruleset=models.CharField(max_length=30, choices=RULESET, default=RULESET[0][0])
-    gametype=models.CharField(max_length=250, choices=GAMETYPE, default=GAMETYPE[0][0])
-    submitted_on=models.DateTimeField(null=True, blank=True)
+    captain1accepted = models.BooleanField(default=True)
+    captain2accepted = models.BooleanField(default=False)
+    roster1score = models.IntegerField(null=True, blank=True)
+    roster2score = models.IntegerField(null=True, blank=True)
+    ruleset = models.CharField(max_length=30, choices=RULESET, default=RULESET[0][0])
+    gametype = models.CharField(max_length=250, choices=GAMETYPE, default=GAMETYPE[0][0])
+    submitted_on = models.DateTimeField(null=True, blank=True)
     objects = ChallengeManager()
 
     #---------------------------------------------------------------------------
     def __unicode__(self):
-       return "%s: %s" %(self.name, self.con)
+
+       return "%s: %s"  % (self.name, self.con)
 
     #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
 
-        string_fields=['internal_notes','communication']
+        string_fields = ['internal_notes','communication']
         for item in string_fields:
-            att_unclean=getattr(self, item)
+            att_unclean = getattr(self, item)
             if att_unclean:
-                # I'm allowing punctuation in name and description
-                # usually I strip all punctuation
-                cleaned_att=ascii_only(att_unclean)
+                cleaned_att = ascii_only(att_unclean)
                 setattr(self, item, cleaned_att)
 
-        #I should have made the name a property. This is stupid. Maybe change later?
+        # Should have made the name a property. This is stupid.
         if self.roster1 and self.roster1.name:
-            name1=self.roster1.name
+            name1 = self.roster1.name
         else:
-            name1="?"
+            name1 = "?"
         if self.roster2 and self.roster2.name:
-            name2=self.roster2.name
+            name2 = self.roster2.name
         else:
-            name2="?"
-        self.name= "%s vs %s" % (name1,name2)
+            name2 = "?"
+        self.name = "%s vs %s" % (name1, name2)
 
         super(Challenge, self).save()
 
     #---------------------------------------------------------------------------
     def roster4registrant(self, registrant):
         """takes in registrant, returns which team they're on"""
+
         if registrant in self.roster1.participants.all():
             return roster1
         elif registrant in self.roster2.participants.all():
@@ -1333,114 +1370,138 @@ class Challenge(Activity):
             return None
 
     #---------------------------------------------------------------------------
-    def rosterreject(self,roster):
-        """takes in roster, rejects challenge. if both have rejected, deletes challenge."""
-        opposing_cap=None
-        opposing=None
+    def rosterreject(self, roster):
+        """takes in roster, rejects challenge.
+        If both have rejected, deletes challenge.
+        """
 
-        if self.roster1==roster:
-            self.captain1accepted=False
+        opposing_cap = None
+        opposing = None
+
+        if self.roster1 == roster:
+            self.captain1accepted = False
             if self.roster2:
-                opposing=self.roster2
+                opposing = self.roster2
 
-        elif self.roster2==roster:
-            self.captain2accepted=False
+        elif self.roster2 == roster:
+            self.captain2accepted = False
             if self.roster1:
-                opposing=self.roster1
+                opposing = self.roster1
 
         if not self.captain1accepted and not self.captain2accepted:
             for r in [self.roster1, self.roster2]:
                 if r :
-                    cappy=r.captain
-                    #this should always run now that i made rosters unique to challenges but I'll keep just in case
-                    if len(list(r.roster1.all())+list(r.roster2.all()))==1:#if this is this rosters only challange
-                        print "Roster reject, deleting ",r
+                    cappy = r.captain
+                    # If this is this roster's only challange
+                    if len(list(r.roster1.all()) + list(r.roster2.all())) == 1:
                         r.delete()
                     if cappy:
-                        cappy.save()#to reset captain number
+                        cappy.save()  #To reset captain number
 
             if self.id and self.pk:
                 self.delete()
         else:
-            #set rejected roster back to defaults. gets saved in method.
+            # Set rejected roster back to defaults. Gets saved in method.
             roster.restore_defaults()
-            self.save()#make sure after naked roster is saved, so chal name will include ? again
+             # Make sure after naked roster is saved, so chal name will include ? again
+            self.save()
 
     #---------------------------------------------------------------------------
     def my_team_status(self, registrant_list):
-        '''takes in registrant list, tells you which team you're captaining, whether you've accepte, who your opponent is, and if they'e accepted'''
-        if self.roster1 and self.roster1.captain and (self.roster1.captain in registrant_list):
-            my_team=self.roster1
-            opponent=self.roster2
-            my_acceptance=self.captain1accepted
-            opponent_acceptance=self.captain2accepted
-        elif self.roster2 and self.roster2.captain and (self.roster2.captain in registrant_list):
-            my_team=self.roster2
-            opponent=self.roster1
-            my_acceptance=self.captain2accepted
-            opponent_acceptance=self.captain1accepted
-        else:
-            my_team=None
-            opponent=None
-            my_acceptance=None
-            opponent_acceptance=None
+        """takes in registrant list, tells you which team registrant is captaining,
+        whether registrant has accepted, who opponent is, and if they'e accepted.
+        """
 
-        return my_team,opponent,my_acceptance,opponent_acceptance
+        if (self.roster1 and self.roster1.captain and
+                (self.roster1.captain in registrant_list)
+                ):
+            my_team = self.roster1
+            opponent = self.roster2
+            my_acceptance = self.captain1accepted
+            opponent_acceptance = self.captain2accepted
+        elif (self.roster2 and self.roster2.captain and
+                (self.roster2.captain in registrant_list)
+                ):
+            my_team = self.roster2
+            opponent = self.roster1
+            my_acceptance = self.captain2accepted
+            opponent_acceptance = self.captain1accepted
+        else:
+            my_team = None
+            opponent = None
+            my_acceptance = None
+            opponent_acceptance = None
+
+        return my_team, opponent, my_acceptance, opponent_acceptance
 
     #---------------------------------------------------------------------------
-    def replace_team(self,old_team,selected_team):
-        """for changing from disposable team to Game team. Finds the team te registrant is a captain of, removes that team, puts given team in it place."""
-        if self.roster1 and self.roster1==old_team:
-            self.roster1=selected_team
-        elif self.roster2 and self.roster2==old_team:
-            self.roster2=selected_team
-
-        #self.save()
-        return old_team,selected_team
+# ###########I think i never use this? outdated?
+#     def replace_team(self, old_team, selected_team):
+#         """For changing from disposable team to Game team.
+#         Finds the team registrant is a captain of, removes that team,
+#         puts given team in it place.
+#         """
+#         if self.roster1 and self.roster1 == old_team:
+#             self.roster1 = selected_team
+#         elif self.roster2 and self.roster2 == old_team:
+#             self.roster2 = selected_team
+#
+#         #self.save()
+#         return old_team, selected_team
 
     #---------------------------------------------------------------------------
     def can_submit_chlg(self):
+        """First checks to see if both captains have accepted.
+        If yes and is a Game, can submit as long as first sub date has passed,
+        and schedule is not final.
+        If yes and is a Challenge, can submit as long as first sub date has
+        passed and max chal cap hasn't been reached.
         """
-        first checks to see if both captains have accepted.
-        If yes and is a Game, can submit as long as first sub date has passed, and schedule is not final.
-        If yes and is a Challenge, can submit as long as first sub date has passed and max chal cp hasn't been reached.
-        """
-        can_sub=False
+
+        can_sub = False
         if self.roster1 and self.captain1accepted and self.roster2 and self.captain2accepted:
             if self.con.can_submit_chlg_by_date():
                 if self.gametype == "6GAME" and not self.con.sched_final:
-                    can_sub= True
+                    can_sub = True
             elif self.gametype != "6GAME" and self.con.can_submit_chlg():
-                    can_sub= True
+                    can_sub = True
 
         return can_sub
 
     #---------------------------------------------------------------------------
     def skill_display(self):
-        """Like method of same name for Roster, makes it so I don't see A0, just A, or AB, or something more understandable
-        If different for 2 rosters, returns both. otehrwise if same, 1."""
-        r1skill=r2skill=display=None
+        """Like method of same name for Roster, makes it so don't see A0,
+        just A, or AB, or something more understandable.
+        If different for 2 rosters, returns both. otherwise if same, 1.
+        """
+        r1skill = r2skill = display = None
 
         if self.roster1:
-            r1skill=self.roster1.skill_display()
+            r1skill = self.roster1.skill_display()
         if self.roster2:
-            r2skill=self.roster2.skill_display()
+            r2skill = self.roster2.skill_display()
 
         if r1skill and r2skill:
              if r1skill != r2skill:
-                 display="%s & %s"%(r1skill,r2skill)
+                 display = "%s & %s" % (r1skill, r2skill)
              else:
-                 display=r1skill
+                 display = r1skill
         elif r1skill and not r2skill:
-            display=r1skill
+            display = r1skill
         elif r2skill and not r1skill:
-            display=r2skill
+            display = r2skill
 
         return display
 
     #---------------------------------------------------------------------------
     def skills_match(self):
-        match=False
+        """Checks to see if skills of 2 rosters are allowed to play each other.
+        For Challenges, not Games.
+        Rules dictated by Ivanna.
+        """
+
+        match = False
+
         if self.roster1 and self.roster2:
             pass
 
@@ -1449,22 +1510,22 @@ class Challenge(Activity):
     #---------------------------------------------------------------------------
     def gender_display(self):
         """Like skill display above but w/ gender."""
-        r1gen=r2gen=display=None
+        r1gen = r2gen = display = None
 
         if self.roster1:
-            r1gen=self.roster1.gender
+            r1gen = self.roster1.gender
         if self.roster2:
-            r2gen=self.roster2.gender
+            r2gen = self.roster2.gender
 
         if r1gen and r2gen:
              if r1gen != r2gen:
-                 display="%s & %s"%(r1gen,r2gen)
+                 display = "%s & %s" % (r1gen, r2gen)
              else:
-                 display=r1gen
+                 display = r1gen
         elif r1gen and not r2gen:
-            display=r1gen
+            display = r1gen
         elif r2gen and not r1gen:
-            display=r2gen
+            display = r2gen
 
         return display
 
