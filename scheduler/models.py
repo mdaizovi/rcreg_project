@@ -14,8 +14,8 @@ from django.db.models.signals import pre_save, post_save, pre_delete
 from django.utils import timezone
 
 from con_event.models import (MatchingCriteria, Con, Registrant,
-        LOCATION_TYPE, LOCATION_CATEGORY, GENDER,SKILL_LEVEL_CHG,
-        SKILL_LEVEL_TNG, SKILL_LEVEL,SKILL_LEVEL_GAME
+        LOCATION_TYPE, LOCATION_CATEGORY, GENDER, SKILL_LEVEL_CHG,
+        SKILL_LEVEL_TNG, SKILL_LEVEL, SKILL_LEVEL_GAME
         )
 from rcreg_project.extras import remove_punct,ascii_only, ascii_only_no_punct
 from rcreg_project.settings import (BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,
@@ -455,21 +455,24 @@ class Roster(MatchingCriteria):
 
     #---------------------------------------------------------------------------
     def opponent_skills_allowed(self):
-        """Non-game rosters can only play oppoenents within 1 skill level of
-        themselves. Returns  list of permissible opponents skill level, as
-        determiend by own skill.
+        """Non-game rosters can only play opponents within 1 skill level of
+        themselves. Returns list of permissible opponents skill level displays, as
+        determined by own skill.
+        ex: roster w/ AO returns ['A','B']. None returns ['ABCD']
+        Used in edit_challenge view.
         """
 
         allowed = []
-        skillphabet = ["A", "AB", "B", "BC", "C"]
+        skillphabet = ["AO", "AB", "BO", "BC", "CO"]
 
         if self.skill:
-            skill_index = skillphabet.index(self.skill_display())
+            skill_index = skillphabet.index(self.skill)
             for i in range(skill_index - 1, skill_index + 2):
                 if i >= 0 and i < len(skillphabet):
                     allowed.append(skillphabet[i])
         else:
-            allowed.append(self.skill_display())
+            # If no skill, as in Gamem can play anyone. It's not policed.
+            allowed = list(skillphabet + [None])
 
         return allowed
 

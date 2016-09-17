@@ -1,33 +1,37 @@
 import datetime
 from dateutil import rrule
-from django.contrib.auth.models import User,Group
+from random import choice
+import openpyxl
+from openpyxl.styles import PatternFill
+
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.db import models
+from django.db.models import Q, F
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.dateparse import parse_datetime,parse_time
-from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.db.models import Q,F
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
-
-from scheduler.models import Location, Challenge, Training,INTEREST_RATING
-from scheduler.app_settings import DEFAULT_REG_CAP, DEFAULT_AUD_CAP
-
-from con_event.models import Blackout,Registrant,SKILL_LEVEL_TNG, MatchingCriteria
-from rcreg_project.settings import BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
-from rcreg_project.extras import ascii_only_no_punct
-
-from random import choice
-import openpyxl
-from openpyxl.styles import PatternFill
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 except ImportError:
     from django.contrib.contenttypes.generic import GenericForeignKey, GenericRelation
 
+from con_event.models import Blackout, Registrant, SKILL_LEVEL_TNG, MatchingCriteria
+from rcreg_project.extras import ascii_only_no_punct
+from rcreg_project.settings import BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
+from scheduler.app_settings import DEFAULT_REG_CAP, DEFAULT_AUD_CAP
+from scheduler.models import Location, Challenge, Training, INTEREST_RATING
 from swingtime.conf import settings as swingtime_settings
+
+"""Note from Dahmer:
+I started off with Swingtime and changed a lot for RollerCon's specifications.
+So if you're familiar w/ the app, this may be very different.
+Also, that explains style inconsistency between old code and my add-ons.
+"""
 
 
 #===============================================================================
@@ -67,92 +71,113 @@ class OccurrenceManager(models.Manager):
 
     #---------------------------------------------------------------------------
     def gather_possibles(self, con,all_act_data):
-        """Meant to make Otto run faster by moving all db queries to 1 place.
+        """Makes Otto (Auto-Scheduler) run faster by moving all db queries to 1 place.
         Takes in activity list, either list of approved but unscheduled challenges or trainings
         gets all possible Occurrences for entire group, divides up by which would suit each activity
-        doesbn't sort by conflict yet"""
-        #0 db hits?!? wtf?
-        #print "gather possibles experiment"
-        #print "dbc1:", len(dbconnection.queries)
-        venues=con.venue.all()
-        all_locations=Location.objects.filter(venue__in=venues) #this works. should i select/prefetch anything?
-        #date_range=con.get_date_range()
+        doesn't sort by conflict yet.
+        I sacrificed readability for speed. It's a mess but it's better this way.
+        """
 
-        #base_q=Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end)
-        base_q=list(Occurrence.objects.filter(challenge=None,training=None,start_time__gte=con.start, end_time__lte=con.end).select_related('location'))
+        venues = con.venue.all()
+        all_locations = Location.objects.filter(venue__in=venues)
 
-        #print "dbc2:", len(dbconnection.queries)
+        base_q = list(Occurrence.objects.filter(
+                challenge=None, training=None, start_time__gte=con.start,
+                end_time__lte=con.end).select_related('location')
+                )
 
-        possibles=all_act_data.keys()
+        possibles = all_act_data.keys()
 
         for act in possibles:
             this_act_data={}
 
-            ############ start gathering locaiton per activity###############
-            ########this is where it's beng evaluated, i bet. If I oculd sort ahead of time I'd massively cut down on db trips.
+            # Start gathering locaiton per activity
             if act.location_type =='Flat Track':
-                if act.is_a_training():#if this is a training
-                    act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Training")
+                if act.is_a_training():
+                    act_locations = all_locations.filter(
+                            venue__in=venues,
+                            location_type='Flat Track',
+                            location_category="Training"
+                            )
 
                 elif act.is_a_challenge():
-                    #if act.is_a_game or float(act.duration)>=1:#has to be in C1
-                    if act.gametype=="6GAME" or float(act.duration)>=1:#has to be in C1
-                        act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category="Competition Any Length")
-                    else:#can be n C1 or C2
-                        act_locations=all_locations.filter(venue__in=venues, location_type='Flat Track', location_category__in=["Competition Half Length Only","Competition Any Length"])
+                    # Games have to be in C1
+                    if act.gametype == "6GAME" or float(act.duration) >= 1:
+                        act_locations = all_locations.filter(
+                                venue__in=venues, location_type='Flat Track',
+                                location_category="Competition Any Length"
+                                )
+                    else: # Can be n C1 or C2
+                        act_locations=all_locations.filter(
+                                venue__in=venues, location_type='Flat Track',
+                                location_category__in=[
+                                        "Competition Half Length Only",
+                                        "Competition Any Length"
+                                        ]
+                                )
 
             elif act.location_type == 'EITHER Flat or Banked Track':
-                if act.is_a_training():#if this is a training
-                    act_locations=all_locations.filter(location_category__in=["Training","Training or Competition"], venue__in=venues, location_type__in=['Flat Track','Banked Track'])
+                if act.is_a_training():
+                    act_locations = all_locations.filter(
+                            location_category__in=["Training","Training or Competition"],
+                            venue__in=venues, location_type__in=['Flat Track','Banked Track']
+                            )
                 elif act.is_a_challenge():
-                    act_locations=all_locations.filter(location_category__in=["Training or Competition","Competition Half Length Only","Competition Any Length"],venue__in=venues, location_type__in=['Flat Track','Banked Track'])
+                    act_locations = all_locations.filter(
+                            location_category__in=["Training or Competition",
+                                    "Competition Half Length Only","Competition Any Length"
+                                    ],
+                            venue__in=venues, location_type__in=['Flat Track', 'Banked Track']
+                            )
             else:
-                act_locations=all_locations.filter(venue__in=venues, location_type=act.location_type)
+                act_locations = all_locations.filter(
+                        venue__in=venues,location_type=act.location_type
+                        )
 
             this_act_data["locations"]=act_locations
-            ############ end gathering locaiton per activity###############
+            # End gathering locaiton per activity #
 
-            ############ start interest, activity type, per activity###############
+            # Start interest, activity type, per activity
             if act.interest:
-                proxy_interest=act.interest
+                proxy_interest = act.interest
             else:
-                proxy_interest=act.get_default_interest()
+                proxy_interest = act.get_default_interest()
 
-            if act.is_a_training():#if this is a training
-                proxy_interest=abs(6-proxy_interest)#to make high demand classes in low interest timeslots and vice versa
+            if act.is_a_training():
+                # Make high demand classes in low interest timeslots and vice versa
+                proxy_interest = abs(6-proxy_interest)
             elif act.is_a_challenge():
-                this_act_data["proxy_interest"]=proxy_interest
-            duration=float(act.duration)
-            dur_delta=int(duration*60)
-            this_act_data["dur_delta"]=dur_delta
-            ############ end interest, activity type, per activity###############
-            #print "dbc2.5:", len(dbconnection.queries)
+                this_act_data["proxy_interest"] = proxy_interest
+            duration = float(act.duration)
+            dur_delta = int(duration * 60)
+            this_act_data["dur_delta"] = dur_delta
+            # End interest, activity type, per activity
 
-            #act_os=base_q.filter(interest__in=[proxy_interest-1,proxy_interest,proxy_interest+1], location__in=act_locations,end_time=F('start_time') + timedelta(minutes=dur_delta))
-            act_os=[]
+            act_os = []
             for o in base_q:
-                if (o.interest in [proxy_interest-1,proxy_interest,proxy_interest+1]) and (o.location in act_locations) and (o.end_time==(o.start_time + datetime.timedelta(minutes=dur_delta)) ) :
+                if ((o.interest in [proxy_interest - 1, proxy_interest, proxy_interest + 1]) and
+                        (o.location in act_locations) and
+                        (o.end_time == (o.start_time + datetime.timedelta(minutes=dur_delta)))
+                        ):
                     act_os.append(o)
 
 
-            this_act_data["act_os"]=act_os
-            #print "dbc2.6:", len(dbconnection.queries)
-            interestexact=[]
-            interestremoved=[]
+            this_act_data["act_os"] = act_os
+            interestexact = []
+            interestremoved = []
 
-            for o in act_os:#this is where it gets evaluated, 1 for every acot
-                if o.interest==proxy_interest:
+            for o in act_os:
+                if o.interest == proxy_interest:
                     interestexact.append(o)
                 else:
                     interestremoved.append(o)
-            this_act_data["interestexact"]=interestexact
-            this_act_data["interestremoved"]=interestremoved
-            #print "dbc2.7:", len(dbconnection.queries)
-            #update dict w/ new data
-            old_act_data=all_act_data.get(act)
+            this_act_data["interestexact"] = interestexact
+            this_act_data["interestremoved"] = interestremoved
+
+            # Update dict w/ new data
+            old_act_data = all_act_data.get(act)
             old_act_data.update(this_act_data)
 
-        #print "dbc3:", len(dbconnection.queries)
         return all_act_data
 
     #---------------------------------------------------------------------------
@@ -444,8 +469,6 @@ class OccurrenceManager(models.Manager):
                             l2.remove(o)
 
         return level1pairs
-
-
 
 
 #===============================================================================
@@ -902,9 +925,6 @@ class TrainingRoster(MatchingCriteria):
     """
 
     # From Matching_criteria: gender, con, intl, skill
-    # To override skill choices defined in matching_criteria
-    #nevermind, doesn't work, need to limit choices elsewhere.
-    #skill=models.CharField(max_length=30, null=True,blank=True,choices=SKILL_LEVEL_TNG)#make this so that it cn be same as training or not, or maube just get rid of it
     cap = models.IntegerField(null=True, blank=True)
     participants = models.ManyToManyField(Registrant, blank=True)
 
@@ -1009,10 +1029,10 @@ class TrainingRoster(MatchingCriteria):
     def can_register(self):
         """Returns true if registration window is open, False if not.
         Will be determined by 2(?) hour window before class starts"""
-        can_reg=self.can_register_at()
-        now=timezone.now()
+        can_reg = self.can_register_at()
+        now = timezone.now()
 
-        if can_reg and now>=can_reg:
+        if can_reg and now >= can_reg:
             return True
         else:
             return False
@@ -1126,19 +1146,8 @@ class TrainingRoster(MatchingCriteria):
 
         allowed_editors = list(User.objects.filter(
                 groups__name__in=[
-                        'Volunteer', BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME
+                        'Volunteer', BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
                         ]
                 ))
 
         return allowed_editors
-
-
-
-    # def save(self, *args, **kwargs):
-    #     if self.registered and self.registered.training:
-    #         if self.registered.training.regcap:# I think this might conflict with get_maxcap
-    #             self.cap=self.registered.training.regcap#but maybe it almost never runs, since you'd have to add a regcap/audcap
-    #     elif self.auditing and self.auditing.training:
-    #         if self.auditing.training.audcap:# I think this might conflict with get_maxcap
-    #             self.cap=self.auditing.training.audcap
-    #     super(TrainingRoster, self).save()
