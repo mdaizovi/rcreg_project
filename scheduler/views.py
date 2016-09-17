@@ -825,6 +825,7 @@ def edit_challenge(request, activity_id):
         my_team, opponent, my_acceptance, opponent_acceptance = (
                 challenge.my_team_status([registrant])
                 )
+
     except:
         challenge = None
         return render_to_response(
@@ -856,6 +857,7 @@ def edit_challenge(request, activity_id):
     save_success = False
     captain_entry_query = None
     skater_entry_query = None
+    opp_skill_msg = None
 
     if request.method == "POST":
 
@@ -878,6 +880,7 @@ def edit_challenge(request, activity_id):
                     #don't save yet, just changing skill and gender for problem criteria check
                     problem_criteria, potential_conflicts, captain_conflict = my_team.criteria_conflict()
                     coed_beginner = my_team.coed_beginner()
+                    opp_skill_allowed = opponent.opponent_skills_allowed()
 
                     if captain_conflict:  # Most important kind of conflict
                         my_team.gender = pre_save_gender
@@ -891,9 +894,14 @@ def edit_challenge(request, activity_id):
                                     {'roster':my_team,'activity_id':activity_id,'registrant': throwaway_reg,
                                     'hidden_forms':[roster_form, challenge_form],'problem_criteria':problem_criteria,
                                     'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
-                        if coed_beginner:
+                        if coed_beginner or (opponent_acceptance and (my_team.skill not in opp_skill_allowed)):
+                            if (opponent_acceptance and (my_team.skill not in opp_skill_allowed)):
+                                opp_skill_msg = ("Making this change to skill "
+                                        "will make your team ineligible to play"
+                                        " %s. Change not made." % (opponent.name))
                             my_team.gender = pre_save_gender
                             my_team.skill = pre_save_skill
+
                         else:  #if no captain conflict, no probem crit/conflicts, no coed beginner.
                             my_team.save()
                             save_success = True
@@ -935,6 +943,8 @@ def edit_challenge(request, activity_id):
                 opponent.captain.save()  # To get captaining number accurate
 
         elif 'search captains' in request.POST:
+            # For filtering which captains to challenge
+            opp_skill_lst = my_team.opp_cap_skills_allowed
             captain_search_form = SearchForm(request.POST)
             captain_search_form.fields['search_q'].label = "Captain Name"
             captain_entry_query = captain_search_form.get_query(
@@ -943,6 +953,7 @@ def edit_challenge(request, activity_id):
             if captain_entry_query and opponent:
                 eligible_opponents = (Registrant.objects.eligible_sk8ers(opponent)
                         .filter(captain_entry_query)
+                        .filter(skill__in = opp_skill_lst)
                         )
                 eligibleopponentform = EligibleRegistrantForm(my_arg=eligible_opponents)
                 eligibleopponentform .fields['eligible_registrant'].label = "Found Captains"
@@ -1010,7 +1021,7 @@ def edit_challenge(request, activity_id):
             roster_form = ChallengeRosterModelForm(instance=my_team, user=user)
 
             formlist = [roster_form, challenge_form]
-            
+
             if not skater_entry_query:  # if skater_entry_query we already did it in POST
                 found_entries = Registrant.objects.eligible_sk8ers(my_team)
                 eligible_participants = EligibleRegistrantForm(my_arg=found_entries)
@@ -1034,7 +1045,11 @@ def edit_challenge(request, activity_id):
 
             if not opponent or not opponent.captain or not opponent_acceptance:
                 if not captain_entry_query:
-                    eligible_opponents = Registrant.objects.basic_eligible(opponent)
+                    # For filtering which captains to challenge
+                    opp_skill_lst = my_team.opp_cap_skills_allowed
+                    eligible_opponents = (Registrant.objects.basic_eligible(opponent)
+                            .filter(skill__in = opp_skill_lst)
+                            )
                     eligibleopponentform = EligibleRegistrantForm(my_arg=eligible_opponents)
                     eligibleopponentform.fields['eligible_registrant'].label = "All Eligible Captains"
                     captain_search_form = SearchForm()
@@ -1053,7 +1068,7 @@ def edit_challenge(request, activity_id):
             'add_fail_reason': add_fail_reason, 'add_fail': add_fail,
             'skater_added': skater_added, 'skater_remove': skater_remove,
             'remove_fail': remove_fail, 'opponent_acceptance': opponent_acceptance,
-            'my_acceptance':my_acceptance
+            'my_acceptance':my_acceptance, 'opp_skill_msg': opp_skill_msg
             }
 
     return render_to_response(

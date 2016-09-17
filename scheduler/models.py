@@ -471,12 +471,32 @@ class Roster(MatchingCriteria):
                 if i >= 0 and i < len(skillphabet):
                     allowed.append(skillphabet[i])
         else:
-            # If no skill, as in Gamem can play anyone. It's not policed.
             allowed = list(skillphabet + [None])
 
         return allowed
 
     #---------------------------------------------------------------------------
+
+    def opp_cap_skills_allowed(self):
+        """Calls opponent_skills_allowed to find out which skills opposing
+        captains can have. Is same, but minus the O.
+        Used when filtering captains that can be challenged, in edit_challenge.
+        """
+
+        allowed = self.opponent_skills_allowed()
+        trimmed = []
+        for s in allowed:
+            try:
+                for l in s:
+                    if l not in trimmed and l!= "O":
+                        trimmed.append(l)
+            except:
+                trimmed.append(s)
+
+        return trimmed
+
+    #---------------------------------------------------------------------------
+
     def genders_allowed(self):
         """Coed teams can have registrants of any gender. Otherwise needs to
         match, but registrants who select na/coed can play on any team.
@@ -582,33 +602,6 @@ class Roster(MatchingCriteria):
         matches captain gender. If captain is coed beginner,
         Does not run for Games, as all Games are essentially coed-beginner.
         """
-
-        # if self.gender == 'NA/Coed':
-        #     forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
-        #
-        #     if self.skill in forbidden_skills:
-        #         coed_int_str = "Coed teams have a minimum skill level of Intermediate."
-        #         if (self.captain and self.captain.skill and
-        #                 self.captain.skill in ["A", "B"]
-        #                 ):  # If captain is Intermediate or above
-        #             self.skill = self.captain.skill + "O"
-        #             coed_int_str += (" In order to remain coed, the skill level "
-        #                     "has been raised. If you'd like to include a lower "
-        #                     "skill level, please change team gender first."
-        #                     )
-        #         else:
-        #             if self.captain.gender:
-        #                 self.gender = self.captain.gender
-        #             else:
-        #                 self.gender = "Female"
-        #             coed_int_str += (" Because your skill is not Intermediate, "
-        #                     "team gender has been assigned.")
-        #         return coed_int_str
-        #
-        #     else:
-        #         return False
-        # else:
-        #     return False
 
         coed_int_str = False
 

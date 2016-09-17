@@ -82,6 +82,9 @@
           </div>{%endif%}
         {% if coed_beginner %}
             <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>{%endif%}
+        {% if opp_skill_msg %}
+            <div class="alert alert-warning" role="alert">{{opp_skill_msg}}</div>{%endif%}
+
           {%if save_success%}
         <div class="alert alert-success" role="alert">{{my_team.name}} successfully saved!</div>
         {%endif%}{%endif%}
