@@ -168,7 +168,7 @@
 <form method="POST" class="post-form" action="#editteamsection">
      {% csrf_token %}
 <h4>Replace Yourself as Captain<br>
-<small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge. Replacement captin must not already exceed maximum captain limit.
+<small>All team details will remain the same. You will remain on the roster but you will no longer be able to edit this team or challenge. Replacement captain must not already exceed maximum captain limit.
 </small></h4>
 {{captain_replacements}}
 <input type="hidden" name="roster_id" value="{{ my_team.id }}" />

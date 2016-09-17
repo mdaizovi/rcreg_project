@@ -211,6 +211,20 @@ class Roster(MatchingCriteria):
         return names
 
     #---------------------------------------------------------------------------
+    @property
+    def challenge(self):
+        """Returns  Challenge Roster is attached to.
+        Should only be 1, this is like a practice before transitioning
+        from fk to 1:1
+        """
+        challenge = None
+        chals = list(self.roster1.all()) + list(self.roster2.all())
+        if len(chals) == 1:
+            challenge = chals[0]
+
+        return challenge
+
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
         # Remove non-ascii, puncuation, from name.
         string_fields = ['name']
