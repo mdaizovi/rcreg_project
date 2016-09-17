@@ -93,7 +93,7 @@
       <a href="{{roster.get_edit_url}}"><button type="button" class="btn btn-success btn-xs">Edit Roster</button></a>
       {%endif%}</h4>
 
-{%if not challenge.gametype == '6GAME' %}
+
 <div class="well well-sm">
   <table class="table-condensed" style="margin: 0px 0px 0px 0px; width:100%;"><tr>
     <td class="text-left container-fluid tooltip-bottom" title="{{roster.skill_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Skill:
@@ -102,7 +102,7 @@
     <td class="text-right container-fluid tooltip-bottom" title="{{roster.gender_tooltip_title}}" style="border:none; text-align: center;"><span class="glyphicon" aria-hidden="true">Gender: <i class="{{roster.gender_icon}}"></i></span></td>
     </tr></table>
 </div><!-- end well-->
-{%endif%}
+
 
 <table class="table table-striped">
 <tr><th> </th><th>Name </th><th class="text-right">Number</th></tr>

@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.utils.translation import ugettext_lazy as _
 
 from con_event.models import (LOCATION_TYPE, GENDER, Con, Registrant,
-        SKILL_LEVEL_TNG, SKILL_LEVEL_CHG, SKILL_LEVEL_ACT,SKILL_LEVEL_GAME
+        SKILL_LEVEL_TNG, SKILL_LEVEL_CHG, SKILL_LEVEL_ACT
         )
 from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
 from scheduler.app_settings import (DEFAULT_ONSK8S_DURATION,
@@ -105,17 +105,7 @@ class ChallengeRosterModelForm(ModelForm):
 
         super(ChallengeRosterModelForm, self).__init__(*args, **kwargs)
 
-        choices = SKILL_LEVEL_CHG[1:]
-        if self.instance:
-            clist = (list(
-                    self.instance.roster1.all())
-                    + list(self.instance.roster2.all()
-                    ))
-            if len(clist) > 0:
-                c = clist[0]
-                if c.gametype == "6GAME":
-                #if c.is_a_game:
-                    choices = SKILL_LEVEL_GAME
+        choices = SKILL_LEVEL_CHG
 
         #  Defining fields
         self.fields["skill"] = (forms.CharField(
@@ -241,10 +231,13 @@ class MyRosterSelectForm(forms.Form):
 class GameRosterCreateModelForm(ModelForm):
 
     #---------------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        super(GameRosterCreateModelForm, self).__init__(*args, **kwargs)
-        self.fields["name"].initial = ""
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user') # I don't actually care about user
+        # Just want to be able to feed it same arguments as ChallengeRosterModelForm
+        super(GameRosterCreateModelForm, self).__init__(*args, **kwargs)
+
+        self.fields["name"].initial = ""
         #  Defining fields
         self.fields["color"] = forms.CharField(
                 widget=forms.Select(choices=COLORS),
@@ -272,60 +265,59 @@ class GameRosterCreateModelForm(ModelForm):
                 }
 
 
-#===============================================================================
-class GameModelForm(ModelForm):
-
-    #---------------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')
-        super(GameModelForm, self).__init__(*args, **kwargs)
-        reglist = user.registrants()
-        conlist=[]
-        for reg in reglist:
-            #  If has MVP or sk8er pass. Just registrant not good enough.
-            if  reg.can_sk8():
-                conlist.append(reg.con)
-
-        #  Defining fields
-        self.fields["location_type"] = forms.CharField(
-                widget=forms.Select(choices=LOCATION_TYPE[:3]),
-                initial=LOCATION_TYPE[0][0],
-                label='Location Type'
-                )
-        self.fields["gametype"] = forms.CharField(
-                widget=forms.Select(choices=GAMETYPE),
-                initial=GAMETYPE[0][0],
-                label='Type'
-                )
-        self.fields["ruleset"] = forms.CharField(
-                widget=forms.Select(choices=RULESET),
-                initial=RULESET[0][0],
-                label='Rules'
-                )
-        self.fields["communication"] = forms.CharField(
-                widget=forms.Textarea(),
-                label='Notes Between Captains & Officials (visible to skaters \
-                        on both teams; can be left blank)',
-                required=False
-                )
-
-        #  Modifying fields
-        self.fields["con"].queryset = Con.objects.filter(
-                id__in=[o.id for o in conlist]
-                )
-        self.fields["con"].initial = conlist[0]
-
-        for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({
-                    'class': 'form-control',
-                    })
-
-    #---------------------------------------------------------------------------
-    class Meta:
-
-        model = Challenge
-        fields = ['con', 'location_type', 'gametype', 'ruleset', 'communication']
-
+# #===============================================================================
+# class GameModelForm(ModelForm):
+#
+#     #---------------------------------------------------------------------------
+#     def __init__(self, *args, **kwargs):
+#         user = kwargs.pop('user')
+#         super(GameModelForm, self).__init__(*args, **kwargs)
+#         reglist = user.registrants()
+#         conlist=[]
+#         for reg in reglist:
+#             #  If has MVP or sk8er pass. Just registrant not good enough.
+#             if  reg.can_sk8():
+#                 conlist.append(reg.con)
+#
+#         #  Defining fields
+#         self.fields["location_type"] = forms.CharField(
+#                 widget=forms.Select(choices=LOCATION_TYPE[:3]),
+#                 initial=LOCATION_TYPE[0][0],
+#                 label='Location Type'
+#                 )
+#         self.fields["gametype"] = forms.CharField(
+#                 widget=forms.Select(choices=GAMETYPE),
+#                 initial=GAMETYPE[0][0],
+#                 label='Type'
+#                 )
+#         self.fields["ruleset"] = forms.CharField(
+#                 widget=forms.Select(choices=RULESET),
+#                 initial=RULESET[0][0],
+#                 label='Rules'
+#                 )
+#         self.fields["communication"] = forms.CharField(
+#                 widget=forms.Textarea(),
+#                 label='Notes Between Captains & Officials (visible to skaters \
+#                         on both teams; can be left blank)',
+#                 required=False
+#                 )
+#
+#         #  Modifying fields
+#         self.fields["con"].queryset = Con.objects.filter(
+#                 id__in=[o.id for o in conlist]
+#                 )
+#         self.fields["con"].initial = conlist[0]
+#
+#         for field in iter(self.fields):
+#             self.fields[field].widget.attrs.update({
+#                     'class': 'form-control',
+#                     })
+#
+#     #---------------------------------------------------------------------------
+#     class Meta:
+#
+#         model = Challenge
+#         fields = ['con', 'location_type', 'gametype', 'ruleset', 'communication']
 
 #===============================================================================
 class GenderSkillForm(forms.Form):
@@ -343,7 +335,7 @@ class GenderSkillForm(forms.Form):
                     skill_options.append(s)
         else:
             # So won't be problem if captain didn't specify skill
-            skill_options = SKILL_LEVEL_CHG[1:]
+            skill_options = SKILL_LEVEL_CHG
 
         #  Defining fields
         self.fields["skill"] = (forms.CharField(

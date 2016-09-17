@@ -224,7 +224,7 @@ def registrant_profile(request):
                             }
 
                     return (render_to_response(
-                            'conflict_warning.html',
+                            'conflict_warning.html',  # This is in scheduler.templates
                             context_dict,
                             context_instance=RequestContext(request))
                             )

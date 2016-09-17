@@ -15,7 +15,7 @@ from django.utils import timezone
 
 from con_event.models import (MatchingCriteria, Con, Registrant,
         LOCATION_TYPE, LOCATION_CATEGORY, GENDER, SKILL_LEVEL_CHG,
-        SKILL_LEVEL_TNG, SKILL_LEVEL, SKILL_LEVEL_GAME
+        SKILL_LEVEL_TNG, SKILL_LEVEL
         )
 from rcreg_project.extras import remove_punct,ascii_only, ascii_only_no_punct
 from rcreg_project.settings import (BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,
@@ -587,24 +587,22 @@ class Roster(MatchingCriteria):
             forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
 
             if self.skill in forbidden_skills:
-                coed_int_str = ("Coed teams have a minimum skill level of \
-                        Intermediate."
-                        )
+                coed_int_str = "Coed teams have a minimum skill level of Intermediate."
                 if (self.captain and self.captain.skill and
                         self.captain.skill in ["A", "B"]
                         ):  # If captain is Intermediate or above
                     self.skill = self.captain.skill + "O"
-                    coed_int_str += (" In order to remain coed, the skill level\
-                            has been raised. If you'd like to include a lower \
-                            skill level, please change team gender first."
+                    coed_int_str += (" In order to remain coed, the skill level "
+                            "has been raised. If you'd like to include a lower "
+                            "skill level, please change team gender first."
                             )
                 else:
                     if self.captain.gender:
                         self.gender = self.captain.gender
                     else:
                         self.gender = "Female"
-                    coed_int_str += (" Because your skill is not Intermediate,\
-                            team gender has been assigned.")
+                    coed_int_str += (" Because your skill is not Intermediate, "
+                            "team gender has been assigned.")
                 return coed_int_str
 
             else:
@@ -1299,7 +1297,8 @@ class ChallengeManager(models.Manager):
 
         submissions = list(Challenge.objects
                 .filter(con=con)
-                .exclude(submitted_on=None,gametype="6GAME")
+                .exclude(submitted_on=None)
+                .exclude(gametype="6GAME")
                 )
 
         if len(submissions) < CLOSE_CHAL_SUB_AT:

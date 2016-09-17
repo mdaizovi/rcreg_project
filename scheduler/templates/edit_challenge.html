@@ -121,8 +121,7 @@
     <div class="well well-sm">
     <div class="form-group" style="tooltip-bottom" title="{{skater_search_form.tooltip}}">
              <h4>Search Eligible Skaters
-               {%if not challenge.gametype == '6GAME' %}<br><small>Search will only return skaters whose skill and gender make them eligible for this team.</small>
-             {%endif%}</h4>
+              <br><small>Search will only return skaters whose skill and gender make them eligible for this team.</small></h4>
 
              <form method="POST" class="post-form" action="#editteamsection">
                    {% csrf_token %}

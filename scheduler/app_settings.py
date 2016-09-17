@@ -6,11 +6,11 @@ DEFAULT_OFFSK8S_DURATION = '1'
 DEFAULT_CHALLENGE_DURATION = '0.75'
 DEFAULT_SANCTIONED_DURATION = '1.5'
 GAME_CAP = 20
-GAME_DEFAULTS = {
-        'skill': None,
-        'gender': 'NA/Coed',
-        'intl': False
-        }
+# GAME_DEFAULTS = {
+#         'skill': None,
+#         'gender': 'NA/Coed',
+#         'intl': False
+#         }
 DEFAULT_REG_CAP = 60
 DEFAULT_AUD_CAP = 10
 

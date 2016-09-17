@@ -3,9 +3,11 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse, resolve
 from django.forms import ModelForm
 
-from con_event.models import (Con, Registrant, SKILL_LEVEL_TNG,
-        SKILL_LEVEL_CHG, SKILL_LEVEL, SKILL_LEVEL_ACT
-        )
+# from con_event.models import (Con, Registrant, SKILL_LEVEL_TNG,
+#         SKILL_LEVEL_CHG, SKILL_LEVEL, SKILL_LEVEL_ACT
+#         )
+from con_event.models import Con, Registrant, SKILL_LEVEL_CHG
+
 from import_export import resources,fields
 from import_export.admin import (ImportExportModelAdmin,
         ImportExportActionModelAdmin
@@ -120,7 +122,7 @@ class RosterAdmin(ImportExportModelAdmin):
         """Limits skill choices to those which are appropriate for activity."""
 
         if db_field.name == "skill":
-            kwargs['choices'] =  SKILL_LEVEL_ACT
+            kwargs['choices'] =  SKILL_LEVEL_CHG
 
         return (super(
                 RosterAdmin, self).formfield_for_choice_field(
