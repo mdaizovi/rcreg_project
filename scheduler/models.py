@@ -1435,21 +1435,6 @@ class Challenge(Activity):
         return my_team, opponent, my_acceptance, opponent_acceptance
 
     #---------------------------------------------------------------------------
-# ###########I think i never use this? outdated?
-#     def replace_team(self, old_team, selected_team):
-#         """For changing from disposable team to Game team.
-#         Finds the team registrant is a captain of, removes that team,
-#         puts given team in it place.
-#         """
-#         if self.roster1 and self.roster1 == old_team:
-#             self.roster1 = selected_team
-#         elif self.roster2 and self.roster2 == old_team:
-#             self.roster2 = selected_team
-#
-#         #self.save()
-#         return old_team, selected_team
-
-    #---------------------------------------------------------------------------
     def can_submit_chlg(self):
         """First checks to see if both captains have accepted.
         If yes and is a Game, can submit as long as first sub date has passed,
@@ -1492,20 +1477,6 @@ class Challenge(Activity):
             display = r2skill
 
         return display
-
-    #---------------------------------------------------------------------------
-    def skills_match(self):
-        """Checks to see if skills of 2 rosters are allowed to play each other.
-        For Challenges, not Games.
-        Rules dictated by Ivanna.
-        """
-
-        match = False
-
-        if self.roster1 and self.roster2:
-            pass
-
-        return match
 
     #---------------------------------------------------------------------------
     def gender_display(self):
@@ -1624,25 +1595,6 @@ class Training(Activity):
             return "glyphicon icon-globe-alt"
         else:
             return "glyphicon icon-universal-access"
-
-    #---------------------------------------------------------------------------
-    def intl_text(self):
-        if self.intl:
-            return "International"
-        else:
-            return None
-
-    #---------------------------------------------------------------------------
-    def intl_tooltip_title(self):
-        if self.intl:
-            return (
-                    "Registrant must qualify as 'International' in order to"
-                    "register. Any MVP can audit and non-INTL auditing skaters"
-                    "MIGHT be allowed to participate as if registered if space"
-                    "is available."
-                    )
-        else:
-            return "No location restrictions for registration"
 
     #---------------------------------------------------------------------------
     def onsk8s_icon(self):
