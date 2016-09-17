@@ -1,7 +1,5 @@
 from con_event.models import GENDER, SKILL_LEVEL_CHG
-from scheduler.app_settings import (DEFAULT_CHALLENGE_DURATION,
-        DEFAULT_SANCTIONED_DURATION, GAME_CAP
-        )
+from scheduler.app_settings import DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION
 
 #-------------------------------------------------------------------------------
 def delete_homeless_roster_chg(sender, instance, **kwargs):
@@ -61,11 +59,3 @@ def challenge_defaults(sender, instance, **kwargs):
             instance.duration = DEFAULT_SANCTIONED_DURATION
         elif instance.gametype in ["3CHAL", "36CHAL"]:
             instance.duration = DEFAULT_CHALLENGE_DURATION
-
-    for r in [instance.roster1, instance.roster2]:
-        if r and not r.cap:
-            r.cap = GAME_CAP
-            # if instance.gametype == "6GAME":
-            #     for k,v in GAME_DEFAULTS.iteritems():
-            #         setattr(r, k, v)
-            r.save()

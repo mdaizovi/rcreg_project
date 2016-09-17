@@ -22,9 +22,8 @@ from scheduler.app_settings import (MAX_CAPTAIN_LIMIT, CLOSE_CHAL_SUB_AT,
         DEFAULT_CHALLENGE_DURATION, DEFAULT_SANCTIONED_DURATION
         )
 from scheduler.forms import (CommunicationForm, MyRosterSelectForm,
-        GameRosterCreateModelForm, ChallengeModelForm, CoachProfileForm, SendEmail,
-        ChallengeRosterModelForm, TrainingModelForm, DurationOnly,
-        ScoreFormDouble, GenderSkillForm
+        ChallengeModelForm, CoachProfileForm, SendEmail, ScoreFormDouble,
+        ChallengeRosterModelForm, TrainingModelForm, DurationOnly
         )
 
 from scheduler.models import Coach, Roster, Challenge, Training, GAMETYPE
@@ -855,200 +854,194 @@ def edit_challenge(request, activity_id):
     captain_conflict = None
     save_attempt = False
     save_success = False
-    entry_query = None
+    captain_entry_query = None
+    skater_entry_query = None
 
     if request.method == "POST":
 
         if 'confirm save' in request.POST or 'save team' in request.POST:
             save_attempt = True
+            challenge_form = ChallengeModelForm(request.POST or None, user=user, instance=challenge)
+            if challenge_form.is_valid():
+                challenge=challenge_form.save()
+
+            # Get original skill/gender, in case save is unsuccessful.
             pre_save_gender = my_team.gender
             pre_save_skill = my_team.skill
-            # First, get the type of form was sent
-            if "gender" in request.POST  or "skill" in request.POST:
-                roster_form = GameRosterCreateModelForm(request.POST or None, instance=my_team, user=user)
-            else:
-                roster_form = ChallengeRosterModelForm(request.POST or None, instance=my_team, user=user)
-
-            # Without save sans commit, criteria conflict was running off old gender/skill.
-            my_team = roster_form.save(commit=False)
-            #don't save yet, just changing skill and gender for problem criteria check
-            if 'confirm save' in request.POST:
-                conflict_sweep = my_team.conflict_sweep()
-            elif 'save team' in request.POST:
-                #don't save yet, just changing skill and gender for problem criteria check
-                problem_criteria, potential_conflicts, captain_conflict = my_team.criteria_conflict()
-
-                if not captain_conflict and (problem_criteria or potential_conflicts):
-                    throwaway_reg = None  # So can re use same conflict_warning template for profiles and challenges
-                    return render_to_response('conflict_warning.html',
-                            {'roster':my_team,'activity_id':activity_id,'registrant': throwaway_reg,
-                            'hidden_forms':[roster_form, challenge_form],'problem_criteria':problem_criteria,
-                            'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
-
-
-            if not captain_conflict and roster_form.is_valid() and challenge_form.is_valid():
-                #this should run regardless of save team or confirm save, assuming it doesn't jump to conflict warning
-                #this is only if just updating team, not creating new or swapping captains or anything
-                #roster=roster_form.save()
-                #I only want this to run for challenges. games are automatically any skill any gender.
-                challenge=challenge_form.save()
-                if challenge.gametype == "6GAME":
-                    roster=roster_form.save()
-                    roster_form = GameRosterCreateModelForm(request.POST, instance=my_team, user=user)
+            roster_form = ChallengeRosterModelForm(request.POST or None, instance=my_team, user=user)
+            if roster_form.is_valid():
+                # Without save sans commit, criteria conflict was running off old gender/skill.
+                my_team = roster_form.save(commit=False)
+                if 'confirm save' in request.POST:
+                    conflict_sweep = my_team.conflict_sweep()
+                elif 'save team' in request.POST:
+                    #don't save yet, just changing skill and gender for problem criteria check
+                    problem_criteria, potential_conflicts, captain_conflict = my_team.criteria_conflict()
                     coed_beginner = my_team.coed_beginner()
-                roster=roster_form.save()
-                roster.con=challenge.con
-                if not coed_beginner: #shouldnt this be if not coed beginner?
-                    roster.save()
-                #roster.save()
-                my_team=roster#keep this to get new saved data for my_team
-                save_success=True
-            else:
-                #print "Captain conflict or Errors: ",roster_form.errors, challenge_form.errors
-                #to prevent rejected unsaved changes form showing up in form
-                if "gender" in problem_criteria:
-                    my_team.gender=pre_save_gender
-                if "skill" in problem_criteria:
-                    my_team.skill=pre_save_skill
 
+                    if captain_conflict:  # Most important kind of conflict
+                        my_team.gender = pre_save_gender
+                        my_team.skill = pre_save_skill
 
-
-
-
-
-
-
+                    else:  #if not  captain_conflict:
+                        if problem_criteria or potential_conflicts:
+                            # So can re use same conflict_warning template for profiles and challenges
+                            throwaway_reg = None
+                            return render_to_response('conflict_warning.html',
+                                    {'roster':my_team,'activity_id':activity_id,'registrant': throwaway_reg,
+                                    'hidden_forms':[roster_form, challenge_form],'problem_criteria':problem_criteria,
+                                    'potential_conflicts':potential_conflicts},context_instance=RequestContext(request))
+                        if coed_beginner:
+                            my_team.gender = pre_save_gender
+                            my_team.skill = pre_save_skill
+                        else:  #if no captain conflict, no probem crit/conflicts, no coed beginner.
+                            my_team.save()
+                            save_success = True
 
         elif 'add skater' in request.POST:
-            skater_added,add_fail,add_fail_reason=my_team.add_sk8er_challenge(request.POST['eligible_registrant'])
+            skater_added, add_fail,add_fail_reason = (my_team.add_sk8er_challenge(
+                    request.POST['eligible_registrant'])
+                    )
 
         elif 'remove skater' in request.POST:
-            skater_remove,remove_fail=my_team.remove_sk8er_challenge(request.POST['eligible_registrant'])
+            skater_remove, remove_fail = (my_team.remove_sk8er_challenge(
+                    request.POST['eligible_registrant']))
 
-        elif 'invite captain' in request.POST or 'game_team' in request.POST:
-            if 'invite captain' in request.POST:
-                if request.POST['eligible_registrant'] not in ["None",None,"",u'']:
-                    invited_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                    if opponent:
-                        if opponent.captain:
-                            prev_cap=opponent.captain
-                        else:
-                            prev_cap=None
-                        opponent.captain=invited_captain
-                        opponent.save()#this is so captain save will reset captian number
-                        if prev_cap:
-                            prev_cap.save()#to reset captain #
-                    else:#if this is the first time and there is no opponent
-                         opponent=Roster(captain=invited_captain, con=invited_captain.con)
-                         opponent.save()
+        elif 'invite captain' in request.POST:
+            if request.POST['eligible_registrant'] not in no_list:  #no_list defined top of file
+                invited_captain = Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                if opponent:
+                    if opponent.captain:
+                        prev_cap = opponent.captain
+                    else:
+                        prev_cap = None
+                    opponent.captain = invited_captain
+                    opponent.save()#this is so captain save will reset captian number
+                    if prev_cap:
+                        prev_cap.save()#to reset captain #
+                else:  # If this is the first time and there is no opponent
+                     opponent = Roster(captain=invited_captain, con=invited_captain.con)
+                     opponent.save()
 
-                    opponent.defaults_match_captain()
+                opponent.defaults_match_captain()  #run regardless of making new captain or not.
 
-            if my_team==challenge.roster1:
-                challenge.roster2=opponent
-            elif my_team==challenge.roster2:
-                challenge.roster1=opponent
+                if my_team == challenge.roster1:
+                    challenge.roster2 = opponent
+                elif my_team == challenge.roster2:
+                    challenge.roster1 = opponent
 
-            challenge.save()
-            if opponent:
+                challenge.save()
                 opponent.save()
-                opponent.captain.save()#to get captaining number accurate
+                opponent.captain.save()  # To get captaining number accurate
 
         elif 'search captains' in request.POST:
-            captain_search_form=SearchForm(request.POST or None)
+            captain_search_form = SearchForm(request.POST)
             captain_search_form.fields['search_q'].label = "Captain Name"
-            entry_query = captain_search_form.get_query(['sk8name','last_name','first_name'])
+            captain_entry_query = captain_search_form.get_query(
+                    ['sk8name','last_name', 'first_name']
+                    )
+            if captain_entry_query and opponent:
+                eligible_opponents = (Registrant.objects.eligible_sk8ers(opponent)
+                        .filter(captain_entry_query)
+                        )
+                eligibleopponentform = EligibleRegistrantForm(my_arg=eligible_opponents)
+                eligibleopponentform .fields['eligible_registrant'].label = "Found Captains"
+                captain_search_form = SearchForm(request.POST)
 
         elif 'search skater' in request.POST:
-            skater_search_form=SearchForm(request.POST or None)
+            skater_search_form=SearchForm(request.POST)
             skater_search_form.fields['search_q'].label = "Skater Name"
-            skater_entry_query = skater_search_form.get_query(['sk8name','last_name','first_name'])
+            skater_entry_query = skater_search_form.get_query(
+                    ['sk8name','last_name','first_name']
+                    )
             if skater_entry_query:
-                found_entries = Registrant.objects.eligible_sk8ers(my_team).filter(skater_entry_query).order_by('sk8name','last_name','first_name')
-                eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
+                found_entries = (Registrant.objects.eligible_sk8ers(my_team)
+                        .filter(skater_entry_query)
+                        )
+                eligible_participants = EligibleRegistrantForm(my_arg=found_entries)
                 eligible_participants.fields['eligible_registrant'].label = "Found Eligible Skaters"
-            else:
-                found_entries = Registrant.objects.eligible_sk8ers(my_team).order_by('sk8name','last_name','first_name')
-                eligible_participants=EligibleRegistrantForm(my_arg=found_entries)
-                eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
 
         elif 'replace captain' in request.POST:
-            swap_attempt=True
+            swap_attempt = True
             try:
-                new_captain=Registrant.objects.get(pk=request.POST['eligible_registrant'])
-                return render_to_response('captain_swap_confirm.html',{'swp_attempt':swap_attempt,'new_captain':new_captain,'roster':my_team,'activity_id':activity_id},context_instance=RequestContext(request))
+                new_captain = Registrant.objects.get(pk=request.POST['eligible_registrant'])
+                cap_swap_dict = {'swp_attempt': swap_attempt, 'new_captain':new_captain,
+                        'roster':my_team,'activity_id':activity_id
+                        }
+                return render_to_response(
+                        'captain_swap_confirm.html',
+                        cap_swap_dict,
+                        context_instance=RequestContext(request)
+                        )
             except:
                 pass
 
         elif 'confirm captain replace' in request.POST:
-            swap_attempt=True
+            swap_attempt = True
             try:
-                new_captain=Registrant.objects.get(pk=request.POST['new_captain'])
-                old_captain=my_team.captain
-                my_team.captain=new_captain
+                new_captain = Registrant.objects.get(pk=request.POST['new_captain'])
+                old_captain = my_team.captain
+                my_team.captain = new_captain
                 new_captain.save()
                 my_team.save()
-                old_captain.save()#to reset captaining#
-                swap_success=True
+                old_captain.save() # To reset captaining#
+                swap_success = True
             except:
-                swap_success=False
+                swap_success = False
 
-            return render_to_response('captain_swap_confirm.html',{'swap_attempt':swap_attempt,'new_captain':new_captain,'roster':my_team,'activity_id':activity_id},context_instance=RequestContext(request))
+            cap_swap_dict = {'swap_attempt': swap_attempt,'new_captain': new_captain,
+                    'roster': my_team, 'activity_id': activity_id
+                    }
+
+            return render_to_response(
+                    'captain_swap_confirm.html',
+                    cap_swap_dict,
+                    context_instance=RequestContext(request)
+                    )
 
     # This line starts things that happen regardless of whether is request.post or not,
     # assuming another page hasn't been returned, as is the case when confirmation is needed.
-    my_team,opponent,my_acceptance,opponent_acceptance=challenge.my_team_status([registrant])
+    # I think this is redundant here again?
+    #my_team, opponent, my_acceptance, opponent_acceptance = challenge.my_team_status([registrant])
 
     if my_team:
         if my_acceptance:
-            challenge_form=ChallengeModelForm(user=user, instance=challenge)
-            if challenge.gametype == "6GAME":
-                roster_form = GameRosterCreateModelForm(request.POST or None, instance=my_team, user=user)
-            else:
-                roster_form = ChallengeRosterModelForm(request.POST or None, instance=my_team, user=user)
+            challenge_form = ChallengeModelForm(user=user, instance=challenge)
+            roster_form = ChallengeRosterModelForm(instance=my_team, user=user)
 
-            formlist=[roster_form,challenge_form]
-            ###############this part sloppy hack to keep searched skater name from showing up in both captain and skater search.
-            if request.method == "POST" and 'search skater' in request.POST:
-                skater_search_form=SearchForm(request.POST)
-            else:
-                skater_search_form=SearchForm()
-            ##################################
-            skater_search_form.fields['search_q'].label = "Skater Name"
-            if request.method != "POST" or 'search skater' not in request.POST:
-                eligible_participants=EligibleRegistrantForm(my_arg=Registrant.objects.eligible_sk8ers(my_team))
+            formlist = [roster_form, challenge_form]
+            
+            if not skater_entry_query:  # if skater_entry_query we already did it in POST
+                found_entries = Registrant.objects.eligible_sk8ers(my_team)
+                eligible_participants = EligibleRegistrantForm(my_arg=found_entries)
                 eligible_participants.fields['eligible_registrant'].label = "All Eligible Skaters"
-            participants=EligibleRegistrantForm(my_arg=my_team.participants.exclude(pk=my_team.captain.pk))
+                skater_search_form = SearchForm()
+                skater_search_form.fields['search_q'].label = "Skater Name"
+
+            # Captain can't remove self from roster.
+            participants = EligibleRegistrantForm(
+                    my_arg=my_team.participants.exclude(pk=my_team.captain.pk)
+                    )
             participants.fields['eligible_registrant'].label = "Rostered Skaters"
 
-            captain_replacements=EligibleRegistrantForm(my_arg=my_team.participants.filter(captaining__lt=MAX_CAPTAIN_LIMIT).exclude(pk=my_team.captain.pk ))
+            captain_replacements = EligibleRegistrantForm(
+                    my_arg=my_team.participants
+                    .filter(captaining__lt=MAX_CAPTAIN_LIMIT)
+                    .exclude(pk=my_team.captain.pk)
+                    )
             captain_replacements.fields['eligible_registrant'].label = "Potential Captains"
 
 
             if not opponent or not opponent.captain or not opponent_acceptance:
-                if entry_query:
-                    #these used to be lists, but i don't think it matters. but if stops working, that's why
-                    eligible_opponents = Registrant.objects.filter(entry_query).filter(con=challenge.con, pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk).order_by('sk8name','last_name','first_name')
-                else:
-                    eligible_opponents=Registrant.objects.filter(con=challenge.con,pass_type__in=['MVP','Skater'], skill__in=['A','B','C']).exclude(pk=registrant.pk)
-
-                eligibleregistrantform=EligibleRegistrantForm(my_arg=eligible_opponents)
-                if entry_query:
-                    eligibleregistrantform.fields['eligible_registrant'].label = "Found Captains"
-                else:
-                    eligibleregistrantform.fields['eligible_registrant'].label = "All Eligible Captains"
-
-                ###############this part sloppy hack to keep searched skater name from showing up in both captain and skater search.
-                if request.method == "POST" and 'search captains' in request.POST:
-                    captain_search_form=SearchForm(request.POST)
-                else:
-                    captain_search_form=SearchForm()
-                ##################################
-
+                if not captain_entry_query:
+                    eligible_opponents = Registrant.objects.basic_eligible(opponent)
+                    eligibleopponentform = EligibleRegistrantForm(my_arg=eligible_opponents)
+                    eligibleopponentform.fields['eligible_registrant'].label = "All Eligible Captains"
+                    captain_search_form = SearchForm()
                 captain_search_form.fields['search_q'].label = "Captain Name"
-                opponent_form_list=[captain_search_form,eligibleregistrantform]
+                opponent_form_list = [captain_search_form, eligibleopponentform]
 
-            formlist=[roster_form,challenge_form]
+            formlist = [roster_form, challenge_form]
 
     context_dict = {'problem_criteria': problem_criteria, 'save_attempt': save_attempt,
             'save_success': save_success, 'captain_conflict': captain_conflict,
@@ -1338,9 +1331,7 @@ def propose_new_challenge(request):
     # If creation success, these 6 Nones/[] get replaced.
     # Don't want to repeat w/ every possible failure
     challenge = None
-    challenge_id = None
     my_team = None
-    roster_id = None
     formlist = []
     my_teams_as_cap = []
 
@@ -1355,38 +1346,25 @@ def propose_new_challenge(request):
 
     if request.method == "POST":
 
-        if 'gender' in request.POST or 'clone roster' in request.POST:
-            if 'gender' in request.POST:
-                my_team = Roster.objects.get(pk=int(request.POST["roster_id"]))
-                challenge = Challenge.objects.get(pk=int(request.POST["challenge_id"]))
+        if 'clone roster' in request.POST:
+            old_team = Roster.objects.get(pk=request.POST['roster_to_clone_id'])
+            my_team = old_team.clone_roster()
+            challenge = Challenge(roster1=my_team, con=my_team.con)
+            try:
+                old_chal = Challenge.objects.get(
+                        Q(roster1=old_team) |
+                        Q(roster2=old_team)
+                        )
+                challenge.location_type = old_chal.location_type
+            except:
+                location_type = "Flat Track"  # Easy default
 
-                gsf = GenderSkillForm(request.POST, captain=my_team.captain)
-                if gsf.is_valid():
-                    my_team.gender = request.POST["gender"]
-                    my_team.skill = request.POST["skill"]
-                    my_team.save()
+            challenge.save()
+            my_team.captain.save()  # to adjust captaining number
 
-            elif 'clone roster' in request.POST:
-                old_team = Roster.objects.get(pk=request.POST['roster_to_clone_id'])
-                my_team = old_team.clone_roster()
-                challenge = Challenge(roster1=my_team,con=my_team.con)
-                try:
-                    old_chal = Challenge.objects.get(
-                            Q(roster1=old_team) |
-                            Q(roster2=old_team)
-                            )
-                    challenge.location_type = old_chal.location_type
-                except:
-                    location_type = "Flat Track"  # Easy default
-
-            # Runs if either gender or clone is successful
-            if my_team and challenge:
-                challenge.save()
-                my_team.captain.save()  # to adjust captaining number
-
-        else: # If not cloning roster, not saving gender/skill, first make
+        else: # If not cloning roster, making for first make
             challenge_form = ChallengeModelForm(request.POST or None, user=user)
-            roster_form = GameRosterCreateModelForm(request.POST, user=user)
+            roster_form = ChallengeRosterModelForm(request.POST, user=user)
             if roster_form.is_valid() and challenge_form.is_valid():
                 my_team=roster_form.save(commit=False)
                 my_team.captain = Registrant.objects.get(
@@ -1400,12 +1378,6 @@ def propose_new_challenge(request):
                 challenge.save()
                 my_team.captain.save()  # To adjust captaining number
 
-                if challenge.gametype != "6GAME":
-                # Only need these 2 if need to specify gender/skill, or failure
-                    roster_id = my_team.pk
-                    challenge_id = challenge.pk
-                    formlist = [GenderSkillForm(captain=my_team.captain)]
-
         # Regardless of whether cloned or made by post,
         # if new challenge has been born
         if challenge and my_team and not formlist:
@@ -1418,14 +1390,12 @@ def propose_new_challenge(request):
             my_teams_as_cap += list(rosters)
 
         formlist = [
-                GameRosterCreateModelForm(request.POST or None, user=user),
+                ChallengeRosterModelForm(request.POST or None, user=user),
                 ChallengeModelForm(request.POST or None, user=user)
                 ]
 
     # Runs if not post, if posts and errors, or if need to get gender/skill
     context_dict = {
-            'challenge_id': challenge_id,
-            'roster_id': roster_id,
             'my_teams_as_cap': my_teams_as_cap,
             'cansk8': cansk8,
             'upcoming_registrants': upcoming_registrants,

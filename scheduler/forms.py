@@ -371,7 +371,7 @@ class ScoreFormDouble(forms.Form):
         if challenge.roster2:
             roster2name = challenge.roster2.name
         else:
-            roster2name="unnamed team"
+            roster2name = "unnamed team"
 
         self.fields["roster1_score"] = forms.IntegerField(
                 initial=challenge.roster1score,

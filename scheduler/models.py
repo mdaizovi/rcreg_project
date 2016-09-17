@@ -172,6 +172,7 @@ class Roster(MatchingCriteria):
     """Chalenges/Games only"""
 
     cap = models.IntegerField(null=True, blank=True)
+    #cap = models.IntegerField(default=GAME_CAP)
     name = models.CharField(max_length=200, null=True, blank=True)
     captain = (models.ForeignKey(Registrant, related_name="captain", null=True,
             blank=True, on_delete=models.SET_NULL)
@@ -211,7 +212,6 @@ class Roster(MatchingCriteria):
 
     #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
-
         # Remove non-ascii, puncuation, from name.
         string_fields = ['name']
         for item in string_fields:
@@ -583,32 +583,44 @@ class Roster(MatchingCriteria):
         Does not run for Games, as all Games are essentially coed-beginner.
         """
 
+        # if self.gender == 'NA/Coed':
+        #     forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
+        #
+        #     if self.skill in forbidden_skills:
+        #         coed_int_str = "Coed teams have a minimum skill level of Intermediate."
+        #         if (self.captain and self.captain.skill and
+        #                 self.captain.skill in ["A", "B"]
+        #                 ):  # If captain is Intermediate or above
+        #             self.skill = self.captain.skill + "O"
+        #             coed_int_str += (" In order to remain coed, the skill level "
+        #                     "has been raised. If you'd like to include a lower "
+        #                     "skill level, please change team gender first."
+        #                     )
+        #         else:
+        #             if self.captain.gender:
+        #                 self.gender = self.captain.gender
+        #             else:
+        #                 self.gender = "Female"
+        #             coed_int_str += (" Because your skill is not Intermediate, "
+        #                     "team gender has been assigned.")
+        #         return coed_int_str
+        #
+        #     else:
+        #         return False
+        # else:
+        #     return False
+
+        coed_int_str = False
+
         if self.gender == 'NA/Coed':
             forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
 
             if self.skill in forbidden_skills:
-                coed_int_str = "Coed teams have a minimum skill level of Intermediate."
-                if (self.captain and self.captain.skill and
-                        self.captain.skill in ["A", "B"]
-                        ):  # If captain is Intermediate or above
-                    self.skill = self.captain.skill + "O"
-                    coed_int_str += (" In order to remain coed, the skill level "
-                            "has been raised. If you'd like to include a lower "
-                            "skill level, please change team gender first."
-                            )
-                else:
-                    if self.captain.gender:
-                        self.gender = self.captain.gender
-                    else:
-                        self.gender = "Female"
-                    coed_int_str += (" Because your skill is not Intermediate, "
-                            "team gender has been assigned.")
-                return coed_int_str
+                coed_int_str = ("Coed teams have a minimum skill level of "
+                        "Intermediate. Please raise the skill level or select "
+                        "a gender for the team.")
 
-            else:
-                return False
-        else:
-            return False
+        return coed_int_str
 
     #---------------------------------------------------------------------------
     def restore_defaults(self):

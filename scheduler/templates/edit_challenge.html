@@ -44,7 +44,7 @@
 
 
     {%if opponent_form_list %}
-    <form method="POST" class="post-form form-inline">
+    <form method="POST" class="post-form form-inline" action="#">
           {% csrf_token %}
           <input type="hidden" name="roster_id" value="{{ my_team.id }}" />
           <input type="hidden" name="opponent_id" value="{{ opponent.id }}" />
@@ -75,14 +75,14 @@
         <h3 class="text-center">Edit Team Details</h3>
 
         {%if save_attempt %}
+        {% if captain_conflict %}
+          <div class="alert alert-danger" role="alert">Making these changes to
+            {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
+            would make you ineligible for this team and would leave it without a captain. Changes not made.
+          </div>{%endif%}
         {% if coed_beginner %}
-            <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>
-          {% elif captain_conflict %}
-            <div class="alert alert-danger" role="alert">Making these changes to
-              {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
-              would make you ineligible for this team and would leave it without a captain. Changes not made.
-            </div>
-          {%elif save_success%}
+            <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>{%endif%}
+          {%if save_success%}
         <div class="alert alert-success" role="alert">{{my_team.name}} successfully saved!</div>
         {%endif%}{%endif%}
 
