@@ -21,7 +21,7 @@ from rcreg_project.extras import remove_punct,ascii_only, ascii_only_no_punct
 from rcreg_project.settings import (BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME,
         SECOND_CHOICE_EMAIL, SECOND_CHOICE_PW
         )
-from scheduler.app_settings import (CLOSE_CHAL_SUB_AT,
+from scheduler.app_settings import (CLOSE_CHAL_SUB_AT, GAME_CAP,
         DEFAULT_ONSK8S_DURATION, DEFAULT_OFFSK8S_DURATION
         )
 from scheduler.signals import (challenge_defaults, delete_homeless_roster_chg,
@@ -171,8 +171,7 @@ class Location(models.Model):
 class Roster(MatchingCriteria):
     """Chalenges/Games only"""
 
-    cap = models.IntegerField(null=True, blank=True)
-    #cap = models.IntegerField(default=GAME_CAP)
+    cap = models.IntegerField(default=GAME_CAP)
     name = models.CharField(max_length=200, null=True, blank=True)
     captain = (models.ForeignKey(Registrant, related_name="captain", null=True,
             blank=True, on_delete=models.SET_NULL)

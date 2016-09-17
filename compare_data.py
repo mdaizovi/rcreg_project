@@ -7,6 +7,59 @@ import openpyxl
 import collections
 
 
+from scheduler.models import Challenge, Roster
+from django.db.models import Q
+
+#no_skill = get_no_skill()
+def get_no_skill():
+    no_skill = list(Challenge.objects.filter(Q(roster1__skill=None)|Q(roster2__skill=None)))
+    print "len no skill ",len(no_skill)
+    return no_skill
+
+#mismatch, no_cap, incompletec = get_skill_mismatch()
+def get_skill_mismatch():
+    mismatch = []
+    no_cap = []
+    incompletec = []
+    for c in Challenge.objects.all():
+        for r in [c.roster1, c.roster2]:
+            if r and r.skill and r.captain:
+                my_team, opponent, my_acceptance, opponent_acceptance = c. my_team_status([r.captain])
+                sa =  opponent.opponent_skills_allowed()
+                if my_team.skill not in sa:
+                    if r not in mismatch:
+                        mismatch.append(r)
+                        print "adding"
+                        print r, r.skill, " not in "
+                        print sa
+                else:
+                    print "okay: ",my_team.skill, sa
+            elif r and not r.captain:
+                no_cap.append(r)
+            elif not r:
+                if c not in incompletec:
+                    incompletec.append(c)
+
+    print "done"
+    print len(mismatch)
+    print len(no_cap)
+    print len(incompletec)
+    return mismatch, no_cap, incompletec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 """This whole file is for helping me compare excel files of who SHOULD BE in RollerTron
 and who ACTUALLY IS in RollerTron.
 Assumes the ACUALLY IS is re-arranged from export to look like BPT excel.
