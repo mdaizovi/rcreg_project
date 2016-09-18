@@ -267,7 +267,6 @@ class OccurrenceManager(models.Manager):
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
-            print "\nact: ",act
             act_p=this_act_dict.get('participants')
             act_f=this_act_dict.get('figureheads')
 

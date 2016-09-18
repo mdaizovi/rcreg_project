@@ -143,7 +143,7 @@ class Location(models.Model):
        return "%s, %s" % (self.name, self.venue.name)
 
     #---------------------------------------------------------------------------
-    def is_free(self, start_time,end_time):
+    def is_free(self, start_time, end_time):
         """Checks to see if location has any occurrences for the time between
         start and end provided. Returns True if no occurrences, else False.
         """
@@ -170,7 +170,7 @@ class Location(models.Model):
 
 #===============================================================================
 class Roster(MatchingCriteria):
-    """Chalenges/Games only"""
+    """Challenges/Games only"""
 
     cap = models.IntegerField(default=GAME_CAP)
     name = models.CharField(max_length=200, null=True, blank=True)
@@ -182,10 +182,6 @@ class Roster(MatchingCriteria):
     internal_notes = models.TextField(null=True, blank=True)
     participants = models.ManyToManyField(Registrant, blank=True)
 
-    #Shouldn't i delete these fields?
-    #registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
-    #auditing=models.OneToOneField("Training", related_name="auditing",null=True, blank=True)
-
     #---------------------------------------------------------------------------
     def __unicode__(self):
 
@@ -195,9 +191,6 @@ class Roster(MatchingCriteria):
             return "unnamed team"
 
     #---------------------------------------------------------------------------
-
-
-
     def validate_unique(self, *args, **kwargs):
         super(Roster, self).validate_unique(*args, **kwargs)
 
@@ -216,7 +209,7 @@ class Roster(MatchingCriteria):
                 raise ValidationError({
                     NON_FIELD_ERRORS: [
                             "Captain's gender (%s) is one which is ineligible "
-                            "for team skill (%s). Please change captain, change"
+                            "for team gender (%s). Please change captain, change"
                             " captain gender, or change team gender."
                             % (self.captain.gender, self.gender),
                             ],})
@@ -229,7 +222,7 @@ class Roster(MatchingCriteria):
                         "the team",
                         ],})
 
-
+    #---------------------------------------------------------------------------
     @property
     def challenge_name(self):
         """Returns name of Challenge Roster is attached to.
@@ -241,7 +234,7 @@ class Roster(MatchingCriteria):
         for c in chals:
             names += str(c.name)+" , "
         if len(names)>2:
-            names=names[:-2]  # to get rid of trailing comma
+            names = names[:-2]  # to get rid of trailing comma
 
         return names
 

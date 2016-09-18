@@ -270,6 +270,8 @@ class SingleOccurrenceForm(forms.ModelForm):
         model = Occurrence
         fields=["start_time", "end_time", "training", "challenge", "location", "interest"]
 
+
+#===============================================================================
 class DLCloneForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
@@ -311,6 +313,8 @@ class DLCloneForm(forms.Form):
                     'style': 'width:100%;',
                     })
 
+
+#===============================================================================
 class SlotCreate(forms.Form):
     def __init__(self, *args, **kwargs):
         super(SlotCreate, self).__init__(*args, **kwargs)
@@ -326,6 +330,8 @@ class SlotCreate(forms.Form):
                     'class': 'form-control'
                     })
 
+
+#===============================================================================
 class L1Check(forms.Form):
     def __init__(self, *args, **kwargs):
         super(L1Check, self).__init__(*args, **kwargs)
