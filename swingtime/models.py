@@ -14,7 +14,7 @@ from django.db.models import Q, F
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.dateparse import parse_datetime,parse_time
+from django.utils.dateparse import parse_datetime, parse_time
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 except ImportError:

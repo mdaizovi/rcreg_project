@@ -1,6 +1,19 @@
 import string
 
 
+
+def make_obj_dict(obj, attr_list):
+    """Makes dict of obj, from list of items.
+    Like model_to_dict, but limited to list."""
+    
+    pre_save_dict = {}
+    for item in attr_list:
+        attr = getattr(obj, item)
+        pre_save_dict[item] = attr
+
+    return pre_save_dict
+
+
 def remove_punct(string_input):
     """Takes in string, removes punctuation, returns string sans punctuation"""
     # turn it into string just to be sure.

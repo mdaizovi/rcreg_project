@@ -47,8 +47,15 @@
       {% csrf_token %}
 
 {%for form in formlist %}
+{%if form.non_field_errors%}
+<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+{%endif%}
+
+
 {%for field in form %}
+
 {%if field.errors%}{{field.errors}}{%endif%}
+
 <div class="form-group">{{ field.label }} {{ field }}
 </div>
 {%endfor%} {%endfor%}

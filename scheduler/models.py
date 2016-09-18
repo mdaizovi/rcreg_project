@@ -6,6 +6,7 @@ from datetime import timedelta
 import string
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
 from django.core.mail import EmailMessage, send_mail
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -194,6 +195,27 @@ class Roster(MatchingCriteria):
             return "unnamed team"
 
     #---------------------------------------------------------------------------
+
+
+
+    def validate_unique(self, *args, **kwargs):
+        super(Roster, self).validate_unique(*args, **kwargs)
+        print "validate unique"
+        if self.captain:
+            print "self.captain ",self.captain
+            print "self.captain.skill",self.captain.skill
+            print "self.skills_allowed()",self.skills_allowed()
+
+        if self.captain:
+            if self.captain.skill not in self.skills_allowed():
+                raise ValidationError({
+                    NON_FIELD_ERRORS: ["Captain's skill (%s) is one which is ineligible for team skill (%s). Please change captain, change captain skill, or change team skill."%(self.captain.skill,self.skill),],})
+
+        if self.coed_beginner():
+            raise ValidationError({
+                NON_FIELD_ERRORS: ["Coed teams have a minimum skill level of Intermediate. Please raise the skill level or select a gender for the team",],})
+
+
     @property
     def challenge_name(self):
         """Returns name of Challenge Roster is attached to.
@@ -616,17 +638,15 @@ class Roster(MatchingCriteria):
         Does not run for Games, as all Games are essentially coed-beginner.
         """
 
-        coed_int_str = False
+        coed_conflict = False
 
         if self.gender == 'NA/Coed':
             forbidden_skills = [None, False, 'C', 'CO', 'BC', 'ABC']
 
             if self.skill in forbidden_skills:
-                coed_int_str = ("Coed teams have a minimum skill level of "
-                        "Intermediate. Please raise the skill level or select "
-                        "a gender for the team.")
-
-        return coed_int_str
+                coed_conflict = True
+                
+        return coed_conflict
 
     #---------------------------------------------------------------------------
     def restore_defaults(self):

@@ -55,9 +55,10 @@ def id_skill(roster, skill_list):
     #roster.save()
 
 
-#mismatch, no_cap, incompletec = get_skill_mismatch()
+#mismatch, mismatch_challenge, no_cap, incompletec = get_skill_mismatch()
 def get_skill_mismatch():
     mismatch = []
+    mismatch_challenge = []
     no_cap = []
     incompletec = []
     for c in Challenge.objects.all():
@@ -70,11 +71,14 @@ def get_skill_mismatch():
                     if my_team.skill not in sa:
                         if r not in mismatch:
                             mismatch.append(r)
-                            print "adding"
-                            print r, r.skill, " not in "
-                            print sa
+                            # print "adding"
+                            # print r, r.skill, " not in "
+                            # print sa
+                        if c not in mismatch_challenge:
+                            mismatch_challenge.append(c)
                     else:
-                        print my_team.pk, my_team, " okay: ",my_team.skill, sa
+                        pass
+                        #print my_team.pk, my_team, " okay: ",my_team.skill, sa
 
             elif r and not r.captain:
                 no_cap.append(r)
@@ -83,9 +87,10 @@ def get_skill_mismatch():
                 incompletec.append(c)
 
     print "done"
-    print len(mismatch)
-    print len(no_cap)
-    print len(incompletec)
+    print "mismatch roster: ", len(mismatch)
+    print "mismatch_challenge: ",len(mismatch_challenge)
+    print "no_cap:" len(no_cap)
+    print "incompletec: ",len(incompletec)
     return mismatch, no_cap, incompletec
 
 

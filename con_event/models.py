@@ -633,32 +633,39 @@ class MatchingCriteria(models.Model):
 class RegistrantManager(models.Manager):
 
     #---------------------------------------------------------------------------
-    def basic_eligible(self, roster):
-        """Returns list of bare minimu eligible skaters for Roster.
+    def basic_eligible(self, roster, con, exclusions):
+        """Returns list of bare minimum eligible skaters for Roster.
         Meant for Boss ladies to add people regardless of skill, gender, etc.
         Just makes sure not already rostered on self or opponent.
         """
-        already_registered = list(roster.participants.all())
+        if roster and hasattr(roster, 'participants'):
+            already_registered = list(roster.participants.all())
 
-        if hasattr(roster, 'captain'):
-            from scheduler.models import Challenge  # Avoid circular import
-            # Makes sure people on opposing team can't be selected.
-            challenge_set = (list(Challenge.objects.filter(
-                    Q(roster1=roster) | Q(roster2=roster)
-                    )))
-            opposing_skaters = []
-            for c in challenge_set:
-                for r in [c.roster1, c.roster2]:
-                    if r and r != roster and r.participants:
-                        for skater in r.participants.all():
-                            opposing_skaters.append(skater)
-            already_registered += opposing_skaters
+            if hasattr(roster, 'captain'):
+                from scheduler.models import Challenge  # Avoid circular import
+                # Makes sure people on opposing team can't be selected.
+                challenge_set = (list(Challenge.objects.filter(
+                        Q(roster1=roster) | Q(roster2=roster)
+                        )))
+                opposing_skaters = []
+                for c in challenge_set:
+                    for r in [c.roster1, c.roster2]:
+                        if r and r != roster and r.participants:
+                            for skater in r.participants.all():
+                                opposing_skaters.append(skater)
+                already_registered += opposing_skaters
 
-        reg_q = (Registrant.objects.filter(
-            con=roster.con,
-            pass_type__in=['MVP','Skater'])
-            .exclude(id__in=[o.id for o in already_registered ])
-            )
+            reg_q = (Registrant.objects.filter(
+                con=roster.con,
+                pass_type__in=['MVP', 'Skater'])
+                .exclude(id__in=[o.id for o in already_registered ])
+                )
+        else:  # If no roster, like for roster w/ no opponent
+            reg_q = (Registrant.objects.filter(
+                con=con,
+                pass_type__in=['MVP', 'Skater'])
+                .exclude(id__in=[o.id for o in exclusions])
+                )
 
         return reg_q
 

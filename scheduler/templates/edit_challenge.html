@@ -80,8 +80,7 @@
             {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
             would make you ineligible for this team and would leave it without a captain. Changes not made.
           </div>{%endif%}
-        {% if coed_beginner %}
-            <div class="alert alert-warning" role="alert">{{coed_beginner}}</div>{%endif%}
+
         {% if opp_skill_msg %}
             <div class="alert alert-warning" role="alert">{{opp_skill_msg}}</div>{%endif%}
 
@@ -93,6 +92,12 @@
         <form method="POST" class="post-form margin-top-10" action="#editteamsection">
               {% csrf_token %}
               {%for form in formlist%}
+
+              {%if form.non_field_errors%}
+              <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+              {%endif%}
+
+
         {%for field in form %}
         {%if field.errors%}{{field.errors}}{%endif%}
         <div class="form-group"><b>{{ field.label }}</b> {{ field }}
