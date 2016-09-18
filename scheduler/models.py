@@ -183,8 +183,8 @@ class Roster(MatchingCriteria):
     participants = models.ManyToManyField(Registrant, blank=True)
 
     #Shouldn't i delete these fields?
-    registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
-    auditing=models.OneToOneField("Training", related_name="auditing",null=True, blank=True)
+    #registered=models.OneToOneField("Training", related_name="registered",null=True, blank=True)
+    #auditing=models.OneToOneField("Training", related_name="auditing",null=True, blank=True)
 
     #---------------------------------------------------------------------------
     def __unicode__(self):

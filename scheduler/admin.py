@@ -3,12 +3,9 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse, resolve
 from django.forms import ModelForm
 
-# from con_event.models import (Con, Registrant, SKILL_LEVEL_TNG,
-#         SKILL_LEVEL_CHG, SKILL_LEVEL, SKILL_LEVEL_ACT
-#         )
 from con_event.models import Con, Registrant, SKILL_LEVEL_CHG
 
-from import_export import resources,fields
+from import_export import resources, fields
 from import_export.admin import (ImportExportModelAdmin,
         ImportExportActionModelAdmin
         )
@@ -221,16 +218,20 @@ class ChallengeAdmin(ImportExportModelAdmin):
 class TrainingResource(resources.ModelResource):
 
     duration_display = fields.Field()
+    figurehead_display = fields.Field()
 
     #---------------------------------------------------------------------------
     def dehydrate_duration_display(self,training):
         return training.get_duration_display()
+    #---------------------------------------------------------------------------
+    def dehydrate_figurehead_display(self,training):
+        return training.figurehead_display
 
     #---------------------------------------------------------------------------
     class Meta:
         model = Training
         fields = ('id', 'name', 'location_type', 'duration_display',
-                'RCaccepted', 'registered__intl', 'registered__skill',
+                'RCaccepted', 'skill',
                 'onsk8s', 'contact', 'figurehead_display', 'created_on',
                 'description', 'regcap', 'audcap', 'con__year'
                 )
@@ -246,9 +247,7 @@ class TrainingAdmin(ImportExportModelAdmin):
     list_display = ('name', 'con', 'figurehead_display')
     search_fields = ('name', 'con__year')
     filter_horizontal = ('coach', )
-    list_filter = ('con', 'RCaccepted', 'onsk8s', 'registered__skill',
-            'registered__intl', 'registered__gender', 'location_type', 'contact'
-            )
+    list_filter = ('con', 'RCaccepted', 'onsk8s', 'skill', 'location_type', 'contact')
     resource_class = TrainingResource
     fields = (('name', 'con', 'location_type'),
             ('RCaccepted', 'RCrejected', 'interest', 'sessions'),
