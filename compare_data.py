@@ -10,11 +10,50 @@ import collections
 from scheduler.models import Challenge, Roster
 from django.db.models import Q
 
+
+#real rollertron has about 49 rosters with no skill, and i couldn't run skill mismatch bc some had no opponent
+#wrote around it, need to test.
+#then get a way to get average skill and see if i can just change it to that.
+
+
 #no_skill = get_no_skill()
 def get_no_skill():
-    no_skill = list(Challenge.objects.filter(Q(roster1__skill=None)|Q(roster2__skill=None)))
-    print "len no skill ",len(no_skill)
-    return no_skill
+    no_skillr = []
+    no_skillc = list(Challenge.objects.filter(Q(roster1__skill=None)|Q(roster2__skill=None)))
+    for c in no_skillc:
+        for r in [c.roster1, c.roster2]:
+            if r and not r.skill:
+                no_skillr.append(r)
+
+    print "no skill rosters: ",len(no_skillr)
+    return no_skillr
+
+#skill_list = get_skill_range(roster)
+def get_skill_range(roster):
+    skills = []
+    for s in roster.participants.all():
+        if s.skill not in skills:
+            skills.append(s.skill)
+    return skills
+
+def id_skill(roster, skill_list):
+    print roster.skill, roster.pk, roster
+    print skill_list
+
+    if skill_list == ["A"]:
+        roster.skill = "AO"
+    elif skill_list == ["A", "B"] or skill_list == ["B","A"]:
+        roster.skill = "AB"
+    elif skill_list == ["B"]:
+        roster.skill = "BO"
+    elif skill_list == ["C", "B"] or skill_list == ["B","C"]:
+        roster.skill = "BC"
+    elif skill_list == ["C"]:
+        roster.skill = "CO"
+    else:
+        print "no match found"
+    #roster.save()
+
 
 #mismatch, no_cap, incompletec = get_skill_mismatch()
 def get_skill_mismatch():
@@ -22,23 +61,26 @@ def get_skill_mismatch():
     no_cap = []
     incompletec = []
     for c in Challenge.objects.all():
+        print c.pk, c
         for r in [c.roster1, c.roster2]:
-            if r and r.skill and r.captain:
+            if r and r.captain:
                 my_team, opponent, my_acceptance, opponent_acceptance = c. my_team_status([r.captain])
-                sa =  opponent.opponent_skills_allowed()
-                if my_team.skill not in sa:
-                    if r not in mismatch:
-                        mismatch.append(r)
-                        print "adding"
-                        print r, r.skill, " not in "
-                        print sa
-                else:
-                    print "okay: ",my_team.skill, sa
+                if my_team and opponent:
+                    sa =  opponent.opponent_skills_allowed()
+                    if my_team.skill not in sa:
+                        if r not in mismatch:
+                            mismatch.append(r)
+                            print "adding"
+                            print r, r.skill, " not in "
+                            print sa
+                    else:
+                        print my_team.pk, my_team, " okay: ",my_team.skill, sa
+
             elif r and not r.captain:
                 no_cap.append(r)
-            elif not r:
-                if c not in incompletec:
-                    incompletec.append(c)
+            elif not r and c not in incompletec:
+                print "incomplete"
+                incompletec.append(c)
 
     print "done"
     print len(mismatch)
