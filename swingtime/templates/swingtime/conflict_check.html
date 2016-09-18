@@ -19,7 +19,6 @@
       <ul class="nav nav-tabs">
 <li {%if not active or active = 'coach'%}class="active"{%endif%}><a href="#coach" data-toggle="tab">Coach</a></li>
 <li {%if active = 'captain'%}class="active"{%endif%}><a href="#captain" data-toggle="tab">Captain</a></li>
-<li {%if active = 'registrant'%}class="active"{%endif%}><a href="#registrant" data-toggle="tab">Registrant</a></li>
       </ul>
 
       <div class="tab-content margin-top-10">
@@ -76,19 +75,6 @@
         {%endif%}<!-- if captain_search-->
           </div><!-- end tab-pane -->
 
-
-            <div class="tab-pane {%if active = 'registrant'%}active{%endif%}" id="registrant">
-              <form method="POST" class="post-form">
-                    {% csrf_token %}
-              <input type="hidden" name="registrant" value="registrant" />
-              <button type="submit" class="btn btn-success margin-top-10">Check Registrant Conflicts</button>
-          </form>
-          {%if registrant_search%}
-          <p>disabled, because it will take forever</p>
-          {%endif%}<!-- if reg search-->
-
-
-            </div><!-- end tab-pane -->
 
 
           </div><!-- end tab-content -->

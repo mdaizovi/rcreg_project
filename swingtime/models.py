@@ -29,7 +29,7 @@ from swingtime.conf import settings as swingtime_settings
 
 """Note from Dahmer:
 I started off with Swingtime and changed a lot for RollerCon's specifications.
-So if you're familiar w/ the app, this may be very different.
+So if you're familiar with Swingtime, this may be very different.
 Also, that explains style inconsistency between old code and my add-ons.
 """
 
@@ -120,7 +120,7 @@ class OccurrenceManager(models.Manager):
                 if act.is_a_training():
                     act_locations = all_locations.filter(
                             location_category__in=["Training","Training or Competition"],
-                            venue__in=venues, location_type__in=['Flat Track','Banked Track']
+                            venue__in=venues, location_type__in=['Flat Track', 'Banked Track']
                             )
                 elif act.is_a_challenge():
                     act_locations = all_locations.filter(
@@ -182,27 +182,25 @@ class OccurrenceManager(models.Manager):
 
     #---------------------------------------------------------------------------
     def sort_possibles(self, con, all_act_data,level1pairs,prefix_base):
-        """Meant to make Otto run faster by moving all db queries.
-        Takes in dict w/k of activity, v list of criteria, including possible occurrences
-        now need to sort by interest match, conflicts, among self and each other, without too maky db hits"""
-        #print "starting sort possibilities"
-        #print "dbc1:", len(dbconnection.queries)
-        from swingtime.forms import L1Check
-        #date_range=con.get_date_range()
-        figureheads=[]
-        participants=[]
-        fpks=[]
-        ppks=[]
-        busy={}
-        busy_coaching={}
+        """Makes Otto run faster by moving all db queries. Takes in dict with
+        k of activity, v list of criteria, including possible occurrences
+        now need to sort by interest match, conflicts, among self and each other,
+        without too maky db hits.
+        """
+        from swingtime.forms import L1Check  #  Avoid circular import
+        figureheads = []
+        participants = []
+        fpks = []
+        ppks = []
+        busy = {}
+        busy_coaching = {}
 
-        #print "dbc2:", len(dbconnection.queries)
         for attr_dict in all_act_data.values():
-            these_f=attr_dict.get('figureheads')
+            these_f = attr_dict.get('figureheads')
             for f in these_f:
                 if f not in figureheads:
                     figureheads.append(f)
-            these_p=attr_dict.get('participants')
+            these_p = attr_dict.get('participants')
             for p in these_p:
                 if p not in participants:
                     participants.append(p)
@@ -211,104 +209,90 @@ class OccurrenceManager(models.Manager):
             if f.pk not in fpks:
                 fpks.append(f.pk)
             if f not in busy:
-                busy[f]=[]
+                busy[f] = []
 
         for p in participants:
             if p.pk not in ppks:
                 ppks.append(p.pk)
             if p not in busy:
-                busy[p]=[]
+                busy[p] = []
 
-        #print "dbc3 models:", len(dbconnection.queries)
-        scheduled_os=Occurrence.objects.filter(start_time__gte=con.start, end_time__lte=con.end).exclude(training=None,challenge=None).prefetch_related('training').prefetch_related('training__coach__user__registrant_set').prefetch_related('challenge').prefetch_related('challenge__roster1__participants').prefetch_related('challenge__roster2__participants')
-        #print "dbc4:", len(dbconnection.queries)
-        #1 chal=8 db hits above. too many? 2 trains=7 hits maybe doesn't matter how many acts?
+        scheduled_os = (Occurrence.objects
+                .filter(start_time__gte=con.start, end_time__lte=con.end)
+                .exclude(training=None,challenge=None)
+                .prefetch_related('training')
+                .prefetch_related('training__coach__user__registrant_set')
+                .prefetch_related('challenge')
+                .prefetch_related('challenge__roster1__participants')
+                .prefetch_related('challenge__roster2__participants')
+                )
+
         for o in scheduled_os:
             if o.challenge:
                 for roster in [o.challenge.roster1, o.challenge.roster2]:
                     for r in roster.participants.all():
                         if r in busy:
-                            r_busy=busy.get(r)
+                            r_busy = busy.get(r)
                             r_busy.append(o)
-                            busy[r]=list(r_busy)
+                            busy[r] = list(r_busy)
                         else:
-                            busy[r]=[o]
+                            busy[r] = [o]
 
             elif o.training:
                 for c in o.training.coach.all():
                     for r in c.user.registrant_set.filter(con=con):
                         if r in busy_coaching:
-                            r_busy=busy_coaching.get(r)
+                            r_busy = busy_coaching.get(r)
                             r_busy.append(o)
-                            busy_coaching[r]=list(r_busy)
+                            busy_coaching[r] = list(r_busy)
                         else:
-                            busy_coaching[r]=[o]
-        #first make a separate coaching dict for conflict checks later, then conbine with the regular busy dict
+                            busy_coaching[r] = [o]
+
+        # First make a separate coaching dict for conflict checks later,
+        # then conbine with the regular busy dict
         for k,v in busy_coaching.iteritems():
             if k in busy:
-                r_busy=busy.get(k)
+                r_busy = busy.get(k)
                 for o in v:
                     if o not in r_busy:
                         r_busy.append(o)
-                busy[k]=list(r_busy) #i dobn't actually think this is necessary
+                busy[k] = list(r_busy)  # Don't actually think this is necessary
             else:
-                busy[k]=v
+                busy[k] = v
 
-        #print "dbc5:", len(dbconnection.queries)
-        related_blackouts=Blackout.objects.filter(registrant__in=figureheads).prefetch_related('registrant')
-        #print "dbc6:", len(dbconnection.queries)
+        related_blackouts = Blackout.objects.filter(registrant__in=figureheads).prefetch_related('registrant')
 
         for b in related_blackouts:
-            r_busy=busy.get(b.registrant)
-            tempo=b.make_temp_o()
+            r_busy = busy.get(b.registrant)
+            tempo = b.make_temp_o()
             r_busy.append(tempo)
-            busy[b.registrant]=list(r_busy)
-
+            busy[b.registrant] = list(r_busy)
 
         avail_score_dict={}
         for act,this_act_dict in all_act_data.iteritems():
-            act_p=this_act_dict.get('participants')
-            act_f=this_act_dict.get('figureheads')
+            act_p = this_act_dict.get('participants')
+            act_f = this_act_dict.get('figureheads')
 
-            level1=[]
-            level15=[]
-            level2=[]
-            interestexact=this_act_dict.get("interestexact")
-            interestremoved=this_act_dict.get("interestremoved")
+            level1 = []
+            level15 = []
+            level2 = []
+            interestexact = this_act_dict.get("interestexact")
+            interestremoved = this_act_dict.get("interestremoved")
 
-            #check to see if any participants are coaches, and if so, remove coach session occurrences
+            # Check to see if any participants are coaches.
+            # If so, remove coach session occurrences
             coach_participants=set(act_p).intersection(set(busy_coaching.keys()))
-############################## uncomment here if you want to be less restrictive w/ coach schedules, only get rid of an occurrence if they're busy coaching at the time.
-    ## solution 1
-            # if len(coach_participants)>0:
-            #     for l in [interestexact,interestremoved]:
-            #         to_remove=[]
-            #         for o in l:
-            #             coach_intersect=o.busy_soft(list(coach_participants),busy_coaching)
-            #             if coach_intersect:
-            #                 to_remove.append(o)
-            #                 ###this is the problem. after it removes one it skips the next in line
-            #                 #l.remove(o)
-            #                 #don't change the to_remove instead of l.remove, this was making a mystery by not testing all occurrences against coach schedules, was skipping
-            #
-            #         while len(to_remove)>0:
-            #             for o in to_remove:
-            #                 l.remove(o)
-            #                 to_remove.remove(o)
 
-## solution 2
-            #this is actually a mcuh easier way to deal with that.
-            #adding any coach as a figurehead makes sure they have no conflicts.
-            #doesn't distinguish betwheen whether they're coaching at the time or not.
-            #might cause a problem by being too restrictive, giving coaches too much preference.
-            #fuck it, I'll leave it that way for now.
+            # Adding any coach as a figurehead makes sure they have no conflicts.
+            # Doesn't distinguish betwheen whether they're coaching at the time or not.
+            # Might cause a problem by being too restrictive, giving coaches too much preference.
             for c in list(coach_participants):
                 if c not in act_f:
                     act_f.append(c)
-###############################################################
+
             for o in interestexact:
-                figurehead_intersect=o.busy_soft(act_f,busy)
-                participant_intersect=o.busy_soft(act_p,busy)
+                figurehead_intersect = o.busy_soft(act_f,busy)
+                participant_intersect = o.busy_soft(act_p,busy)
 
                 if not figurehead_intersect:
                     if not participant_intersect:
@@ -326,132 +310,108 @@ class OccurrenceManager(models.Manager):
                     else:
                         level2.append(o)
 
-            avail_score=( (len(level1)*100) + (len(level15)*10) + (len(level2)*1) )
+            avail_score = ((len(level1) * 100) + (len(level15) * 10) + (len(level2) * 1))
             if avail_score in avail_score_dict:
-                tmp=avail_score_dict.get(avail_score)
+                tmp = avail_score_dict.get(avail_score)
                 tmp.append(act)
             else:
-                avail_score_dict[avail_score]=[act]
+                avail_score_dict[avail_score] = [act]
 
-            this_act_dict.update({"level1":level1,"level15":level15,"level2":level2,"avail_score":avail_score})
+            this_act_dict.update({
+                    "level1": level1, "level15": level15,
+                    "level2": level2, "avail_score": avail_score
+                    })
 
-        #print "all_act_data test",all_act_data
+        taken_os = []
+        ask = avail_score_dict.keys()
+        ask.sort()  #  Sorting less available to more available
 
-        taken_os=[]
-        #print "avail_score_dict",avail_score_dict
-        ask=avail_score_dict.keys()
-        ask.sort()#sorting less available to more available
-        #print "ask",ask
         for score in ask:
-            #print "score",score
-            act_list=avail_score_dict.get(score)
-            #print "act_list",act_list
+            act_list = avail_score_dict.get(score)
             for act in act_list:
-                #print "\nact: ",act
-                oselected=False
-                this_act_dict=all_act_data.get(act)
-                l1=this_act_dict.get('level1')
-                #print "len l1: ",len(l1)
-                l15=this_act_dict.get('level15')
-                #print "len l15: ",len(l15)
-                l2=this_act_dict.get('level2')
-                #print "len l2: ",len(l2)
-                figs=this_act_dict.get('figureheads')
-                parts=this_act_dict.get('participants')
-                #print "len figs",len(figs)
-                #print "len partss",len(parts)
+                oselected = False
+                this_act_dict = all_act_data.get(act)
+                l1 = this_act_dict.get('level1')
+                l15 = this_act_dict.get('level15')
+                l2 = this_act_dict.get('level2')
+                figs = this_act_dict.get('figureheads')
+                parts = this_act_dict.get('participants')
 
-
-                if len(l1)>0:
-                    while len(l1)>0 and not oselected:
-                        o=choice(l1)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                if len(l1) > 0:
+                    while len(l1) > 0 and not oselected:
+                        o = choice(l1)
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(figs,busy)
+                            figurehead_intersect = o.busy_soft(figs,busy)
                             if not figurehead_intersect:
                                 participant_intersect=o.busy_soft(parts,busy)
                                 if not participant_intersect:
-                                    #print"not in taken"
-                                    prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
-                                    #print"prefix: ",prefix
-                                    level1pairs[(act,o,"Perfect Match")]=L1Check(prefix=prefix)
-                                    #print "selecting ", o.start_time, o.end_time
+                                    prefix = (prefix_base + "-%s-occurr-%s"
+                                            % (str(act.pk), str(o.pk))
+                                            )
+                                    level1pairs[(act, o, "Perfect Match")] = L1Check(prefix=prefix)
                                     taken_os.append(o)
                                     l1.remove(o)
-                                    oselected=True
+                                    oselected = True
 
                                     for l in [figs,parts]:
                                         for r in l:
-                                            r_busy=busy.get(r)
+                                            r_busy = busy.get(r)
                                             r_busy.append(o)
                                     break
-                                else:#if participant intersect
+                                else:  # If participant intersect
                                     l1.remove(o)
                                     if o not in l2:
                                         l2.append(o)
                             else:
-                                #print "o taken, keep going"
-                                #print "len l1: ",len(l1)
                                 l1.remove(o)
                         else:
-                            #print "o taken, keep going"
-                            #print "len l1: ",len(l1)
                             l1.remove(o)
 
-                if len(l15)>0 and not oselected:
-                    while len(l15)>0 and not oselected:
-                        o=choice(l15)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                if len(l15) > 0 and not oselected:
+                    while len(l15) > 0 and not oselected:
+                        o = choice(l15)
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(figs,busy)
+                            figurehead_intersect = o.busy_soft(figs,busy)
                             if not figurehead_intersect:
-                                participant_intersect=o.busy_soft(parts,busy)
+                                participant_intersect = o.busy_soft(parts,busy)
                                 if not participant_intersect:
-                                    #print"not in taken"
-                                    prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
-                                    #print"prefix: ",prefix
-                                    level1pairs[(act,o,"+/- Interest but no Conflicts")]=L1Check(prefix=prefix)
+                                    prefix = (prefix_base + "-%s-occurr-%s"
+                                            % (str(act.pk), str(o.pk))
+                                            )
+                                    level1pairs[(act, o, "+/- Interest but no Conflicts")] = L1Check(prefix=prefix)
                                     taken_os.append(o)
                                     l15.remove(o)
                                     oselected=True
-                                    #print "selecting ", o.start_time, o.end_time
                                     for l in [figs,parts]:
                                         for r in l:
-                                            r_busy=busy.get(r)
+                                            r_busy = busy.get(r)
                                             r_busy.append(o)
                                     break
-                                else:#if participant intersect
+                                else:  # If participant intersect
                                     l1.remove(o)
                                     if o not in l2:
                                         l2.append(o)
                             else:
-                                #print "o taken, keep going"
-                                #print "len l15: ",len(l15)
                                 l15.remove(o)
                                 if not figurehead_intersect:
                                     if o not in l2:
                                         l2.append(o)
                         else:
-                            #print "o taken, keep going"
-                            #print "len l15: ",len(l15)
                             l15.remove(o)
 
-                elif len(l2)>0 and not oselected:
-                    #print "going for l2, len ",len(l2)
-                    while len(l2)>0 and not oselected:
-                        o=choice(l2)
-                        #print"o: ",o.start_time,o.end_time,o.interest#to see if the break is working
+                elif len(l2) > 0 and not oselected:
+                    while len(l2) > 0 and not oselected:
+                        o = choice(l2)
                         if o not in taken_os:
-                            figurehead_intersect=o.busy_soft(figs,busy)
+                            figurehead_intersect = o.busy_soft(figs,busy)
                             if not figurehead_intersect:
-                                #print"not in taken"
-                                prefix=prefix_base+"-%s-occurr-%s"%(str(act.pk),str(o.pk))
-                                #print"prefix: ",prefix
-                                level1pairs[(act,o,"+/- Interest and Player Conflicts")]=L1Check(prefix=prefix)
+                                prefix = (prefix_base + "-%s-occurr-%s"
+                                        % (str(act.pk), str(o.pk))
+                                        )
+                                level1pairs[(act, o, "+/- Interest and Player Conflicts")] = L1Check(prefix=prefix)
                                 taken_os.append(o)
-                                #print "selecting ", o.start_time, o.end_time
                                 l2.remove(o)
-                                oselected=True
+                                oselected = True
 
                                 for l in [figs,parts]:
                                     for r in l:
@@ -459,12 +419,8 @@ class OccurrenceManager(models.Manager):
                                         r_busy.append(o)
                                 break
                             else:
-                                #print "o taken, keep going"
-                                #print "len l2: ",len(l2)
                                 l2.remove(o)
                         else:
-                            #print "o taken, keep going"
-                            #print "len l2: ",len(l2)
                             l2.remove(o)
 
         return level1pairs
@@ -479,12 +435,11 @@ class Occurrence(models.Model):
     '''
     start_time = models.DateTimeField(_('start time'))
     end_time = models.DateTimeField(_('end time'))
-    #Why did i say null=true for locaiton? prob so occurrance doesn't get deleted if locaiton does
     location = models.ForeignKey(Location, null=True, blank=True, on_delete=models.SET_NULL)
-    interest=models.IntegerField(null=True, blank=True,choices=INTEREST_RATING, default=3)
+    interest = models.IntegerField(null=True, blank=True,choices=INTEREST_RATING, default=3)
 
-    training=models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
-    challenge=models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
+    training = models.ForeignKey(Training,null=True,blank=True,on_delete=models.SET_NULL)
+    challenge = models.ForeignKey(Challenge,null=True,blank=True,on_delete=models.SET_NULL)
 
     objects = OccurrenceManager()
 
@@ -496,7 +451,6 @@ class Occurrence(models.Model):
 
     #---------------------------------------------------------------------------
     def __str__(self):
-        #return '{}: {}'.format(self.title, self.start_time.isoformat())
         return '{}: {}'.format(self.name, self.start_time.isoformat())
 
     #---------------------------------------------------------------------------
@@ -515,13 +469,13 @@ class Occurrence(models.Model):
         Dahmer custom. Returns training or activity related to Event.
         Currently written to ease the transition to not having Event as a model
         '''
-        activity=None
+        activity = None
 
         if self.training or self.challenge:
             if self.training:
-                activity=self.training
+                activity = self.training
             elif self.challenge:
-                activity=self.challenge
+                activity = self.challenge
 
         return activity
     #---------------------------------------------------------------------------
@@ -532,23 +486,19 @@ class Occurrence(models.Model):
 
 
     #---------------------------------------------------------------------------
-########eventually I want this to replace title######################
     @property
     def name(self):
-        activity=self.get_activity()
+        activity = self.get_activity()
 
         if activity and activity.name:
             return activity.name
         else:
             if self.interest:
-                temp_name="Empty (Interest: "+str(self.interest)+")"
+                temp_name = "Empty (Interest: " + str(self.interest) + ")"
             else:
-                temp_name="Empty"
+                temp_name = "Empty"
             return temp_name
     #---------------------------------------------------------------------------
-
-    #reference: http://stackoverflow.com/questions/7366363/adding-custom-django-model-validation
-
     def validate_unique(self, *args, **kwargs):
         super(Occurrence, self).validate_unique(*args, **kwargs)
 
@@ -563,226 +513,233 @@ class Occurrence(models.Model):
                 qs = qs.exclude(pk=self.pk)
 
             if qs.exists():
-                raise ValidationError({
-                    NON_FIELD_ERRORS: ["You can't have more than 1 occurrence in the same place at the same time",],})
+                raise ValidationError({NON_FIELD_ERRORS: [
+                            "You can't have more than 1 occurrence in the same"
+                            " place at the same time",
+                            ],})
 
-        if self.training and self.challenge:#can't add until occurrence has training and challenge
-            raise ValidationError({
-                NON_FIELD_ERRORS: ["Occurrence cannot be BOTH a Challenge and a Training",],})
-
-
+        if self.training and self.challenge:
+            raise ValidationError({NON_FIELD_ERRORS: [
+                    "Occurrence cannot be BOTH a Challenge and a Training",
+                    ],})
 
     #---------------------------------------------------------------------------
     def get_endtime(self):
-        """Dahmer custom funct to get end time based on the train/chal it's linked to,
+        """Get end time based on the train/chal it's linked to,
         and pad an extra 15 mins for 30 min chal or 30 mins for 90 min chal
-        REQUIRES event and start time"""
-        duration=1#default, may be overridden
-        activity=self.get_activity()
+        REQUIRES event and start time.
+        """
+        duration = 1  # Default, may be overridden
+        activity = self.get_activity()
         if activity and activity.duration:
-            duration=float(activity.duration)
+            duration = float(activity.duration)
 
-        dur_delta=int(duration*60)
-        end_time=self.start_time+datetime.timedelta(minutes=dur_delta)
+        dur_delta = int(duration * 60)
+        end_time = self.start_time + datetime.timedelta(minutes=dur_delta)
+
         return end_time
-    #---------------------------------------------------------------------------
-    def get_initial_interest(self,start_time):
-        """Figures out intiial interest level based on when event is occurring.
-        Start time is fed so can be calculated for initial before any other data is populated."""
-        pass
 
     #---------------------------------------------------------------------------
     def figurehead_conflict(self):
-        """Dahmer custom function. Checks to see if any Event figureheads (coach, captain) are participating in other occurrances at same time.
-        If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.get_activity()#0db hits
-        figureheads=[]
-        conflict_dict={}
-        if activity:
-            figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
-        else:
-            figureheads=[]
+        """Checks to see if any figureheads (coach, captain) are participating
+        in other occurrances at same time. If so, returns dict with
+        activity k, skater list v, but has no teeth, can be overridden,
+        is just an FYI warning.
+        """
 
-        #0 db hits
-        #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk).select_related('challenge').select_related('training')
-        #adding a half hour padding:
-        concurrent=list(Occurrence.objects.filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),end_time__gt=(self.start_time - datetime.timedelta(minutes=30))).exclude(pk=self.pk).select_related('challenge').select_related('training'))
+        activity = self.get_activity()
+        figureheads = []
+        conflict_dict = {}
+        if activity:
+            # Figureheads is for getting blackouts
+            figureheads = activity.get_figurehead_registrants()
+        else:
+            figureheads = []
+
+        concurrent = list(Occurrence.objects
+                .filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),
+                        end_time__gt=(self.start_time - datetime.timedelta(minutes=30)))
+                .exclude(pk=self.pk)
+                .select_related('challenge')
+                .select_related('training')
+                )
 
         for o in concurrent:
-            event_activity=o.get_activity()
-            if event_activity: #could be an empty timeslot
-                event_part=event_activity.participating_in()
-                conflict=set(figureheads).intersection(event_part)
+            event_activity = o.get_activity()
+            if event_activity:  # Could be an empty timeslot
+                event_part = event_activity.participating_in()
+                conflict = set(figureheads).intersection(event_part)
                 if len( conflict ) > 0:
                     conflict_dict[event_activity]=list(conflict)
 
-        if len(conflict_dict)>0:
+        if len(conflict_dict) > 0:
             return conflict_dict
         else:
             return None
     #---------------------------------------------------------------------------
     def os_soft_intersect(self,o2):
-        #print "starting os_soft_intersect: ", self.start_time, self.end_time
-        #print "against ",o2.start_time, o2.end_time
-        if (o2.start_time<(self.end_time + datetime.timedelta(minutes=30))) and (o2.end_time>(self.start_time - datetime.timedelta(minutes=30) ) ):
-            #print "true"
+
+        if ((o2.start_time < (self.end_time + datetime.timedelta(minutes=30))) and
+                (o2.end_time > (self.start_time - datetime.timedelta(minutes=30)))
+                ):
+
             return True
         else:
-            #print "false"
             return False
     #---------------------------------------------------------------------------
     def os_hard_intersect(self,o2):
-        #print "starting os_hard_intersect: ", self.start_time, self.end_time
-        #print "against ",o2.start_time, o2.end_time
-        if (o2.start_time<self.end_time) and (o2.end_time>self.start_time):
-            #print "true"
+        if (o2.start_time < self.end_time) and (o2.end_time > self.start_time):
             return True
         else:
-            #print "false"
             return False
     #-------------------------------------------------------------------------------
     def busy_soft(self,participant_list,busy_dict):
-        """takes in list of relevant registrant, dict w/ registrant as key, list of occurrences reg is in as v,
-        checks to see if reg is busy/ w/ soft intersection"""
-        #print "\n\nstarting  busy_soft for ",self.challenge,self.training,self.start_time,self.end_time
-        intersection=False
-        i=0
-        #print "len(participant_list)",len(participant_list)
-        while not intersection and i<len(participant_list):
+        """takes in list of relevant registrant, dict w/ registrant as key,
+        list of occurrences reg is in as v.
+        checks to see if reg is busy/ w/ soft intersection.
+        """
+
+        intersection = False
+        i = 0
+
+        while not intersection and i < len(participant_list):
             for f in participant_list:
-                #print "starting i is ",i
-                #print f
-                busy_list=busy_dict.get(f)
-                #print "busy_list",busy_list
+                busy_list = busy_dict.get(f)
                 for o2 in busy_list:
-                    #print "tessting ",o2.start_time,o2.end_time
                     if self.os_soft_intersect(o2):
-                        intersection=True
-                        #print "about to break a"
+                        intersection = True
                         break
-                i+=1
+                i += 1
                 if intersection:
-                    #print "about to break b"
                     break
             if intersection:
-                #print "about to break c"
                 break
-            #print "ending i is ",i
-        #print "busy_soft intersection",intersection
+
         return intersection
 
     #-------------------------------------------------------------------------------
     def participant_conflict(self):
-        """Dahmer custom function. Checks to see if any Event participants are participating in other occurrances at same time.
-        If so, returns dict w/  activity k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        activity=self.get_activity()
-        figureheads=[]
-        conflict_dict={}
+        """Checks to see if any participants are participating in other
+        occurrances at same time. If so, returns dict w/  activity k, skater list v,
+        but has no teeth, can be overridden, is just an FYI warning.
+        """
+
+        activity = self.get_activity()
+        figureheads = []
+        conflict_dict = {}
 
         if activity:
-            occur_part = activity.participating_in()#cut down form 7 to 4 db hits
+            occur_part = activity.participating_in()
         else:
             occur_part=[]
-        #concurrent=Occurrence.objects.filter(start_time__lt=self.end_time,end_time__gt=self.start_time).exclude(pk=self.pk)
-        #adding a half hour padding:
-        concurrent=Occurrence.objects.filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),end_time__gt=(self.start_time - datetime.timedelta(minutes=30))).exclude(pk=self.pk)
+
+        concurrent = (Occurrence.objects
+                .filter(start_time__lt=(self.end_time + datetime.timedelta(minutes=30)),
+                        end_time__gt=(self.start_time - datetime.timedelta(minutes=30)))
+                .exclude(pk=self.pk)
+                )
 
         for o in concurrent:
-            event_activity=o.get_activity()
-            if event_activity: #could be an empty timeslot
-                event_part=event_activity.participating_in()
-                inter=set(occur_part).intersection(event_part)
-                if len( inter ) > 0:
-                    conflict_dict[event_activity]=list(inter)
-                    #conflict_dict[event_activity]=event_part#whoops, this adds all people, not just the intersection!
-        if len(conflict_dict)>0:
-            #print "conflict_dict",conflict_dict
+            event_activity = o.get_activity()
+            if event_activity:  # Could be an empty timeslot
+                event_part = event_activity.participating_in()
+                inter = set(occur_part).intersection(event_part)
+                if len(inter) > 0:
+                    conflict_dict[event_activity] = list(inter)
+        if len(conflict_dict) > 0:
             return conflict_dict
         else:
             return None
 
     #-------------------------------------------------------------------------------
     def blackout_conflict(self):
-        """Dahmer custom function. Checks to see if any Event figureheads (coach, captain have blackouts during Occu time.
-        If so, returns dict w/  blackout k, skater list v, but has no teeth, can be overridden, is just an FYI warning"""
-        #print("running o blackout_conflict")
-        activity=self.get_activity()
-        figureheads=[]
-        conflict_dict={}
-        daypart=[]
-        #print("activity ",activity)
-        if activity:
-            figureheads=activity.get_figurehead_registrants()#figureheads is for getting blackouts, but where to put the logic?
-        else:
-            figureheads=[]
+        """Checks to see if any figureheads (coach, captain) have blackouts during
+        Occurrance time. If so, returns dict w/  blackout k, skater list v,
+        but has no teeth, can be overridden, is just an FYI warning.
+        """
 
-        odate=self.start_time.date()
+        activity = self.get_activity()
+        figureheads = []
+        conflict_dict = {}
+        daypart = []
+
+        if activity:
+            figureheads = activity.get_figurehead_registrants()
+        else:
+            figureheads = []
+
+        odate = self.start_time.date()
         if self.start_time.time() >= parse_time('12:00:00'):
             daypart.append("PM")
         else:
             daypart.append("AM")
         if (self.end_time.time() >= parse_time('12:00:00')) and ("PM" not in daypart):
             daypart.append("PM")
-        #print("daypart ",daypart)
-        for f in figureheads:
-            #print("Figurehead ",f)
-            potential_bouts=Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)
-            if len(list(potential_bouts))>0:
-                conflict_dict[f]=list(potential_bouts)
-        #print("conflict_dict ",conflict_dict)
 
-        if len(conflict_dict)>0:
+        for f in figureheads:
+            potential_bouts = Blackout.objects.filter(registrant=f, date=odate, ampm__in=daypart)
+            if len(list(potential_bouts)) > 0:
+                conflict_dict[f] = list(potential_bouts)
+
+        if len(conflict_dict) > 0:
             return conflict_dict
         else:
             return None
-#-------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def get_add_url(self):
         """Creates string of URL to call add-event page.
-        Like a DIY get abdolute url"""
+        Like a DIY get absolute url"""
 
-        dstr_str=self.start_time.isoformat()
+        dstr_str = self.start_time.isoformat()
 
-        url_str='/events/add/?dtstart=%s&location=%s'%(dstr_str,str(self.location.pk))
+        url_str = '/events/add/?dtstart=%s&location=%s' % (dstr_str, str(self.location.pk))
 
         if self.training:
-            url_str+="&training=%s"%(str(self.training.pk))
+            url_str += "&training=%s" % (str(self.training.pk))
         if self.challenge:
-            url_str+="&challenge=%s"%(str(self.challenge.pk))
+            url_str += "&challenge=%s" % (str(self.challenge.pk))
 
         return url_str
 
-#-------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def can_add_sk8ers(self):
-        '''returns list of Users that can edit Roster
+        """Returns list of Users that can edit Roster
         this is for adding/removing roster participants,
-        they are only true in activity.editable_by. This is Bosses and Volunteers.'''
-        allowed_editors=list(User.objects.filter(groups__name__in=['Volunteer',BIG_BOSS_GROUP_NAME,LOWER_BOSS_GROUP_NAME]))
+        they are only true in activity.editable_by. This is Bosses and Volunteers.
+        """
+        allowed_editors = list(User.objects
+                .filter(groups__name__in=['Volunteer', BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
+                ]))
+
         return allowed_editors
 
-#-------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     def excel_backup(self):
-        """Writes/returns xlsx file of relevant data, to be gathered ahead of the con and be used as a Plan B,
-        or for people who don't want to use the site, I guess (I think redundant, Ivanna insists)"""
-        wb=None
+        """Writes/returns xlsx file of relevant data, to be gathered ahead
+        of the con and be used as a Plan B, or for people who don't want to use
+        the site, I guess (I think redundant, Ivanna insists).
+        """
+
+        wb = None
 
         if self.training or self.challenge:
 
-            timestr=self.start_time.strftime('%H %M %p ')
-            xlfilename=timestr+(ascii_only_no_punct(self.name))+".xlsx"
+            timestr = self.start_time.strftime('%H %M %p ')
+            xlfilename = timestr + (ascii_only_no_punct(self.name)) + ".xlsx"
 
             wb = openpyxl.Workbook()
             sheet = wb.active
 
             if self.training:
 
-                regros, rcreated=TrainingRoster.objects.get_or_create(registered=self)
+                regros, rcreated = TrainingRoster.objects.get_or_create(registered=self)
 
                 if regros.intl:
-                    splitxlfilename=xlfilename.split(".")
-                    newname=splitxlfilename[0]+" INTL"
-                    xlfilename=''.join([newname,splitxlfilename[1]])
+                    splitxlfilename = xlfilename.split(".")
+                    newname = splitxlfilename[0] + " INTL"
+                    xlfilename = ''.join([newname,splitxlfilename[1]])
 
-                sheet["E3"].value = "Printed: %s"%(timezone.now().strftime('%m %d %Y'))
+                sheet["E3"].value = "Printed: %s" % (timezone.now().strftime('%m %d %Y'))
                 sheet["A1"].value = self.training.name
                 sheet["A2"].value = self.training.figurehead_display
                 sheet["A3"].value = self.start_time.strftime('%H %M %p, %m-%d-%Y')
@@ -799,38 +756,37 @@ class Occurrence(models.Model):
                 sheet["B10"].value = "Name"
 
                 if regros.intl:
-                    sheet["F6"].value = "Auditing Roster (non-INTL skaters go here, maybe coach will let them skate.)"
+                    sheet["F6"].value = ("Auditing Roster (non-INTL skaters go "
+                            "here, maybe coach will let them skate.)")
                 else:
                     sheet["F6"].value = "Auditing Roster"
 
                 sheet["E7"].value = "Skill:"
                 sheet["F7"].value = "ABCD"
                 sheet["E8"].value = "Pass:"
-                sheet["F8"].value = "MVP, Skater, Offskate" #right? confirm.
+                sheet["F8"].value = "MVP, Skater, Offskate"
                 sheet["F10"].value = "Name"
 
-                starti=11
-                rno=int(1)
-                #regros, rcreated=TrainingRoster.objects.get_or_create(registered=acto) #moved above so i can find out if INTL
-                rmaxcap=regros.get_maxcap()
-                for r in range(1,(rmaxcap+1)):
-                    sheet["A"+str(starti)].value = str(rno)+"."
-                    rno+=1
-                    starti+=1
+                starti = 11
+                rno = int(1)
+                rmaxcap = regros.get_maxcap()
+                for r in range(1, (rmaxcap + 1)):
+                    sheet["A" + str(starti)].value = str(rno) + "."
+                    rno += 1
+                    starti += 1
 
-                starti=11
-                rno=int(1)
-                audros,acreated=TrainingRoster.objects.get_or_create(auditing=self)
-                amaxcap=audros.get_maxcap()
-                for r in range(1,(amaxcap+1)):
-                    sheet["E"+str(starti)].value = str(rno)+"."
-                    rno+=1
-                    starti+=1
+                starti = 11
+                rno = int(1)
+                audros, acreated = TrainingRoster.objects.get_or_create(auditing=self)
+                amaxcap = audros.get_maxcap()
+                for r in range(1, (amaxcap + 1)):
+                    sheet["E" + str(starti)].value = str(rno) + "."
+                    rno += 1
+                    starti += 1
 
             elif self.challenge:
 
                 sheet["A1"].value = self.challenge.data_title
-
                 sheet["A2"].value = self.location.abbrv
                 sheet["B2"].value = self.start_time.strftime('%H %M %p, %m-%d-%Y')
 
@@ -839,7 +795,7 @@ class Occurrence(models.Model):
 
                 if self.challenge.communication:
                     sheet["A4"].value = "ATTN:"
-                    sheet["A4"].fill = PatternFill(start_color='FFFF0000',end_color="FFFFFF00",fill_type='solid')
+                    sheet["A4"].fill = PatternFill(start_color='FFFF0000', end_color="FFFFFF00", fill_type='solid')
                     sheet.merge_cells('B4:G4')
                     sheet["B4"].value = self.challenge.communication
                     sheet.row_dimensions[4].height=(12 * len( self.challenge.communication.splitlines() ) )
@@ -878,45 +834,45 @@ class Occurrence(models.Model):
                 sheet["C12"].value = "Skater Name"
                 sheet["G12"].value = "Skater Name"
 
-                starti=13
-                rno=int(1)
-                r1=list(self.challenge.roster1.participants.all())
+                starti = 13
+                rno = int(1)
+                r1 = list(self.challenge.roster1.participants.all())
                 r1.sort(key=lambda x: x.sk8number)
                 for r in r1:
-                    if r==self.challenge.roster1.captain:
+                    if r == self.challenge.roster1.captain:
                         if r.sk8name:
-                            name=r.sk8name+" (Captain)"
+                            name = r.sk8name+" (Captain)"
                         else:
-                            name="(Captain)"
+                            name = "(Captain)"
                     else:
-                        name=r.sk8name
-                    sheet["A"+str(starti)].value = str(rno)+"."
-                    sheet["B"+str(starti)].value = r.sk8number
-                    sheet["C"+str(starti)].value = name
-                    rno+=1
-                    starti+=1
+                        name = r.sk8name
+                    sheet["A" + str(starti)].value = str(rno) + "."
+                    sheet["B" + str(starti)].value = r.sk8number
+                    sheet["C" + str(starti)].value = name
+                    rno += 1
+                    starti += 1
 
-                starti=13
-                rno=int(1)
-                r2=list(self.challenge.roster2.participants.all())
+                starti = 13
+                rno = int(1)
+                r2 = list(self.challenge.roster2.participants.all())
                 r2.sort(key=lambda x: x.sk8number)
                 for r in r2:
-                    if r==self.challenge.roster2.captain:
+                    if r == self.challenge.roster2.captain:
                         if r.sk8name:
-                            name=r.sk8name+" (Captain)"
+                            name = r.sk8name+" (Captain)"
                         else:
-                            name="(Captain)"
+                            name = "(Captain)"
                     else:
-                        name=r.sk8name
-                    sheet["E"+str(starti)].value = str(rno)+"."
-                    sheet["F"+str(starti)].value = r.sk8number
-                    sheet["G"+str(starti)].value = name
-                    rno+=1
-                    starti+=1
+                        name = r.sk8name
+                    sheet["E" + str(starti)].value = str(rno) + "."
+                    sheet["F" + str(starti)].value = r.sk8number
+                    sheet["G" + str(starti)].value = name
+                    rno += 1
+                    starti += 1
 
-        return wb,xlfilename
+        return wb, xlfilename
 
-#-------------------------------------------------------------------------------
+#===============================================================================
 class TrainingRoster(MatchingCriteria):
     """Used for Registration and Auditing roster for training Occurrences.
     Can be made in the Admin if made INTL, or made using get_or_create in
@@ -927,18 +883,18 @@ class TrainingRoster(MatchingCriteria):
     cap = models.IntegerField(null=True, blank=True)
     participants = models.ManyToManyField(Registrant, blank=True)
 
-    #Reminder: can have 1 of these but not both.
-    registered=models.OneToOneField("Occurrence", null=True,blank=True,related_name="registered")
-    auditing=models.OneToOneField("Occurrence", null=True,blank=True,related_name="auditing")
-
+    # Reminder: can have 1 of these but not both.
+    registered = models.OneToOneField("Occurrence", null=True, blank=True, related_name="registered")
+    auditing = models.OneToOneField("Occurrence", null=True, blank=True, related_name="auditing")
+    #---------------------------------------------------------------------------
     def __unicode__(self):
         return self.name
-
+    #---------------------------------------------------------------------------
     class Meta:
         ordering=('registered__start_time', 'auditing__start_time',
                 'registered__training__name', 'auditing__training__name'
                 )
-
+    #---------------------------------------------------------------------------
     @property
     def name(self):
         basename = ""
@@ -969,14 +925,14 @@ class TrainingRoster(MatchingCriteria):
         if not self.registered and not self.auditing:
             raise ValidationError({
                 NON_FIELD_ERRORS: ["Please choose a Training Occurrence",],})
-
+    #---------------------------------------------------------------------------
     def intls_allowed(self):
         if self.intl is True:
             allowed = [True]
         else:
             allowed = [True,False,None]
         return allowed
-
+    #---------------------------------------------------------------------------
     def can_register_at(self):
         """Returns datetime registration for class starts
         both for displaying that time and checking if now is past that time"""
@@ -1024,7 +980,7 @@ class TrainingRoster(MatchingCriteria):
 
         return can_reg
 
-
+    #---------------------------------------------------------------------------
     def can_register(self):
         """Returns true if registration window is open, False if not.
         Will be determined by 2(?) hour window before class starts"""
@@ -1035,7 +991,7 @@ class TrainingRoster(MatchingCriteria):
             return True
         else:
             return False
-
+    #---------------------------------------------------------------------------
     def get_maxcap(self):
         """Gets maximum number of participants for triningroster.
         PRIORITY ORDER: self.cap for TrainingRoster, use that.
@@ -1126,7 +1082,7 @@ class TrainingRoster(MatchingCriteria):
 
         return maxcap
 
-
+    #---------------------------------------------------------------------------
     def spacea(self):
         """gets maxcap (see above), checks is participants are fewer"""
         maxcap = self.get_maxcap()
@@ -1136,7 +1092,7 @@ class TrainingRoster(MatchingCriteria):
             return spacea
         else:
             return False
-
+    #---------------------------------------------------------------------------
     def editable_by(self):
         """Returns list of Users that can edit Roster.
         For adding/removing roster participants, so coaches actually don't have

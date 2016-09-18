@@ -49,7 +49,7 @@ def challenge_defaults(sender, instance, **kwargs):
     """pre_save from challenge. If it's a game, sets defaults to
     no skill or gender restrictions.
     """
-    #  Avoid parallel import
+    #  Avoid circular import
     from scheduler.models import GAMETYPE
 
     if instance.gametype == "6GAME":

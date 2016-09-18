@@ -148,7 +148,7 @@ class Location(models.Model):
         start and end provided. Returns True if no occurrences, else False.
         """
 
-        from swingtime.models import Occurrence  #  Avoid parallel import
+        from swingtime.models import Occurrence  #  Avoid circular import
 
         qs = list(Occurrence.objects.filter(
                 start_time__lt=end_time,
@@ -897,7 +897,7 @@ class Activity(models.Model):
         """Gets Blackouts for activity, from all coaches or captains,
         but not participants.
         """
-        from con_event.models import Blackout  # Avoid parallel import
+        from con_event.models import Blackout  #  Avoid circular import
         figureheads = self.get_figurehead_registrants()
         b_outs = list(Blackout.objects.filter(registrant__in=figureheads))
 
@@ -1005,7 +1005,7 @@ class Activity(models.Model):
         """
         # This works, but it makes about 2500 on my first test run. Not Plan A.
 
-        from swingtime.models import Occurrence  # Avoid parallel import
+        from swingtime.models import Occurrence  #  Avoid circular import
 
         dummies = []
         pls = self.possible_locations()
@@ -1158,7 +1158,7 @@ class Activity(models.Model):
         all levels here require right duration.
         """
 
-        from swingtime.models import Occurrence  # Avoid parallel import
+        from swingtime.models import Occurrence  #  Avoid circular import
 
         if self.interest:
             proxy_interest = self.interest
@@ -1291,17 +1291,17 @@ class Activity(models.Model):
     #---------------------------------------------------------------------------
     def get_view_url(self):
         if self.is_a_training():
-            from scheduler.views import view_training  # Avoid parallel import
+            from scheduler.views import view_training  #  Avoid circular import
             return reverse('scheduler.views.view_training', args=[str(self.pk)])
 
         elif self.is_a_challenge():
-            from scheduler.views import view_challenge  # Avoid parallel import
+            from scheduler.views import view_challenge  #  Avoid circular import
             return reverse('scheduler.views.view_challenge', args=[str(self.pk)])
 
     #---------------------------------------------------------------------------
     def get_edit_url(self):
         if self.is_a_training():
-            from scheduler.views import edit_training  # Avoid parallel import
+            from scheduler.views import edit_training  #  Avoid circular import
             return reverse('scheduler.views.edit_training', args=[str(self.pk)])
 
         elif self.is_a_challenge():
@@ -1312,10 +1312,10 @@ class Activity(models.Model):
     #---------------------------------------------------------------------------
     def get_sched_assist_url(self):
         if self.is_a_training():
-            from swingtime.views import sched_assist_tr  # Avoid parallel import
+            from swingtime.views import sched_assist_tr  #  Avoid circular import
             return reverse('swingtime.views.sched_assist_tr', args=[str(self.pk)])
         elif self.is_a_challenge():
-            from swingtime.views import sched_assist_ch  # Avoid parallel import
+            from swingtime.views import sched_assist_ch  #  Avoid circular import
             return reverse('swingtime.views.sched_assist_ch', args=[str(self.pk)])
 
     #---------------------------------------------------------------------------
@@ -1846,20 +1846,6 @@ class Coach(models.Model):
 
         return self.user.get_my_schedule_url()
 
-    #---------------------------------------------------------------------------
-    # def unconfirmed_trainings(self):
-    #     """Returns a list of all trainings in which have been submitted,but is
-    #     not accepted by RC. Only matters for coaches, bc you can only register
-    #     to attend trainigns that have been approved.
-    #     """
-    #     #Do i ever use this?
-    #     from scheduler.models import Training  # Avoid parallel import
-    #
-    #     unconfirmed = list(self.training_set.filter(RCaccepted=False))
-    #
-    #     return unconfirmed
-
-    #---------------------------------------------------------------------------
     class Meta:
 
         ordering = ('user',)
