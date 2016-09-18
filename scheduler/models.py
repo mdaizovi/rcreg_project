@@ -200,20 +200,34 @@ class Roster(MatchingCriteria):
 
     def validate_unique(self, *args, **kwargs):
         super(Roster, self).validate_unique(*args, **kwargs)
-        print "validate unique"
-        if self.captain:
-            print "self.captain ",self.captain
-            print "self.captain.skill",self.captain.skill
-            print "self.skills_allowed()",self.skills_allowed()
 
         if self.captain:
+            # Note: this doesn't work for propose_new_challenge
+            # because captain isn't captain yet.
             if self.captain.skill not in self.skills_allowed():
                 raise ValidationError({
-                    NON_FIELD_ERRORS: ["Captain's skill (%s) is one which is ineligible for team skill (%s). Please change captain, change captain skill, or change team skill."%(self.captain.skill,self.skill),],})
+                    NON_FIELD_ERRORS: [
+                            "Captain's skill (%s) is one which is ineligible "
+                            "for team skill (%s). Please change captain, change"
+                            " captain skill, or change team skill."
+                            % (self.captain.skill_display(), self.skill_display()),
+                            ],})
+            if self.captain.gender not in self.genders_allowed():
+                raise ValidationError({
+                    NON_FIELD_ERRORS: [
+                            "Captain's gender (%s) is one which is ineligible "
+                            "for team skill (%s). Please change captain, change"
+                            " captain gender, or change team gender."
+                            % (self.captain.gender, self.gender),
+                            ],})
 
         if self.coed_beginner():
             raise ValidationError({
-                NON_FIELD_ERRORS: ["Coed teams have a minimum skill level of Intermediate. Please raise the skill level or select a gender for the team",],})
+                NON_FIELD_ERRORS: [
+                        "Coed teams have a minimum skill level of Intermediate."
+                        " Please raise the skill level or select a gender for "
+                        "the team",
+                        ],})
 
 
     @property
@@ -573,13 +587,6 @@ class Roster(MatchingCriteria):
         else:
             pass_string = pass_list[0]
 
-        # if self.registered:
-        #     base_str=self.registered.onsk8s_tooltip_title()
-        # elif self.auditing:
-        #     base_str=self.auditing.onsk8s_tooltip_title()
-        # else:
-        #     base_str=""
-
         tooltip_title = base_str + (" Registrant must have %s pass in order to\
                 register"%(pass_string)
                 )
@@ -645,7 +652,7 @@ class Roster(MatchingCriteria):
 
             if self.skill in forbidden_skills:
                 coed_conflict = True
-                
+
         return coed_conflict
 
     #---------------------------------------------------------------------------
@@ -1488,7 +1495,7 @@ class Challenge(Activity):
             if self.con.can_submit_chlg_by_date():
                 if self.gametype == "6GAME" and not self.con.sched_final:
                     can_sub = True
-            elif self.gametype != "6GAME" and self.con.can_submit_chlg():
+                elif self.gametype != "6GAME" and self.con.can_submit_chlg():
                     can_sub = True
 
         return can_sub

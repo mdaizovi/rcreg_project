@@ -9,7 +9,7 @@ def all_challenge_notifications(request):
     submission window is closed due to too many challenges captained by user.
     """
     from django.conf import settings  # avoid circular import
-    from scheduler.models import Challenge  # avoid circular import
+    from scheduler.models import Challenge, Roster  # avoid circular import
     user = request.user
     NOTIFY_PENDING_CHALLENGES = None
     NOTIFY_UNACCEPTED_CHALLENGES = None
@@ -24,6 +24,8 @@ def all_challenge_notifications(request):
 
                 con = registrant_upcoming_con.con
                 if con.can_submit_chlg():
+                    # Note: Games will not be notified if submission is closed,
+                    # but submisison button won'tbe disabled.
                     my_rosters = list(Roster.objects.filter(
                                     captain=registrant_upcoming_con))
 

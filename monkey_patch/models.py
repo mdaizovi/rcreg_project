@@ -1,8 +1,21 @@
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.core.validators import MaxLengthValidator
+from django.db.models import Q
 
+from rcreg_project.settings import BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
 
 NEW_USERNAME_LENGTH = 100
+
+
+"""2 purposes of Monkey Patch:
+Make user name longer since I use emails, and methods I've added to the User class.
+I know that monkey patching is frowned upon, but I thought it the lesser of 2
+evils, between monkey patching and using a custom User model.
+These methods are peppered all over the views, templates, etc,
+so changing them is ill-advised.
+Sometimes models are imported in method to avoid circular import.
+"""
 
 
 def monkey_patch_username():
@@ -16,22 +29,6 @@ def monkey_patch_username():
             v.limit_value = NEW_USERNAME_LENGTH
 
 monkey_patch_username()
-
-
-from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
-from django.db.models import Q
-
-from rcreg_project.settings import BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
-
-
-"""This whole file is methods I've added to the User class.
-I know that monkey patching is frowned upon, but I thought it the lesser of 2
-evils, between monkey patching and using a custom User model.
-These methods are peppered all over the views, templates, etc,
-so changing them is ill-advised.
-Sometimes models are imported in method to avoid circular import.
-"""
 
 
 def is_a_boss(self):

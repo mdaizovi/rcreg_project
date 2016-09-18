@@ -69,13 +69,8 @@ SKILL_LEVEL_ACT = (
 # Unless you're smarter than I am, which you may very well be.
 SKILL_LEVEL_TNG = tuple(list(SKILL_LEVEL_ACT[:2])
         + [tuple(SKILL_LEVEL_ACT[-2])])
-# SKILL_LEVEL_CHG = tuple([tuple(SKILL_LEVEL_ACT[0])]
-#         + list(SKILL_LEVEL_ACT[2:]))
-#shirting awat form letting games have no skill
-SKILL_LEVEL_CHG = SKILL_LEVEL_ACT[2:]
 # end weirdness.
-
-
+SKILL_LEVEL_CHG = SKILL_LEVEL_ACT[2:]
 SKILL_LEVEL = SKILL_LEVEL_SK8R + SKILL_LEVEL_ACT
 PASS_TYPES = (('MVP', 'MVP'), ('Skater', 'Skater'), ('Offskate', 'Offskate'))
 

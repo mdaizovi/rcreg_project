@@ -67,7 +67,7 @@ class RosterAdmin(ImportExportModelAdmin):
     list_display = ('name', 'captain', 'challenge_name', 'con', 'cap')
     list_display_links = list_display
     search_fields = ('name', 'captain__sk8name', 'captain__first_name',
-            'captain__last_name'
+            'captain__last_name',
             )
     filter_horizontal = ('participants',)
     list_filter = ('con', 'skill', 'gender', 'intl')

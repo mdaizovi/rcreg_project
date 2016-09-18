@@ -75,11 +75,6 @@
         <h3 class="text-center">Edit Team Details</h3>
 
         {%if save_attempt %}
-        {% if captain_conflict %}
-          <div class="alert alert-danger" role="alert">Making these changes to
-            {% for criteria in problem_criteria %}{%if not forloop.first %} and{%endif%}<b>{{criteria}}</b>{%endfor%}
-            would make you ineligible for this team and would leave it without a captain. Changes not made.
-          </div>{%endif%}
 
         {% if opp_skill_msg %}
             <div class="alert alert-warning" role="alert">{{opp_skill_msg}}</div>{%endif%}
