@@ -418,7 +418,8 @@ def know_thyself(request, con_id=None):
 
         elif r.pass_type=="Offskate":
             offsk8_pass.append(r)
-            if len(r.user.registrant_set.all())>1:
+
+            if r.user and len(r.user.registrant_set.all())>1:
                 return_offsk8.append(r)
             else:
                 first_offsk8.append(r)
@@ -555,7 +556,7 @@ def know_thyself(request, con_id=None):
     for t in state_tups:
         states.append(t[1])
 
-    occurrences=list(Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).select_related('challenge').select_related('challenge__roster1').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2').prefetch_related('challenge__roster2__participants').select_related('training').prefetch_related('training__coach').prefetch_related('training__registered').prefetch_related('training__auditing')) #17 hits
+    occurrences=list(Occurrence.objects.filter(start_time__gte=con.start,end_time__lte=con.end).select_related('challenge').select_related('challenge__roster1').prefetch_related('challenge__roster1__participants').select_related('challenge__roster2').prefetch_related('challenge__roster2__participants').select_related('training').prefetch_related('training__coach')) #17 hits
 
     challenges=[]
     trainings=[]
@@ -573,7 +574,7 @@ def know_thyself(request, con_id=None):
         for roster in [o.challenge.roster1,o.challenge.roster2]:
             if roster:
                 cr_total+=roster.participants.count()
-        if o.challenge.is_a_game:
+        if o.challenge.gametype == "6GAME":
             games.append(o)
     c_tup=((len(challenges)-len(games)),c_dur, cr_total,len(games))
 
