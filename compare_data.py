@@ -2,18 +2,96 @@ import csv
 import os
 import datetime
 from rcreg_project.settings import BASE_DIR
-from rcreg_project.extras import remove_punct,ascii_only,ascii_only_no_punct
+from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
 import openpyxl
 import collections
 
-
+from con_event.models import  Con, MatchingCriteria, Registrant, SKILL_LEVEL_CHG, SKILL_LEVEL_TNG, GENDER
 from scheduler.models import Challenge, Roster
+
+from django.db import models
 from django.db.models import Q
+import random, string
+from django.utils import timezone
 
 
 #real rollertron has about 49 rosters with no skill, and i couldn't run skill mismatch bc some had no opponent
 #wrote around it, need to test.
 #then get a way to get average skill and see if i can just change it to that.
+
+
+
+
+def random_roster(con):
+    rand_gen = random.choice(GENDER)[0]
+    ran_skill = random.choice(SKILL_LEVEL_CHG)[0]
+    ran_name = ''.join(random.choice(string.lowercase) for i in range(10))
+    r1 = Roster(skill=ran_skill, gender=rand_gen, name=ran_name, con=con)
+    skills_a = r1.skills_allowed()
+    gender_a = r1.genders_allowed()
+
+    er = list(Registrant.objects.filter(con=con, skill__in=skills_a, gender__in=gender_a))
+    cap1 = random.choice(er)
+    r1.captain = cap1
+
+    return r1
+
+def random_training(con, user_list):
+    ran_skill = random.choice(SKILL_LEVEL_TNG)[0]
+    ran_name = ''.join(random.choice(string.lowercase) for i in range(7))
+    ran_onsk8s = [True, True, True, False]
+    ran_sess = [1,1,1,2,1,1,1]
+    t1 = Training(skill=ran_skill, name=ran_name, onsk8s=random.choice(ran_onsk8s), sessions=random.choice(ran_sess))
+
+    er = list(Coach.objects.filter(user__in = user_list))
+    coach = random.choice(er)
+    t1.coach = coach
+
+    return t1
+
+
+def make_act():
+
+    con = Con.objects.get(pk=3)
+
+    cno = 0
+    tno = 0
+
+    while cno < 200:
+        r1 = random_roster(con)
+        r2 = random_roster(con)
+        chal = Challenge(roster1=r1, roster2=r2, captain2accepted=True, RCaccepted=True, submitted_on=timezone.now())
+        try:
+            #r1.save()
+            #r2.save()
+            #chal.save()
+            cno += 1
+            print "challenge saved. ",cno
+        except:
+            print "error."
+
+    user_list = []
+    r_list = list(Registrant.objects.filter(con=con))
+    for r in r_list:
+        user_list.append(r.user)
+
+    while tno < 100:
+        t1 = random_training(con, user_list)
+        try:
+            #t1.save()
+            tno += 1
+            print "training saved. ",tno
+        except:
+            print "error."
+
+
+
+
+
+
+
+
+
 
 
 #no_skill = get_no_skill()
@@ -89,7 +167,7 @@ def get_skill_mismatch():
     print "done"
     print "mismatch roster: ", len(mismatch)
     print "mismatch_challenge: ",len(mismatch_challenge)
-    print "no_cap:" len(no_cap)
+    print "no_cap:", len(no_cap)
     print "incompletec: ",len(incompletec)
     return mismatch, no_cap, incompletec
 

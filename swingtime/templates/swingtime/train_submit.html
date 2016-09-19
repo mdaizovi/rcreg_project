@@ -6,7 +6,7 @@
 <div class="row">
 
     <h3 class="margin-top-10 text-center">Submitted Trainings</h3>
-  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Trainings have been submitted for {{con}} and have not been <a href="{% url 'train_reject' %}">rejected</a></small></h3></td>
+  <table style="width:100%;"><tr><td style="border: none; text-align:center;"><h3><small>These Trainings have been submitted for {{con}} and have neither been <b><a href="{% url 'train_accept' %}">accepted</a></b> nor <b><a href="{% url 'train_reject' %}">rejected</a></b></small></h3></td>
 
 <td style="border: none; text-align:left;">
       <div class="dropdown">

@@ -51,7 +51,11 @@ class ChallengeTable(tables.Table):
             verbose_name="Name",
             attrs={"td":med_minmax, "th":med_minmax})
             )
-    gametype = (tables.Column(
+    skill_display = (tables.Column(
+            verbose_name="Skill",
+            attrs={"td": sm_fixed, "tr": sm_fixed})
+            )
+    activity_type = (tables.Column(
             verbose_name="Game Type",
             attrs={"td": med_minmax, "th": med_minmax})
             )
@@ -93,6 +97,16 @@ class ChallengeTable(tables.Table):
         return mark_safe(string)
 
     #---------------------------------------------------------------------------
+    def render_skill_display(self, value):
+
+        return value
+
+    #---------------------------------------------------------------------------
+    def render_activity_type(self, value):
+
+        return value
+
+    #---------------------------------------------------------------------------
     def render_status(self, value):
 
         return value
@@ -108,7 +122,7 @@ class ChallengeTable(tables.Table):
     class Meta:
 
         model = Challenge
-        fields = ("name", "gametype", "location_type", "duration",
+        fields = ("name", "skill_display","activity_type", "location_type", "duration",
                 "submitted_on", "interest", "status"
                 )
         attrs = {"class": "table table-striped"}

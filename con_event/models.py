@@ -455,6 +455,19 @@ class MatchingCriteria(models.Model):
     intl = models.NullBooleanField(default=False)
 
     #---------------------------------------------------------------------------
+    class Meta:
+        abstract = True
+    # #---------------------------------------------------------------------------
+    # def save(self, *args, **kwargs):
+    #
+    #     if not self.intl:
+    #         # I don't like None, I just leave it for default select widget
+    #         self.intl = False
+    #
+    #     super(MatchingCriteria, self).save()
+    # #---------------------------------------------------------------------------
+
+
     def skills_allowed(self):
         """Used for Rosters/TrainingRosters to indicate
         which skill can be registered.
@@ -593,7 +606,6 @@ class MatchingCriteria(models.Model):
         return gender_tt
 
     #---------------------------------------------------------------------------
-
     def passes_allowed(self):
         """Used for Rosters/TrainingRosters."""
 
@@ -608,20 +620,6 @@ class MatchingCriteria(models.Model):
                     allowed = ['MVP']
 
         return allowed
-
-    #---------------------------------------------------------------------------
-    def save(self, *args, **kwargs):
-
-        if not self.intl:
-            # I don't like None, I just leave it for default select widget
-            self.intl = False
-
-        super(MatchingCriteria, self).save()
-
-    #---------------------------------------------------------------------------
-    class Meta:
-
-        abstract = True
 
 
 #===============================================================================
@@ -757,12 +755,15 @@ class Registrant(MatchingCriteria):
     age_group=models.CharField(max_length=100, null=True, blank=True)
     favorite_part=models.CharField(max_length=100, null=True, blank=True)
     volunteer=models.CharField(max_length=100, null=True, blank=True)
-
     # I don't think internal_notes ever got used.
-    internal_notes = models.TextField(null=True,blank=True)
-
+    internal_notes = models.TextField(null=True, blank=True)
     objects = RegistrantManager()
 
+    #---------------------------------------------------------------------------
+
+    def __unicode__(self):
+
+        return self.name + ": " + str(self.con)
     #---------------------------------------------------------------------------
     @property
     def name(self):
@@ -784,11 +785,6 @@ class Registrant(MatchingCriteria):
             return "%s %s" % (self.first_name, self.last_name)
         else:
             return "Incomplete Name Record"
-
-    #---------------------------------------------------------------------------
-    def __unicode__(self):
-
-        return self.name + ": " + str(self.con)
 
     #---------------------------------------------------------------------------
     def is_intl(self, con):

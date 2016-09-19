@@ -61,7 +61,9 @@ class RosterAdmin(ImportExportModelAdmin):
     fields = (('con', 'name', 'color'), ('captain', 'can_email'),
             ('skill', 'gender', 'intl'), 'participants', 'internal_notes'
             )
-    list_display = ('name', 'captain', 'challenge_name', 'con', 'cap')
+    list_display = ('name', 'captain', 'skill_display', 'gender',
+            'challenge_name', 'con', 'cap'
+            )
     list_display_links = list_display
     search_fields = ('name', 'captain__sk8name', 'captain__first_name',
             'captain__last_name',
@@ -180,8 +182,8 @@ class ChallengeResource(resources.ModelResource):
 #===============================================================================
 class ChallengeAdmin(ImportExportModelAdmin):
 
-    list_display = ('name', 'figurehead_display', 'con', 'gametype',
-            'location_type', 'submitted_on', 'RCaccepted'
+    list_display = ('name', 'figurehead_display', 'skill_display','con',
+            'get_activity_type', 'location_type', 'submitted_on', 'RCaccepted'
             )
     list_display_links = list_display
     search_fields = ('name', 'roster1__name', 'roster2__name',

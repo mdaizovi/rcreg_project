@@ -307,21 +307,22 @@ def chal_submit(
         con = Con.objects.get(pk=con_id)
     else:
         con = Con.objects.most_upcoming()
-
-    q = (Challenge.objects.filter(con=con, RCrejected=False)
+    # in 2016 included accpted, Ivanna complained too many.
+    # for 2017 trying to filter out, only do ones w/no decision.
+    #q = (Challenge.objects.filter(con=con, RCrejected=False)
+    q = (Challenge.objects.filter(con=con, RCaccepted=False, RCrejected=False)
             .exclude(roster1=None)
             .exclude(roster2=None)
             .exclude(submitted_on=None)
             .order_by('submitted_on')
             )
-    #q_od  = collections.OrderedDict()
     q_od = OrderedDict()
 
     data = []
     for c in q:
-        thisdict = {"name": c, "gametype": c.get_gametype_display() ,
-                "location_type": c.location_type, "duration": c.get_duration_display(),
-                "submitted_on": c.submitted_on
+        thisdict = {"name": c, "skill_display": c.skill_display(),
+                "activity_type": c.get_activity_type(), "location_type": c.location_type,
+                "duration": c.get_duration_display(), "submitted_on": c.submitted_on
                 }
         form = ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"] = form
@@ -334,10 +335,12 @@ def chal_submit(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
+        sort_data = []
         for dic in data:
             chal = dic.get("name")
-            if chal.RCrejected == True:
-                data.remove(dic)
+            if not chal.RCrejected and not chal.RCaccepted:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently rejected.
 
     table = ChallengeTable(data)
     RequestConfig(request,paginate={"per_page": 300}).configure(table)
@@ -369,9 +372,9 @@ def chal_accept(
     q_od = OrderedDict()
     data = []
     for c in q:
-        thisdict = {"name": c, "gametype": c.get_gametype_display(),
-                "location_type": c.location_type, "duration": c.get_duration_display(),
-                "submitted_on": c.submitted_on
+        thisdict = {"name": c, "skill_display": c.skill_display(),
+                "activity_type": c.get_activity_type(), "location_type": c.location_type,
+                "duration": c.get_duration_display(), "submitted_on": c.submitted_on
                 }
         form = ChalStatusForm(request.POST or None, instance=c,prefix=str(c.pk))
         thisdict["status"] = form
@@ -384,10 +387,12 @@ def chal_accept(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
-            for dic in data:
-                chal = dic.get("name")
-                if chal.RCaccepted == False:
-                    data.remove(dic)
+        sort_data = []
+        for dic in data:
+            chal = dic.get("name")
+            if chal.RCaccepted:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently rejected.
 
     table = ChallengeTable(data)
     RequestConfig(request,paginate={"per_page": 300}).configure(table)
@@ -416,9 +421,9 @@ def chal_reject(
     q_od = OrderedDict()
     data = []
     for c in q:
-        thisdict = {"name": c, "gametype": c.get_gametype_display(),
-                "location_type": c.location_type, "duration": c.get_duration_display(),
-                "submitted_on": c.submitted_on
+        thisdict = {"name": c, "skill_display": c.skill_display(),
+                "activity_type": c.get_activity_type(), "location_type": c.location_type,
+                "duration": c.get_duration_display(), "submitted_on": c.submitted_on
                 }
         form = ChalStatusForm(request.POST or None, instance=c, prefix=str(c.pk))
         thisdict["status"] = form
@@ -431,10 +436,12 @@ def chal_reject(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
-            for dic in data:
-                chal = dic.get("name")
-                if chal.RCrejected == False:
-                    data.remove(dic)
+        sort_data = []
+        for dic in data:
+            chal = dic.get("name")
+            if chal.RCrejected:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently ineligible.
 
     table = ChallengeTable(data)
     RequestConfig(request,paginate = {"per_page": 300}).configure(table)
@@ -457,8 +464,10 @@ def train_submit(
         con = Con.objects.get(pk=con_id)
     else:
         con = Con.objects.most_upcoming()
-
-    q = Training.objects.filter(con=con, RCrejected=False).order_by('created_on')
+    # in 2016 included accpted, Ivanna complained too many.
+    # for 2017 trying to filter out, only do ones w/no decision.
+    #q = Training.objects.filter(con=con, RCrejected=False).order_by('created_on')
+    q = Training.objects.filter(con=con, RCaccepted=False, RCrejected=False).order_by('created_on')
     q_od = OrderedDict()
     data = []
     for c in q:
@@ -477,10 +486,12 @@ def train_submit(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
+        sort_data = []
         for dic in data:
             train = dic.get("name")
-            if train.RCrejected == True:
-                data.remove(dic)
+            if not train.RCrejected and not train.RCaccepted:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently rejected.
 
     table = TrainingTable(data)
     RequestConfig(request, paginate={"per_page": 300}).configure(table)
@@ -524,10 +535,12 @@ def train_accept(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
+        sort_data = []
         for dic in data:
             train = dic.get("name")
-            if train.RCaccepted == False:
-                data.remove(dic)
+            if train.RCaccepted:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently changed.
 
     table = TrainingTable(data)
     RequestConfig(request, paginate={"per_page": 300}).configure(table)
@@ -571,10 +584,12 @@ def train_reject(
             if form.is_valid():
                 this_instance = form.save()
                 save_success += 1
+        sort_data = []
         for dic in data:
             train = dic.get("name")
-            if train.RCrejected == False:
-                data.remove(dic)
+            if train.RCrejected:
+                sort_data.append(dic)
+        data = sort_data  #to remove recently changed.
 
     table = TrainingTable(data)
     RequestConfig(request,paginate={"per_page": 300}).configure(table)

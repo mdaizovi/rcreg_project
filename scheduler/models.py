@@ -239,20 +239,6 @@ class Roster(MatchingCriteria):
         return names
 
     #---------------------------------------------------------------------------
-    @property
-    def challenge(self):
-        """Returns  Challenge Roster is attached to.
-        Should only be 1, this is like a practice before transitioning
-        from fk to 1:1
-        """
-        challenge = None
-        chals = list(self.roster1.all()) + list(self.roster2.all())
-        if len(chals) == 1:
-            challenge = chals[0]
-
-        return challenge
-
-    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
         # Remove non-ascii, puncuation, from name.
         string_fields = ['name']
@@ -518,7 +504,6 @@ class Roster(MatchingCriteria):
         return allowed
 
     #---------------------------------------------------------------------------
-
     def opp_cap_skills_allowed(self):
         """Calls opponent_skills_allowed to find out which skills opposing
         captains can have. Is same, but minus the O.
@@ -538,7 +523,6 @@ class Roster(MatchingCriteria):
         return trimmed
 
     #---------------------------------------------------------------------------
-
     def genders_allowed(self):
         """Coed teams can have registrants of any gender. Otherwise needs to
         match, but registrants who select na/coed can play on any team.
@@ -1269,7 +1253,6 @@ class Activity(models.Model):
             loc_str = "Xsk8 Athletic "
         elif self.location_type == 'Seminar/Conference Room':
             loc_str = "Xsk8  "
-
 
         if self.is_a_training():
             loc_str += ("(" + self.duration +" Hrs)")
