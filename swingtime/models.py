@@ -89,7 +89,8 @@ class OccurrenceManager(models.Manager):
         possibles = all_act_data.keys()
 
         for act in possibles:
-            this_act_data={}
+            print "act ",act
+            this_act_data = {}
 
             # Start gathering locaiton per activity
             if act.location_type =='Flat Track':
@@ -131,10 +132,11 @@ class OccurrenceManager(models.Manager):
                             )
             else:
                 act_locations = all_locations.filter(
-                        venue__in=venues,location_type=act.location_type
+                        venue__in=venues, location_type=act.location_type
                         )
 
-            this_act_data["locations"]=act_locations
+            this_act_data["locations"] = act_locations
+            print "act_locations ",act_locations
             # End gathering locaiton per activity #
 
             # Start interest, activity type, per activity
@@ -381,14 +383,14 @@ class OccurrenceManager(models.Manager):
                                     level1pairs[(act, o, "+/- Interest but no Conflicts")] = L1Check(prefix=prefix)
                                     taken_os.append(o)
                                     l15.remove(o)
-                                    oselected=True
-                                    for l in [figs,parts]:
+                                    oselected = True
+                                    for l in [figs, parts]:
                                         for r in l:
                                             r_busy = busy.get(r)
                                             r_busy.append(o)
                                     break
                                 else:  # If participant intersect
-                                    l1.remove(o)
+                                    l15.remove(o)
                                     if o not in l2:
                                         l2.append(o)
                             else:
@@ -413,9 +415,9 @@ class OccurrenceManager(models.Manager):
                                 l2.remove(o)
                                 oselected = True
 
-                                for l in [figs,parts]:
+                                for l in [figs, parts]:
                                     for r in l:
-                                        r_busy=busy.get(r)
+                                        r_busy = busy.get(r)
                                         r_busy.append(o)
                                 break
                             else:

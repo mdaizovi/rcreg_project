@@ -457,15 +457,16 @@ class MatchingCriteria(models.Model):
     #---------------------------------------------------------------------------
     class Meta:
         abstract = True
-    # #---------------------------------------------------------------------------
-    # def save(self, *args, **kwargs):
-    #
-    #     if not self.intl:
-    #         # I don't like None, I just leave it for default select widget
-    #         self.intl = False
-    #
-    #     super(MatchingCriteria, self).save()
-    # #---------------------------------------------------------------------------
+        
+    #---------------------------------------------------------------------------
+    def save(self, *args, **kwargs):
+
+        if not self.intl:
+            # I don't like None, I just leave it for default select widget
+            self.intl = False
+
+        super(MatchingCriteria, self).save()
+    #---------------------------------------------------------------------------
 
 
     def skills_allowed(self):

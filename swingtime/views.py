@@ -859,7 +859,7 @@ def sched_assist_tr(
     slots = act.sched_conflict_score(level=level, makedummies=makedummies)
 
     context_dict = {'level': level, 'form': form, 'act': act, 'slots': slots,
-            'training': act, 'challenge': None
+            'training': act, 'challenge': None, 'coaches' :list(act.coach.all())
             }
 
     return render(request, template, context_dict)
@@ -895,8 +895,8 @@ def sched_assist_ch(
 
     slots = act.sched_conflict_score(level=level, makedummies=makedummies)
 
-    context_dict = {'level': level, 'form': form, 'act': act,
-            'slots': slots, 'training' :None, 'challenge': act
+    context_dict = {'level': level, 'form': form, 'act': act, 'slots': slots,
+            'training' :None, 'challenge': act, 'coaches' : []
             }
 
     return render(request, template, context_dict)

@@ -9,9 +9,10 @@
 {%else%}
 <div class="col-sm-12">
     <h3 class="margin-top-10 text-center">Schedule Assistant: <a href="{{act.get_view_url}}"><b>{{act.name}}</b></a>
-      {%if act.communication%}<br>{%if act.is_a_training%}<a href="{{act.get_edit_url}}">{%else%}<a href="{{act.get_view_url}}">{%endif%}<span class="glyphicon glyphicon-pencil" aria-hidden="true" ><b><i> See Communication</b></i></span></a>{%endif%}
-      <br>
-    <small>{{act.get_activity_type}}{%if act.is_a_challenge %}, {{act.skill_display}}, {{act.gender_display}}{%endif%}</small></h3>
+      <br><small>{% for coach in coaches%}<a href="{{coach.get_my_schedule_url}}">{{coach.user.first_name}} <span class="glyphicon glyphicon-calendar" aria-hidden="true" ></span></a>{%endfor%}
+
+      {%if act.communication%}<br>{%if act.is_a_training%}<a href="{{act.get_edit_url}}">{%else%}<a href="{{act.get_view_url}}">{%endif%}<span class="glyphicon glyphicon-pencil" aria-hidden="true" ><b><i> See Communication</b></i></span></a><br>{%endif%}
+    {{act.get_activity_type}}{%if act.is_a_challenge %}, {{act.skill_display}}, {{act.gender_display}}{%endif%}</small></h3>
 
     <div class="col-sm-6">
       <div class="well well-lg">
