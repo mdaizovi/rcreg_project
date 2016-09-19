@@ -4,26 +4,64 @@
 
 {% block main_content %}
 
-    <h3 class="margin-top-10 text-center">Welcome to the real purpose of RollerTron</h3>
-    <p class="lead margin-top-10">Hello Khaleesi, you are the only one that can access any of these pages.<br>
-      In the grey navbar above you'll see 4 sections:</p>
-      <ul class="lead">
-        <li>Upcoming Con</li>
-        <li>Challenges</li>
-        <li>Trainings</li>
-        <li>Schedule</li></ul>
+    <h3 class="margin-top-10 text-center">Calendar: FAQ<br><small>Reminders in case you forget how this all works</small></h3>
+    <hr>
+    <div class="row">
+      <div class="col-sm-12 center-block">
+          <p>&nbsp;</p>
+        <div class="col-sm-8" style="font-size: 17px;">
 
-    <p class="lead margin-top-10">The <b>Upcoming Con</b> dropdown will let you manually schedule any Accepted Challenges and Trainings for the most upcoming Con.</p>
-  <p class="lead margin-top-10">Before making use of that, you're going to need to use the <b>Challenges</b> and <b>Trainings</b> dropdowns to decide which submitted activities you
-want to accept.
-<b>Submitted</b> will show you everything that has been submitted for the Con and has not been rejected. If you reject an activity, it doesn't go away forever, but it will be put aside and only accessible from the <b>Rejected</b> page,
-so you don't need to see things you know you don't want every time you look at Submitted Challenges or Activities.<br>
-<b>Accepted</b> will only show you those you've accepted.</p>
+        <span class="anchor" id="whocansee"></span>
+        <p><b>Who can see this page?</b></p>
+        <p>Only the Khaleesi.</p>
+        <p>&nbsp;</p>
 
-  <p class="lead margin-top-10">The rightmost dropdown pertains to the <b>Schedule</b>.<br>
-    you can look at <b>Scheduled</b> at any time to see what you've already put on the schedule.<br>
-     <b>Un-Scheduled</b> is where the schedule hole-filler will eventually live, but it doesn't yet.<br>
-     When you think you're almost done, you can go to <b>Status</b> to make the tentative schedule visible on the site,
-     or make it final. At that point, users will no longer be able to delete Challenges or Trainings that have been put on the schedule; you will be the only one that can do that.</p>
+        <span class="anchor" id="selectact"></span>
+        <p><b>How do I select activities to schedule?</b></p>
+        <p>Use the <b>Challenges</b> and <b>Trainings</b> dropdowns on this page (top grey column) to decide which submitted activities you
+        want to accept.
+        <b>Submitted</b> will show you everything that has been submitted for the Con and has neither been accepted, nor rejected. If you reject an activity,
+        it doesn't go away forever, but it will be put aside and only accessible from the <b>Rejected</b> page,
+        so you don't need to see things you know you don't want every time you look at Submitted Challenges or Activities.<br>
+        <b>Accepted</b> will only show you those you've accepted.</p>
+        <p>&nbsp;</p>
+
+        <span class="anchor" id="howotto"></span>
+        <p><b>How do I use the Auto Scheduler?</b></p>
+        <p>First, you need to decide Approve some Challenges or Trainings, because Otto only picks up on accepted activities.
+        Next, you need to make some empty Occurrences to be filled; the <b>Upcoming Con</b> dropdown will take you to the days.
+        Then, <b><a href = "{% url 'act_unsched'%}">Un-Scheduled</a></b> (from the Schedule dropdown, right-hand side) will show you everything you've approved but haven't scheduled.
+        From there it's pretty self-explanatory.</p>
+        <p>&nbsp;</p>
+
+        <span class="anchor" id="howasst"></span>
+        <p><b>How do I get scheduling assistance, if I don't want it to be auto-scheduled
+          but still want to know about Blackouts and conflicts?</b></p>
+        <p>Two ways:<br>
+        1) If you make the occurrence with the calender, choose the challenge or training in the form and click "Check Schedule." That will look for any conflicts and let you know.<br>
+        Or, if you go to <a href = "{% url 'act_unsched'%}">Un-Scheduled</a>, click on the number for blackouts for that activity, and that will take you to the
+        Schedule Assistant page that lets you see possible matching empty Occurrences. </p>
+        <p>&nbsp;</p>
+
+        <span class="anchor" id="howvis"></span>
+        <p><b>How do I make the schedule visible on the site?</b></p>
+        <p>From the rightmost Schedule dropdown, go to "Status". There you can make the schedule "visible", so it will show up on the
+          main Challenge and Training home pages. You can also make it "final", which will mean that only you can delete challenges or trainings that have been scheduled. </p>
+        <p>&nbsp;</p>
+
+        </div>
+
+<div class="col-sm-4">
+  <ul style="font-size: 17px;">
+  <li><a href="#whocansee">Who can see this page?</a></li>
+  <li><a href="#selectact">How do I select activities to schedule?</a></li>
+  <li><a href="#howotto">How do I use the Auto Scheduler?</a></li>
+  <li><a href="#howasst">How do I get scheduling assistance, if I don't want it to be auto-scheduled
+    but still want to know about Blackouts and conflicts?</a></li>
+  <li><a href="#howvis">How do I make the schedule visible on the site?</a></li>
+  </ul>
+
+      </div>
+    </div>
 
 {% endblock %}
