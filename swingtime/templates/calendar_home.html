@@ -18,7 +18,7 @@
 
         <span class="anchor" id="selectact"></span>
         <p><b>How do I select activities to schedule?</b></p>
-        <p>Use the <b>Challenges</b> and <b>Trainings</b> dropdowns on this page (top grey column) to decide which submitted activities you
+        <p>Use the <b>Challenges</b> and <b>Trainings</b> dropdowns on this page (middle top grey dropdowns) to decide which submitted activities you
         want to accept.
         <b>Submitted</b> will show you everything that has been submitted for the Con and has neither been accepted, nor rejected. If you reject an activity,
         it doesn't go away forever, but it will be put aside and only accessible from the <b>Rejected</b> page,
@@ -28,8 +28,8 @@
 
         <span class="anchor" id="howotto"></span>
         <p><b>How do I use the Auto Scheduler?</b></p>
-        <p>First, you need to decide Approve some Challenges or Trainings, because Otto only picks up on accepted activities.
-        Next, you need to make some empty Occurrences to be filled; the <b>Upcoming Con</b> dropdown will take you to the days.
+        <p>First, you need to approve some Challenges or Trainings, because Otto only picks up on accepted activities.
+        Next, you need to make some empty Occurrences to be filled; the <b>Upcoming Con</b> dropdown (left-most dropdown) will take you to the days.
         Then, <b><a href = "{% url 'act_unsched'%}">Un-Scheduled</a></b> (from the Schedule dropdown, right-hand side) will show you everything you've approved but haven't scheduled.
         From there it's pretty self-explanatory.</p>
         <p>&nbsp;</p>
@@ -41,6 +41,12 @@
         1) If you make the occurrence with the calender, choose the challenge or training in the form and click "Check Schedule." That will look for any conflicts and let you know.<br>
         Or, if you go to <a href = "{% url 'act_unsched'%}">Un-Scheduled</a>, click on the number for blackouts for that activity, and that will take you to the
         Schedule Assistant page that lets you see possible matching empty Occurrences. </p>
+        <p>&nbsp;</p>
+
+        <span class="anchor" id="howconfl"></span>
+        <p><b>How do I check a coach's schedule for conflicts?</b></p>
+        <p>You can check the entire schedule for any coach or captain conlficts by selecting "Check Conflicts" from the "Schedule" dropdown on the right.<br>
+        You can also look at individual coach schedules by clicking on the calendar icno that you see on the training or coach page. Only the Khaleesi can see this icon and follow this link.</p>
         <p>&nbsp;</p>
 
         <span class="anchor" id="howvis"></span>
@@ -58,7 +64,8 @@
   <li><a href="#howotto">How do I use the Auto Scheduler?</a></li>
   <li><a href="#howasst">How do I get scheduling assistance, if I don't want it to be auto-scheduled
     but still want to know about Blackouts and conflicts?</a></li>
-  <li><a href="#howvis">How do I make the schedule visible on the site?</a></li>
+  <li><a href="#howvis">How do I check a coach's schedule for conflicts?</a></li>
+  <li><a href="#howconfl">How do I make the schedule visible on the site?</a></li>
   </ul>
 
       </div>

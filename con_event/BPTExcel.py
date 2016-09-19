@@ -144,19 +144,35 @@ class BPTUploadForm(forms.Form):
         last_email = None
         bad_emails = []
 
+        def get_email(od):
+            email = od.get("AB")
+            if not email or len(email) < 5:  # 5 is arbitrary
+                email = od.get("Q")
+            return email
+
+        # First get the emails on thir own, always same field.
+        for od in all_data:
+            email = get_email(od)
+            if email:
+                email_list.append(email)
+
         for od in all_data:
             sk8name = od.get("AC")
             first_name = od.get("AA")
             last_name = od.get("Z")
-            email2 = od.get("AB")
-            email_list.append(email2)
+            email = get_email(od)
 
-            if not sk8name or not first_name or not last_name:
+            if email:
+                emailcount = email_list.count(email)
+
+                if emailcount > 1:
+                    bad_emails.append(od)
+                elif email and sk8name and first_name and last_name:
+                    complete_entries.append(od)
+                else:
+                    no_sk8_or_real_name.append(od)
+            else:  # slight misnomer-- no email gets you here.
                 no_sk8_or_real_name.append(od)
-            elif int(email_list.count(email2)) > 1:
-                bad_emails.append(od)
-            elif email2 and sk8name and first_name and last_name:
-                complete_entries.append(od)
 
         return no_sk8_or_real_name, bad_emails, complete_entries
 
@@ -267,6 +283,7 @@ class BPTUploadForm(forms.Form):
 
                         if reg_q.count() == 1:
                             this_reg = reg_q[0]
+
                         else:
                             try:
                                 # If email already exists for con,
@@ -328,7 +345,7 @@ class BPTUploadForm(forms.Form):
 
         # Make the registrants you can, tell them about the ones you couldn't.
         reg_made, errors_list, email_dupe = (
-                self.import_from_od(complete_entries,con)
+                self.import_from_od(complete_entries, con)
                 )
 
         bad_emails += email_dupe
