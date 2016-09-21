@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from con_event.signals import (update_user_fl_name, delete_homeless_user,
         clean_registrant_import, match_user, sync_reg_permissions)
+from monkey_patch.models import NEW_USERNAME_LENGTH
 from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
 from rcreg_project.settings import BPT_Affiliate_ID
 from scheduler.app_settings import MAX_CAPTAIN_LIMIT
@@ -457,7 +458,7 @@ class MatchingCriteria(models.Model):
     #---------------------------------------------------------------------------
     class Meta:
         abstract = True
-        
+
     #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
 
@@ -726,7 +727,7 @@ class Registrant(MatchingCriteria):
     pass_type = (models.CharField(
             max_length=30, choices=PASS_TYPES, default='MVP')
             )
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(max_length=NEW_USERNAME_LENGTH)
     # Email can't be unique=true across the board bc
     # same email for same person for different cons.
     first_name = models.CharField(max_length=30)
