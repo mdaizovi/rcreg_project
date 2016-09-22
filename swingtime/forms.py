@@ -100,6 +100,7 @@ ISO_WEEKDAYS_MAP = (
 MINUTES_INTERVAL = swingtime_settings.TIMESLOT_INTERVAL.seconds // 60
 SECONDS_INTERVAL = utils.time_delta_total_seconds(swingtime_settings.DEFAULT_OCCURRENCE_DURATION)
 
+
 #-------------------------------------------------------------------------------
 def timeslot_options(
     interval=swingtime_settings.TIMESLOT_INTERVAL,
@@ -153,6 +154,7 @@ def timeslot_offset_options(
 
     return options
 
+#-------------------------------------------------------------------------------
 default_timeslot_options = timeslot_options()
 default_timeslot_offset_options = timeslot_offset_options()
 
@@ -316,6 +318,7 @@ class DLCloneForm(forms.Form):
 
 #===============================================================================
 class SlotCreate(forms.Form):
+    
     def __init__(self, *args, **kwargs):
         super(SlotCreate, self).__init__(*args, **kwargs)
         self.fields["slot_create"] = forms.BooleanField(
@@ -333,6 +336,7 @@ class SlotCreate(forms.Form):
 
 #===============================================================================
 class L1Check(forms.Form):
+
     def __init__(self, *args, **kwargs):
         super(L1Check, self).__init__(*args, **kwargs)
 

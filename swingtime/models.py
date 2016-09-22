@@ -31,6 +31,7 @@ from swingtime.conf import settings as swingtime_settings
 I started off with Swingtime and changed a lot for RollerCon's specifications.
 So if you're familiar with Swingtime, this may be very different.
 Also, that explains style inconsistency between old code and my add-ons.
+Swingtime is a great app. I just had other stuff that I wanted as well.
 """
 
 

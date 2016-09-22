@@ -167,7 +167,6 @@ class OccurrenceResource(resources.ModelResource):
 
         return real_names
 
-
     #---------------------------------------------------------------------------
     def dehydrate_description(self, occurrence):
 
@@ -215,6 +214,7 @@ class OccurrenceResource(resources.ModelResource):
         export_order = fields
         skip_unchanged = True
         report_skipped = True
+
 
 #===============================================================================
 class OccurrenceAdmin(ImportExportModelAdmin):
@@ -271,5 +271,6 @@ class TrainingRosterAdmin(admin.ModelAdmin):
         return super(TrainingRosterAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
+#-------------------------------------------------------------------------------
 admin.site.register(Occurrence, OccurrenceAdmin)
 admin.site.register(TrainingRoster, TrainingRosterAdmin)

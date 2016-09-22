@@ -35,6 +35,7 @@ if swingtime_settings.CALENDAR_FIRST_WEEKDAY is not None:
 no_list = ["", u'', None, "None"]
 
 
+#-------------------------------------------------------------------------------
 @login_required
 def conflict_check(
     request,
@@ -44,9 +45,8 @@ def conflict_check(
 ):
     """Checks to see if any coaches or captains have schedule conflicts.
     Big mess of code but can check all coaches in 2 seconds and 1 db hit per coach.
-    Sacrifice readability for speed. No regrets.
+    Sacrificed readability for speed. No regrets.
     """
-    #start = datetime.now()
 
     if con_id:
         try:
@@ -178,14 +178,6 @@ def conflict_check(
             busy1 = busy_figurehead
             busy2 = busy
 
-        elif 'registrant' in request.POST:
-            registrant_search = True
-            active = "registrant"
-            #relevant_reg=all_participants
-            relevant_reg = []
-            busy1 = busy
-            busy2 = busy
-
         related_blackouts = (Blackout.objects.filter(
                 registrant__in=relevant_reg)
                 .prefetch_related('registrant')
@@ -195,14 +187,6 @@ def conflict_check(
             r_busy = busy.get(b.registrant)
             tempo = b.make_temp_o()
             r_busy.append(tempo)
-            # if b.registrant in busy_figurehead:
-            #     fig_busy=busy_figurehead.get(b.registrant)
-            #     tempo=b.make_temp_o()
-            #     fig_busy.append(tempo)
-            # else:
-            #     r_busy=busy.get(b.registrant)
-            #     tempo=b.make_temp_o()
-            #     r_busy.append(tempo)
 
         for r in relevant_reg:
             hard_conflict = []
@@ -234,7 +218,6 @@ def conflict_check(
                 soft_conflict.sort(key=lambda o:(o.start_time, o.end_time))
                 relevant_soft_conflicts.append({r:soft_conflict})
 
-    #elapsed = datetime.now()-start
     return render(request, template, {
         'con':con,
         'active':active,
@@ -368,7 +351,6 @@ def chal_accept(
     q = (Challenge.objects.filter(con=con, RCaccepted=True)
             .exclude(submitted_on=None).order_by('submitted_on')
             )
-    #q_od = collections.OrderedDict()
     q_od = OrderedDict()
     data = []
     for c in q:
@@ -601,7 +583,6 @@ def train_reject(
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
-
 @login_required
 def act_unsched(
     request,
@@ -757,7 +738,6 @@ def act_unsched(
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
-
 @login_required
 def act_sched(
     request,
@@ -912,7 +892,6 @@ def calendar_home(
     return render(request, template, extra_context)
 
 #-------------------------------------------------------------------------------
-
 @login_required
 def occurrence_view(
     request,
@@ -985,7 +964,6 @@ def occurrence_view(
             'occurrence': occurrence, 'form': form
             }
     return render(request, template, context_dict)
-
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -1288,9 +1266,7 @@ def day_clone(request, con_id=None, template='swingtime/day_clone.html', **param
 
     return render(request, template, context_dict)
 
-
 #-------------------------------------------------------------------------------
-
 @login_required
 def today_view(request, template='swingtime/daily_view.html', **params):
     '''
@@ -1345,7 +1321,6 @@ def year_view(request, year, template='swingtime/yearly_view.html', queryset=Non
 
     })
 
-
 #-------------------------------------------------------------------------------
 @login_required
 def month_view(
@@ -1388,6 +1363,7 @@ def month_view(
     # month but end in this month?
     queryset = queryset._clone() if queryset is not None else Occurrence.objects.select_related()
     occurrences = queryset.filter(start_time__year=year, start_time__month=month)
+
 
     def start_day(o):
         return o.start_time.day

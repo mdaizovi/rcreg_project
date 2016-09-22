@@ -66,6 +66,7 @@ Save Training</button>
 <button type="submit" class="btn btn-primary margin-top-10" >Propose</button>
 {%endif%}
 </form>
+</div>
 
 
 {%else%}<!-- if not formlist -->
@@ -75,14 +76,12 @@ Save Training</button>
 {%else%}
 {%if training_made %}
 <div class="alert alert-success" role="alert">Training {{ training_made.name}} Sucessfully proposed! Please see <a href="{%url 'my_trainings'%}" class="alert-link"> My Trainings</a> to edit
-and update your <a href="{% url 'coach_profile' %}" class="alert-link">Coaching Profile</a> if you haven't already.
-</div>
+and update your <a href="{% url 'coach_profile' %}" class="alert-link">Coaching Profile</a> if you haven't already.</div>
 {%endif%}<!--<end if training made, -->
 {%endif%}<!--<end if add_fail -->
 
-
 {%endif%}<!--<end if form -->
-</div>
+
 
 {%else%} <!--if not upcoming_registrants -->
 <div class="alert alert-danger" role="alert">In order to propose a training, you need have a Skater, MVP, or Off-Skates pass for an upcoming RollerCon, which you do not.<br>
