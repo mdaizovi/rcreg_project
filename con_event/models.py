@@ -210,7 +210,6 @@ class Con(models.Model):
 
     #---------------------------------------------------------------------------
     class Meta:
-
         ordering = ('-start',)
         unique_together = ('city', 'year')
 
@@ -467,9 +466,8 @@ class MatchingCriteria(models.Model):
             self.intl = False
 
         super(MatchingCriteria, self).save()
+
     #---------------------------------------------------------------------------
-
-
     def skills_allowed(self):
         """Used for Rosters/TrainingRosters to indicate
         which skill can be registered.
@@ -577,7 +575,6 @@ class MatchingCriteria(models.Model):
             return "fa fa-mars"
         elif self.gender == GENDER[2][0]:  # If na/coed
             return "fa fa-venus-mars"
-
 
     #---------------------------------------------------------------------------
     def gender_text(self):
@@ -717,6 +714,7 @@ class RegistrantManager(models.Manager):
 
         return eligibles
 
+
 #===============================================================================
 class Registrant(MatchingCriteria):
 
@@ -762,7 +760,6 @@ class Registrant(MatchingCriteria):
     objects = RegistrantManager()
 
     #---------------------------------------------------------------------------
-
     def __unicode__(self):
 
         return self.name + ": " + str(self.con)
@@ -941,7 +938,6 @@ class Registrant(MatchingCriteria):
                         registrant=self, date=date, ampm=ampmitem
                         ))
                 bo2delete.delete()
-
 
     #---------------------------------------------------------------------------
     def get_occurrences(self):
@@ -1173,11 +1169,13 @@ class Registrant(MatchingCriteria):
                 ('con','last_name','first_name','sk8name')
                 )
 
+#-------------------------------------------------------------------------------
 pre_save.connect(clean_registrant_import, sender=Registrant)
 pre_save.connect(match_user, sender=Registrant)
 post_save.connect(update_user_fl_name, sender=Registrant)
 post_save.connect(sync_reg_permissions, sender=Registrant)
 pre_delete.connect(delete_homeless_user, sender=Registrant)
+
 
 #===============================================================================
 class Blog(models.Model):
@@ -1198,7 +1196,6 @@ class Blog(models.Model):
 
     #---------------------------------------------------------------------------
     class Meta:
-
         ordering = ('-date',)
 
     #---------------------------------------------------------------------------

@@ -4,7 +4,7 @@ from django.forms.models import model_to_dict
 from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
 from rcreg_project.settings import BIG_BOSS_GROUP_NAME, LOWER_BOSS_GROUP_NAME
 
-
+#-------------------------------------------------------------------------------
 def update_user_fl_name(sender, instance, **kwargs):
     """post_save signal from Registrant.
     Syncs user first and last name w/ registrant sk8 name and sk8#,
@@ -24,7 +24,7 @@ def update_user_fl_name(sender, instance, **kwargs):
             user.first_name, user.last_name = reg.first_name, reg.last_name
             user.save()
 
-
+#-------------------------------------------------------------------------------
 def delete_homeless_user(sender, instance, **kwargs):
     '''pre_delete from Registrant.
     If this is the only registrant for its user, user is also deleted.
@@ -40,7 +40,77 @@ def delete_homeless_user(sender, instance, **kwargs):
             if (not user.is_staff and not user.is_superuser):
                 user.delete()
 
+#-------------------------------------------------------------------------------
+def match_user(sender, instance, **kwargs):
+    """pre_save signal from Registrant.
+    Looks for user w/ registrant email as user email or username.
+    If > 1 user-- which should not happen-- uses most recently created.
+    If no match, makes new user with a random password.
+    """
 
+    from django.contrib.auth.models import User  # Avoid circular import
+
+    if instance.email and not instance.user:
+        try:
+            # There should only be one User w/ email; should be unique.
+            # In case of 2, get most recent User w/ same email.
+            user_q = list(
+                        user.objects.filter(
+                            Q(username=instance.email) |
+                            Q(email=instance.email)).
+                        latest('id')
+                        )
+            user = user_q[0]
+            created = False
+        except:  # Create new User, no match with Registrant email.
+            user, created = User.objects.get_or_create(username=instance.email)
+
+        if created:
+            password = User.objects.make_random_password()
+            user.set_password(password)
+
+            if instance.sk8name:
+                user.first_name = instance.sk8name
+                if instance.sk8number:
+                    user.last_name = instance.sk8number
+                else:
+                    user.last_name = "X"
+
+            elif instance.first_name and instance.last_name:
+                user.first_name = instance.first_name
+                user.last_name = instance.last_name
+
+            user.email = instance.email
+            user.save()
+
+        # If created over. This runs as long as there was an email and no User.
+        instance.user = user
+        instance.save()
+
+#-------------------------------------------------------------------------------
+def sync_reg_permissions(sender, instance, **kwargs):
+    """post_save from Registrant.
+    If user is in custom BIG_BOSS_GROUP_NAME or LOWER_BOSS_GROUP_NAME groups,
+    gives staff / superuser permissions.
+    Does not work backwards--
+    one can be a staff/superuser without being in a custom group.
+    In case permissions are given piecemeal.
+    """
+
+    user = instance.user
+    groups = user.groups.values_list('name',flat=True)
+
+    if (BIG_BOSS_GROUP_NAME in groups) or (LOWER_BOSS_GROUP_NAME in groups):
+
+        if not user.is_staff:  # Either of these groups makes you staff.
+            user.is_staff = True
+            user.save()
+        if BIG_BOSS_GROUP_NAME in groups:  # Must be Big Boss to get Superuser.
+            if not user.is_superuser:
+                user.is_superuser = True
+                user.save()
+
+#-------------------------------------------------------------------------------
 def clean_registrant_import(sender, instance, **kwargs):
     """pre_save from Registrant. Vestigial, but no reason to delete.
     If import/export app is used to import registrants, this will clean data.
@@ -98,73 +168,3 @@ def clean_registrant_import(sender, instance, **kwargs):
         instance.gender = "Male"
     else:
         instance.gender = "NA/Coed"
-
-
-def match_user(sender, instance, **kwargs):
-    """pre_save signal from Registrant.
-    Looks for user w/ registrant email as user email or username.
-    If > 1 user-- which should not happen-- uses most recently created.
-    If no match, makes new user with a random password.
-    """
-
-    from django.contrib.auth.models import User  # Avoid circular import
-
-    if instance.email and not instance.user:
-        try:
-            # There should only be one User w/ email; should be unique.
-            # In case of 2, get most recent User w/ same email.
-            user_q = list(
-                        user.objects.filter(
-                            Q(username=instance.email) |
-                            Q(email=instance.email)).
-                        latest('id')
-                        )
-            user = user_q[0]
-            created = False
-        except:  # Create new User, no match with Registrant email.
-            user, created = User.objects.get_or_create(username=instance.email)
-
-        if created:
-            password = User.objects.make_random_password()
-            user.set_password(password)
-
-            if instance.sk8name:
-                user.first_name = instance.sk8name
-                if instance.sk8number:
-                    user.last_name = instance.sk8number
-                else:
-                    user.last_name = "X"
-
-            elif instance.first_name and instance.last_name:
-                user.first_name = instance.first_name
-                user.last_name = instance.last_name
-
-            user.email = instance.email
-            user.save()
-
-        # If created over. This runs as long as there was an email and no User.
-        instance.user = user
-        instance.save()
-
-
-def sync_reg_permissions(sender, instance, **kwargs):
-    """post_save from Registrant.
-    If user is in custom BIG_BOSS_GROUP_NAME or LOWER_BOSS_GROUP_NAME groups,
-    gives staff / superuser permissions.
-    Does not work backwards--
-    one can be a staff/superuser without being in a custom group.
-    In case permissions are given piecemeal.
-    """
-    
-    user = instance.user
-    groups = user.groups.values_list('name',flat=True)
-
-    if (BIG_BOSS_GROUP_NAME in groups) or (LOWER_BOSS_GROUP_NAME in groups):
-
-        if not user.is_staff:  # Either of these groups makes you staff.
-            user.is_staff = True
-            user.save()
-        if BIG_BOSS_GROUP_NAME in groups:  # Must be Big Boss to get Superuser.
-            if not user.is_superuser:
-                user.is_superuser = True
-                user.save()

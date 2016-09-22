@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from con_event.models import Con, Registrant, Blackout, SKILL_LEVEL_SK8R
 
-
+#===============================================================================
 class SearchForm(forms.Form):
     """Used by site users to search for registrant to add to roster."""
 
@@ -28,6 +28,7 @@ class SearchForm(forms.Form):
                     'class': 'form-control',
                     })
 
+    #---------------------------------------------------------------------------
     def normalize_query(self, findterms=re.compile(r'"([^"]+)"|(\S+)').findall,normspace=re.compile(r'\s{2,}').sub):
         """Splits the query string in invidual keywords, getting rid of unecessary spaces
         and grouping quoted words together.
@@ -38,6 +39,7 @@ class SearchForm(forms.Form):
         """
         return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(self['search_q'].value())]
 
+    #---------------------------------------------------------------------------
     def get_query(self, search_fields):
         """Returns a query, that is a combination of Q objects. That combination
         aims to search keywords within a model by testing the given search fields.
@@ -60,6 +62,7 @@ class SearchForm(forms.Form):
         return query
 
 
+#===============================================================================
 class RegistrantProfileForm(ModelForm):
     """Used in registrant_profile view"""
 
@@ -87,6 +90,7 @@ class RegistrantProfileForm(ModelForm):
         self.fields['intl'].required = False
         self.fields['pass_type'].required = False
 
+    #---------------------------------------------------------------------------
     class Meta:
         model = Registrant
         fields = [
@@ -98,6 +102,8 @@ class RegistrantProfileForm(ModelForm):
             'pass_type': _("Pass Type"),
         }
 
+
+#===============================================================================
 class EligibleRegistrantForm(forms.Form):
     """Used all over the place for editing
     Roster participants and TrainingRoster participants.
@@ -142,17 +148,9 @@ class EligibleRegistrantForm(forms.Form):
                     })
 
 
+#===============================================================================
 class ConSchedStatusForm(ModelForm):
     """Used in Calendar for Khaleesi, so she doesn't have to go to Admin."""
-
-    class Meta:
-
-        model = Con
-        fields = ['sched_visible', 'sched_final']
-        labels = {
-            'sched_visible': _('Schedule Visible'),
-            'sched_final': _('Schedule Final'),
-        }
 
     def __init__(self, *args, **kwargs):
         super(ConSchedStatusForm, self).__init__(*args, **kwargs)
@@ -162,7 +160,17 @@ class ConSchedStatusForm(ModelForm):
                     'class': 'form-control',
                     })
 
+    #---------------------------------------------------------------------------
+    class Meta:
+        model = Con
+        fields = ['sched_visible', 'sched_final']
+        labels = {
+            'sched_visible': _('Schedule Visible'),
+            'sched_final': _('Schedule Final'),
+        }
 
+
+#===============================================================================
 class AvailabilityForm(forms.Form):
     """Used to get Blackouts from Captains and Coaches for scheduling purposes.
     Shows up in My Profile, if they're coaching or captining.

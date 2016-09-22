@@ -60,11 +60,10 @@ def upload_reg(request):
             context_instance=RequestContext(request)
             )
 
-
 #-------------------------------------------------------------------------------
 def CheapAirDynamic(request):
     '''Looks nice to fill the flight search with upcoming con data;
-    search doesn't work. Think it's their fault, not mine, though'''
+    search doesn't work well. Think it's their fault, not mine, though'''
     most_upcoming = Con.objects.most_upcoming()
     context_dict = {'most_upcoming': most_upcoming}
 
@@ -317,7 +316,7 @@ def know_thyself(request, con_id=None):
     """Some basic Con analytics.
     Hideous long code in the view because this is the one and only time
     this data is ever necessary, no reason to write methods over it.
-    It's hard to read to cut down on DB hits; my apologies.
+    It's hard to read because I wanted to cut down on DB hits; my apologies.
     I tossed it at the end of the file so no one ever has to look at it.
     """
     if con_id:

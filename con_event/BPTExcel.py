@@ -16,7 +16,8 @@ from rcreg_project.settings import BASE_DIR
 from rcreg_project.extras import remove_punct, ascii_only, ascii_only_no_punct
 
 """Logic for uploading an XLSX sheet of registrants from the view 'upload_reg'.
-XLSX must look exactly like it did in 2016."""
+XLSX must look exactly like it did in 2016, or it will be rejected.
+"""
 
 data_columns = [
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
@@ -25,9 +26,11 @@ data_columns = [
 base_header_file = os.path.join(BASE_DIR, 'con_event/BPT2016Header.xlsx')
 
 
+#===============================================================================
 class BPTUploadForm(forms.Form):
     """Used in 'upload_reg' to select XLSX file to upload."""
 
+    #---------------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         super(BPTUploadForm, self).__init__(*args, **kwargs)
         CONS = []
@@ -47,9 +50,11 @@ class BPTUploadForm(forms.Form):
                 'class': 'form-control',
                 })
 
+    #---------------------------------------------------------------------------
     def get_header(self, header_file):
         """Gets header input xlsx file,
-        returns as OrderedDict. {k: v} is {header: data} ."""
+        returns as OrderedDict. {k: v} is {header: data} .
+        """
 
         wb = openpyxl.load_workbook(header_file)
         sheet = wb.get_active_sheet()
@@ -62,7 +67,7 @@ class BPTUploadForm(forms.Form):
 
         return header
 
-
+    #---------------------------------------------------------------------------
     def my_valid(self):
         """Don't touch this, it has to be this way in order to return
         specified custom error messages.
@@ -110,7 +115,7 @@ class BPTUploadForm(forms.Form):
         else:  # if not self.is_valid()
             return False
 
-
+    #---------------------------------------------------------------------------
     def make_excel_odict_list(self, xlfile):
         """Takes in XLSX file of BPT registrant data,
         turns each row into an OrderedDict,
@@ -132,7 +137,19 @@ class BPTUploadForm(forms.Form):
 
         return all_data
 
+    #---------------------------------------------------------------------------
+    def get_email(self, od):
+        """First looks in column AB for email, then Q.
+        Putting in one place so registrants always have the same emial-finding chain.
+        """
 
+        email = od.get("AB")
+        if not email or len(email) < 5:  # 5 is arbitrary
+            email = od.get("Q")
+
+        return email
+
+    #---------------------------------------------------------------------------
     def find_incompletes(self, all_data):
         """Takes in OrderedDict list, presumably from  make_excel_odict_list,
         looks to see if any records are missing required data.
@@ -144,15 +161,9 @@ class BPTUploadForm(forms.Form):
         last_email = None
         bad_emails = []
 
-        def get_email(od):
-            email = od.get("AB")
-            if not email or len(email) < 5:  # 5 is arbitrary
-                email = od.get("Q")
-            return email
-
         # First get the emails on thir own, always same field.
         for od in all_data:
-            email = get_email(od)
+            email = self.get_email(od)
             if email:
                 email_list.append(email)
 
@@ -160,7 +171,7 @@ class BPTUploadForm(forms.Form):
             sk8name = od.get("AC")
             first_name = od.get("AA")
             last_name = od.get("Z")
-            email = get_email(od)
+            email = self.get_email(od)
 
             if email:
                 emailcount = email_list.count(email)
@@ -176,7 +187,7 @@ class BPTUploadForm(forms.Form):
 
         return no_sk8_or_real_name, bad_emails, complete_entries
 
-
+    #---------------------------------------------------------------------------
     def import_from_od(self, complete_entries, con):
         """Inputs list of complete_entries in form of OrderedDict,
         assumes already checked for email dupes, lack of real name, sk8name.
@@ -192,9 +203,8 @@ class BPTUploadForm(forms.Form):
             skill = od.get("AF")
             gender = od.get("AG")
             pass_type = od.get("V")
-            email = od.get("AB")
-            if not email:
-                email = od.get("Q")
+            email = self.get_email(od)
+
             first_name = od.get("AA")
             if not first_name:
                 first_name = od.get("I")
@@ -324,6 +334,7 @@ class BPTUploadForm(forms.Form):
 
         return success_list, error_list, repeat_email_list
 
+    #---------------------------------------------------------------------------
     def make_registrants(self):
         """Makes resitrants from XLSX sheet upload,
         returns XLSX for download, notifying user (RC staff) of
