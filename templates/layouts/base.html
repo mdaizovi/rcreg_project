@@ -42,6 +42,7 @@ example syntax for use, if name is skate2
   <link href="{% static "css/dashboard.css" %}" rel="stylesheet">
   <link href="{% static "css/jumbotron.css" %}" rel="stylesheet">
   <link href="{% static "css/blog.css" %}" rel="stylesheet">
+    <link href="{% static "css/sticky-footer.css" %}" rel="stylesheet">
 
   <!-- Dahmer's custom CSS -->
   <link rel="stylesheet" href="{% static "css/dahmer.css" %}" type="text/css" media="screen" />
@@ -141,22 +142,32 @@ example syntax for use, if name is skate2
 
     {% block content %}
     {% endblock %}
-    <hr>
-    <footer class="margin-top-25">
-      <p class="pull-left" style="position: absolute; bottom: 0;">
+
+  </div>  <!-- end div id='content'-->
+</div>
+</div>
+
+</div>
+
+
+
+  <!--  css redundency bc of last minute change, people may have old css-->
+    <footer class="footer my-footer" style ="height: 80px; background: none;">
+      <hr class = "margin-top-15">
+        <div class="container">
+       <p class="pull-left">
          Site by <a href="mailto:mdaizovi@gmail.com">Michela Dai Zovi</a> @ <a href="http://www.smartderby.net"> SmartDerby.Net
         <span class="glyphicon icon-smartderby" style="font-size: 20px;"aria-hidden="true"> </span></a>
          &middot;
-        <!-- <a href="#">Privacy</a> &middot; <a href="#">Terms</a> &middot; -->
         <a href="mailto:{{ CUSTOM_SITE_ADMIN_EMAIL }}">Contact</a></p>
+      </div>
     </footer>
 
 
-  </div>  <!-- end div id='content'-->
-        </div>
 
-      </div>
-    </div>
+
+
+
 
   <!-- Bootstrap core JavaScript
   ================================================== -->
