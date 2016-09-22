@@ -191,7 +191,6 @@ class ChallengeModelForm(ModelForm):
 
     #---------------------------------------------------------------------------
     class Meta:
-
         model = Challenge
         fields = ['con', 'location_type', 'ruleset', 'gametype', 'communication']
 
@@ -204,7 +203,7 @@ class MyRosterSelectForm(forms.Form):
         team_list = kwargs.pop('team_list')
         super(MyRosterSelectForm, self).__init__(*args, **kwargs)
 
-        MY_TEAMS=[]
+        MY_TEAMS = []
         # Provide list of rosters input, likely rosters registrant is captaining
         for r in team_list:
             if r.name:
@@ -212,7 +211,7 @@ class MyRosterSelectForm(forms.Form):
             else:
                 MY_TEAMS.append((str(r.pk), "unnamed team"))
 
-        self.fields["game_team"]=forms.CharField(
+        self.fields["game_team"] = forms.CharField(
                 label="Select Team",
                 widget=forms.Select(choices=MY_TEAMS),
                 required=True,
@@ -221,44 +220,6 @@ class MyRosterSelectForm(forms.Form):
 
         for field in iter(self.fields):
             self.fields[field].widget.attrs.update({'class': 'form-control'})
-
-
-#===============================================================================
-class GameRosterCreateModelForm(ModelForm):
-
-    #---------------------------------------------------------------------------
-
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user') # I don't actually care about user
-        # Just want to be able to feed it same arguments as ChallengeRosterModelForm
-        super(GameRosterCreateModelForm, self).__init__(*args, **kwargs)
-
-        self.fields["name"].initial = ""
-        #  Defining fields
-        self.fields["color"] = forms.CharField(
-                widget=forms.Select(choices=COLORS),
-                initial=COLORS[0][0],
-                label='Team Color'
-                )
-        self.fields["can_email"] = forms.CharField(
-                widget=forms.Select(choices=BINARY_HALF_WORDS),
-                initial=BINARY_HALF_WORDS[1][0],
-                label='Can skaters rostered on this team use this site to \
-                        send you emails?'
-                )
-        #  Modifying fields
-        for field in iter(self.fields):
-            self.fields[field].widget.attrs.update({
-                    'class': 'form-control',
-                    })
-
-    #---------------------------------------------------------------------------
-    class Meta:
-        model = Roster
-        fields = ['name','color','can_email']
-        labels = {
-                'name': _('Team Name'),
-                }
 
 
 #===============================================================================

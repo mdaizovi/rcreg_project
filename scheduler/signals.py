@@ -26,7 +26,6 @@ def delete_homeless_roster_chg(sender, instance, **kwargs):
     for c in caps:  # To adjust captain number
         c.save()
 
-
 #-------------------------------------------------------------------------------
 def delete_homeless_roster_ros(sender, instance, **kwargs):
     """post_save from roster.

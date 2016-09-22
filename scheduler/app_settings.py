@@ -10,5 +10,5 @@ GAME_CAP = 20
 DEFAULT_REG_CAP = 60
 DEFAULT_AUD_CAP = 10
 
-MAX_CAPTAIN_LIMIT = 2
+MAX_CAPTAIN_LIMIT = 2  # How many submitted Challenges Registrant can captain. 
 CLOSE_CHAL_SUB_AT = 250

@@ -17,7 +17,7 @@ so changing them is ill-advised.
 Sometimes models are imported in method to avoid circular import.
 """
 
-
+#-------------------------------------------------------------------------------
 def monkey_patch_username():
     """Allows the username to be 100 chars, instead of just 30
     for long emails, since email address is username."""
@@ -31,6 +31,8 @@ def monkey_patch_username():
 monkey_patch_username()
 
 
+# Begin User method monkey patching
+#===============================================================================
 def is_a_boss(self):
     """Checks to see if user is either a superuser,
     or in 1 of the 2 custom boss groups.
@@ -46,7 +48,7 @@ def is_a_boss(self):
     else:
         return False
 
-
+#-------------------------------------------------------------------------------
 def is_the_boss(self):
     """Checks to see if user is either a superuser,
     or in the main boss.
@@ -62,7 +64,7 @@ def is_the_boss(self):
     else:
         return False
 
-
+#-------------------------------------------------------------------------------
 def is_a_coach(self):
     """Returns True if user is associated with a coach object."""
 
@@ -74,7 +76,7 @@ def is_a_coach(self):
     else:
         return False
 
-
+#-------------------------------------------------------------------------------
 def is_a_coach_this_con(self, con):
     """Extend is_a_coach to return True iff they are a coach for con supplied.
     Having been a coach ever, for a different con, is not good enough.
@@ -95,7 +97,7 @@ def is_a_coach_this_con(self, con):
     else:
         return None
 
-
+#-------------------------------------------------------------------------------
 def can_edit_score(self):
     """Return True if user is in NSO group or either of 2 custom boss groups.
     Also used to grant other privileges, like see and edit communication box"""
@@ -108,7 +110,7 @@ def can_edit_score(self):
     else:
         return False
 
-
+#-------------------------------------------------------------------------------
 def registrants(self):
     """Returns list of registrants associated w/user, or None."""
 
@@ -117,7 +119,7 @@ def registrants(self):
 
     return registrant_list
 
-
+#-------------------------------------------------------------------------------
 def trainings_coached(self):
     """If user is a coach, returns training set associated w/ coach.
     Else, returns None.
@@ -130,7 +132,7 @@ def trainings_coached(self):
     else:
         return None
 
-
+#-------------------------------------------------------------------------------
 def all_cons(self):
     """Returns list of all cons user has a registrant for.
     If has no cons but is a superuser, like RollerTron,
@@ -155,7 +157,7 @@ def all_cons(self):
     else:
         return None
 
-
+#-------------------------------------------------------------------------------
 def upcoming_registrants(self):
     """If user associated w/registrants that are associated w/ an upcoming con,
     returns list of registrants. If no registrants, or all registrant cons
@@ -169,7 +171,7 @@ def upcoming_registrants(self):
 
     return reglist
 
-
+#-------------------------------------------------------------------------------
 def upcoming_cons(self):
     """Upcoming cons associated w/ user.
     Like upcoming_registrants, but only returns list of cons, or None.
@@ -190,7 +192,7 @@ def upcoming_cons(self):
     else:
         return None
 
-
+#-------------------------------------------------------------------------------
 def get_most_recent_registrant(self):
     """If user has a registrant, returns most recent one, even if past.
     Otherwise, if no registrants, returns None.
@@ -208,7 +210,7 @@ def get_most_recent_registrant(self):
 
     return most_recent_reg
 
-
+#-------------------------------------------------------------------------------
 def get_registrant_for_most_upcoming_con(self):
     """If user has a registrant for most upcoming con, returns it.
     Else, returns None.
@@ -221,7 +223,7 @@ def get_registrant_for_most_upcoming_con(self):
 
     return relevant_user
 
-
+#-------------------------------------------------------------------------------
 def get_my_schedule_url(self):
     """Used for bosses to check coach's schedule.
     Otherwise registrants can check only own schedule,
@@ -234,7 +236,7 @@ def get_my_schedule_url(self):
 
     return url
 
-
+#-------------------------------------------------------------------------------
 User.add_to_class("is_a_boss", is_a_boss)
 User.add_to_class("is_the_boss", is_the_boss)
 User.add_to_class("is_a_coach", is_a_coach)

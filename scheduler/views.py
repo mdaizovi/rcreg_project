@@ -28,7 +28,7 @@ from scheduler.tables import RosterTable
 from swingtime.models import Occurrence,TrainingRoster
 
 
-no_list = ["" ,u'', None, "None"]
+no_list = ["" , u'', None, "None"]
 
 #-------------------------------------------------------------------------------
 @login_required
@@ -548,7 +548,9 @@ def register_training(request, o_id):
                     roster = registered
                 else:
                     roster = auditing
-                if 'eligible_registrant' in request.POST and request.POST['eligible_registrant'] not in no_list:
+                if ('eligible_registrant' in request.POST and
+                        request.POST['eligible_registrant'] not in no_list
+                        ):
                     try:
                         skater_remove = Registrant.objects.get(
                                 pk=request.POST['eligible_registrant']
@@ -642,7 +644,11 @@ def edit_training(request, activity_id):
         training = Training.objects.get(pk=int(activity_id))
         editable_by = training.editable_by()
     except ObjectDoesNotExist:
-        return render_to_response('edit_training.html',{},context_instance=RequestContext(request))
+        return render_to_response(
+                'edit_training.html',
+                {},
+                context_instance=RequestContext(request)
+                )
 
     if request.method == "POST":
 
@@ -740,7 +746,11 @@ def edit_roster(request, roster_id):
     try:
         roster = Roster.objects.get(pk=roster_id)
     except ObjectDoesNotExist:
-        return render_to_response('edit_roster.html',{},context_instance=RequestContext(request))
+        return render_to_response(
+                'edit_roster.html',
+                {},
+                context_instance=RequestContext(request)
+                )
     try:
         challenge = Challenge.objects.get(Q(roster1=roster) | Q(roster2=roster))
     except:
@@ -818,7 +828,8 @@ def edit_challenge(request, activity_id):
     try:
         challenge = Challenge.objects.get(pk=int(activity_id))
         registrant = Registrant.objects.get(con=challenge.con, user=user)
-        # If don't have a registrant for con of challenge, will prob say challenge doesn't exist.
+        # If don't have a registrant for con of challenge,
+        # will prob return false negative that challenge doesn't exist.
         my_team, opponent, my_acceptance, opponent_acceptance = (
                 challenge.my_team_status([registrant])
                 )

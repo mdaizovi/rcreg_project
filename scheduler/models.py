@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from copy import deepcopy
-#from datetime import datetime, timedelta
 import datetime
 from datetime import timedelta
 import string
@@ -33,7 +32,6 @@ from swingtime.conf.swingtime_settings import (TIMESLOT_INTERVAL,
         )
 
 
-#not to self: will have to make ivanna choose 30/60 when scheduling
 COLORS = (("Black", "Black"), ("Beige or tan", "Beige or tan"),
         ("Blue (aqua or turquoise)", "Blue (aqua or turquoise)"),
         ("Blue (dark)", "Blue (dark)"), ("Blue (light)", "Blue (light)"),
@@ -684,6 +682,7 @@ class Roster(MatchingCriteria):
 
         ordering = ("-con__start", 'name', 'captain')
 
+#-------------------------------------------------------------------------------
 post_save.connect(delete_homeless_roster_ros, sender=Roster)
 
 
@@ -812,7 +811,7 @@ class Activity(models.Model):
         If former, gets coaches. If latter, gets captains.
         Returns list of registrants.
         """
-        #select/prefetch brought it form 5 db hits to 3 on trainings
+
         figureheads = []
         if self.is_a_training():
             for c in (self.coach.select_related('user')
@@ -862,7 +861,7 @@ class Activity(models.Model):
         or are Coach.
         For use in Scheduling as well as seeing Communication between NSO/skaters
         """
-        #no prefetch/select is 7 db hits for a training, trimmed it down to 4
+
         participating = []
         if self.is_a_training():
             for c in self.coach.select_related('user').all():
@@ -1297,6 +1296,7 @@ class Challenge(Activity):
     # challenges, but that ended up confusing everyone.
     # So that's why roster:challenge is essentially a 1:1, but
     # I have to write awkward stuff around it really being fk
+    # Should be changed, but don't want to introduce new bugs.
     captain1accepted = models.BooleanField(default=True)
     captain2accepted = models.BooleanField(default=False)
     roster1score = models.IntegerField(null=True, blank=True)
@@ -1481,6 +1481,7 @@ class Challenge(Activity):
         ordering=('-con__start', 'name')
         unique_together = ('con', 'name', 'roster1', 'roster2')
 
+#-------------------------------------------------------------------------------
 pre_save.connect(challenge_defaults, sender=Challenge)
 post_save.connect(delete_homeless_chg, sender=Challenge)
 pre_delete.connect(delete_homeless_roster_chg, sender=Challenge)
@@ -1627,7 +1628,6 @@ class Training(Activity):
                 (" Registrant must have %s pass in order to register" % (pass_string))
                 )
 
-
         return tooltip_title
 
     #---------------------------------------------------------------------------
@@ -1711,6 +1711,10 @@ class Coach(models.Model):
             return self.id
 
     #---------------------------------------------------------------------------
+    class Meta:
+        ordering = ('user',)
+
+    #---------------------------------------------------------------------------
     def save(self, *args, **kwargs):
         """Removes non-ascii chars from description, internal notes"""
 
@@ -1781,7 +1785,3 @@ class Coach(models.Model):
         from con_event.monkey_patching import get_my_schedule_url
 
         return self.user.get_my_schedule_url()
-
-    class Meta:
-
-        ordering = ('user',)
