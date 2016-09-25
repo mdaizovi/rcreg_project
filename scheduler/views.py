@@ -1049,7 +1049,6 @@ def edit_challenge(request, activity_id):
 
             if not opponent or not opponent.captain or not opponent_acceptance:
                 if not captain_entry_query:
-                    print "not cp entry query"
                     # For filtering which captains to challenge
                     opp_skill_lst = my_team.opp_cap_skills_allowed
                     eligible_opponents = (Registrant.objects.basic_eligible(opponent, my_team.con, list(my_team.participants.all()))
@@ -1369,7 +1368,9 @@ def propose_new_challenge(request):
         if 'clone roster' in request.POST:
             old_team = Roster.objects.get(pk=request.POST['roster_to_clone_id'])
             my_team = old_team.clone_roster()
-            challenge = Challenge(roster1=my_team, con=my_team.con)
+             # NOTE: Change  con if want to allow old teams to be cloned.
+             # Right now does not, looks for teams w/ cons in upcoming_registrants.
+            challenge = Challenge(roster1=my_team, con=old_team.con)
             try:
                 old_chal = Challenge.objects.get(
                         Q(roster1=old_team) |

@@ -90,7 +90,6 @@ class OccurrenceManager(models.Manager):
         possibles = all_act_data.keys()
 
         for act in possibles:
-            print "act ",act
             this_act_data = {}
 
             # Start gathering locaiton per activity
@@ -137,7 +136,6 @@ class OccurrenceManager(models.Manager):
                         )
 
             this_act_data["locations"] = act_locations
-            print "act_locations ",act_locations
             # End gathering locaiton per activity #
 
             # Start interest, activity type, per activity
